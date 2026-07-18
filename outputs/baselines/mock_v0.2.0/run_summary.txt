@@ -1,0 +1,47 @@
+运行摘要
+========================================
+项目版本：v0.2.0
+模式：mock
+图表数据模式：mock
+关键词：machine learning astronomical spectra
+最大结果数：20
+
+数量统计
+----------------------------------------
+原始文献数量：20
+清洗后文献数量：20
+去重后文献数量：18
+被去重文献数量：2
+
+缺失字段统计（按去重后文献计算）
+----------------------------------------
+title: 0
+authors: 0
+publication_year: 0
+doi: 1
+abstract: 1
+cited_by_count: 0
+source_name: 1
+openalex_id: 0
+landing_page_url: 1
+keyword: 0
+retrieved_at: 0
+
+输出文件
+----------------------------------------
+raw_response: outputs\raw\raw_response.json
+papers_ranked: outputs\tables\papers_ranked.csv
+duplicates_removed: outputs\tables\duplicates_removed.csv
+database: data\literature.db
+top10_citations: outputs\figures\top10_citations.png
+top10_preliminary_score: outputs\figures\top10_preliminary_score.png
+run_summary: outputs\reports\run_summary.txt
+
+图表数据说明
+----------------------------------------
+当前图表由 mock 教学样例生成，不代表真实论文数据或学术结论。
+
+评分说明
+----------------------------------------
+preliminary_score = 0.40 * relevance_score + 0.30 * impact_score + 0.20 * recency_score + 0.10 * completeness_score
+该分数只用于第一版初步文献排序，不代表论文价值评价。

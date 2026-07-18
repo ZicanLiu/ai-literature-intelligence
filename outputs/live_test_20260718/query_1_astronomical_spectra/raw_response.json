@@ -1,0 +1,6230 @@
+{
+  "meta": {
+    "count": 7944,
+    "db_response_time_ms": 67,
+    "page": 1,
+    "per_page": 10,
+    "groups_count": null,
+    "x_query": {
+      "oql": "works where full text has (machine learning astronomical spectra)",
+      "oqo": {
+        "get_rows": "works",
+        "filter_rows": [
+          {
+            "column_id": "fulltext.search",
+            "value": "machine learning astronomical spectra",
+            "operator": "has"
+          }
+        ],
+        "select": [
+          "id",
+          "display_name",
+          "authorships",
+          "publication_year",
+          "doi",
+          "abstract_inverted_index",
+          "cited_by_count",
+          "primary_location"
+        ],
+        "per_page": 10
+      },
+      "url": "/works?filter=fulltext.search:machine learning astronomical spectra&select=id,display_name,authorships,publication_year,doi,abstract_inverted_index,cited_by_count,primary_location&per_page=10"
+    },
+    "cost_usd": 0.001
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W2469230926",
+      "display_name": "Tensor Decomposition for Signal Processing and Machine Learning",
+      "authorships": [
+        {
+          "author_position": "first",
+          "author": {
+            "id": "https://openalex.org/A5050186120",
+            "display_name": "Nicholas D. Sidiropoulos",
+            "orcid": "https://orcid.org/0000-0002-3385-7911"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I130238516",
+              "display_name": "University of Minnesota",
+              "ror": "https://ror.org/017zqws13",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I130238516"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Nicholas D. Sidiropoulos",
+          "raw_affiliation_strings": [
+            "Department of Electrical and Computer Engineering, University of Minnesota, Minneapolis, MN, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Electrical and Computer Engineering, University of Minnesota, Minneapolis, MN, USA",
+              "institution_ids": [
+                "https://openalex.org/I130238516"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5009006026",
+            "display_name": "Lieven De Lathauwer",
+            "orcid": "https://orcid.org/0000-0001-5562-5014"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I99464096",
+              "display_name": "KU Leuven",
+              "ror": "https://ror.org/05f950310",
+              "country_code": "BE",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I99464096"
+              ]
+            }
+          ],
+          "countries": [
+            "BE"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Lieven De Lathauwer",
+          "raw_affiliation_strings": [
+            "KU Leuven, Leuven, Belgium"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "KU Leuven, Leuven, Belgium",
+              "institution_ids": [
+                "https://openalex.org/I99464096"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5015075381",
+            "display_name": "Xiao Fu",
+            "orcid": "https://orcid.org/0000-0003-4847-9586"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I130238516",
+              "display_name": "University of Minnesota",
+              "ror": "https://ror.org/017zqws13",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I130238516"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Xiao Fu",
+          "raw_affiliation_strings": [
+            "Department of Electrical and Computer Engineering, University of Minnesota, Minneapolis, MN, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Electrical and Computer Engineering, University of Minnesota, Minneapolis, MN, USA",
+              "institution_ids": [
+                "https://openalex.org/I130238516"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5002695199",
+            "display_name": "Kejun Huang",
+            "orcid": "https://orcid.org/0000-0002-6460-6365"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I130238516",
+              "display_name": "University of Minnesota",
+              "ror": "https://ror.org/017zqws13",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I130238516"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Kejun Huang",
+          "raw_affiliation_strings": [
+            "Department of Electrical and Computer Engineering, University of Minnesota, Minneapolis, MN, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Electrical and Computer Engineering, University of Minnesota, Minneapolis, MN, USA",
+              "institution_ids": [
+                "https://openalex.org/I130238516"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5054849323",
+            "display_name": "Evangelos E. Papalexakis",
+            "orcid": "https://orcid.org/0000-0002-3411-8483"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I103635307",
+              "display_name": "University of California, Riverside",
+              "ror": "https://ror.org/03nawhv43",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I103635307"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Evangelos E. Papalexakis",
+          "raw_affiliation_strings": [
+            "Department of Computer Science, University of California, Riverside, CA, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Computer Science, University of California, Riverside, CA, USA",
+              "institution_ids": [
+                "https://openalex.org/I103635307"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "last",
+          "author": {
+            "id": "https://openalex.org/A5035605036",
+            "display_name": "Christos Faloutsos",
+            "orcid": "https://orcid.org/0000-0003-2996-9790"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I74973139",
+              "display_name": "Carnegie Mellon University",
+              "ror": "https://ror.org/05x2bcf33",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I74973139"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Christos Faloutsos",
+          "raw_affiliation_strings": [
+            "Department of Computer Science, Carnegie Mellon University, Pittsburgh, PA, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Computer Science, Carnegie Mellon University, Pittsburgh, PA, USA",
+              "institution_ids": [
+                "https://openalex.org/I74973139"
+              ]
+            }
+          ]
+        }
+      ],
+      "publication_year": 2017,
+      "doi": "https://doi.org/10.1109/tsp.2017.2690524",
+      "abstract_inverted_index": {
+        "Tensors": [
+          0,
+          33
+        ],
+        "or": [
+          1,
+          8
+        ],
+        "multiway": [
+          2
+        ],
+        "arrays": [
+          3
+        ],
+        "are": [
+          4,
+          23
+        ],
+        "functions": [
+          5,
+          24
+        ],
+        "of": [
+          6,
+          25,
+          63,
+          112,
+          174,
+          178
+        ],
+        "three": [
+          7
+        ],
+        "more": [
+          9
+        ],
+        "indices": [
+          10,
+          27
+        ],
+        "(i,": [
+          11
+        ],
+        "j,": [
+          12
+        ],
+        "k,": [
+          13
+        ],
+        ".": [
+          14,
+          15,
+          16
+        ],
+        ")-similar": [
+          17
+        ],
+        "to": [
+          18,
+          76,
+          107,
+          130,
+          184,
+          196
+        ],
+        "matrices": [
+          19
+        ],
+        "(two-way": [
+          20
+        ],
+        "arrays),": [
+          21
+        ],
+        "which": [
+          22
+        ],
+        "two": [
+          26
+        ],
+        "(r,": [
+          28
+        ],
+        "c)": [
+          29
+        ],
+        "for": [
+          30,
+          82
+        ],
+        "(row,": [
+          31
+        ],
+        "column).": [
+          32
+        ],
+        "have": [
+          34,
+          50
+        ],
+        "a": [
+          35,
+          41,
+          78
+        ],
+        "rich": [
+          36
+        ],
+        "history,": [
+          37
+        ],
+        "stretching": [
+          38
+        ],
+        "over": [
+          39
+        ],
+        "almost": [
+          40
+        ],
+        "century,": [
+          42
+        ],
+        "and": [
+          43,
+          57,
+          69,
+          84,
+          90,
+          100,
+          114,
+          128,
+          139,
+          158,
+          165,
+          168,
+          190,
+          200,
+          204
+        ],
+        "touching": [
+          44
+        ],
+        "upon": [
+          45
+        ],
+        "numerous": [
+          46
+        ],
+        "disciplines;": [
+          47
+        ],
+        "but": [
+          48,
+          148
+        ],
+        "they": [
+          49
+        ],
+        "only": [
+          51
+        ],
+        "recently": [
+          52
+        ],
+        "become": [
+          53
+        ],
+        "ubiquitous": [
+          54
+        ],
+        "in": [
+          55,
+          87,
+          125,
+          143
+        ],
+        "signal": [
+          56,
+          64
+        ],
+        "data": [
+          58,
+          67
+        ],
+        "analytics": [
+          59
+        ],
+        "at": [
+          60
+        ],
+        "the": [
+          61
+        ],
+        "confluence": [
+          62
+        ],
+        "processing,": [
+          65
+        ],
+        "statistics,": [
+          66
+        ],
+        "mining,": [
+          68
+        ],
+        "machine": [
+          70
+        ],
+        "learning.": [
+          71,
+          207
+        ],
+        "This": [
+          72
+        ],
+        "overview": [
+          73
+        ],
+        "article": [
+          74
+        ],
+        "aims": [
+          75
+        ],
+        "provide": [
+          77
+        ],
+        "good": [
+          79,
+          172
+        ],
+        "starting": [
+          80
+        ],
+        "point": [
+          81
+        ],
+        "researchers": [
+          83
+        ],
+        "practitioners": [
+          85
+        ],
+        "interested": [
+          86
+        ],
+        "learning": [
+          88
+        ],
+        "about": [
+          89
+        ],
+        "working": [
+          91
+        ],
+        "with": [
+          92
+        ],
+        "tensors.": [
+          93
+        ],
+        "As": [
+          94
+        ],
+        "such,": [
+          95
+        ],
+        "it": [
+          96
+        ],
+        "focuses": [
+          97
+        ],
+        "on": [
+          98
+        ],
+        "fundamentals": [
+          99
+        ],
+        "motivation": [
+          101
+        ],
+        "(using": [
+          102
+        ],
+        "various": [
+          103
+        ],
+        "application": [
+          104
+        ],
+        "examples),": [
+          105
+        ],
+        "aiming": [
+          106
+        ],
+        "strike": [
+          108
+        ],
+        "an": [
+          109
+        ],
+        "appropriate": [
+          110
+        ],
+        "balance": [
+          111
+        ],
+        "breadth": [
+          113
+        ],
+        "depth": [
+          115
+        ],
+        "that": [
+          116
+        ],
+        "will": [
+          117
+        ],
+        "enable": [
+          118
+        ],
+        "someone": [
+          119
+        ],
+        "having": [
+          120
+        ],
+        "taken": [
+          121
+        ],
+        "first": [
+          122
+        ],
+        "graduate": [
+          123
+        ],
+        "courses": [
+          124
+        ],
+        "matrix": [
+          126
+        ],
+        "algebra": [
+          127
+        ],
+        "probability": [
+          129
+        ],
+        "get": [
+          131
+        ],
+        "started": [
+          132
+        ],
+        "doing": [
+          133
+        ],
+        "research": [
+          134
+        ],
+        "and/or": [
+          135
+        ],
+        "developing": [
+          136
+        ],
+        "tensor": [
+          137,
+          156,
+          162
+        ],
+        "algorithms": [
+          138,
+          179
+        ],
+        "software.": [
+          140
+        ],
+        "Some": [
+          141
+        ],
+        "background": [
+          142
+        ],
+        "applied": [
+          144
+        ],
+        "optimization": [
+          145,
+          183
+        ],
+        "is": [
+          146
+        ],
+        "useful": [
+          147
+        ],
+        "not": [
+          149
+        ],
+        "strictly": [
+          150
+        ],
+        "required.": [
+          151
+        ],
+        "The": [
+          152
+        ],
+        "material": [
+          153
+        ],
+        "covered": [
+          154
+        ],
+        "includes": [
+          155
+        ],
+        "rank": [
+          157,
+          159
+        ],
+        "decomposition;": [
+          160
+        ],
+        "basic": [
+          161
+        ],
+        "factorization": [
+          163
+        ],
+        "models": [
+          164
+        ],
+        "their": [
+          166
+        ],
+        "relationships": [
+          167
+        ],
+        "properties": [
+          169
+        ],
+        "(including": [
+          170
+        ],
+        "fairly": [
+          171
+        ],
+        "coverage": [
+          173,
+          177
+        ],
+        "identifiability);": [
+          175
+        ],
+        "broad": [
+          176
+        ],
+        "ranging": [
+          180,
+          192
+        ],
+        "from": [
+          181,
+          193
+        ],
+        "alternating": [
+          182
+        ],
+        "stochastic": [
+          185
+        ],
+        "gradient;": [
+          186
+        ],
+        "statistical": [
+          187
+        ],
+        "performance": [
+          188
+        ],
+        "analysis;": [
+          189
+        ],
+        "applications": [
+          191
+        ],
+        "source": [
+          194
+        ],
+        "separation": [
+          195
+        ],
+        "collaborative": [
+          197
+        ],
+        "filtering,": [
+          198
+        ],
+        "mixture": [
+          199
+        ],
+        "topic": [
+          201
+        ],
+        "modeling,": [
+          202
+        ],
+        "classification,": [
+          203
+        ],
+        "multilinear": [
+          205
+        ],
+        "subspace": [
+          206
+        ]
+      },
+      "cited_by_count": 1613,
+      "primary_location": {
+        "id": "doi:10.1109/tsp.2017.2690524",
+        "is_oa": false,
+        "landing_page_url": "https://doi.org/10.1109/tsp.2017.2690524",
+        "pdf_url": null,
+        "source": {
+          "id": "https://openalex.org/S168680287",
+          "display_name": "IEEE Transactions on Signal Processing",
+          "issn_l": "1053-587X",
+          "issn": [
+            "1053-587X",
+            "1941-0476"
+          ],
+          "is_oa": false,
+          "is_in_doaj": false,
+          "is_core": true,
+          "host_organization": "https://openalex.org/P4310319808",
+          "host_organization_name": "Institute of Electrical and Electronics Engineers",
+          "host_organization_lineage": [
+            "https://openalex.org/P4310319808"
+          ],
+          "host_organization_lineage_names": [
+            "Institute of Electrical and Electronics Engineers"
+          ],
+          "type": "journal"
+        },
+        "license": null,
+        "license_id": null,
+        "version": "publishedVersion",
+        "is_accepted": true,
+        "is_published": true,
+        "raw_source_name": "IEEE Transactions on Signal Processing",
+        "raw_type": "journal-article"
+      }
+    },
+    {
+      "id": "https://openalex.org/W2047278710",
+      "display_name": "On the mathematical foundations of learning",
+      "authorships": [
+        {
+          "author_position": "first",
+          "author": {
+            "id": "https://openalex.org/A5079608792",
+            "display_name": "Felipe Cucker",
+            "orcid": "https://orcid.org/0000-0002-4569-3248"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I168719708",
+              "display_name": "City University of Hong Kong",
+              "ror": "https://ror.org/03q8dnn23",
+              "country_code": "HK",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I168719708"
+              ]
+            }
+          ],
+          "countries": [
+            "HK"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Felipe Cucker",
+          "raw_affiliation_strings": [
+            "Department of Mathematics, City University of Hong Kong, 83 Tat Chee Avenue, Kowloon, Hong Kong",
+            "Department of Mathematics, City University of Hong Kong, 83 Tat Chee Avenue, Kowloon, Hong Kong#TAB#"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Mathematics, City University of Hong Kong, 83 Tat Chee Avenue, Kowloon, Hong Kong",
+              "institution_ids": [
+                "https://openalex.org/I168719708"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Department of Mathematics, City University of Hong Kong, 83 Tat Chee Avenue, Kowloon, Hong Kong#TAB#",
+              "institution_ids": [
+                "https://openalex.org/I168719708"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "last",
+          "author": {
+            "id": "https://openalex.org/A5109147998",
+            "display_name": "Steve Smale",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I168719708",
+              "display_name": "City University of Hong Kong",
+              "ror": "https://ror.org/03q8dnn23",
+              "country_code": "HK",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I168719708"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I95457486",
+              "display_name": "University of California, Berkeley",
+              "ror": "https://ror.org/01an7q238",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I95457486"
+              ]
+            }
+          ],
+          "countries": [
+            "HK",
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Steve Smale",
+          "raw_affiliation_strings": [
+            "Department of Mathematics, City University of Hong Kong, 83 Tat Chee Avenue, Kowloon, Hong Kong",
+            "Department of Mathematics, University of California, Berkeley, California 94720"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Mathematics, City University of Hong Kong, 83 Tat Chee Avenue, Kowloon, Hong Kong",
+              "institution_ids": [
+                "https://openalex.org/I168719708"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Department of Mathematics, University of California, Berkeley, California 94720",
+              "institution_ids": [
+                "https://openalex.org/I95457486"
+              ]
+            }
+          ]
+        }
+      ],
+      "publication_year": 2001,
+      "doi": "https://doi.org/10.1090/s0273-0979-01-00923-5",
+      "abstract_inverted_index": {
+        "The": [
+          0
+        ],
+        "problem": [
+          1,
+          12
+        ],
+        "of": [
+          2,
+          10,
+          13
+        ],
+        "learning": [
+          3
+        ],
+        "is": [
+          4
+        ],
+        "arguably": [
+          5
+        ],
+        "at": [
+          6
+        ],
+        "the": [
+          7,
+          11
+        ],
+        "very": [
+          8
+        ],
+        "core": [
+          9
+        ],
+        "intelligence,": [
+          14
+        ],
+        "both": [
+          15
+        ],
+        "biological": [
+          16
+        ],
+        "and": [
+          17,
+          21
+        ],
+        "artificial.": [
+          18
+        ],
+        "T.": [
+          19
+        ],
+        "Poggio": [
+          20
+        ],
+        "C.R.": [
+          22
+        ],
+        "Shelton": [
+          23
+        ]
+      },
+      "cited_by_count": 1581,
+      "primary_location": {
+        "id": "doi:10.1090/s0273-0979-01-00923-5",
+        "is_oa": true,
+        "landing_page_url": "https://doi.org/10.1090/s0273-0979-01-00923-5",
+        "pdf_url": "https://www.ams.org/bull/2002-39-01/S0273-0979-01-00923-5/S0273-0979-01-00923-5.pdf",
+        "source": {
+          "id": "https://openalex.org/S71584477",
+          "display_name": "Bulletin of the American Mathematical Society",
+          "issn_l": "0002-9904",
+          "issn": [
+            "0002-9904",
+            "0273-0979",
+            "1088-9485",
+            "1936-881X"
+          ],
+          "is_oa": true,
+          "is_in_doaj": false,
+          "is_core": true,
+          "host_organization": "https://openalex.org/P4310315719",
+          "host_organization_name": "American Mathematical Society",
+          "host_organization_lineage": [
+            "https://openalex.org/P4310315719"
+          ],
+          "host_organization_lineage_names": [
+            "American Mathematical Society"
+          ],
+          "type": "journal"
+        },
+        "license": null,
+        "license_id": null,
+        "version": "publishedVersion",
+        "is_accepted": true,
+        "is_published": true,
+        "raw_source_name": "Bulletin of the American Mathematical Society",
+        "raw_type": "journal-article"
+      }
+    },
+    {
+      "id": "https://openalex.org/W2920947047",
+      "display_name": "The Challenge of Machine Learning in Space Weather: Nowcasting and Forecasting",
+      "authorships": [
+        {
+          "author_position": "first",
+          "author": {
+            "id": "https://openalex.org/A5054362485",
+            "display_name": "Enrico Camporeale",
+            "orcid": "https://orcid.org/0000-0002-7862-6383"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I1341640284",
+              "display_name": "Centrum Wiskunde & Informatica",
+              "ror": "https://ror.org/00x7ekv49",
+              "country_code": "NL",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1341640284",
+                "https://openalex.org/I2800991832",
+                "https://openalex.org/I4405262988"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I161675122",
+              "display_name": "Cooperative Institute for Research in Environmental Sciences",
+              "ror": "https://ror.org/00bdqav06",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1308126019",
+                "https://openalex.org/I1343035065",
+                "https://openalex.org/I161675122",
+                "https://openalex.org/I188538660",
+                "https://openalex.org/I2802992173"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I188538660",
+              "display_name": "University of Colorado Boulder",
+              "ror": "https://ror.org/02ttsq026",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I188538660"
+              ]
+            }
+          ],
+          "countries": [
+            "NL",
+            "US"
+          ],
+          "is_corresponding": true,
+          "raw_author_name": "E. Camporeale",
+          "raw_affiliation_strings": [
+            "CIRES University of Colorado Boulder  Boulder CO USA",
+            "Centrum Wiskunde &amp; Informatica  Amsterdam The Netherlands",
+            "Centrum Wiskunde &amp; Informatica Amsterdam The Netherlands",
+            "CIRES, University of Colorado Boulder, Boulder, CO, USA"
+          ],
+          "raw_orcid": "https://orcid.org/0000-0002-7862-6383",
+          "affiliations": [
+            {
+              "raw_affiliation_string": "CIRES University of Colorado Boulder  Boulder CO USA",
+              "institution_ids": [
+                "https://openalex.org/I188538660",
+                "https://openalex.org/I161675122"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Centrum Wiskunde &amp; Informatica  Amsterdam The Netherlands",
+              "institution_ids": [
+                "https://openalex.org/I1341640284"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Centrum Wiskunde &amp; Informatica Amsterdam The Netherlands",
+              "institution_ids": [
+                "https://openalex.org/I1341640284"
+              ]
+            },
+            {
+              "raw_affiliation_string": "CIRES, University of Colorado Boulder, Boulder, CO, USA",
+              "institution_ids": [
+                "https://openalex.org/I188538660",
+                "https://openalex.org/I161675122"
+              ]
+            }
+          ]
+        }
+      ],
+      "publication_year": 2019,
+      "doi": "https://doi.org/10.1029/2018sw002061",
+      "abstract_inverted_index": {
+        "Abstract": [
+          0
+        ],
+        "The": [
+          1,
+          52,
+          154
+        ],
+        "numerous": [
+          2
+        ],
+        "recent": [
+          3
+        ],
+        "breakthroughs": [
+          4
+        ],
+        "in": [
+          5,
+          49,
+          73,
+          150
+        ],
+        "machine": [
+          6,
+          47,
+          66,
+          125,
+          185
+        ],
+        "learning": [
+          7,
+          48,
+          67,
+          126,
+          186
+        ],
+        "make": [
+          8
+        ],
+        "imperative": [
+          9
+        ],
+        "to": [
+          10,
+          121,
+          128,
+          137,
+          163,
+          168
+        ],
+        "carefully": [
+          11
+        ],
+        "ponder": [
+          12
+        ],
+        "how": [
+          13
+        ],
+        "the": [
+          14,
+          41,
+          76,
+          84,
+          111,
+          122,
+          129,
+          146,
+          151,
+          158,
+          161,
+          174,
+          180
+        ],
+        "scientific": [
+          15
+        ],
+        "community": [
+          16,
+          132,
+          147
+        ],
+        "can": [
+          17
+        ],
+        "benefit": [
+          18
+        ],
+        "from": [
+          19
+        ],
+        "a": [
+          20,
+          118,
+          135,
+          138,
+          169
+        ],
+        "technology": [
+          21
+        ],
+        "that,": [
+          22
+        ],
+        "although": [
+          23
+        ],
+        "not": [
+          24
+        ],
+        "necessarily": [
+          25
+        ],
+        "new,": [
+          26
+        ],
+        "is": [
+          27,
+          38,
+          54
+        ],
+        "today": [
+          28
+        ],
+        "living": [
+          29
+        ],
+        "its": [
+          30
+        ],
+        "golden": [
+          31
+        ],
+        "age.": [
+          32
+        ],
+        "This": [
+          33
+        ],
+        "Grand": [
+          34
+        ],
+        "Challenge": [
+          35
+        ],
+        "review": [
+          36,
+          159
+        ],
+        "paper": [
+          37,
+          115
+        ],
+        "focused": [
+          39,
+          172
+        ],
+        "on": [
+          40,
+          75,
+          173
+        ],
+        "present": [
+          42
+        ],
+        "and": [
+          43,
+          105,
+          133,
+          179,
+          184
+        ],
+        "future": [
+          44
+        ],
+        "role": [
+          45
+        ],
+        "of": [
+          46,
+          86,
+          89,
+          95,
+          99,
+          106,
+          124,
+          140,
+          177,
+          182
+        ],
+        "Space": [
+          50,
+          69,
+          130
+        ],
+        "Weather.": [
+          51
+        ],
+        "purpose": [
+          53
+        ],
+        "twofold.": [
+          55
+        ],
+        "On": [
+          56,
+          110
+        ],
+        "one": [
+          57
+        ],
+        "hand,": [
+          58,
+          113
+        ],
+        "we": [
+          59,
+          144
+        ],
+        "will": [
+          60
+        ],
+        "discuss": [
+          61
+        ],
+        "previous": [
+          62
+        ],
+        "works": [
+          63
+        ],
+        "that": [
+          64,
+          79,
+          143
+        ],
+        "use": [
+          65
+        ],
+        "for": [
+          68
+        ],
+        "Weather": [
+          70,
+          131
+        ],
+        "forecasting,": [
+          71
+        ],
+        "focusing": [
+          72
+        ],
+        "particular": [
+          74
+        ],
+        "few": [
+          77
+        ],
+        "areas": [
+          78
+        ],
+        "have": [
+          80
+        ],
+        "seen": [
+          81
+        ],
+        "most": [
+          82
+        ],
+        "activity:": [
+          83
+        ],
+        "forecasting": [
+          85,
+          166
+        ],
+        "geomagnetic": [
+          87
+        ],
+        "indices,": [
+          88
+        ],
+        "relativistic": [
+          90
+        ],
+        "electrons": [
+          91
+        ],
+        "at": [
+          92
+        ],
+        "geosynchronous": [
+          93
+        ],
+        "orbits,": [
+          94
+        ],
+        "solar": [
+          96,
+          107
+        ],
+        "flares": [
+          97
+        ],
+        "occurrence,": [
+          98
+        ],
+        "coronal": [
+          100
+        ],
+        "mass": [
+          101
+        ],
+        "ejection": [
+          102
+        ],
+        "propagation": [
+          103
+        ],
+        "time,": [
+          104
+        ],
+        "wind": [
+          108
+        ],
+        "speed.": [
+          109
+        ],
+        "other": [
+          112
+        ],
+        "this": [
+          114
+        ],
+        "serves": [
+          116
+        ],
+        "as": [
+          117,
+          134,
+          189
+        ],
+        "gentle": [
+          119
+        ],
+        "introduction": [
+          120
+        ],
+        "field": [
+          123
+        ],
+        "tailored": [
+          127
+        ],
+        "pointer": [
+          136
+        ],
+        "number": [
+          139
+        ],
+        "open": [
+          141
+        ],
+        "challenges": [
+          142
+        ],
+        "believe": [
+          145
+        ],
+        "should": [
+          148
+        ],
+        "undertake": [
+          149
+        ],
+        "next": [
+          152
+        ],
+        "decade.": [
+          153
+        ],
+        "recurring": [
+          155
+        ],
+        "themes": [
+          156
+        ],
+        "throughout": [
+          157
+        ],
+        "are": [
+          160
+        ],
+        "need": [
+          162
+        ],
+        "shift": [
+          164
+        ],
+        "our": [
+          165
+        ],
+        "paradigm": [
+          167
+        ],
+        "probabilistic": [
+          170
+        ],
+        "approach": [
+          171
+        ],
+        "reliable": [
+          175
+        ],
+        "assessment": [
+          176
+        ],
+        "uncertainties,": [
+          178
+        ],
+        "combination": [
+          181
+        ],
+        "physics‐based": [
+          183
+        ],
+        "approaches,": [
+          187
+        ],
+        "known": [
+          188
+        ],
+        "gray": [
+          190
+        ],
+        "box.": [
+          191
+        ]
+      },
+      "cited_by_count": 398,
+      "primary_location": {
+        "id": "doi:10.1029/2018sw002061",
+        "is_oa": true,
+        "landing_page_url": "https://doi.org/10.1029/2018sw002061",
+        "pdf_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1029/2018SW002061",
+        "source": {
+          "id": "https://openalex.org/S166492742",
+          "display_name": "Space Weather",
+          "issn_l": "1542-7390",
+          "issn": [
+            "1542-7390"
+          ],
+          "is_oa": false,
+          "is_in_doaj": true,
+          "is_core": true,
+          "host_organization": "https://openalex.org/P4310315809",
+          "host_organization_name": "American Geophysical Union",
+          "host_organization_lineage": [
+            "https://openalex.org/P4310315809"
+          ],
+          "host_organization_lineage_names": [
+            "American Geophysical Union"
+          ],
+          "type": "journal"
+        },
+        "license": "other-oa",
+        "license_id": "https://openalex.org/licenses/other-oa",
+        "version": "publishedVersion",
+        "is_accepted": true,
+        "is_published": true,
+        "raw_source_name": "Space Weather",
+        "raw_type": "journal-article"
+      }
+    },
+    {
+      "id": "https://openalex.org/W3105098767",
+      "display_name": "Machine learning for metabolic engineering: A review",
+      "authorships": [
+        {
+          "author_position": "first",
+          "author": {
+            "id": "https://openalex.org/A5069394957",
+            "display_name": "Christopher E. Lawson",
+            "orcid": "https://orcid.org/0000-0002-3473-1640"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148283060",
+              "display_name": "Lawrence Berkeley National Laboratory",
+              "ror": "https://ror.org/02jbv0t02",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I148283060",
+                "https://openalex.org/I39565521"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I53012624",
+              "display_name": "Joint BioEnergy Institute",
+              "ror": "https://ror.org/03ww55028",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Christopher E. Lawson",
+          "raw_affiliation_strings": [
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+            "Joint BioEnergy Institute, Emeryville, CA, 94608, USA"
+          ],
+          "raw_orcid": "https://orcid.org/0000-0002-3473-1640",
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5087748920",
+            "display_name": "Jose Manuel Martí",
+            "orcid": "https://orcid.org/0000-0002-1902-9749"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148283060",
+              "display_name": "Lawrence Berkeley National Laboratory",
+              "ror": "https://ror.org/02jbv0t02",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I148283060",
+                "https://openalex.org/I39565521"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I53012624",
+              "display_name": "Joint BioEnergy Institute",
+              "ror": "https://ror.org/03ww55028",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Jose Manuel Martí",
+          "raw_affiliation_strings": [
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+            "DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+            "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            },
+            {
+              "raw_affiliation_string": "DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+              "institution_ids": []
+            },
+            {
+              "raw_affiliation_string": "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5052321440",
+            "display_name": "Tijana Radivojević",
+            "orcid": "https://orcid.org/0000-0002-7165-2909"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148283060",
+              "display_name": "Lawrence Berkeley National Laboratory",
+              "ror": "https://ror.org/02jbv0t02",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I148283060",
+                "https://openalex.org/I39565521"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I53012624",
+              "display_name": "Joint BioEnergy Institute",
+              "ror": "https://ror.org/03ww55028",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Tijana Radivojevic",
+          "raw_affiliation_strings": [
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+            "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+            "DOE Agile BioFoundry, Emeryville, CA, 94608, USA"
+          ],
+          "raw_orcid": "https://orcid.org/0000-0002-7165-2909",
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            },
+            {
+              "raw_affiliation_string": "DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+              "institution_ids": []
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5032771948",
+            "display_name": "Sai Vamshi R. Jonnalagadda",
+            "orcid": "https://orcid.org/0000-0001-7327-238X"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148283060",
+              "display_name": "Lawrence Berkeley National Laboratory",
+              "ror": "https://ror.org/02jbv0t02",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I148283060",
+                "https://openalex.org/I39565521"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I53012624",
+              "display_name": "Joint BioEnergy Institute",
+              "ror": "https://ror.org/03ww55028",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Sai Vamshi R. Jonnalagadda",
+          "raw_affiliation_strings": [
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+            "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+            "DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            },
+            {
+              "raw_affiliation_string": "DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+              "institution_ids": []
+            },
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5029689658",
+            "display_name": "Reinhard Gentz",
+            "orcid": "https://orcid.org/0000-0002-7107-3448"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148283060",
+              "display_name": "Lawrence Berkeley National Laboratory",
+              "ror": "https://ror.org/02jbv0t02",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I148283060",
+                "https://openalex.org/I39565521"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I53012624",
+              "display_name": "Joint BioEnergy Institute",
+              "ror": "https://ror.org/03ww55028",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Reinhard Gentz",
+          "raw_affiliation_strings": [
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; Computational Research Division, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+            "Computational Research Division, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+            "Joint BioEnergy Institute, Emeryville, CA, 94608, USA"
+          ],
+          "raw_orcid": "https://orcid.org/0000-0002-7107-3448",
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; Computational Research Division, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Computational Research Division, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5063703987",
+            "display_name": "Nathan J. Hillson",
+            "orcid": "https://orcid.org/0000-0002-9169-3978"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148283060",
+              "display_name": "Lawrence Berkeley National Laboratory",
+              "ror": "https://ror.org/02jbv0t02",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I148283060",
+                "https://openalex.org/I39565521"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I53012624",
+              "display_name": "Joint BioEnergy Institute",
+              "ror": "https://ror.org/03ww55028",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Nathan J. Hillson",
+          "raw_affiliation_strings": [
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+            "DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+            "Joint BioEnergy Institute, Emeryville, CA, 94608, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+              "institution_ids": []
+            },
+            {
+              "raw_affiliation_string": "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5067720069",
+            "display_name": "Sean Peisert",
+            "orcid": "https://orcid.org/0000-0003-3566-9719"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148283060",
+              "display_name": "Lawrence Berkeley National Laboratory",
+              "ror": "https://ror.org/02jbv0t02",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I148283060",
+                "https://openalex.org/I39565521"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I84218800",
+              "display_name": "University of California, Davis",
+              "ror": "https://ror.org/05rrcem69",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I84218800"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Sean Peisert",
+          "raw_affiliation_strings": [
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Computational Research Division, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; University of California Davis, Davis, CA, 95616, USA",
+            "University of California Davis, Davis, CA, 95616, USA",
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+            "Computational Research Division, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA"
+          ],
+          "raw_orcid": "https://orcid.org/0000-0003-3566-9719",
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Computational Research Division, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; University of California Davis, Davis, CA, 95616, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "University of California Davis, Davis, CA, 95616, USA",
+              "institution_ids": [
+                "https://openalex.org/I84218800"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Computational Research Division, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5025386827",
+            "display_name": "Joonhoon Kim",
+            "orcid": "https://orcid.org/0000-0002-7425-1828"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I142606810",
+              "display_name": "Pacific Northwest National Laboratory",
+              "ror": "https://ror.org/05h992307",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1325736334",
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I142606810",
+                "https://openalex.org/I39565521"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I53012624",
+              "display_name": "Joint BioEnergy Institute",
+              "ror": "https://ror.org/03ww55028",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Joonhoon Kim",
+          "raw_affiliation_strings": [
+            "Joint BioEnergy Institute, Emeryville, CA, 94608, USA; Pacific Northwest National Laboratory, Richland, 99354, WA, USA",
+            "Pacific Northwest National Laboratory, Richland, 99354, WA, USA",
+            "Joint BioEnergy Institute, Emeryville, CA, 94608, USA"
+          ],
+          "raw_orcid": "https://orcid.org/0000-0002-7425-1828",
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Joint BioEnergy Institute, Emeryville, CA, 94608, USA; Pacific Northwest National Laboratory, Richland, 99354, WA, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624",
+                "https://openalex.org/I142606810"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Pacific Northwest National Laboratory, Richland, 99354, WA, USA",
+              "institution_ids": [
+                "https://openalex.org/I142606810"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5073802212",
+            "display_name": "Blake A. Simmons",
+            "orcid": "https://orcid.org/0000-0002-1332-1810"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148283060",
+              "display_name": "Lawrence Berkeley National Laboratory",
+              "ror": "https://ror.org/02jbv0t02",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I148283060",
+                "https://openalex.org/I39565521"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I53012624",
+              "display_name": "Joint BioEnergy Institute",
+              "ror": "https://ror.org/03ww55028",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Blake A. Simmons",
+          "raw_affiliation_strings": [
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+            "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+            "DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            },
+            {
+              "raw_affiliation_string": "DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+              "institution_ids": []
+            },
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5019804925",
+            "display_name": "Christopher J. Petzold",
+            "orcid": "https://orcid.org/0000-0002-8270-5228"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148283060",
+              "display_name": "Lawrence Berkeley National Laboratory",
+              "ror": "https://ror.org/02jbv0t02",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I148283060",
+                "https://openalex.org/I39565521"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I53012624",
+              "display_name": "Joint BioEnergy Institute",
+              "ror": "https://ror.org/03ww55028",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Christopher J. Petzold",
+          "raw_affiliation_strings": [
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+            "DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+            "Joint BioEnergy Institute, Emeryville, CA, 94608, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            },
+            {
+              "raw_affiliation_string": "DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+              "institution_ids": []
+            },
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5022026178",
+            "display_name": "Steven W. Singer",
+            "orcid": "https://orcid.org/0000-0002-4229-8314"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148283060",
+              "display_name": "Lawrence Berkeley National Laboratory",
+              "ror": "https://ror.org/02jbv0t02",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I148283060",
+                "https://openalex.org/I39565521"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I53012624",
+              "display_name": "Joint BioEnergy Institute",
+              "ror": "https://ror.org/03ww55028",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Steven W. Singer",
+          "raw_affiliation_strings": [
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+            "Joint BioEnergy Institute, Emeryville, CA, 94608, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5021331494",
+            "display_name": "Aindrila Mukhopadhyay",
+            "orcid": "https://orcid.org/0000-0002-6513-7425"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148283060",
+              "display_name": "Lawrence Berkeley National Laboratory",
+              "ror": "https://ror.org/02jbv0t02",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I148283060",
+                "https://openalex.org/I39565521"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I53012624",
+              "display_name": "Joint BioEnergy Institute",
+              "ror": "https://ror.org/03ww55028",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Aindrila Mukhopadhyay",
+          "raw_affiliation_strings": [
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; Environmental Genomics and Systems Biology Division, Lawrence Berkeley National Laboratory, USA",
+            "Environmental Genomics and Systems Biology Division, Lawrence Berkeley National Laboratory, USA",
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+            "Joint BioEnergy Institute, Emeryville, CA, 94608, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; Environmental Genomics and Systems Biology Division, Lawrence Berkeley National Laboratory, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Environmental Genomics and Systems Biology Division, Lawrence Berkeley National Laboratory, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5024413095",
+            "display_name": "Deepti Tanjore",
+            "orcid": "https://orcid.org/0000-0001-6507-4359"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148283060",
+              "display_name": "Lawrence Berkeley National Laboratory",
+              "ror": "https://ror.org/02jbv0t02",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I148283060",
+                "https://openalex.org/I39565521"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Deepti Tanjore",
+          "raw_affiliation_strings": [
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Advanced Biofuels and Bioproducts Process Development Unit, Emeryville, CA, 94608, USA",
+            "Advanced Biofuels and Bioproducts Process Development Unit, Emeryville, CA, 94608, USA",
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Advanced Biofuels and Bioproducts Process Development Unit, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Advanced Biofuels and Bioproducts Process Development Unit, Emeryville, CA, 94608, USA",
+              "institution_ids": []
+            },
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5004710697",
+            "display_name": "Joshua G. Dunn",
+            "orcid": "https://orcid.org/0000-0003-4476-7257"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I4210120307",
+              "display_name": "Ginkgo Bioworks, Inc. (United States)",
+              "ror": "https://ror.org/0311zp875",
+              "country_code": "US",
+              "type": "company",
+              "lineage": [
+                "https://openalex.org/I4210120307"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Joshua G. Dunn",
+          "raw_affiliation_strings": [
+            "Ginkgo Bioworks, Boston, MA, 02210, USA"
+          ],
+          "raw_orcid": "https://orcid.org/0000-0003-4476-7257",
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Ginkgo Bioworks, Boston, MA, 02210, USA",
+              "institution_ids": [
+                "https://openalex.org/I4210120307"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "last",
+          "author": {
+            "id": "https://openalex.org/A5003905928",
+            "display_name": "Héctor García Martín",
+            "orcid": "https://orcid.org/0000-0002-4556-9685"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148283060",
+              "display_name": "Lawrence Berkeley National Laboratory",
+              "ror": "https://ror.org/02jbv0t02",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I148283060",
+                "https://openalex.org/I39565521"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I2802176441",
+              "display_name": "Basque Center for Applied Mathematics",
+              "ror": "https://ror.org/03b21sh32",
+              "country_code": "ES",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I2802176441"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I53012624",
+              "display_name": "Joint BioEnergy Institute",
+              "ror": "https://ror.org/03ww55028",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ],
+          "countries": [
+            "ES",
+            "US"
+          ],
+          "is_corresponding": true,
+          "raw_author_name": "Hector Garcia Martin",
+          "raw_affiliation_strings": [
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; DOE Agile BioFoundry, Emeryville, CA, 94608, USA; Basque Center for Applied Mathematics, 48009, Bilbao, Spain; Environmental Genomics and Systems Biology Division, Lawrence Berkeley National Laboratory, USA. Electronic address: hgmartin@lbl.gov",
+            "Environmental Genomics and Systems Biology Division, Lawrence Berkeley National Laboratory, USA",
+            "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+            "DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+            "Basque Center for Applied Mathematics, 48009, Bilbao, Spain",
+            "Joint BioEnergy Institute, Emeryville, CA, 94608, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA; Joint BioEnergy Institute, Emeryville, CA, 94608, USA; DOE Agile BioFoundry, Emeryville, CA, 94608, USA; Basque Center for Applied Mathematics, 48009, Bilbao, Spain; Environmental Genomics and Systems Biology Division, Lawrence Berkeley National Laboratory, USA. Electronic address: hgmartin@lbl.gov",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Environmental Genomics and Systems Biology Division, Lawrence Berkeley National Laboratory, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Biological Systems and Engineering, Lawrence Berkeley National Laboratory, Berkeley, CA, 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060"
+              ]
+            },
+            {
+              "raw_affiliation_string": "DOE Agile BioFoundry, Emeryville, CA, 94608, USA",
+              "institution_ids": []
+            },
+            {
+              "raw_affiliation_string": "Basque Center for Applied Mathematics, 48009, Bilbao, Spain",
+              "institution_ids": [
+                "https://openalex.org/I2802176441"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Joint BioEnergy Institute, Emeryville, CA, 94608, USA",
+              "institution_ids": [
+                "https://openalex.org/I53012624"
+              ]
+            }
+          ]
+        }
+      ],
+      "publication_year": 2020,
+      "doi": "https://doi.org/10.1016/j.ymben.2020.10.005",
+      "abstract_inverted_index": {
+        "Machine": [
+          0
+        ],
+        "learning": [
+          1,
+          93
+        ],
+        "provides": [
+          2
+        ],
+        "researchers": [
+          3
+        ],
+        "a": [
+          4
+        ],
+        "unique": [
+          5
+        ],
+        "opportunity": [
+          6
+        ],
+        "to": [
+          7,
+          20,
+          28,
+          75
+        ],
+        "make": [
+          8
+        ],
+        "metabolic": [
+          9,
+          29
+        ],
+        "engineering": [
+          10
+        ],
+        "more": [
+          11
+        ],
+        "predictable.": [
+          12
+        ],
+        "In": [
+          13
+        ],
+        "this": [
+          14,
+          21,
+          109
+        ],
+        "review,": [
+          15
+        ],
+        "we": [
+          16
+        ],
+        "offer": [
+          17
+        ],
+        "an": [
+          18
+        ],
+        "introduction": [
+          19
+        ],
+        "discipline": [
+          22
+        ],
+        "in": [
+          23,
+          52
+        ],
+        "terms": [
+          24,
+          53
+        ],
+        "that": [
+          25
+        ],
+        "are": [
+          26,
+          85,
+          113
+        ],
+        "relatable": [
+          27
+        ],
+        "engineers,": [
+          30
+        ],
+        "as": [
+          31,
+          33
+        ],
+        "well": [
+          32
+        ],
+        "providing": [
+          34
+        ],
+        "in-depth": [
+          35
+        ],
+        "illustrative": [
+          36
+        ],
+        "examples": [
+          37
+        ],
+        "leveraging": [
+          38
+        ],
+        "omics": [
+          39
+        ],
+        "data": [
+          40,
+          55
+        ],
+        "and": [
+          41,
+          61,
+          73,
+          82,
+          94,
+          104
+        ],
+        "improving": [
+          42
+        ],
+        "production.": [
+          43
+        ],
+        "We": [
+          44
+        ],
+        "also": [
+          45
+        ],
+        "include": [
+          46
+        ],
+        "practical": [
+          47
+        ],
+        "advice": [
+          48
+        ],
+        "for": [
+          49,
+          108
+        ],
+        "the": [
+          50,
+          88,
+          101
+        ],
+        "practitioner": [
+          51
+        ],
+        "of": [
+          54,
+          67,
+          111
+        ],
+        "management,": [
+          56
+        ],
+        "algorithm": [
+          57
+        ],
+        "libraries,": [
+          58
+        ],
+        "computational": [
+          59
+        ],
+        "resources,": [
+          60
+        ],
+        "important": [
+          62
+        ],
+        "non-technical": [
+          63
+        ],
+        "issues.": [
+          64
+        ],
+        "A": [
+          65
+        ],
+        "variety": [
+          66
+        ],
+        "applications": [
+          68
+        ],
+        "ranging": [
+          69
+        ],
+        "from": [
+          70
+        ],
+        "pathway": [
+          71
+        ],
+        "construction": [
+          72
+        ],
+        "optimization,": [
+          74,
+          78
+        ],
+        "genetic": [
+          76
+        ],
+        "editing": [
+          77
+        ],
+        "cell": [
+          79
+        ],
+        "factory": [
+          80
+        ],
+        "testing,": [
+          81
+        ],
+        "production": [
+          83
+        ],
+        "scale-up": [
+          84
+        ],
+        "discussed.": [
+          86
+        ],
+        "Moreover,": [
+          87
+        ],
+        "promising": [
+          89,
+          106
+        ],
+        "relationship": [
+          90
+        ],
+        "between": [
+          91
+        ],
+        "machine": [
+          92
+        ],
+        "mechanistic": [
+          95
+        ],
+        "models": [
+          96
+        ],
+        "is": [
+          97
+        ],
+        "thoroughly": [
+          98
+        ],
+        "reviewed.": [
+          99
+        ],
+        "Finally,": [
+          100
+        ],
+        "future": [
+          102
+        ],
+        "perspectives": [
+          103
+        ],
+        "most": [
+          105
+        ],
+        "directions": [
+          107
+        ],
+        "combination": [
+          110
+        ],
+        "disciplines": [
+          112
+        ],
+        "examined.": [
+          114
+        ]
+      },
+      "cited_by_count": 306,
+      "primary_location": {
+        "id": "doi:10.1016/j.ymben.2020.10.005",
+        "is_oa": true,
+        "landing_page_url": "https://doi.org/10.1016/j.ymben.2020.10.005",
+        "pdf_url": "https://www.sciencedirect.com/science/article/am/pii/S109671762030166X?via%3Dihub",
+        "source": {
+          "id": "https://openalex.org/S173328182",
+          "display_name": "Metabolic Engineering",
+          "issn_l": "1096-7176",
+          "issn": [
+            "1096-7176",
+            "1096-7184"
+          ],
+          "is_oa": false,
+          "is_in_doaj": false,
+          "is_core": true,
+          "host_organization": "https://openalex.org/P4310320990",
+          "host_organization_name": "Elsevier BV",
+          "host_organization_lineage": [
+            "https://openalex.org/P4310320990"
+          ],
+          "host_organization_lineage_names": [
+            "Elsevier BV"
+          ],
+          "type": "journal"
+        },
+        "license": "cc-by",
+        "license_id": "https://openalex.org/licenses/cc-by",
+        "version": "publishedVersion",
+        "is_accepted": true,
+        "is_published": true,
+        "raw_source_name": "Metabolic Engineering",
+        "raw_type": "journal-article"
+      }
+    },
+    {
+      "id": "https://openalex.org/W2078829410",
+      "display_name": "Classification of Spectra of Emission Line Stars Using Machine Learning Techniques",
+      "authorships": [
+        {
+          "author_position": "first",
+          "author": {
+            "id": "https://openalex.org/A5024990576",
+            "display_name": "Pavla Bromová",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I60587646",
+              "display_name": "Brno University of Technology",
+              "ror": "https://ror.org/03613d656",
+              "country_code": "CZ",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I60587646"
+              ]
+            }
+          ],
+          "countries": [
+            "CZ"
+          ],
+          "is_corresponding": true,
+          "raw_author_name": "Pavla Bromová",
+          "raw_affiliation_strings": [
+            "Faculty of Information Technology, Brno University of Technology, Božetěchova 1/2, 612 66, Brno, Czech Republic",
+            "Faculty of Information Technology, Brno, University of Technology, Brno, Czech Republic 612 66#TAB#"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Faculty of Information Technology, Brno University of Technology, Božetěchova 1/2, 612 66, Brno, Czech Republic",
+              "institution_ids": [
+                "https://openalex.org/I60587646"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Faculty of Information Technology, Brno, University of Technology, Brno, Czech Republic 612 66#TAB#",
+              "institution_ids": [
+                "https://openalex.org/I60587646"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5031369136",
+            "display_name": "Petr Škoda",
+            "orcid": "https://orcid.org/0000-0002-7434-9518"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I202391551",
+              "display_name": "Czech Academy of Sciences",
+              "ror": "https://ror.org/053avzc18",
+              "country_code": "CZ",
+              "type": "government",
+              "lineage": [
+                "https://openalex.org/I202391551"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I2800512976",
+              "display_name": "Czech Academy of Sciences, Astronomical Institute",
+              "ror": "https://ror.org/03tp8z347",
+              "country_code": "CZ",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I202391551",
+                "https://openalex.org/I2800512976"
+              ]
+            }
+          ],
+          "countries": [
+            "CZ"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Petr Škoda",
+          "raw_affiliation_strings": [
+            "Astronomical Institute of the Academy of Sciences of the Czech Republic, Fričova 298, 251 65, Ondřejov, Czech Republic",
+            "Astronomical Institute of the Academy of Sciences of the Czech Republic, Ondřejov, Czech Republic 251 65#TAB#"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Astronomical Institute of the Academy of Sciences of the Czech Republic, Fričova 298, 251 65, Ondřejov, Czech Republic",
+              "institution_ids": [
+                "https://openalex.org/I2800512976"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Astronomical Institute of the Academy of Sciences of the Czech Republic, Ondřejov, Czech Republic 251 65#TAB#",
+              "institution_ids": [
+                "https://openalex.org/I202391551"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "last",
+          "author": {
+            "id": "https://openalex.org/A5083042068",
+            "display_name": "Jaroslav Vážný",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I202391551",
+              "display_name": "Czech Academy of Sciences",
+              "ror": "https://ror.org/053avzc18",
+              "country_code": "CZ",
+              "type": "government",
+              "lineage": [
+                "https://openalex.org/I202391551"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I2800512976",
+              "display_name": "Czech Academy of Sciences, Astronomical Institute",
+              "ror": "https://ror.org/03tp8z347",
+              "country_code": "CZ",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I202391551",
+                "https://openalex.org/I2800512976"
+              ]
+            }
+          ],
+          "countries": [
+            "CZ"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Jaroslav Vážný",
+          "raw_affiliation_strings": [
+            "Astronomical Institute of the Academy of Sciences of the Czech Republic, Fričova 298, 251 65, Ondřejov, Czech Republic",
+            "Astronomical Institute of the Academy of Sciences of the Czech Republic, Ondřejov, Czech Republic 251 65#TAB#"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Astronomical Institute of the Academy of Sciences of the Czech Republic, Fričova 298, 251 65, Ondřejov, Czech Republic",
+              "institution_ids": [
+                "https://openalex.org/I2800512976"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Astronomical Institute of the Academy of Sciences of the Czech Republic, Ondřejov, Czech Republic 251 65#TAB#",
+              "institution_ids": [
+                "https://openalex.org/I202391551"
+              ]
+            }
+          ]
+        }
+      ],
+      "publication_year": 2014,
+      "doi": "https://doi.org/10.1007/s11633-014-0789-2",
+      "abstract_inverted_index": null,
+      "cited_by_count": 47,
+      "primary_location": {
+        "id": "doi:10.1007/s11633-014-0789-2",
+        "is_oa": false,
+        "landing_page_url": "https://doi.org/10.1007/s11633-014-0789-2",
+        "pdf_url": null,
+        "source": {
+          "id": "https://openalex.org/S28082686",
+          "display_name": "International Journal of Automation and Computing",
+          "issn_l": "1476-8186",
+          "issn": [
+            "1476-8186",
+            "1751-8520"
+          ],
+          "is_oa": false,
+          "is_in_doaj": false,
+          "is_core": true,
+          "host_organization": "https://openalex.org/P4310319900",
+          "host_organization_name": "Springer Science+Business Media",
+          "host_organization_lineage": [
+            "https://openalex.org/P4310319900",
+            "https://openalex.org/P4310319965"
+          ],
+          "host_organization_lineage_names": [
+            "Springer Science+Business Media",
+            "Springer Nature"
+          ],
+          "type": "journal"
+        },
+        "license": null,
+        "license_id": null,
+        "version": "publishedVersion",
+        "is_accepted": true,
+        "is_published": true,
+        "raw_source_name": "International Journal of Automation and Computing",
+        "raw_type": "journal-article"
+      }
+    },
+    {
+      "id": "https://openalex.org/W3119472565",
+      "display_name": "Tackling Photonic Inverse Design with Machine Learning",
+      "authorships": [
+        {
+          "author_position": "first",
+          "author": {
+            "id": "https://openalex.org/A5070698492",
+            "display_name": "Zhaocheng Liu",
+            "orcid": "https://orcid.org/0000-0001-6623-9231"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I130701444",
+              "display_name": "Georgia Institute of Technology",
+              "ror": "https://ror.org/01zkghx44",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I130701444"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": true,
+          "raw_author_name": "Zhaocheng Liu",
+          "raw_affiliation_strings": [
+            "School of Electrical and Computer Engineering Georgia Institute of Technology  Atlanta GA 30332 USA",
+            "School of Electrical and Computer Engineering, Georgia Institute of Technology, Atlanta, GA, 30332 USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "School of Electrical and Computer Engineering Georgia Institute of Technology  Atlanta GA 30332 USA",
+              "institution_ids": [
+                "https://openalex.org/I130701444"
+              ]
+            },
+            {
+              "raw_affiliation_string": "School of Electrical and Computer Engineering, Georgia Institute of Technology, Atlanta, GA, 30332 USA",
+              "institution_ids": [
+                "https://openalex.org/I130701444"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5029175114",
+            "display_name": "Dayu Zhu",
+            "orcid": "https://orcid.org/0000-0002-7887-7676"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I130701444",
+              "display_name": "Georgia Institute of Technology",
+              "ror": "https://ror.org/01zkghx44",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I130701444"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Dayu Zhu",
+          "raw_affiliation_strings": [
+            "School of Electrical and Computer Engineering Georgia Institute of Technology  Atlanta GA 30332 USA",
+            "School of Electrical and Computer Engineering, Georgia Institute of Technology, Atlanta, GA, 30332 USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "School of Electrical and Computer Engineering Georgia Institute of Technology  Atlanta GA 30332 USA",
+              "institution_ids": [
+                "https://openalex.org/I130701444"
+              ]
+            },
+            {
+              "raw_affiliation_string": "School of Electrical and Computer Engineering, Georgia Institute of Technology, Atlanta, GA, 30332 USA",
+              "institution_ids": [
+                "https://openalex.org/I130701444"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5072707876",
+            "display_name": "Lakshmi Raju",
+            "orcid": "https://orcid.org/0000-0003-2450-8856"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I130701444",
+              "display_name": "Georgia Institute of Technology",
+              "ror": "https://ror.org/01zkghx44",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I130701444"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Lakshmi Raju",
+          "raw_affiliation_strings": [
+            "School of Electrical and Computer Engineering Georgia Institute of Technology  Atlanta GA 30332 USA",
+            "School of Electrical and Computer Engineering, Georgia Institute of Technology, Atlanta, GA, 30332 USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "School of Electrical and Computer Engineering Georgia Institute of Technology  Atlanta GA 30332 USA",
+              "institution_ids": [
+                "https://openalex.org/I130701444"
+              ]
+            },
+            {
+              "raw_affiliation_string": "School of Electrical and Computer Engineering, Georgia Institute of Technology, Atlanta, GA, 30332 USA",
+              "institution_ids": [
+                "https://openalex.org/I130701444"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "last",
+          "author": {
+            "id": "https://openalex.org/A5003762748",
+            "display_name": "Wenshan Cai",
+            "orcid": "https://orcid.org/0000-0002-6367-3857"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I130701444",
+              "display_name": "Georgia Institute of Technology",
+              "ror": "https://ror.org/01zkghx44",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I130701444"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": true,
+          "raw_author_name": "Wenshan Cai",
+          "raw_affiliation_strings": [
+            "School of Electrical and Computer Engineering Georgia Institute of Technology  Atlanta GA 30332 USA",
+            "School of Materials Science and Engineering Georgia Institute of Technology  Atlanta GA 30332 USA",
+            "School of Electrical and Computer Engineering, Georgia Institute of Technology, Atlanta, GA, 30332 USA",
+            "School of Materials Science and Engineering, Georgia Institute of Technology, Atlanta, GA, 30332 USA"
+          ],
+          "raw_orcid": "https://orcid.org/0000-0002-6367-3857",
+          "affiliations": [
+            {
+              "raw_affiliation_string": "School of Electrical and Computer Engineering Georgia Institute of Technology  Atlanta GA 30332 USA",
+              "institution_ids": [
+                "https://openalex.org/I130701444"
+              ]
+            },
+            {
+              "raw_affiliation_string": "School of Materials Science and Engineering Georgia Institute of Technology  Atlanta GA 30332 USA",
+              "institution_ids": [
+                "https://openalex.org/I130701444"
+              ]
+            },
+            {
+              "raw_affiliation_string": "School of Electrical and Computer Engineering, Georgia Institute of Technology, Atlanta, GA, 30332 USA",
+              "institution_ids": [
+                "https://openalex.org/I130701444"
+              ]
+            },
+            {
+              "raw_affiliation_string": "School of Materials Science and Engineering, Georgia Institute of Technology, Atlanta, GA, 30332 USA",
+              "institution_ids": [
+                "https://openalex.org/I130701444"
+              ]
+            }
+          ]
+        }
+      ],
+      "publication_year": 2021,
+      "doi": "https://doi.org/10.1002/advs.202002923",
+      "abstract_inverted_index": {
+        "Machine": [
+          0
+        ],
+        "learning,": [
+          1
+        ],
+        "as": [
+          2,
+          90
+        ],
+        "a": [
+          3,
+          123
+        ],
+        "study": [
+          4,
+          26
+        ],
+        "of": [
+          5,
+          19,
+          27,
+          86,
+          106,
+          125
+        ],
+        "algorithms": [
+          6
+        ],
+        "that": [
+          7
+        ],
+        "automate": [
+          8
+        ],
+        "prediction": [
+          9
+        ],
+        "and": [
+          10,
+          53,
+          73,
+          88
+        ],
+        "decision-making": [
+          11
+        ],
+        "based": [
+          12
+        ],
+        "on": [
+          13
+        ],
+        "complex": [
+          14
+        ],
+        "data,": [
+          15
+        ],
+        "has": [
+          16,
+          80
+        ],
+        "become": [
+          17
+        ],
+        "one": [
+          18
+        ],
+        "the": [
+          20,
+          25,
+          64,
+          84,
+          96,
+          103,
+          112
+        ],
+        "most": [
+          21
+        ],
+        "effective": [
+          22
+        ],
+        "tools": [
+          23
+        ],
+        "in": [
+          24,
+          46,
+          63,
+          83,
+          111
+        ],
+        "artificial": [
+          28
+        ],
+        "intelligence.": [
+          29
+        ],
+        "In": [
+          30,
+          100,
+          118
+        ],
+        "recent": [
+          31
+        ],
+        "years,": [
+          32
+        ],
+        "scientific": [
+          33
+        ],
+        "communities": [
+          34
+        ],
+        "have": [
+          35
+        ],
+        "been": [
+          36,
+          81
+        ],
+        "gradually": [
+          37
+        ],
+        "merging": [
+          38
+        ],
+        "data-driven": [
+          39
+        ],
+        "approaches": [
+          40
+        ],
+        "with": [
+          41,
+          130
+        ],
+        "research,": [
+          42
+        ],
+        "enabling": [
+          43
+        ],
+        "dramatic": [
+          44
+        ],
+        "progress": [
+          45
+        ],
+        "revealing": [
+          47
+        ],
+        "underlying": [
+          48
+        ],
+        "mechanisms,": [
+          49
+        ],
+        "predicting": [
+          50
+        ],
+        "essential": [
+          51
+        ],
+        "properties,": [
+          52
+        ],
+        "discovering": [
+          54
+        ],
+        "unconventional": [
+          55
+        ],
+        "phenomena.": [
+          56
+        ],
+        "It": [
+          57
+        ],
+        "is": [
+          58
+        ],
+        "becoming": [
+          59
+        ],
+        "an": [
+          60,
+          91
+        ],
+        "indispensable": [
+          61
+        ],
+        "tool": [
+          62
+        ],
+        "fields": [
+          65
+        ],
+        "of,": [
+          66
+        ],
+        "for": [
+          67
+        ],
+        "instance,": [
+          68
+        ],
+        "quantum": [
+          69
+        ],
+        "physics,": [
+          70
+        ],
+        "organic": [
+          71
+        ],
+        "chemistry,": [
+          72
+        ],
+        "medical": [
+          74
+        ],
+        "imaging.": [
+          75
+        ],
+        "Very": [
+          76
+        ],
+        "recently,": [
+          77
+        ],
+        "machine": [
+          78,
+          126
+        ],
+        "learning": [
+          79,
+          121,
+          127
+        ],
+        "adopted": [
+          82
+        ],
+        "research": [
+          85
+        ],
+        "photonics": [
+          87
+        ],
+        "optics": [
+          89
+        ],
+        "alternative": [
+          92
+        ],
+        "approach": [
+          93
+        ],
+        "to": [
+          94
+        ],
+        "address": [
+          95
+        ],
+        "inverse": [
+          97
+        ],
+        "design": [
+          98,
+          109,
+          135
+        ],
+        "problem.": [
+          99
+        ],
+        "this": [
+          101
+        ],
+        "report,": [
+          102
+        ],
+        "fast": [
+          104
+        ],
+        "advances": [
+          105
+        ],
+        "machine-learning-enabled": [
+          107
+        ],
+        "photonic": [
+          108
+        ],
+        "strategies": [
+          110
+        ],
+        "past": [
+          113
+        ],
+        "few": [
+          114
+        ],
+        "years": [
+          115
+        ],
+        "are": [
+          116,
+          136
+        ],
+        "summarized.": [
+          117
+        ],
+        "particular,": [
+          119
+        ],
+        "deep": [
+          120
+        ],
+        "methods,": [
+          122
+        ],
+        "subset": [
+          124
+        ],
+        "algorithms,": [
+          128
+        ],
+        "dealing": [
+          129
+        ],
+        "intractable": [
+          131
+        ],
+        "high": [
+          132
+        ],
+        "degrees-of-freedom": [
+          133
+        ],
+        "structure": [
+          134
+        ],
+        "focused": [
+          137
+        ],
+        "upon.": [
+          138
+        ]
+      },
+      "cited_by_count": 207,
+      "primary_location": {
+        "id": "doi:10.1002/advs.202002923",
+        "is_oa": true,
+        "landing_page_url": "https://doi.org/10.1002/advs.202002923",
+        "pdf_url": null,
+        "source": {
+          "id": "https://openalex.org/S2737737698",
+          "display_name": "Advanced Science",
+          "issn_l": "2198-3844",
+          "issn": [
+            "2198-3844"
+          ],
+          "is_oa": true,
+          "is_in_doaj": true,
+          "is_core": true,
+          "host_organization": "https://openalex.org/P4310320595",
+          "host_organization_name": "Wiley",
+          "host_organization_lineage": [
+            "https://openalex.org/P4310320595"
+          ],
+          "host_organization_lineage_names": [
+            "Wiley"
+          ],
+          "type": "journal"
+        },
+        "license": "cc-by",
+        "license_id": "https://openalex.org/licenses/cc-by",
+        "version": "publishedVersion",
+        "is_accepted": true,
+        "is_published": true,
+        "raw_source_name": "Advanced Science",
+        "raw_type": "journal-article"
+      }
+    },
+    {
+      "id": "https://openalex.org/W3009386672",
+      "display_name": "Machine-Learning Methods for Computational Science and Engineering",
+      "authorships": [
+        {
+          "author_position": "first",
+          "author": {
+            "id": "https://openalex.org/A5013101570",
+            "display_name": "Michael Frank",
+            "orcid": "https://orcid.org/0000-0003-1684-0939"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I181647926",
+              "display_name": "University of Strathclyde",
+              "ror": "https://ror.org/00n3w3b69",
+              "country_code": "GB",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I181647926"
+              ]
+            }
+          ],
+          "countries": [
+            "GB"
+          ],
+          "is_corresponding": true,
+          "raw_author_name": "Michael Frank",
+          "raw_affiliation_strings": [
+            "Department of Mechanical and Aerospace Engineering, University of Strathclyde, Glasgow G1 1XJ, UK"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Mechanical and Aerospace Engineering, University of Strathclyde, Glasgow G1 1XJ, UK",
+              "institution_ids": [
+                "https://openalex.org/I181647926"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5086465022",
+            "display_name": "Dimitris Drikakis",
+            "orcid": "https://orcid.org/0000-0002-3300-7669"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I17389662",
+              "display_name": "University of Nicosia",
+              "ror": "https://ror.org/04v18t651",
+              "country_code": "CY",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I17389662"
+              ]
+            }
+          ],
+          "countries": [
+            "CY"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Dimitris Drikakis",
+          "raw_affiliation_strings": [
+            "Defence and Security Research Institute, University of Nicosia, CY-2417 Nicosia, Cyprus"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Defence and Security Research Institute, University of Nicosia, CY-2417 Nicosia, Cyprus",
+              "institution_ids": [
+                "https://openalex.org/I17389662"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "last",
+          "author": {
+            "id": "https://openalex.org/A5042173179",
+            "display_name": "Vassilis Charissis",
+            "orcid": "https://orcid.org/0000-0002-4195-843X"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I195939026",
+              "display_name": "Glasgow Caledonian University",
+              "ror": "https://ror.org/03dvm1235",
+              "country_code": "GB",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I195939026"
+              ]
+            }
+          ],
+          "countries": [
+            "GB"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Vassilis Charissis",
+          "raw_affiliation_strings": [
+            "School of Computing, Engineering and Built Environment, Glasgow Caledonian University, Glasgow G4 0BA, UK"
+          ],
+          "raw_orcid": "https://orcid.org/0000-0002-4195-843X",
+          "affiliations": [
+            {
+              "raw_affiliation_string": "School of Computing, Engineering and Built Environment, Glasgow Caledonian University, Glasgow G4 0BA, UK",
+              "institution_ids": [
+                "https://openalex.org/I195939026"
+              ]
+            }
+          ]
+        }
+      ],
+      "publication_year": 2020,
+      "doi": "https://doi.org/10.3390/computation8010015",
+      "abstract_inverted_index": {
+        "The": [
+          0
+        ],
+        "re-kindled": [
+          1
+        ],
+        "fascination": [
+          2
+        ],
+        "in": [
+          3,
+          26,
+          32,
+          46
+        ],
+        "machine": [
+          4
+        ],
+        "learning": [
+          5
+        ],
+        "(ML),": [
+          6
+        ],
+        "observed": [
+          7
+        ],
+        "over": [
+          8
+        ],
+        "the": [
+          9,
+          44,
+          64,
+          81,
+          96,
+          99
+        ],
+        "last": [
+          10
+        ],
+        "few": [
+          11
+        ],
+        "decades,": [
+          12
+        ],
+        "has": [
+          13,
+          138
+        ],
+        "also": [
+          14,
+          106
+        ],
+        "percolated": [
+          15
+        ],
+        "into": [
+          16
+        ],
+        "natural": [
+          17
+        ],
+        "sciences": [
+          18
+        ],
+        "and": [
+          19,
+          34,
+          51,
+          76,
+          131,
+          145
+        ],
+        "engineering.": [
+          20,
+          52
+        ],
+        "ML": [
+          21,
+          47,
+          58,
+          84,
+          109,
+          137
+        ],
+        "algorithms": [
+          22
+        ],
+        "are": [
+          23
+        ],
+        "now": [
+          24
+        ],
+        "used": [
+          25,
+          112,
+          140
+        ],
+        "scientific": [
+          27,
+          124
+        ],
+        "computing,": [
+          28
+        ],
+        "as": [
+          29,
+          31,
+          70,
+          120,
+          127
+        ],
+        "well": [
+          30
+        ],
+        "data-mining": [
+          33
+        ],
+        "processing.": [
+          35
+        ],
+        "In": [
+          36
+        ],
+        "this": [
+          37
+        ],
+        "paper,": [
+          38
+        ],
+        "we": [
+          39,
+          134
+        ],
+        "provide": [
+          40
+        ],
+        "a": [
+          41
+        ],
+        "review": [
+          42,
+          135
+        ],
+        "of": [
+          43,
+          56,
+          66,
+          83,
+          91,
+          117
+        ],
+        "state-of-the-art": [
+          45
+        ],
+        "for": [
+          48,
+          98
+        ],
+        "computational": [
+          49,
+          71
+        ],
+        "science": [
+          50
+        ],
+        "We": [
+          53,
+          79,
+          105
+        ],
+        "discuss": [
+          54,
+          107
+        ],
+        "ways": [
+          55
+        ],
+        "using": [
+          57,
+          119
+        ],
+        "to": [
+          59,
+          85,
+          113,
+          141
+        ],
+        "speed": [
+          60
+        ],
+        "up": [
+          61
+        ],
+        "or": [
+          62
+        ],
+        "improve": [
+          63
+        ],
+        "quality": [
+          65
+        ],
+        "simulation": [
+          67,
+          102
+        ],
+        "techniques": [
+          68,
+          103
+        ],
+        "such": [
+          69,
+          126
+        ],
+        "fluid": [
+          72
+        ],
+        "dynamics,": [
+          73,
+          75
+        ],
+        "molecular": [
+          74
+        ],
+        "structural": [
+          77
+        ],
+        "analysis.": [
+          78
+        ],
+        "explore": [
+          80
+        ],
+        "ability": [
+          82
+        ],
+        "produce": [
+          86
+        ],
+        "computationally": [
+          87
+        ],
+        "efficient": [
+          88
+        ],
+        "surrogate": [
+          89
+        ],
+        "models": [
+          90
+        ],
+        "physical": [
+          92
+        ],
+        "applications": [
+          93
+        ],
+        "that": [
+          94
+        ],
+        "circumvent": [
+          95
+        ],
+        "need": [
+          97
+        ],
+        "more": [
+          100,
+          143
+        ],
+        "expensive": [
+          101
+        ],
+        "entirely.": [
+          104
+        ],
+        "how": [
+          108,
+          136
+        ],
+        "can": [
+          110
+        ],
+        "be": [
+          111
+        ],
+        "process": [
+          114
+        ],
+        "large": [
+          115
+        ],
+        "amounts": [
+          116
+        ],
+        "data,": [
+          118
+        ],
+        "examples": [
+          121
+        ],
+        "many": [
+          122
+        ],
+        "different": [
+          123
+        ],
+        "fields,": [
+          125
+        ],
+        "engineering,": [
+          128
+        ],
+        "medicine,": [
+          129
+        ],
+        "astronomy": [
+          130
+        ],
+        "computing.": [
+          132
+        ],
+        "Finally,": [
+          133
+        ],
+        "been": [
+          139
+        ],
+        "create": [
+          142
+        ],
+        "realistic": [
+          144
+        ],
+        "responsive": [
+          146
+        ],
+        "virtual": [
+          147
+        ],
+        "reality": [
+          148
+        ],
+        "applications.": [
+          149
+        ]
+      },
+      "cited_by_count": 212,
+      "primary_location": {
+        "id": "doi:10.3390/computation8010015",
+        "is_oa": true,
+        "landing_page_url": "https://doi.org/10.3390/computation8010015",
+        "pdf_url": "https://www.mdpi.com/2079-3197/8/1/15/pdf?version=1583246110",
+        "source": {
+          "id": "https://openalex.org/S2738402919",
+          "display_name": "Computation",
+          "issn_l": "2079-3197",
+          "issn": [
+            "2079-3197"
+          ],
+          "is_oa": true,
+          "is_in_doaj": true,
+          "is_core": true,
+          "host_organization": "https://openalex.org/P4310310987",
+          "host_organization_name": "Multidisciplinary Digital Publishing Institute",
+          "host_organization_lineage": [
+            "https://openalex.org/P4310310987"
+          ],
+          "host_organization_lineage_names": [
+            "Multidisciplinary Digital Publishing Institute"
+          ],
+          "type": "journal"
+        },
+        "license": "cc-by",
+        "license_id": "https://openalex.org/licenses/cc-by",
+        "version": "publishedVersion",
+        "is_accepted": true,
+        "is_published": true,
+        "raw_source_name": "Computation",
+        "raw_type": "journal-article"
+      }
+    },
+    {
+      "id": "https://openalex.org/W3093761498",
+      "display_name": "Astronomaly: Personalised active anomaly detection in astronomical data",
+      "authorships": [
+        {
+          "author_position": "first",
+          "author": {
+            "id": null,
+            "display_name": "M. Lochner",
+            "orcid": "https://orcid.org/0000-0003-2221-8281"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148561064",
+              "display_name": "African Institute for Mathematical Sciences",
+              "ror": "https://ror.org/02f9k5d27",
+              "country_code": "ZA",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I148561064"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I4210116079",
+              "display_name": "South African Radio Astronomy Observatory",
+              "ror": "https://ror.org/022j2n646",
+              "country_code": "ZA",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I4210116079",
+                "https://openalex.org/I866804994"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I869660684",
+              "display_name": "University of the Western Cape",
+              "ror": "https://ror.org/00h2vm590",
+              "country_code": "ZA",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I869660684"
+              ]
+            }
+          ],
+          "countries": [
+            "ZA"
+          ],
+          "is_corresponding": true,
+          "raw_author_name": "M. Lochner",
+          "raw_affiliation_strings": [
+            "African Institute for Mathematical Sciences, 6 Melrose Road, Muizenberg, 7945, South Africa",
+            "Department of Physics and Astronomy, University of the Western Cape, Bellville, Cape Town, 7535, South Africa",
+            "South African Radio Astronomy Observatory (SARAO), The Park, Park Road, Pinelands, Cape Town 7405, South Africa"
+          ],
+          "raw_orcid": "https://orcid.org/0000-0003-2221-8281",
+          "affiliations": [
+            {
+              "raw_affiliation_string": "African Institute for Mathematical Sciences, 6 Melrose Road, Muizenberg, 7945, South Africa",
+              "institution_ids": [
+                "https://openalex.org/I148561064"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Department of Physics and Astronomy, University of the Western Cape, Bellville, Cape Town, 7535, South Africa",
+              "institution_ids": [
+                "https://openalex.org/I869660684"
+              ]
+            },
+            {
+              "raw_affiliation_string": "South African Radio Astronomy Observatory (SARAO), The Park, Park Road, Pinelands, Cape Town 7405, South Africa",
+              "institution_ids": [
+                "https://openalex.org/I4210116079"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "last",
+          "author": {
+            "id": null,
+            "display_name": "B.A. Bassett",
+            "orcid": "https://orcid.org/0000-0001-7700-1069"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148561064",
+              "display_name": "African Institute for Mathematical Sciences",
+              "ror": "https://ror.org/02f9k5d27",
+              "country_code": "ZA",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I148561064"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I157614274",
+              "display_name": "University of Cape Town",
+              "ror": "https://ror.org/03p74gp79",
+              "country_code": "ZA",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I157614274"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I4210116079",
+              "display_name": "South African Radio Astronomy Observatory",
+              "ror": "https://ror.org/022j2n646",
+              "country_code": "ZA",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I4210116079",
+                "https://openalex.org/I866804994"
+              ]
+            }
+          ],
+          "countries": [
+            "ZA"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "B.A. Bassett",
+          "raw_affiliation_strings": [
+            "African Institute for Mathematical Sciences, 6 Melrose Road, Muizenberg, 7945, South Africa",
+            "Department of Maths and Applied Maths, University of Cape Town, Cape Town, South Africa",
+            "South African Astronomical Observatory, Observatory, Cape Town, 7925, South Africa",
+            "South African Radio Astronomy Observatory (SARAO), The Park, Park Road, Pinelands, Cape Town 7405, South Africa"
+          ],
+          "raw_orcid": "https://orcid.org/0000-0001-7700-1069",
+          "affiliations": [
+            {
+              "raw_affiliation_string": "African Institute for Mathematical Sciences, 6 Melrose Road, Muizenberg, 7945, South Africa",
+              "institution_ids": [
+                "https://openalex.org/I148561064"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Department of Maths and Applied Maths, University of Cape Town, Cape Town, South Africa",
+              "institution_ids": [
+                "https://openalex.org/I157614274"
+              ]
+            },
+            {
+              "raw_affiliation_string": "South African Astronomical Observatory, Observatory, Cape Town, 7925, South Africa",
+              "institution_ids": [
+                "https://openalex.org/I4210116079"
+              ]
+            },
+            {
+              "raw_affiliation_string": "South African Radio Astronomy Observatory (SARAO), The Park, Park Road, Pinelands, Cape Town 7405, South Africa",
+              "institution_ids": [
+                "https://openalex.org/I4210116079"
+              ]
+            }
+          ]
+        }
+      ],
+      "publication_year": 2021,
+      "doi": "https://doi.org/10.1016/j.ascom.2021.100481",
+      "abstract_inverted_index": null,
+      "cited_by_count": 75,
+      "primary_location": {
+        "id": "doi:10.1016/j.ascom.2021.100481",
+        "is_oa": false,
+        "landing_page_url": "https://doi.org/10.1016/j.ascom.2021.100481",
+        "pdf_url": null,
+        "source": {
+          "id": "https://openalex.org/S107133554",
+          "display_name": "Astronomy and Computing",
+          "issn_l": "2213-1337",
+          "issn": [
+            "2213-1337",
+            "2213-1345"
+          ],
+          "is_oa": false,
+          "is_in_doaj": false,
+          "is_core": true,
+          "host_organization": "https://openalex.org/P4310320990",
+          "host_organization_name": "Elsevier BV",
+          "host_organization_lineage": [
+            "https://openalex.org/P4310320990"
+          ],
+          "host_organization_lineage_names": [
+            "Elsevier BV"
+          ],
+          "type": "journal"
+        },
+        "license": null,
+        "license_id": null,
+        "version": "publishedVersion",
+        "is_accepted": true,
+        "is_published": true,
+        "raw_source_name": "Astronomy and Computing",
+        "raw_type": "journal-article"
+      }
+    },
+    {
+      "id": "https://openalex.org/W2098142369",
+      "display_name": "Galaxy Zoo: reproducing galaxy morphologies via machine learning★",
+      "authorships": [
+        {
+          "author_position": "first",
+          "author": {
+            "id": null,
+            "display_name": "Manda Banerji",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I241749",
+              "display_name": "University of Cambridge",
+              "ror": "https://ror.org/013meh722",
+              "country_code": "GB",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I241749"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I4210121240",
+              "display_name": "Institute of Astronomy",
+              "ror": "https://ror.org/01whksa54",
+              "country_code": "RU",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1313323035",
+                "https://openalex.org/I4210096333",
+                "https://openalex.org/I4210121240"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I45129253",
+              "display_name": "University College London",
+              "ror": "https://ror.org/02jx3x895",
+              "country_code": "GB",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I124357947",
+                "https://openalex.org/I45129253"
+              ]
+            }
+          ],
+          "countries": [
+            "GB",
+            "RU"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Manda Banerji",
+          "raw_affiliation_strings": [
+            "Department of Physics and Astronomy, University College London, Gower Street, London WC1E 6BT",
+            "Institute of Astronomy, University of Cambridge, Madingley Road, Cambridge CB3 0HA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Physics and Astronomy, University College London, Gower Street, London WC1E 6BT",
+              "institution_ids": [
+                "https://openalex.org/I45129253"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Institute of Astronomy, University of Cambridge, Madingley Road, Cambridge CB3 0HA",
+              "institution_ids": [
+                "https://openalex.org/I4210121240",
+                "https://openalex.org/I241749"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": null,
+            "display_name": "Ofer Lahav",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I45129253",
+              "display_name": "University College London",
+              "ror": "https://ror.org/02jx3x895",
+              "country_code": "GB",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I124357947",
+                "https://openalex.org/I45129253"
+              ]
+            }
+          ],
+          "countries": [
+            "GB"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Ofer Lahav",
+          "raw_affiliation_strings": [
+            "Department of Physics and Astronomy, University College London, Gower Street, London WC1E 6BT"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Physics and Astronomy, University College London, Gower Street, London WC1E 6BT",
+              "institution_ids": [
+                "https://openalex.org/I45129253"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": null,
+            "display_name": "Chris J. Lintott",
+            "orcid": null
+          },
+          "institutions": [],
+          "countries": [],
+          "is_corresponding": false,
+          "raw_author_name": "Chris J. Lintott",
+          "raw_affiliation_strings": [
+            "Department of Physics, Denys Wilkinson Building, Keble Road, Oxford OX1 3RH"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Physics, Denys Wilkinson Building, Keble Road, Oxford OX1 3RH",
+              "institution_ids": []
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": null,
+            "display_name": "Filipe B. Abdalla",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I45129253",
+              "display_name": "University College London",
+              "ror": "https://ror.org/02jx3x895",
+              "country_code": "GB",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I124357947",
+                "https://openalex.org/I45129253"
+              ]
+            }
+          ],
+          "countries": [
+            "GB"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Filipe B. Abdalla",
+          "raw_affiliation_strings": [
+            "Department of Physics and Astronomy, University College London, Gower Street, London WC1E 6BT"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Physics and Astronomy, University College London, Gower Street, London WC1E 6BT",
+              "institution_ids": [
+                "https://openalex.org/I45129253"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": null,
+            "display_name": "Kevin Schawinski",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I2802730090",
+              "display_name": "Yale Cancer Center",
+              "ror": "https://ror.org/03j7sze86",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I2802730090",
+                "https://openalex.org/I4210117499",
+                "https://openalex.org/I4210165192"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I32971472",
+              "display_name": "Yale University",
+              "ror": "https://ror.org/03v76x132",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I32971472"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Kevin Schawinski",
+          "raw_affiliation_strings": [
+            "Department of Physics, Yale University, New Haven, CT 06511, USA",
+            "Yale Center for Astronomy & Astrophysics, Yale University, PO Box 208121, New Haven, CT 06520, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Physics, Yale University, New Haven, CT 06511, USA",
+              "institution_ids": [
+                "https://openalex.org/I32971472"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Yale Center for Astronomy & Astrophysics, Yale University, PO Box 208121, New Haven, CT 06520, USA",
+              "institution_ids": [
+                "https://openalex.org/I2802730090",
+                "https://openalex.org/I32971472"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": null,
+            "display_name": "Steven P. Bamford",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I142263535",
+              "display_name": "University of Nottingham",
+              "ror": "https://ror.org/01ee9ar58",
+              "country_code": "GB",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I142263535"
+              ]
+            }
+          ],
+          "countries": [
+            "GB"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Steven P. Bamford",
+          "raw_affiliation_strings": [
+            "Centre for Astronomy and Particle Theory, School of Physics & Astronomy, University of Nottingham, University Park, Nottingham NG7 2RD"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Centre for Astronomy and Particle Theory, School of Physics & Astronomy, University of Nottingham, University Park, Nottingham NG7 2RD",
+              "institution_ids": [
+                "https://openalex.org/I142263535"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": null,
+            "display_name": "Dan Andreescu",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I4210099328",
+              "display_name": "Bronx Health Link",
+              "ror": "https://ror.org/011mp8w48",
+              "country_code": "US",
+              "type": "healthcare",
+              "lineage": [
+                "https://openalex.org/I4210099328"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Dan Andreescu",
+          "raw_affiliation_strings": [
+            "LinkLab, 4506 Graystone Avenue, Bronx, NY 10471, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "LinkLab, 4506 Graystone Avenue, Bronx, NY 10471, USA",
+              "institution_ids": [
+                "https://openalex.org/I4210099328"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": null,
+            "display_name": "Phil Murray",
+            "orcid": null
+          },
+          "institutions": [],
+          "countries": [],
+          "is_corresponding": false,
+          "raw_author_name": "Phil Murray",
+          "raw_affiliation_strings": [
+            "Fingerprint Digital Media, 9 Victoria Close, Newtownards, Co. Down, Northern Ireland BT23 7GY"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Fingerprint Digital Media, 9 Victoria Close, Newtownards, Co. Down, Northern Ireland BT23 7GY",
+              "institution_ids": []
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": null,
+            "display_name": "M. Jordan Raddick",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I145311948",
+              "display_name": "Johns Hopkins University",
+              "ror": "https://ror.org/00za53h95",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I145311948"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "M. Jordan Raddick",
+          "raw_affiliation_strings": [
+            "Department of Physics and Astronomy, Johns Hopkins University, 3400 N. Charles Street, Baltimore, MD 21218, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Physics and Astronomy, Johns Hopkins University, 3400 N. Charles Street, Baltimore, MD 21218, USA",
+              "institution_ids": [
+                "https://openalex.org/I145311948"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": null,
+            "display_name": "Anze Slosar",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I148283060",
+              "display_name": "Lawrence Berkeley National Laboratory",
+              "ror": "https://ror.org/02jbv0t02",
+              "country_code": "US",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I1330989302",
+                "https://openalex.org/I148283060",
+                "https://openalex.org/I39565521"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I95457486",
+              "display_name": "University of California, Berkeley",
+              "ror": "https://ror.org/01an7q238",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I95457486"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Anze Slosar",
+          "raw_affiliation_strings": [
+            "Berkeley Center for Cosmological Physics, Lawrence Berkeley National Laboratory & Physics Department, University of California, Berkeley, CA 94720, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Berkeley Center for Cosmological Physics, Lawrence Berkeley National Laboratory & Physics Department, University of California, Berkeley, CA 94720, USA",
+              "institution_ids": [
+                "https://openalex.org/I148283060",
+                "https://openalex.org/I95457486"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": null,
+            "display_name": "Alex Szalay",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I145311948",
+              "display_name": "Johns Hopkins University",
+              "ror": "https://ror.org/00za53h95",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I145311948"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Alex Szalay",
+          "raw_affiliation_strings": [
+            "Department of Physics and Astronomy, Johns Hopkins University, 3400 N. Charles Street, Baltimore, MD 21218, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Physics and Astronomy, Johns Hopkins University, 3400 N. Charles Street, Baltimore, MD 21218, USA",
+              "institution_ids": [
+                "https://openalex.org/I145311948"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": null,
+            "display_name": "Daniel Thomas",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I63072094",
+              "display_name": "University of Portsmouth",
+              "ror": "https://ror.org/03ykbk197",
+              "country_code": "GB",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I63072094"
+              ]
+            }
+          ],
+          "countries": [
+            "GB"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Daniel Thomas",
+          "raw_affiliation_strings": [
+            "Institute of Cosmology and Gravitation, University of Portsmouth, Mercantile House, Hampshire Terrace, Portsmouth, Hants PO1 2EG"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Institute of Cosmology and Gravitation, University of Portsmouth, Mercantile House, Hampshire Terrace, Portsmouth, Hants PO1 2EG",
+              "institution_ids": [
+                "https://openalex.org/I63072094"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "last",
+          "author": {
+            "id": null,
+            "display_name": "Jan Vandenberg",
+            "orcid": null
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I145311948",
+              "display_name": "Johns Hopkins University",
+              "ror": "https://ror.org/00za53h95",
+              "country_code": "US",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I145311948"
+              ]
+            }
+          ],
+          "countries": [
+            "US"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Jan Vandenberg",
+          "raw_affiliation_strings": [
+            "Department of Physics and Astronomy, Johns Hopkins University, 3400 N. Charles Street, Baltimore, MD 21218, USA"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Department of Physics and Astronomy, Johns Hopkins University, 3400 N. Charles Street, Baltimore, MD 21218, USA",
+              "institution_ids": [
+                "https://openalex.org/I145311948"
+              ]
+            }
+          ]
+        }
+      ],
+      "publication_year": 2010,
+      "doi": "https://doi.org/10.1111/j.1365-2966.2010.16713.x",
+      "abstract_inverted_index": {
+        "We": [
+          0,
+          68,
+          174,
+          202
+        ],
+        "present": [
+          1
+        ],
+        "morphological": [
+          2,
+          172,
+          214
+        ],
+        "classifications": [
+          3,
+          61,
+          81,
+          162
+        ],
+        "obtained": [
+          4
+        ],
+        "using": [
+          5,
+          177
+        ],
+        "machine": [
+          6
+        ],
+        "learning": [
+          7
+        ],
+        "for": [
+          8,
+          62,
+          91,
+          169,
+          216,
+          235
+        ],
+        "objects": [
+          9,
+          44,
+          108
+        ],
+        "in": [
+          10,
+          77,
+          105,
+          184
+        ],
+        "the": [
+          11,
+          47,
+          54,
+          59,
+          63,
+          66,
+          71,
+          74,
+          79,
+          85,
+          92,
+          107,
+          144,
+          153,
+          160,
+          196,
+          200,
+          217,
+          226
+        ],
+        "Sloan": [
+          12
+        ],
+        "Digital": [
+          13
+        ],
+        "Sky": [
+          14
+        ],
+        "Survey": [
+          15
+        ],
+        "DR6": [
+          16
+        ],
+        "that": [
+          17,
+          70,
+          176,
+          181,
+          204,
+          225
+        ],
+        "have": [
+          18
+        ],
+        "been": [
+          19
+        ],
+        "classified": [
+          20,
+          45
+        ],
+        "by": [
+          21,
+          46
+        ],
+        "Galaxy": [
+          22,
+          227
+        ],
+        "Zoo": [
+          23,
+          228
+        ],
+        "into": [
+          24,
+          109
+        ],
+        "three": [
+          25,
+          110,
+          171
+        ],
+        "classes,": [
+          26
+        ],
+        "namely": [
+          27
+        ],
+        "early": [
+          28,
+          140
+        ],
+        "types,": [
+          29
+        ],
+        "spirals": [
+          30
+        ],
+        "and": [
+          31,
+          50,
+          97,
+          127,
+          133,
+          143,
+          224
+        ],
+        "point": [
+          32,
+          145
+        ],
+        "sources/artefacts.": [
+          33,
+          146
+        ],
+        "An": [
+          34
+        ],
+        "artificial": [
+          35
+        ],
+        "neural": [
+          36,
+          75,
+          154
+        ],
+        "network": [
+          37,
+          76,
+          155
+        ],
+        "is": [
+          38,
+          156,
+          182,
+          206
+        ],
+        "trained": [
+          39
+        ],
+        "on": [
+          40,
+          84
+        ],
+        "a": [
+          41,
+          148,
+          178
+        ],
+        "subset": [
+          42
+        ],
+        "of": [
+          43,
+          65,
+          73,
+          87,
+          150,
+          195,
+          220
+        ],
+        "human": [
+          48,
+          60,
+          80,
+          161
+        ],
+        "eye,": [
+          49
+        ],
+        "we": [
+          51
+        ],
+        "test": [
+          52
+        ],
+        "whether": [
+          53
+        ],
+        "machine-learning": [
+          55,
+          93,
+          210
+        ],
+        "algorithm": [
+          56
+        ],
+        "can": [
+          57
+        ],
+        "reproduce": [
+          58,
+          159
+        ],
+        "rest": [
+          64
+        ],
+        "sample.": [
+          67
+        ],
+        "find": [
+          69,
+          175
+        ],
+        "success": [
+          72
+        ],
+        "matching": [
+          78
+        ],
+        "depends": [
+          82
+        ],
+        "crucially": [
+          83
+        ],
+        "set": [
+          86,
+          149,
+          180,
+          234
+        ],
+        "input": [
+          88,
+          197
+        ],
+        "parameters": [
+          89,
+          98,
+          122,
+          135,
+          198
+        ],
+        "chosen": [
+          90
+        ],
+        "algorithm.": [
+          94
+        ],
+        "The": [
+          95,
+          129
+        ],
+        "colours": [
+          96
+        ],
+        "associated": [
+          99
+        ],
+        "with": [
+          100
+        ],
+        "profile": [
+          101
+        ],
+        "fitting": [
+          102
+        ],
+        "are": [
+          103,
+          115
+        ],
+        "reasonable": [
+          104
+        ],
+        "separating": [
+          106
+        ],
+        "classes.": [
+          111,
+          173
+        ],
+        "However,": [
+          112
+        ],
+        "these": [
+          113
+        ],
+        "results": [
+          114,
+          190
+        ],
+        "considerably": [
+          116
+        ],
+        "improved": [
+          117
+        ],
+        "when": [
+          118
+        ],
+        "adding": [
+          119
+        ],
+        "adaptive": [
+          120,
+          130
+        ],
+        "shape": [
+          121
+        ],
+        "as": [
+          123,
+          125
+        ],
+        "well": [
+          124
+        ],
+        "concentration": [
+          126,
+          132
+        ],
+        "texture.": [
+          128
+        ],
+        "moments,": [
+          131
+        ],
+        "texture": [
+          134
+        ],
+        "alone": [
+          136
+        ],
+        "cannot": [
+          137
+        ],
+        "distinguish": [
+          138
+        ],
+        "between": [
+          139
+        ],
+        "type": [
+          141
+        ],
+        "galaxies": [
+          142
+        ],
+        "Using": [
+          147
+        ],
+        "12": [
+          151
+        ],
+        "parameters,": [
+          152
+        ],
+        "able": [
+          157
+        ],
+        "to": [
+          158,
+          163,
+          199,
+          208,
+          212
+        ],
+        "better": [
+          164
+        ],
+        "than": [
+          165
+        ],
+        "90": [
+          166
+        ],
+        "per": [
+          167
+        ],
+        "cent": [
+          168
+        ],
+        "all": [
+          170
+        ],
+        "training": [
+          179,
+          233
+        ],
+        "incomplete": [
+          183
+        ],
+        "magnitude": [
+          185
+        ],
+        "does": [
+          186
+        ],
+        "not": [
+          187
+        ],
+        "degrade": [
+          188
+        ],
+        "our": [
+          189,
+          192
+        ],
+        "given": [
+          191
+        ],
+        "particular": [
+          193
+        ],
+        "choice": [
+          194
+        ],
+        "network.": [
+          201
+        ],
+        "conclude": [
+          203
+        ],
+        "it": [
+          205
+        ],
+        "promising": [
+          207
+        ],
+        "use": [
+          209
+        ],
+        "algorithms": [
+          211
+        ],
+        "perform": [
+          213
+        ],
+        "classification": [
+          215
+        ],
+        "next": [
+          218
+        ],
+        "generation": [
+          219
+        ],
+        "wide-field": [
+          221
+        ],
+        "imaging": [
+          222
+        ],
+        "surveys": [
+          223
+        ],
+        "catalogue": [
+          229
+        ],
+        "provides": [
+          230
+        ],
+        "an": [
+          231
+        ],
+        "invaluable": [
+          232
+        ],
+        "such": [
+          236
+        ],
+        "purposes.": [
+          237
+        ]
+      },
+      "cited_by_count": 199,
+      "primary_location": {
+        "id": "doi:10.1111/j.1365-2966.2010.16713.x",
+        "is_oa": true,
+        "landing_page_url": "https://doi.org/10.1111/j.1365-2966.2010.16713.x",
+        "pdf_url": "https://academic.oup.com/mnras/article-pdf/406/1/342/3714678/mnras0406-0342.pdf",
+        "source": {
+          "id": "https://openalex.org/S195663288",
+          "display_name": "Monthly Notices of the Royal Astronomical Society",
+          "issn_l": "0035-8711",
+          "issn": [
+            "0035-8711",
+            "1365-2966",
+            "1365-8711"
+          ],
+          "is_oa": false,
+          "is_in_doaj": true,
+          "is_core": true,
+          "host_organization": "https://openalex.org/P4310311648",
+          "host_organization_name": "Oxford University Press",
+          "host_organization_lineage": [
+            "https://openalex.org/P4310311648",
+            "https://openalex.org/P4310311647"
+          ],
+          "host_organization_lineage_names": [
+            "Oxford University Press",
+            "University of Oxford"
+          ],
+          "type": "journal"
+        },
+        "license": null,
+        "license_id": null,
+        "version": "publishedVersion",
+        "is_accepted": true,
+        "is_published": true,
+        "raw_source_name": "Monthly Notices of the Royal Astronomical Society",
+        "raw_type": "journal-article"
+      }
+    },
+    {
+      "id": "https://openalex.org/W3157197496",
+      "display_name": "Big data and machine learning for materials science",
+      "authorships": [
+        {
+          "author_position": "first",
+          "author": {
+            "id": "https://openalex.org/A5063700071",
+            "display_name": "José F. Rodrigues",
+            "orcid": "https://orcid.org/0000-0001-8318-1780"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I17974374",
+              "display_name": "Universidade de São Paulo",
+              "ror": "https://ror.org/036rp1748",
+              "country_code": "BR",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I17974374"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I4210086947",
+              "display_name": "Institute of Physics",
+              "ror": "https://ror.org/000sfad56",
+              "country_code": "PL",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I4210086947",
+                "https://openalex.org/I99542240"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I4210092357",
+              "display_name": "Institute of Mathematics and Computer Science",
+              "ror": "https://ror.org/00fy4at53",
+              "country_code": "MD",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I112090838",
+                "https://openalex.org/I4210092357"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I4210131883",
+              "display_name": "Brazilian Society of Computational and Applied Mathematics",
+              "ror": "https://ror.org/03kcw4w74",
+              "country_code": "BR",
+              "type": "other",
+              "lineage": [
+                "https://openalex.org/I4210131883"
+              ]
+            }
+          ],
+          "countries": [
+            "BR",
+            "MD",
+            "PL"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Jose F. Rodrigues",
+          "raw_affiliation_strings": [
+            "Institute of Mathematical Sciences and Computing, University of São Paulo (USP), São Carlos, SP Brazil",
+            "Institute of Mathematical Sciences and Computing, University of São Paulo (USP), São Carlos, SP, Brazil"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Institute of Mathematical Sciences and Computing, University of São Paulo (USP), São Carlos, SP Brazil",
+              "institution_ids": [
+                "https://openalex.org/I4210092357",
+                "https://openalex.org/I4210086947"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Institute of Mathematical Sciences and Computing, University of São Paulo (USP), São Carlos, SP, Brazil",
+              "institution_ids": [
+                "https://openalex.org/I4210131883",
+                "https://openalex.org/I17974374"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5051604045",
+            "display_name": "Larisa Florea",
+            "orcid": "https://orcid.org/0000-0002-4704-2393"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I205274468",
+              "display_name": "Trinity College Dublin",
+              "ror": "https://ror.org/02tyrky19",
+              "country_code": "IE",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I205274468"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I4210112033",
+              "display_name": "Advanced Materials and BioEngineering Research",
+              "ror": "https://ror.org/01c4rxk68",
+              "country_code": "IE",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I142762351",
+                "https://openalex.org/I188760350",
+                "https://openalex.org/I205274468",
+                "https://openalex.org/I230495080",
+                "https://openalex.org/I27577105",
+                "https://openalex.org/I4210112033",
+                "https://openalex.org/I42934936"
+              ]
+            }
+          ],
+          "countries": [
+            "IE"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Larisa Florea",
+          "raw_affiliation_strings": [
+            "SFI Research Centre for Advanced Materials and BioEngineering Research Trinity College Dublin, The University of Dublin, Dublin, Ireland"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "SFI Research Centre for Advanced Materials and BioEngineering Research Trinity College Dublin, The University of Dublin, Dublin, Ireland",
+              "institution_ids": [
+                "https://openalex.org/I4210112033",
+                "https://openalex.org/I205274468"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5042377165",
+            "display_name": "Maria Cristina Ferreira de Oliveira",
+            "orcid": "https://orcid.org/0000-0002-4729-5104"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I17974374",
+              "display_name": "Universidade de São Paulo",
+              "ror": "https://ror.org/036rp1748",
+              "country_code": "BR",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I17974374"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I4210086947",
+              "display_name": "Institute of Physics",
+              "ror": "https://ror.org/000sfad56",
+              "country_code": "PL",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I4210086947",
+                "https://openalex.org/I99542240"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I4210092357",
+              "display_name": "Institute of Mathematics and Computer Science",
+              "ror": "https://ror.org/00fy4at53",
+              "country_code": "MD",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I112090838",
+                "https://openalex.org/I4210092357"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I4210131883",
+              "display_name": "Brazilian Society of Computational and Applied Mathematics",
+              "ror": "https://ror.org/03kcw4w74",
+              "country_code": "BR",
+              "type": "other",
+              "lineage": [
+                "https://openalex.org/I4210131883"
+              ]
+            }
+          ],
+          "countries": [
+            "BR",
+            "MD",
+            "PL"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Maria C. F. de Oliveira",
+          "raw_affiliation_strings": [
+            "Institute of Mathematical Sciences and Computing, University of São Paulo (USP), São Carlos, SP Brazil",
+            "Institute of Mathematical Sciences and Computing, University of São Paulo (USP), São Carlos, SP, Brazil"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Institute of Mathematical Sciences and Computing, University of São Paulo (USP), São Carlos, SP Brazil",
+              "institution_ids": [
+                "https://openalex.org/I4210092357",
+                "https://openalex.org/I4210086947"
+              ]
+            },
+            {
+              "raw_affiliation_string": "Institute of Mathematical Sciences and Computing, University of São Paulo (USP), São Carlos, SP, Brazil",
+              "institution_ids": [
+                "https://openalex.org/I4210131883",
+                "https://openalex.org/I17974374"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "middle",
+          "author": {
+            "id": "https://openalex.org/A5087269305",
+            "display_name": "Dermot Diamond",
+            "orcid": "https://orcid.org/0000-0003-2944-4839"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I42934936",
+              "display_name": "Dublin City University",
+              "ror": "https://ror.org/04a1a1e81",
+              "country_code": "IE",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I42934936"
+              ]
+            }
+          ],
+          "countries": [
+            "IE"
+          ],
+          "is_corresponding": false,
+          "raw_author_name": "Dermot Diamond",
+          "raw_affiliation_strings": [
+            "Insight Centre for Data Analytics, National Centre for Sensor Research, Dublin City University, Dublin 9, Dublin, Ireland"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "Insight Centre for Data Analytics, National Centre for Sensor Research, Dublin City University, Dublin 9, Dublin, Ireland",
+              "institution_ids": [
+                "https://openalex.org/I42934936"
+              ]
+            }
+          ]
+        },
+        {
+          "author_position": "last",
+          "author": {
+            "id": "https://openalex.org/A5017451457",
+            "display_name": "Osvaldo N. Oliveira",
+            "orcid": "https://orcid.org/0000-0002-5399-5860"
+          },
+          "institutions": [
+            {
+              "id": "https://openalex.org/I17974374",
+              "display_name": "Universidade de São Paulo",
+              "ror": "https://ror.org/036rp1748",
+              "country_code": "BR",
+              "type": "education",
+              "lineage": [
+                "https://openalex.org/I17974374"
+              ]
+            },
+            {
+              "id": "https://openalex.org/I4210086947",
+              "display_name": "Institute of Physics",
+              "ror": "https://ror.org/000sfad56",
+              "country_code": "PL",
+              "type": "facility",
+              "lineage": [
+                "https://openalex.org/I4210086947",
+                "https://openalex.org/I99542240"
+              ]
+            }
+          ],
+          "countries": [
+            "BR",
+            "PL"
+          ],
+          "is_corresponding": true,
+          "raw_author_name": "Osvaldo N. Oliveira",
+          "raw_affiliation_strings": [
+            "São Carlos Institute of Physics, University of São Paulo (USP), São Carlos, SP Brazil",
+            "São Carlos Institute of Physics, University of São Paulo (USP), São Carlos, SP, Brazil"
+          ],
+          "raw_orcid": null,
+          "affiliations": [
+            {
+              "raw_affiliation_string": "São Carlos Institute of Physics, University of São Paulo (USP), São Carlos, SP Brazil",
+              "institution_ids": [
+                "https://openalex.org/I4210086947"
+              ]
+            },
+            {
+              "raw_affiliation_string": "São Carlos Institute of Physics, University of São Paulo (USP), São Carlos, SP, Brazil",
+              "institution_ids": [
+                "https://openalex.org/I17974374"
+              ]
+            }
+          ]
+        }
+      ],
+      "publication_year": 2021,
+      "doi": "https://doi.org/10.1007/s43939-021-00012-0",
+      "abstract_inverted_index": {
+        "Herein,": [
+          0
+        ],
+        "we": [
+          1,
+          88,
+          130
+        ],
+        "review": [
+          2
+        ],
+        "aspects": [
+          3
+        ],
+        "of": [
+          4,
+          35,
+          53,
+          59,
+          70,
+          72,
+          100,
+          105,
+          118,
+          127,
+          138,
+          154
+        ],
+        "leading-edge": [
+          5
+        ],
+        "research": [
+          6,
+          111
+        ],
+        "and": [
+          7,
+          16,
+          39,
+          75,
+          103,
+          135,
+          141,
+          151,
+          156
+        ],
+        "innovation": [
+          8
+        ],
+        "in": [
+          9,
+          115
+        ],
+        "materials": [
+          10,
+          102,
+          119,
+          145
+        ],
+        "science": [
+          11,
+          22
+        ],
+        "that": [
+          12,
+          24,
+          43,
+          63
+        ],
+        "exploit": [
+          13
+        ],
+        "big": [
+          14,
+          60,
+          139
+        ],
+        "data": [
+          15,
+          61,
+          71,
+          140
+        ],
+        "machine": [
+          17
+        ],
+        "learning": [
+          18
+        ],
+        "(ML),": [
+          19
+        ],
+        "two": [
+          20
+        ],
+        "computer": [
+          21
+        ],
+        "concepts": [
+          23
+        ],
+        "combine": [
+          25
+        ],
+        "to": [
+          26,
+          82,
+          123,
+          144
+        ],
+        "yield": [
+          27
+        ],
+        "computational": [
+          28
+        ],
+        "intelligence.": [
+          29
+        ],
+        "ML": [
+          30,
+          54,
+          114,
+          142
+        ],
+        "can": [
+          31
+        ],
+        "accelerate": [
+          32
+        ],
+        "the": [
+          33,
+          50,
+          57,
+          65,
+          86,
+          116,
+          133
+        ],
+        "solution": [
+          34
+        ],
+        "intricate": [
+          36
+        ],
+        "chemical": [
+          37,
+          106
+        ],
+        "problems": [
+          38,
+          42
+        ],
+        "even": [
+          40
+        ],
+        "solve": [
+          41
+        ],
+        "otherwise": [
+          44
+        ],
+        "would": [
+          45
+        ],
+        "not": [
+          46
+        ],
+        "be": [
+          47
+        ],
+        "tractable.": [
+          48
+        ],
+        "However,": [
+          49
+        ],
+        "potential": [
+          51
+        ],
+        "benefits": [
+          52
+        ],
+        "come": [
+          55
+        ],
+        "at": [
+          56
+        ],
+        "cost": [
+          58
+        ],
+        "production;": [
+          62
+        ],
+        "is,": [
+          64
+        ],
+        "algorithms": [
+          66
+        ],
+        "demand": [
+          67
+        ],
+        "large": [
+          68
+        ],
+        "volumes": [
+          69
+        ],
+        "various": [
+          73
+        ],
+        "natures": [
+          74
+        ],
+        "from": [
+          76,
+          79
+        ],
+        "different": [
+          77
+        ],
+        "sources,": [
+          78
+        ],
+        "material": [
+          80
+        ],
+        "properties": [
+          81
+        ],
+        "sensor": [
+          83
+        ],
+        "data.": [
+          84
+        ],
+        "In": [
+          85,
+          121
+        ],
+        "survey,": [
+          87
+        ],
+        "propose": [
+          89
+        ],
+        "a": [
+          90
+        ],
+        "roadmap": [
+          91
+        ],
+        "for": [
+          92,
+          113
+        ],
+        "future": [
+          93
+        ],
+        "developments": [
+          94
+        ],
+        "with": [
+          95
+        ],
+        "emphasis": [
+          96
+        ],
+        "on": [
+          97
+        ],
+        "computer-aided": [
+          98
+        ],
+        "discovery": [
+          99
+        ],
+        "new": [
+          101
+        ],
+        "analysis": [
+          104
+        ],
+        "sensing": [
+          107
+        ],
+        "compounds,": [
+          108
+        ],
+        "both": [
+          109
+        ],
+        "prominent": [
+          110
+        ],
+        "fields": [
+          112
+        ],
+        "context": [
+          117
+        ],
+        "science.": [
+          120
+        ],
+        "addition": [
+          122
+        ],
+        "providing": [
+          124
+        ],
+        "an": [
+          125
+        ],
+        "overview": [
+          126
+        ],
+        "recent": [
+          128
+        ],
+        "advances,": [
+          129
+        ],
+        "elaborate": [
+          131
+        ],
+        "upon": [
+          132
+        ],
+        "conceptual": [
+          134
+        ],
+        "practical": [
+          136
+        ],
+        "limitations": [
+          137
+        ],
+        "applied": [
+          143
+        ],
+        "science,": [
+          146
+        ],
+        "outlining": [
+          147
+        ],
+        "processes,": [
+          148
+        ],
+        "discussing": [
+          149
+        ],
+        "pitfalls,": [
+          150
+        ],
+        "reviewing": [
+          152
+        ],
+        "cases": [
+          153
+        ],
+        "success": [
+          155
+        ],
+        "failure.": [
+          157
+        ]
+      },
+      "cited_by_count": 164,
+      "primary_location": {
+        "id": "doi:10.1007/s43939-021-00012-0",
+        "is_oa": true,
+        "landing_page_url": "https://doi.org/10.1007/s43939-021-00012-0",
+        "pdf_url": "https://link.springer.com/content/pdf/10.1007/s43939-021-00012-0.pdf",
+        "source": {
+          "id": "https://openalex.org/S4210203817",
+          "display_name": "Discover Materials",
+          "issn_l": "2730-7727",
+          "issn": [
+            "2730-7727"
+          ],
+          "is_oa": true,
+          "is_in_doaj": true,
+          "is_core": true,
+          "host_organization": "https://openalex.org/P4310319965",
+          "host_organization_name": "Springer Nature",
+          "host_organization_lineage": [
+            "https://openalex.org/P4310319965"
+          ],
+          "host_organization_lineage_names": [
+            "Springer Nature"
+          ],
+          "type": "journal"
+        },
+        "license": "cc-by",
+        "license_id": "https://openalex.org/licenses/cc-by",
+        "version": "publishedVersion",
+        "is_accepted": true,
+        "is_published": true,
+        "raw_source_name": "Discover Materials",
+        "raw_type": "journal-article"
+      }
+    }
+  ],
+  "group_by": []
+}
