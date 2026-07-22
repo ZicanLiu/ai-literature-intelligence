@@ -24,9 +24,12 @@ Thumbs.db
 tmp/
 temp/
 
-# 运行生成文件
+# 每次运行会覆盖的临时结果：不作为稳定基线提交
 data/literature.db
 outputs/raw/*.json
 outputs/tables/*.csv
 outputs/figures/*.png
 outputs/reports/*.txt
+
+# outputs/baselines/、outputs/live_test_*/ 和 outputs/experiments/ 不在忽略列表中。
+# 这些目录只保存经过来源、安全和可复现性检查、确有必要长期保留的基线或实验结果。
