@@ -13,6 +13,8 @@
 → 图表和运行摘要
 ```
 
+真实数据来源是 OpenAlex，不是 OpenAI。v0.2.0 的稳定边界是文献获取、字段清洗、严格规则去重、缺失统计、初步排序、CSV、SQLite、图表和运行摘要；不包含 PDF 解析、RAG、多 Agent、知识图谱或前端。
+
 ## 1. 关键词输入
 
 用户通过命令行传入关键词：
@@ -28,6 +30,8 @@ python -m app.main --mode mock --keyword "machine learning astronomical spectra"
 `mock` 模式调用 `src/mock_client.py`，读取本地 `data/mock_papers.json`。这个模式不需要网络、不需要 API Key，适合课堂演示和调试。
 
 `live` 模式调用 `src/openalex_client.py`，请求 OpenAlex Works API。API Key 只能从 `.env` 或环境变量读取。
+
+live 模式已经完成小规模真实数据测试，测试记录见 `docs/LIVE_TEST_REPORT_20260718.md`。
 
 v0.2 的单次 `per_page` 上限为 100；传入更大值时会自动限制为 100。当前不实现分页。
 
@@ -107,3 +111,5 @@ SQLite 只使用 Python 自带的 `sqlite3`，第一版只建一张 `papers` 表
 图表标题会按运行模式标记 `[MOCK DATA]` 或 `[OPENALEX LIVE]`；mock 图仅用于教学演示，不代表真实学术结论。
 
 `app/main.py` 同时生成运行摘要，记录本次运行模式、关键词、数量统计、缺失字段统计和输出文件路径。
+
+此前展示过的 PDF 解析属于临时演示，相关内容已删除，不在当前数据流中。

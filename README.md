@@ -6,14 +6,16 @@
 
 第一版目标是做出一条简单、稳定、可运行、适合本科生逐步读懂和二次开发的最小流程，而不是追求复杂系统。
 
-当前版本：**v0.2**。运行环境要求 **Python 3.10 或更高版本**。
+当前版本：**v0.2.0**。运行环境要求 **Python 3.10 或更高版本**。
 
 当前验证状态：
 
 - mock 模式已经完成完整流程验证，相关图表由教学样例生成；
-- live 模式代码入口已实现，但必须使用真实网络环境和合法 API Key 单独验证；
+- live 模式已使用 OpenAlex 完成小规模真实测试，详见 `docs/LIVE_TEST_REPORT_20260718.md`；
 - `preliminary_score` 是透明的 baseline 排序规则，尚未经过人工评价数据验证；
 - 当前结果不代表真实论文价值评价，mock 图表也不代表真实学术结论。
+
+当前真实文献数据来自 **OpenAlex**，不是 OpenAI。稳定基线只包括文献获取、字段清洗、严格规则去重、初步排序、CSV、SQLite、图表和运行摘要。此前展示过的 PDF 解析只是临时演示，相关代码和文件已删除，不属于 v0.2.0 功能。
 
 ## 2. MVP 的输入、处理过程和输出
 
@@ -111,6 +113,8 @@ OpenAlex 的 `per_page` 范围为 1—100。本项目 v0.2 单次最多请求 10
 | `outputs/reports/run_summary.txt` | 保存本次运行的数量统计、缺失字段统计和输出路径 |
 | `data/literature.db` | SQLite 数据库，保存最近一次运行的排序论文 |
 
+`outputs/raw/`、`outputs/tables/`、`outputs/figures/` 和 `outputs/reports/` 是每次运行会覆盖的结果，默认不提交。经过来源、安全和可复现性检查后，需要长期保留的基线或实验结果可以放入 `outputs/baselines/`、`outputs/live_test_*/` 或 `outputs/experiments/`。
+
 ## 9. 初步排序公式
 
 本项目统一称为“初步文献排序”或“初步辅助评价”，不称为“论文价值评价”。
@@ -162,7 +166,19 @@ v0.2 没有使用 TF-IDF、Embedding、RAG、大模型 API、Crossref 二次校�
 
 不是。`data/mock_papers.json` 是教学样例数据，用来稳定演示清洗、去重、缺失统计和排序流程。真实检索请使用 live 模式。
 
-## 13. 后续可扩展方向
+### 当前项目支持 PDF 解析吗？
+
+不支持。此前的 PDF 解析只是临时演示，已从公开仓库中删除；当前稳定基线只处理文献元数据和摘要。
+
+## 13. 六人协作入口
+
+- 贡献规则：`CONTRIBUTING.md`
+- Git 操作指南：`docs/TEAM_GIT_GUIDE.md`
+- 第一周分工：`docs/WEEK1_TASKS.md`
+
+所有任务都应从最新 `main` 创建短期分支，通过 Pull Request 合并，禁止直接向 `main` 推送。
+
+## 14. 后续可扩展方向
 
 - Crossref DOI 二次校验
 - 标题模糊去重

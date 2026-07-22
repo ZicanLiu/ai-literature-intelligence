@@ -2,6 +2,8 @@
 
 这份指南面向刚开始学习 Python 项目的本科生。建议按下面顺序阅读：
 
+阅读前先确认项目边界：真实数据来自 OpenAlex，不是 OpenAI；当前稳定功能不包含 PDF 解析。`preliminary_score` 只负责初步排序，不能解释为论文真实学术价值。
+
 ```text
 1. app/main.py
 2. src/mock_client.py
@@ -133,3 +135,11 @@ v0.2 会在图表标题中明确标记 `[MOCK DATA]` 或 `[OPENALEX LIVE]`，阅
 - 后续可扩展方向
 
 修改时注意：README 应保持面向使用者，不要写成代码内部实现细节清单。
+
+## 8. 团队协作文档
+
+开始修改前继续阅读：
+
+- `CONTRIBUTING.md`：分支、Pull Request、安全和验证规则；
+- `docs/TEAM_GIT_GUIDE.md`：从 clone 到合并后同步 `main` 的命令；
+- `docs/WEEK1_TASKS.md`：六位成员第一周的独立任务和验收标准。
