@@ -1,0 +1,21 @@
+﻿openalex_id,title,relevance_score,impact_score,recency_score,completeness_score,preliminary_score,manual_relevance,ranking_problem,explanation
+https://openalex.org/W4395479208,Stellar populations with optical spectra: deep learning versus popular spectrum fitting codes,0.825,0.3847,0.8,1.0,0.7054,相关,无,深度学习与传统谱拟合代码对比恢复恒星族性质；属光谱+ML主题。
+https://openalex.org/W4389097389,Machine learning applications in Jupiter-host star classification using stellar spectra,1.0,0.1924,0.7,1.0,0.6977,相关,无,用恒星光谱做宿主星分类，标题直接命中全部关键词。
+https://openalex.org/W3161623437,Stellar Spectra Models Classification and Parameter Estimation Using Machine Learning Algorithms,1.0,0.2326,0.5,1.0,0.6698,相关,无,恒星光谱分类与参数估计，正中主题。
+https://openalex.org/W4200631758,Mapping the Diversity of Galaxy Spectra with Deep Unsupervised Machine Learning,0.825,0.3695,0.6,1.0,0.6608,部分相关,领域词命中但对象为星系光谱,标题命中 machine/learning/spectra（3/4），rel=0.825；但研究对象是 MaNGA 星系光谱而非恒星光谱。
+https://openalex.org/W4319592221,Deducing neutron star equation of state parameters directly from telescope spectra with uncertainty-aware machine learning,0.75,0.3939,0.7,1.0,0.6582,相关,边界案例,中子星 X 射线光谱+ML 反演物态方程；属恒星（遗迹）光谱，但偏离经典恒星光谱，保留观察。
+https://openalex.org/W4389613706,Deducing neutron star equation of state from telescope spectra with machine-learning-derived likelihoods,0.825,0.2626,0.7,1.0,0.6488,相关,边界案例,与第5篇同组工作中子星光谱+ML；同为边界案例。
+https://openalex.org/W3081618654,Assessing the performance of LTE and NLTE synthetic stellar spectra in a machine learning framework,0.85,0.3847,0.4,1.0,0.6354,相关,无,合成恒星光谱库+CNN 参数反演，正中主题。
+https://openalex.org/W2907474932,Star formation rates and stellar masses from machine learning,0.825,0.4768,0.3,1.0,0.633,不相关,相关性误匹配,标题命中 stellar/machine/learning（3/4），rel=0.825 贡献 0.33 为最大来源；但内容是从星系 UV/光学 SED 推断 SFR 与恒星质量，与恒星光谱无关。
+https://openalex.org/W4387321945,Predicting the impact of feedback on matter clustering with machine learning in CAMELS,0.65,0.3983,0.7,1.0,0.6195,不相关,相关性误匹配,宇宙学物质功率谱（power spectra）命中词项 spectra，rel=0.65 贡献 0.26 为最大来源；与恒星光谱无关。
+https://openalex.org/W3036313178,Stellar spectral interpolation using machine learning,0.825,0.3314,0.4,1.0,0.6094,相关,无,恒星光谱插值，正中主题。
+https://openalex.org/W4284892148,Unsupervised Learning for Stellar Spectra with Deep Normalizing Flows,0.825,0.1924,0.6,1.0,0.6077,相关,无,恒星光谱无监督归一化流，正中主题。
+https://openalex.org/W4281823699,Mimicking the halo–galaxy connection using machine learning,0.65,0.4025,0.6,1.0,0.6007,不相关,相关性误匹配,暗物质晕-星系关系研究，摘要中 spectra 词项带来 rel=0.65（贡献 0.26）；与恒星光谱无关。
+https://openalex.org/W4319662832,The Gaia-ESO Survey: Chemical evolution of Mg and Al in the Milky Way with machine learning,0.65,0.3314,0.7,1.0,0.5994,相关,无,Gaia-ESO 恒星光谱参数化 CNN 工作，属主题范围。
+https://openalex.org/W4384942767,Identifying Symbiotic Stars with Machine Learning,0.65,0.3154,0.7,1.0,0.5946,相关,无,基于 LAMOST 巡天数据用 ML 识别共生星并做光谱认证，属恒星光谱巡天范畴。
+https://openalex.org/W2206825795,Classification of large-scale stellar spectra based on the non-linearly assembling learning machine,1.0,0.3154,0.0,1.0,0.5946,相关,无,大规模恒星光谱分类，rel=1.0；2015 年 rec=0 仍进前 20，全靠相关性。
+https://openalex.org/W4384201335,Machine learning in solar physics,0.5,0.5043,0.7,1.0,0.5913,部分相关,高被引+新近carry,太阳物理 ML 综述，非恒星光谱主题；rel=0.5 仅通用词命中，imp=0.5043（67 引用）与 rec=0.7 合计贡献 0.291，超过相关性贡献 0.20。
+https://openalex.org/W4223474580,Objective Separation between CP1 and CP2 Based on Feature Extraction with Machine Learning,0.65,0.3639,0.6,1.0,0.5892,相关,无,LAMOST 恒星光谱的 CP1/CP2 星 ML 分类，正中主题。
+https://openalex.org/W3155899199,Machine Learning Based Automatic Modulation Recognition for Wireless Communications: A Comprehensive Survey,0.5,0.6173,0.5,1.0,0.5852,不相关,高被引carry,无线通信调制识别综述，与天文完全无关；rel=0.5 仅 machine/learning 命中，cit=174 使 imp=0.6173，影响贡献 0.185 接近相关性贡献 0.200。
+https://openalex.org/W4388221752,Machine Learning Model for Leak Detection Using Water Pipeline Vibration Sensor,0.5,0.479,0.7,1.0,0.5837,不相关,高被引+新近carry,水管泄漏检测工程论文，与天文完全无关；rel=0.5 仅通用词命中，imp=0.479（54 引用）+rec=0.7 合计贡献 0.284，超过相关性贡献 0.200。
+https://openalex.org/W4225314923,The GALAH Survey: A New Sample of Extremely Metal-Poor Stars Using A Machine Learning Classification Algorithm,0.65,0.3386,0.6,1.0,0.5816,相关,无,GALAH 高分辨恒星光谱+ML 筛选极贫金属星，正中主题。
