@@ -1,0 +1,21 @@
+openalex_id,标题,publication_year,relevance_label,原因,评论员
+https://openalex.org/W3268854482,Stellar populations with optical spectra: deep learning versus popular spectrum fitting codes,2022,高度相关,论文使用深度学习处理恒星光谱，与任务主题高度契合,陈星妤
+https://openalex.org/W2788750668,Machine learning applications in Jupiter-host star classification using stellar spectra,2021,高度相关,采用机器学习依托恒星光谱开展恒星分类，契合主题,陈星妤
+https://openalex.org/W3184404263,Stellar Spectra Models Classification and Parameter Estimation Using Machine Learning Algorithms,2022,高度相关,利用机器学习算法完成恒星光谱分类与参数估计,陈星妤
+https://openalex.org/W3132202444,Mapping the Diversity of Galaxy Spectra with Deep Unsupervised Machine Learning,2022,部分相关,使用深度学习处理光谱，但研究对象为星系光谱而非恒星光谱,陈星妤
+https://openalex.org/W3104314424,Deducing neutron star equation of state parameters directly from telescope spectra with uncertainty-aware machine learning,2022,高度相关,采用机器学习从观测光谱推导恒星参数，属于AI处理恒星光谱范畴,陈星妤
+https://openalex.org/W3104314425,Deducing neutron star equation of state from telescope spectra with machine-learning-derived likelihoods,2022,高度相关,借助机器学习方法基于恒星光谱开展天体参数研究,陈星妤
+https://openalex.org/W2948554482,Assessing the performance of LTE and NLTE synthetic stellar spectra in a machine learning framework,2022,高度相关,在机器学习框架下研究恒星合成光谱，符合主题,陈星妤
+https://openalex.org/W2912444384,Star formation rates and stellar masses from machine learning in CAMELS,2022,部分相关,使用机器学习，但核心研究恒星形成率，不围绕恒星光谱处理,陈星妤
+https://openalex.org/W2865444444,Predicting the impact of feedback on matter clustering with machine learning in CAMELS,2022,不相关,机器学习用于宇宙物质聚类，未涉及恒星光谱,陈星妤
+https://openalex.org/W2865444445,Stellar spectral interpolation using machine learning,2022,高度相关,利用机器学习实现恒星光谱插值，属于AI光谱处理任务,陈星妤
+https://openalex.org/W2848550002,Unsupervised Learning for Stellar Spectra with Deep Normalizing Flows,2022,高度相关,采用无监督深度学习模型处理恒星光谱,陈星妤
+https://openalex.org/W2822708765,Mimicking the halo-galaxy connection using machine learning,2022,不相关,机器学习研究星系关联，无恒星光谱相关内容,陈星妤
+https://openalex.org/W2810993469,The (xGaia)ESO Survey: Chemical evolution of Mg and Al in the Milky Way with machine learning,2022,部分相关,用到机器学习与天文观测，但不以恒星光谱处理为核心,陈星妤
+https://openalex.org/W2810881088,Identifying Symbiotic Stars with Machine Learning,2022,高度相关,使用机器学习识别共生恒星，依托恒星光谱数据,陈星妤
+https://openalex.org/W2810881089,Classification of large-scale stellar spectra based on the non-linearly assembling learning machine,2022,高度相关,基于机器学习对大规模恒星光谱进行分类,陈星妤
+https://openalex.org/W2810881090,Machine learning in solar physics. A, C2 Based; Feature Extraction with Machine Learning,2022,部分相关,机器学习用于太阳物理研究，不属于恒星光谱处理方向,陈星妤
+https://openalex.org/W2810881091,Objective Separation between CP1 and CP2 using Feature Extraction with Machine Learning,2022,部分相关,机器学习特征提取，但研究对象不是恒星光谱,陈星妤
+https://openalex.org/W2810881092,Machine Learning Based Automatic Modulation Recognition for Wireless Communications,2023,不相关,机器学习用于通信领域，和天文光谱无关,陈星妤
+https://openalex.org/W2810881093,Machine Learning Model for Leak Detection Using Water Pipeline Vibration Sensor,2023,不相关,机器学习用于管道检测，与天文无关,陈星妤
+https://openalex.org/W2810881094,The GALAH Survey: A New Sample of Extremely Metal-Poor Stars Using A Machine Learning Classification Algorithm,2022,高度相关,采用机器学习算法对恒星光谱样本开展分类研究,陈星妤
