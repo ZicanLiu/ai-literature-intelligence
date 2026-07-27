@@ -17,7 +17,7 @@
 - 此前展示的 PDF 解析是已删除的临时演示，不属于当前功能。计划中提到 PDF、知识图谱、多智能体或前端时，只表示未来是否立项的讨论，不表示已经实现。
 
 第一周实际完成情况与验收结论见
-`docs/reports/week1/weekly_report_20260725.md`；本文件用于说明八周方向。计划中列出的
+`docs/reports/week1/WEEKLY_REPORT_20260725.md`；本文件用于说明八周方向。计划中列出的
 未来交付文件若尚未创建，不应视为当前功能。
 
 ---
@@ -104,7 +104,7 @@
 **学习任务**
 
 - 重新阅读 `README.md`、`app/main.py` 和
-  `docs/reports/live/live_test_report_20260718.md`；
+  `docs/reports/live/LIVE_TEST_REPORT_20260718.md`；
 - 理解关键词、最大返回数、清洗、去重、评分和固定输出目录之间的关系。
 
 **实操步骤**
@@ -243,7 +243,7 @@
 **交付物**
 
 - `tests/manual/week1_test_cases.csv`
-- `docs/reports/week1/test_report_w1_completed.md`
+- `docs/reports/week1/TEST_REPORT_W1_COMPLETED.md`
 - 测试截图。
 
 **验收标准**

@@ -33,7 +33,7 @@ python -m app.main --mode mock --keyword "machine learning astronomical spectra"
 `live` 模式调用 `src/openalex_client.py`，请求 OpenAlex Works API。API Key 只能从 `.env` 或环境变量读取。
 
 live 模式已经完成小规模真实数据测试，测试记录见
-`docs/reports/live/live_test_report_20260718.md`。
+`docs/reports/live/LIVE_TEST_REPORT_20260718.md`。
 
 v0.2 的单次 `per_page` 上限为 100；传入更大值时会自动限制为 100。当前不实现分页。
 

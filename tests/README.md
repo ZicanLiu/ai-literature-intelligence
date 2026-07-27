@@ -28,7 +28,7 @@ python -m unittest discover -s tests/automated -p "test_*.py" -v
 手工测试记录位于 `tests/manual/week1_test_cases.csv`。每条记录至少包含命令、前置条件、
 预期结果、实际结果、状态和证据；没有实际运行的项目必须写“未执行”或“不适用”，
 不能填写为通过。补充报告见
-`docs/reports/week1/test_report_w1_completed.md`。
+`docs/reports/week1/TEST_REPORT_W1_COMPLETED.md`。
 
 新增测试也应使用临时输出目录。需要 live 的场景不得把 Key 写入命令或报告；没有合法
 本地配置时只记录预期行为，不擅自请求真实 API。

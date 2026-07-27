@@ -26,7 +26,7 @@
 - `src/storage.py`
 - `README.md`
 - `docs/README.md`
-- `docs/current_status.md`
+- `docs/CURRENT_STATUS.md`
 - `data/README.md`
 - `tests/README.md`
 - `outputs/README.md`
@@ -38,9 +38,6 @@
 蒲正杰若确实需要 `scikit-learn`，可在 PR 中修改 `requirements.txt`，但必须说明引入原因、
 版本兼容性和验证结果。其他成员若认为共享文件需要调整，应在 PR 描述中提出建议，由
 组长集成，不直接改写。所有人都可以读取其他模块，但不得擅自覆盖他人成果。
-
-除各目录的 `README.md` 外，仓库中的英文文件名统一使用小写；新增文件也应遵守这一
-约定。
 
 ## 冲突处理
 

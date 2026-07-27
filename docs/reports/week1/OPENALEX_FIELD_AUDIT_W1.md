@@ -222,7 +222,7 @@ These two changes address the most impactful quality gaps without adding complex
 
 | File | Path |
 |------|------|
-| Audit report (this file) | `docs/reports/week1/openalex_field_audit_w1.md` |
+| Audit report (this file) | `docs/reports/week1/OPENALEX_FIELD_AUDIT_W1.md` |
 | Anomaly records CSV | `data/analysis/openalex_field_audit_w1.csv` |
 
 ---

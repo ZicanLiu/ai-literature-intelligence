@@ -7,7 +7,7 @@
 当前六项任务均处于计划或开发阶段。表中的路径是约定交付入口，不表示文件或功能已经
 完成；本页面由组长在最终集成时根据实际 Pull Request 更新。
 
-`docs/project/summer_plan_2026.md` 是暑期方向初稿；第二周的实际人员分工和路径以已经
+`docs/project/SUMMER_PLAN_2026.md` 是暑期方向初稿；第二周的实际人员分工和路径以已经
 发布的 Issue、本页及文件归属表为准。
 
 | 方向 | 负责人 | 代码入口 | 数据目录 | 测试 | 报告 | 当前状态 |
@@ -30,9 +30,9 @@ git switch -c <Issue 中规定的分支名>
 
 协作前先阅读：
 
-- [第二周文件归属与协作边界](../../collaboration/w2_file_ownership.md)
-- [第二周数据接口约定](../../project/w2_data_contracts.md)
-- [贡献指南](../../../contributing.md)
+- [第二周文件归属与协作边界](../../collaboration/W2_FILE_OWNERSHIP.md)
+- [第二周数据接口约定](../../project/W2_DATA_CONTRACTS.md)
+- [贡献指南](../../../CONTRIBUTING.md)
 
 任务完成后应把代码、数据、测试和报告的真实路径补充到上表；未提交或未验证的内容继续
 标记为“待提交”，不能提前写成已完成。

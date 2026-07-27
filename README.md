@@ -12,7 +12,7 @@
 
 - mock 模式已经完成完整流程验证，相关图表由教学样例生成；
 - live 模式已使用 OpenAlex 完成小规模真实测试，详见
-  [`docs/reports/live/live_test_report_20260718.md`](docs/reports/live/live_test_report_20260718.md)；
+  [`docs/reports/live/LIVE_TEST_REPORT_20260718.md`](docs/reports/live/LIVE_TEST_REPORT_20260718.md)；
 - `preliminary_score` 是透明的 baseline 排序规则，尚未经过人工评价数据验证；
 - 当前结果不代表真实论文价值评价，mock 图表也不代表真实学术结论。
 
@@ -203,19 +203,19 @@ v0.2 没有使用 TF-IDF、Embedding、RAG、大模型 API、Crossref 二次校�
 
 ## 13. 六人协作入口
 
-- 贡献规则：[`contributing.md`](contributing.md)
+- 贡献规则：[`CONTRIBUTING.md`](CONTRIBUTING.md)
 - 文档索引：[`docs/README.md`](docs/README.md)
-- 当前状态：[`docs/current_status.md`](docs/current_status.md)
-- Git 操作指南：[`docs/collaboration/team_git_guide.md`](docs/collaboration/team_git_guide.md)
-- 第一周总结：[`docs/reports/week1/weekly_report_20260725.md`](docs/reports/week1/weekly_report_20260725.md)
+- 当前状态：[`docs/CURRENT_STATUS.md`](docs/CURRENT_STATUS.md)
+- Git 操作指南：[`docs/collaboration/TEAM_GIT_GUIDE.md`](docs/collaboration/TEAM_GIT_GUIDE.md)
+- 第一周总结：[`docs/reports/week1/WEEKLY_REPORT_20260725.md`](docs/reports/week1/WEEKLY_REPORT_20260725.md)
 
 所有任务都应从最新 `main` 创建短期分支，通过 Pull Request 合并，禁止直接向 `main` 推送。
 
 ### 第二周协作入口
 
 - [第二周成果索引](docs/reports/week2/README.md)
-- [第二周文件归属与协作边界](docs/collaboration/w2_file_ownership.md)
-- [第二周数据接口约定](docs/project/w2_data_contracts.md)
+- [第二周文件归属与协作边界](docs/collaboration/W2_FILE_OWNERSHIP.md)
+- [第二周数据接口约定](docs/project/W2_DATA_CONTRACTS.md)
 
 这些页面只建立协作目录和接口。OpenAlex v2、疑似重复复核、领域查询、质量门禁、
 TF-IDF 排序和批量集成仍处于计划或开发阶段，不属于当前 v0.2.0 稳定功能。
