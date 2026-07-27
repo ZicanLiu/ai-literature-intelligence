@@ -25,6 +25,15 @@
 - [初步排序结果分析](reports/week1/RANKING_ANALYSIS_W1.md)
 - [第一周补充测试报告](reports/week1/TEST_REPORT_W1_COMPLETED.md)
 
+## 第二周协作
+
+- [第二周成果索引](reports/week2/README.md)
+- [第二周文件归属与协作边界](collaboration/W2_FILE_OWNERSHIP.md)
+- [第二周数据接口约定](project/W2_DATA_CONTRACTS.md)
+
+第二周业务功能仍处于计划或开发阶段；以上文档用于统一路径、责任边界和字段含义，
+不代表 v0.3.0 已经完成。
+
 ## live 验证
 
 - [2026-07-18 OpenAlex live 测试报告](reports/live/LIVE_TEST_REPORT_20260718.md)

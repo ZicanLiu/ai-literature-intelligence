@@ -211,6 +211,15 @@ v0.2 没有使用 TF-IDF、Embedding、RAG、大模型 API、Crossref 二次校�
 
 所有任务都应从最新 `main` 创建短期分支，通过 Pull Request 合并，禁止直接向 `main` 推送。
 
+### 第二周协作入口
+
+- [第二周成果索引](docs/reports/week2/README.md)
+- [第二周文件归属与协作边界](docs/collaboration/W2_FILE_OWNERSHIP.md)
+- [第二周数据接口约定](docs/project/W2_DATA_CONTRACTS.md)
+
+这些页面只建立协作目录和接口。OpenAlex v2、疑似重复复核、领域查询、质量门禁、
+TF-IDF 排序和批量集成仍处于计划或开发阶段，不属于当前 v0.2.0 稳定功能。
+
 ## 14. 后续可扩展方向
 
 - Crossref DOI 二次校验
