@@ -15,13 +15,13 @@
 
 从合并记录可以确认，本周完成了一轮“任务分支 → Pull Request → 合并到 main”的协作闭环。当前本地 Git 历史不能可靠统计 GitHub Issue 总数、每个 PR 的在线审核讨论或参与成员人数，因此本报告不对这些数量作猜测，具体状态以 GitHub 页面为准。
 
-武子恒提交的协作规范已整理在 `docs/TEAM_GIT_GUIDE.md`。文档覆盖 Issue 确认、同步 `main`、创建短期分支、精确暂存、Commit、Push、创建 PR、处理审核意见、冲突和异常处理、安全边界，以及提交前检查清单。该文档明确不包含 Python 环境配置、依赖安装或项目运行方法。
+武子恒提交的协作规范现归档在 `docs/collaboration/TEAM_GIT_GUIDE.md`。文档覆盖 Issue 确认、同步 `main`、创建短期分支、精确暂存、Commit、Push、创建 PR、处理审核意见、冲突和异常处理、安全边界，以及提交前检查清单。该文档明确不包含 Python 环境配置、依赖安装或项目运行方法。
 
 ## 三、成员交付成果核查
 
 ### 1. Git 协作规范
 
-- `docs/TEAM_GIT_GUIDE.md`：面向团队成员的 GitHub、VS Code 和终端协作说明。
+- `docs/collaboration/TEAM_GIT_GUIDE.md`：面向团队成员的 GitHub、VS Code 和终端协作说明。
 
 文档给出了完整的标准协作顺序，说明了 `main` 与任务分支的边界，并提供分支命名、提交信息、PR 内容、安全检查、冲突处理和高风险命令提示。内容与当前团队通过 Issue、任务分支和 PR 开展协作的方向一致，基本满足本周 Git 协作说明的验收要求。
 
@@ -30,24 +30,26 @@
 ### 2. OpenAlex 字段质量检查
 
 - `data/samples/openalex_stellar_spectra_100.csv`：统一样例，实际读取为 100 条、16 列，关键词均为 `machine learning stellar spectra`，100 个 OpenAlex ID 均不重复。
-- `docs/OPENALEX_FIELD_AUDIT_W1.md`：对全体样例的缺失统计，并对前 20 条进行逐条抽查。
+- `docs/reports/week1/OPENALEX_FIELD_AUDIT_W1.md`：对全体样例的缺失统计，并对前 20 条进行逐条抽查。
 - `data/analysis/openalex_field_audit_w1.csv`：18 条异常记录，对应 16 个不同的样例 ID；这 16 个 ID 都能在统一样例中找到。
 
 本次实际重新统计与报告中的主要缺失数一致：`landing_page_url` 缺失 1 条、`source_name` 缺失 2 条、`doi` 缺失 4 条、`abstract` 缺失 4 条；标题、作者、年份、引用量和 OpenAlex ID 没有缺失。报告还记录了主题混入、标题 HTML 标记、摘要前缀和引用量极值等问题。字段核查有明确的数据来源和可复查记录，基本满足验收要求。
 
 ### 3. 领域检索词与人工相关性标注
 
-- `docs/DOMAIN_QUERY_GUIDE_W1.md`：实际列出 5 条领域检索词，覆盖恒星光谱分类、大气参数估计、降噪、异常检测和特征提取。
+- `docs/reports/week1/DOMAIN_QUERY_GUIDE_W1.md`：实际列出 5 条领域检索词，覆盖恒星光谱分类、大气参数估计、降噪、异常检测和特征提取。
 - `data/manual/relevance_labels_w1.csv`：文件中有 20 条物理数据行。
 
 这里需要保留一个待确认事项。该标注 CSV 第 17 行列数不符合表头：标题中的逗号未按 CSV 规则转义，因此只有 19 条记录可被严格解析；这 19 条的标签分布为高度相关 11 条、部分相关 4 条、不相关 4 条。更重要的是，这 19 个可解析的 OpenAlex ID 与统一 100 条样例没有重合。因此可以确认“已提交一份人工标注文件”，但目前不能确认它是否针对本周统一样例，也不应把它的标签比例写成对该样例的客观统计。该项状态为待人工确认。
 
 ### 4. MVP 测试
 
-- `week1_test_cases.csv`
-- `week1_test_report.md`
+- `tests/manual/week1_test_cases.csv`
+- `docs/reports/week1/TEST_REPORT_W1_COMPLETED.md`
 
-两个文件当前均为 0 字节，没有可读取的测试用例、通过/失败记录或结论。因此本周无法在仓库中确认独立的成员测试交付，也不能把该方向写成已完成。
+第一周合并时，根目录中的 `week1_test_cases.csv` 和 `week1_test_report.md` 均为
+0 字节，因此本周总结当时无法确认独立测试交付。第二周基线整理已保留这一历史判断，
+删除空占位，并补充离线自动测试、实际手工测试记录和报告；补充结果不追溯为原成员交付。
 
 作为合并后的整合验证，本次在当前代码上实际运行：
 
@@ -59,7 +61,7 @@ python -m app.main --mode mock --keyword "machine learning astronomical spectra"
 
 ### 5. 初步排序结果分析
 
-- `docs/RANKING_ANALYSIS_W1.md`
+- `docs/reports/week1/RANKING_ANALYSIS_W1.md`
 - `data/analysis/ranking_cases_w1.csv`
 
 排序复核表实际包含 20 条、10 列，20 个 OpenAlex ID 均能在统一样例中找到。文件中的人工判断为相关 13 条、部分相关 2 条、不相关 5 条；问题标记包括 3 条相关性词项误匹配、3 条由高引用或新近性带入前列的情况、2 条边界案例和 1 条星系光谱对象不匹配。
@@ -82,11 +84,11 @@ python -m app.main --mode mock --keyword "machine learning astronomical spectra"
 
 - 一轮可在 Git 历史中确认的成员 PR 合并记录（PR #10—#13、PR #16）。
 - 100 条统一 OpenAlex live 样例：`data/samples/openalex_stellar_spectra_100.csv`。
-- OpenAlex 字段质量检查材料：`docs/OPENALEX_FIELD_AUDIT_W1.md`、`data/analysis/openalex_field_audit_w1.csv`。
-- 5 条领域检索词：`docs/DOMAIN_QUERY_GUIDE_W1.md`。
+- OpenAlex 字段质量检查材料：`docs/reports/week1/OPENALEX_FIELD_AUDIT_W1.md`、`data/analysis/openalex_field_audit_w1.csv`。
+- 5 条领域检索词：`docs/reports/week1/DOMAIN_QUERY_GUIDE_W1.md`。
 - 一份需要继续核对来源和格式的人工相关性标注文件：`data/manual/relevance_labels_w1.csv`。
-- 前 20 名初步排序人工复核：`docs/RANKING_ANALYSIS_W1.md`、`data/analysis/ranking_cases_w1.csv`。
-- 团队 Git 协作规范：`docs/TEAM_GIT_GUIDE.md`。
+- 前 20 名初步排序人工复核：`docs/reports/week1/RANKING_ANALYSIS_W1.md`、`data/analysis/ranking_cases_w1.csv`。
+- 团队 Git 协作规范：`docs/collaboration/TEAM_GIT_GUIDE.md`。
 
 ## 六、本周主要发现
 
@@ -101,8 +103,10 @@ python -m app.main --mode mock --keyword "machine learning astronomical spectra"
 - 真实统一样例只有 100 条，且只代表一次检索与排序结果，不是完整或权威的天文光谱文献集。
 - 人工相关性标注数量和格式尚不稳定，当前无法作为排序验证集。
 - 初步排序权重尚未经过可追溯的人工评价数据验证；严格去重仍主要依据 DOI 或完全相同标题。
-- `outputs/raw/`、`outputs/tables/` 等默认运行结果会被后续运行覆盖，虽然 `.gitignore` 已避免将其作为普通提交，但长期实验的归档规则仍需继续执行。
-- 测试 PR 的两个根目录文件为空，需补充可运行的用例与结果后才能形成测试结论。
+- 第一周结束时默认运行结果会被后续运行覆盖；第二周基线整理已改为每次创建唯一
+  `outputs/experiments/<run_id>/`，普通实验仍默认不提交。
+- 测试 PR 的两个根目录文件在第一周合并时为空；第二周基线整理已用实际测试成果替代，
+  但该补充不改变第一周原交付的核查结论。
 - 当前 Git 协作说明没有覆盖 Python 环境复现，后续如需形成统一环境记录，应单独安排并保留实际运行证据。
 
 ## 八、下一周计划
@@ -112,7 +116,7 @@ python -m app.main --mode mock --keyword "machine learning astronomical spectra"
 3. 为每次实验使用独立输出目录和简短说明，避免默认运行结果互相覆盖。
 4. 补充实际可执行的命令行测试用例和测试报告，覆盖 mock 正常流程、参数边界和空结果等场景。
 5. 在人工标注样本扩大后，再设计“确定重复 + 疑似重复人工复核”的小规模机制。
-6. 继续按照 `docs/TEAM_GIT_GUIDE.md`，使用 Issue、短期分支和 Pull Request 管理每个可验收任务。
+6. 继续按照 `docs/collaboration/TEAM_GIT_GUIDE.md`，使用 Issue、短期分支和 Pull Request 管理每个可验收任务。
 
 本周不建议直接加入 RAG、知识图谱、多 Agent 或 PDF 全文解析。这些方向应建立在检索质量、人工标注和基础测试更稳定之后。
 
@@ -121,9 +125,9 @@ python -m app.main --mode mock --keyword "machine learning astronomical spectra"
 | 任务方向 | 文件路径 | 内容概括 | 状态 |
 | --- | --- | --- | --- |
 | 统一真实样例 | `data/samples/openalex_stellar_spectra_100.csv` | 100 条 OpenAlex live 元数据与项目评分字段 | 已完成 |
-| Git 协作规范 | `docs/TEAM_GIT_GUIDE.md` | Issue、分支、Commit、Push、PR、审核、安全和异常处理说明 | 已完成 |
-| 字段质量 | `docs/OPENALEX_FIELD_AUDIT_W1.md`、`data/analysis/openalex_field_audit_w1.csv` | 100 条样例缺失统计、前 20 抽查与异常记录 | 已完成但需继续完善 |
-| 检索词 | `docs/DOMAIN_QUERY_GUIDE_W1.md` | 5 条天文光谱领域检索词 | 已完成 |
+| Git 协作规范 | `docs/collaboration/TEAM_GIT_GUIDE.md` | Issue、分支、Commit、Push、PR、审核、安全和异常处理说明 | 已完成 |
+| 字段质量 | `docs/reports/week1/OPENALEX_FIELD_AUDIT_W1.md`、`data/analysis/openalex_field_audit_w1.csv` | 100 条样例缺失统计、前 20 抽查与异常记录 | 已完成但需继续完善 |
+| 检索词 | `docs/reports/week1/DOMAIN_QUERY_GUIDE_W1.md` | 5 条天文光谱领域检索词 | 已完成 |
 | 人工相关性标注 | `data/manual/relevance_labels_w1.csv` | 20 条物理行；其中 1 行格式异常，且无法关联统一样例 | 待人工确认 |
-| 排序复核 | `docs/RANKING_ANALYSIS_W1.md`、`data/analysis/ranking_cases_w1.csv` | 前 20 名人工复核与透明改进建议 | 已完成但需继续完善 |
-| 命令行测试 | `week1_test_cases.csv`、`week1_test_report.md` | 两个文件均为空，未确认实际测试内容 | 待人工确认 |
+| 排序复核 | `docs/reports/week1/RANKING_ANALYSIS_W1.md`、`data/analysis/ranking_cases_w1.csv` | 前 20 名人工复核与透明改进建议 | 已完成但需继续完善 |
+| 命令行测试 | `tests/manual/week1_test_cases.csv`、`docs/reports/week1/TEST_REPORT_W1_COMPLETED.md` | 第二周基线整理补充的实际测试，不追溯为原成员交付 | 已补充 |

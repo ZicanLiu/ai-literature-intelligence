@@ -11,7 +11,8 @@
 当前验证状态：
 
 - mock 模式已经完成完整流程验证，相关图表由教学样例生成；
-- live 模式已使用 OpenAlex 完成小规模真实测试，详见 `docs/LIVE_TEST_REPORT_20260718.md`；
+- live 模式已使用 OpenAlex 完成小规模真实测试，详见
+  [`docs/reports/live/LIVE_TEST_REPORT_20260718.md`](docs/reports/live/LIVE_TEST_REPORT_20260718.md)；
 - `preliminary_score` 是透明的 baseline 排序规则，尚未经过人工评价数据验证；
 - 当前结果不代表真实论文价值评价，mock 图表也不代表真实学术结论。
 
@@ -40,13 +41,9 @@
 
 输出：
 
-- `outputs/raw/raw_response.json`
-- `outputs/tables/papers_ranked.csv`
-- `outputs/tables/duplicates_removed.csv`
-- `outputs/figures/top10_citations.png`
-- `outputs/figures/top10_preliminary_score.png`
-- `outputs/reports/run_summary.txt`
-- `data/literature.db`
+- 每次运行对应一个 `outputs/experiments/<run_id>/`；
+- 同一目录内保存运行配置、原始响应、CSV、SQLite、图表和运行摘要；
+- `run_id` 包含时间、模式、关键词片段、请求数量和短随机标识，连续运行不会覆盖。
 
 ## 3. 为什么选择这个验证场景
 
@@ -83,6 +80,21 @@ mock 模式不依赖网络，也不依赖 API Key：
 python -m app.main --mode mock --keyword "machine learning astronomical spectra" --max-results 20
 ```
 
+程序会自动创建唯一实验目录。如需把验证结果写入临时位置，可使用：
+
+```powershell
+python -m app.main --mode mock --keyword "machine learning stellar spectra" --max-results 20 --output-root temp/test-runs --run-name readme-check
+```
+
+`--run-name` 可选；中文或特殊字符会被转换成安全目录片段，完整关键词始终保存在
+`run_config.json`。
+
+运行离线自动测试：
+
+```powershell
+python -m unittest discover -s tests/automated -p "test_*.py" -v
+```
+
 ## 7. live 模式运行命令
 
 live 模式会请求 OpenAlex：
@@ -103,17 +115,35 @@ OpenAlex 的 `per_page` 范围为 1—100。本项目 v0.2 单次最多请求 10
 
 ## 8. 输出文件说明
 
-| 文件 | 说明 |
+| 文件（相对 `<run_id>/`） | 说明 |
 | --- | --- |
-| `outputs/raw/raw_response.json` | 保存 OpenAlex 或 mock 的原始响应 |
-| `outputs/tables/papers_ranked.csv` | 保存清洗、去重并完成初步排序后的论文表 |
-| `outputs/tables/duplicates_removed.csv` | 保存被去重的论文及去重原因 |
-| `outputs/figures/top10_citations.png` | 引用量最高的 Top 10 文献图 |
-| `outputs/figures/top10_preliminary_score.png` | preliminary_score 最高的 Top 10 文献图 |
-| `outputs/reports/run_summary.txt` | 保存本次运行的数量统计、缺失字段统计和输出路径 |
-| `data/literature.db` | SQLite 数据库，保存最近一次运行的排序论文 |
+| `run_config.json` | 参数、评分权重、数量、耗时、状态和输出文件相对路径 |
+| `raw/raw_response.json` | 保存 OpenAlex 或 mock 的原始响应 |
+| `tables/papers_ranked.csv` | 保存清洗、去重并完成初步排序后的论文表 |
+| `tables/duplicates_removed.csv` | 保存被去重的论文及去重原因 |
+| `figures/top10_citations.png` | 引用量最高的 Top 10 文献图 |
+| `figures/top10_preliminary_score.png` | preliminary_score 最高的 Top 10 文献图 |
+| `reports/run_summary.txt` | 保存数量统计、缺失字段统计和相对输出路径 |
+| `data/literature.db` | 只保存本次运行排序论文的 SQLite 数据库 |
 
-`outputs/raw/`、`outputs/tables/`、`outputs/figures/` 和 `outputs/reports/` 是每次运行会覆盖的结果，默认不提交。经过来源、安全和可复现性检查后，需要长期保留的基线或实验结果可以放入 `outputs/baselines/`、`outputs/live_test_*/` 或 `outputs/experiments/`。
+普通实验写入 `outputs/experiments/`，默认不提交。经过来源、安全和可复现性检查后，
+确需长期保留的稳定结果才能提升到 `outputs/baselines/`。现有
+`outputs/live_test_20260718/` 和已跟踪历史实验保留原路径，详情见
+[`outputs/README.md`](outputs/README.md)。
+
+### 当前目录分工
+
+```text
+app/                         命令行入口
+src/                         获取、处理、输出管理、存储与可视化
+data/{samples,manual,analysis}/ 固定样例、人工数据与分析表
+docs/project/                长期项目说明
+docs/collaboration/          Git 与团队协作规范
+docs/reports/                周报、分析与 live 验证记录
+tests/{automated,manual}/     离线自动测试与手工测试记录
+outputs/baselines/           经确认的稳定基线
+outputs/experiments/         默认生成、通常不提交的独立实验
+```
 
 ## 9. 初步排序公式
 
@@ -147,6 +177,7 @@ v0.2 没有使用 TF-IDF、Embedding、RAG、大模型 API、Crossref 二次校�
 - 排序和去重 CSV 在零数据时仍保留稳定表头；
 - 图表标题增加 `[MOCK DATA]` 或 `[OPENALEX LIVE]` 数据来源标识；
 - 增加版本号和当前验证状态说明。
+- 第二周开始前增加独立实验目录和离线自动测试，不改变评分公式的业务含义。
 
 ## 12. 常见问题
 
@@ -172,9 +203,11 @@ v0.2 没有使用 TF-IDF、Embedding、RAG、大模型 API、Crossref 二次校�
 
 ## 13. 六人协作入口
 
-- 贡献规则：`CONTRIBUTING.md`
-- Git 操作指南：`docs/TEAM_GIT_GUIDE.md`
-- 第一周分工：`docs/WEEK1_TASKS.md`
+- 贡献规则：[`CONTRIBUTING.md`](CONTRIBUTING.md)
+- 文档索引：[`docs/README.md`](docs/README.md)
+- 当前状态：[`docs/CURRENT_STATUS.md`](docs/CURRENT_STATUS.md)
+- Git 操作指南：[`docs/collaboration/TEAM_GIT_GUIDE.md`](docs/collaboration/TEAM_GIT_GUIDE.md)
+- 第一周总结：[`docs/reports/week1/WEEKLY_REPORT_20260725.md`](docs/reports/week1/WEEKLY_REPORT_20260725.md)
 
 所有任务都应从最新 `main` 创建短期分支，通过 Pull Request 合并，禁止直接向 `main` 推送。
 
