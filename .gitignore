@@ -36,5 +36,9 @@ outputs/reports/*.txt
 # 每次运行生成的普通实验默认不提交；已跟踪的历史实验不会受此规则影响。
 outputs/experiments/*
 
+# 质量门禁普通运行结果默认不提交，只跟踪目录说明。
+outputs/quality/*
+!outputs/quality/README.md
+
 # outputs/baselines/ 和 outputs/live_test_*/ 不在忽略列表中。
 # 这些目录只保存经过来源、安全和可复现性检查、确有必要长期保留的基线或实验结果。

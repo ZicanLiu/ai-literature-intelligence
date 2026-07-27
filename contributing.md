@@ -78,3 +78,16 @@ Pull Request 必须写明：
 - [ ] `preliminary_score` 没有被描述为真实学术价值；
 - [ ] 验证方法和实际结果已写入 PR。
 
+## 6. 第二周协作规则
+
+- 开始前阅读
+  [`docs/collaboration/w2_file_ownership.md`](docs/collaboration/w2_file_ownership.md)，
+  以文件归属表为主要边界；共享文件默认由组长在集成时修改。
+- 每项任务使用 `tests/fixtures/` 下的独立子目录，不改写其他任务的 fixture。
+- live 结果只提交经过整理、来源清楚且体积适中的样例或摘要，不提交完整普通实验目录。
+- 涉及真实检索或样例的 PR 必须记录 `keyword`、`run_id` 和记录数量；未执行 live 时
+  应明确写“未执行”。
+- Git 提交说明默认使用简洁中文，说明实际完成的事情，不把计划写成成果。
+- 分支可使用 `feature/`、`test/`、`data/`、`docs/`、`fix/` 或 `chore/` 等前缀。
+- 第二周新增的非 `README.md` 文件统一使用小写英文命名；需要修改共享文件时先在 PR
+  描述中提出，由组长决定如何集成。

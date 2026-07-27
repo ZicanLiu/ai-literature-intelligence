@@ -282,7 +282,7 @@ git add 文件路径  # 把指定文件加入暂存区
 例如：
 
 ```bash
-git add docs/collaboration/TEAM_GIT_GUIDE.md  # 只暂存团队 Git 协作说明
+git add docs/collaboration/team_git_guide.md  # 只暂存团队 Git 协作说明
 ```
 
 不建议默认使用：
@@ -310,7 +310,7 @@ git diff --cached --stat  # 只查看暂存区内各文件的修改规模
 只查看某个文件：
 
 ```bash
-git diff --cached -- docs/collaboration/TEAM_GIT_GUIDE.md  # 只查看该文档已暂存的修改
+git diff --cached -- docs/collaboration/team_git_guide.md  # 只查看该文档已暂存的修改
 ```
 
 如果进入分页界面，按：
@@ -955,7 +955,7 @@ git status --short  # 用简洁格式查看文件状态
 git diff  # 查看尚未暂存的具体修改
 
 # 精确暂存
-git add docs/collaboration/TEAM_GIT_GUIDE.md  # 只暂存团队 Git 协作说明
+git add docs/collaboration/team_git_guide.md  # 只暂存团队 Git 协作说明
 
 # 检查即将提交的内容
 git diff --cached  # 查看已经暂存、即将进入 Commit 的内容
