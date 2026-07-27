@@ -1,0 +1,29 @@
+{
+  "description": "TF-IDF 词法相关性已知答案案例：3 篇标题文档 + 1 个查询，期望值按公式手算，推导见同目录 README.md。",
+  "formula": {
+    "tf": "词项在文档中的原始出现次数",
+    "idf": "ln((N + 1) / (df + 1)) + 1，N 为文档总数，df 为包含该词项的文档数",
+    "similarity": "查询向量与文档向量的余弦相似度"
+  },
+  "documents": {
+    "D1": "machine learning spectra",
+    "D2": "machine vision",
+    "D3": "deep sea fish"
+  },
+  "query": "machine learning",
+  "expected_idf": {
+    "machine": 1.287682,
+    "learning": 1.693147,
+    "spectra": 1.693147,
+    "vision": 1.693147,
+    "deep": 1.693147,
+    "sea": 1.693147,
+    "fish": 1.693147
+  },
+  "expected_cosine": {
+    "D1": 0.782408,
+    "D2": 0.366447,
+    "D3": 0.0
+  },
+  "tolerance": 0.0001
+}

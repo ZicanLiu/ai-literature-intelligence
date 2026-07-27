@@ -1,0 +1,6 @@
+﻿openalex_id,title,cited_by_count,old_rank,new_rank,rank_change,baseline_preliminary_score,combined_relevance_score,stage1_relevance_level,explanation
+https://openalex.org/W2316951457,Stellar atmospheric parameter estimation using Gaussian process regression,31,48,4,44,0.3376,0.2985,high,排名上升 44 位：词法相关性 combined=0.2985（high 层）在新权重 0.50 下贡献超过引用影响
+https://openalex.org/W2623459029,Photometric redshift estimation via deep learning,162,44,16,28,0.3493,0.1712,medium,排名上升 28 位：词法相关性 combined=0.1712（medium 层）在新权重 0.50 下贡献超过引用影响
+https://openalex.org/W4320341265,"Full spectrum fitting with photometry in <scp>ppxf</scp>: stellar population versus dynamical masses, non-parametric star formation history and metallicity for 3200 LEGA-C galaxies at redshift <i>z</i> ≈ 0.8",254,8,35,-27,0.4587,0.0209,low,排名下降 27 位：引用量 254 支撑了旧版高分，但词法相关性 combined=0.0209（low 层），第一阶段降权系数 0.5 生效
+https://openalex.org/W2808054733,Empirical Relations for the Accurate Estimation of Stellar Masses and Radii,33,50,26,24,0.3331,0.1274,medium,排名上升 24 位：词法相关性 combined=0.1274（medium 层）在新权重 0.50 下贡献超过引用影响
+https://openalex.org/W2211251945,Stellar parametrization from<i>Gaia</i>RVS spectra,88,51,28,23,0.3276,0.1277,medium,排名上升 23 位：词法相关性 combined=0.1277（medium 层）在新权重 0.50 下贡献超过引用影响
