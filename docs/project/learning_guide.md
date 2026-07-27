@@ -141,5 +141,6 @@ v0.2 会在图表标题中明确标记 `[MOCK DATA]` 或 `[OPENALEX LIVE]`，阅
 开始修改前继续阅读：
 
 - `CONTRIBUTING.md`：分支、Pull Request、安全和验证规则；
-- `docs/TEAM_GIT_GUIDE.md`：从 clone 到合并后同步 `main` 的命令；
-- `docs/WEEK1_TASKS.md`：六位成员第一周的独立任务和验收标准。
+- `docs/collaboration/TEAM_GIT_GUIDE.md`：从 clone 到合并后同步 `main` 的命令；
+- `docs/reports/week1/WEEKLY_REPORT_20260725.md`：第一周实际交付、核查结论和待确认事项；
+- `docs/CURRENT_STATUS.md`：第二周开始前的当前基线与下一步重点。

@@ -27,6 +27,13 @@ OUTPUT_FIELDS = [
     "retrieved_at",
 ]
 
+PRELIMINARY_SCORE_WEIGHTS = {
+    "relevance_score": 0.40,
+    "impact_score": 0.30,
+    "recency_score": 0.20,
+    "completeness_score": 0.10,
+}
+
 
 def clean_papers(raw_papers: list[dict], keyword: str) -> list[dict]:
     """
@@ -272,10 +279,11 @@ def add_preliminary_scores(papers: list[dict], keyword: str) -> list[dict]:
         # 相关性 40%，引用影响 30%，近期程度 20%，字段完整度 10%。
         # 它不等同于论文“学术价值”，也不能替代人工阅读和判断。
         preliminary_score = (
-            0.40 * relevance_score
-            + 0.30 * impact_score
-            + 0.20 * recency_score
-            + 0.10 * completeness_score
+            PRELIMINARY_SCORE_WEIGHTS["relevance_score"] * relevance_score
+            + PRELIMINARY_SCORE_WEIGHTS["impact_score"] * impact_score
+            + PRELIMINARY_SCORE_WEIGHTS["recency_score"] * recency_score
+            + PRELIMINARY_SCORE_WEIGHTS["completeness_score"]
+            * completeness_score
         )
 
         scored_paper = dict(paper)

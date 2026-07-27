@@ -39,10 +39,11 @@ git check-ignore -v .env
 
 ## 3. 输出与实验数据
 
-- `outputs/raw/`、`outputs/tables/`、`outputs/figures/` 和 `outputs/reports/` 是运行时结果，会被后续运行覆盖，默认不提交。
+- 普通运行写入 `outputs/experiments/<run_id>/`，每次目录独立，默认由 `.gitignore` 忽略。
 - `outputs/baselines/` 保存经过验证、可复现的固定基线。
 - `outputs/live_test_*/` 保存有明确日期、检索词和记录数的小规模真实测试。
-- `outputs/experiments/` 只保存确有比较价值的实验结果；提交前必须检查数据来源、敏感信息、记录数和说明文档。
+- 不要直接强制添加普通实验。确有长期价值的结果应核对数据来源、敏感信息、记录数和
+  `run_config.json` 后，通过单独任务提升到 `outputs/baselines/`。
 - 不得把 mock 数据描述成真实论文，也不得把小样本实验描述成算法评测结论。
 
 ## 4. 修改与验证
@@ -53,6 +54,7 @@ git check-ignore -v .env
 
 ```powershell
 python -m app.main --mode mock --keyword "machine learning astronomical spectra" --max-results 20
+python -m unittest discover -s tests/automated -p "test_*.py" -v
 ```
 
 只有本地合法配置 OpenAlex Key 时，才执行 live 验证；不得把密钥写进命令行、代码、日志或报告。

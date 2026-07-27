@@ -13,19 +13,19 @@
 
 1. 打开 GitHub 的 Issues 总览，说明任务按方向拆分；具体 Issue 数量以页面为准。
 2. 打开 Pull Requests 或本地合并历史，展示成员 PR #10—#13 和 PR #16 已进入 `main`，并说明此前代做的 Git 文档和第一版周报已经回退。
-3. 打开武子恒提交的 `docs/TEAM_GIT_GUIDE.md`，用一句话说明：团队按照“Issue → 最新 main → 任务分支 → Commit → Push → PR → 审核合并”协作。
+3. 打开武子恒提交的 `docs/collaboration/TEAM_GIT_GUIDE.md`，用一句话说明：团队按照“Issue → 最新 main → 任务分支 → Commit → Push → PR → 审核合并”协作。
 4. 打开 `data/samples/openalex_stellar_spectra_100.csv` 与 `data/samples/README.md`，说明这是 100 条 OpenAlex live 样例，不是完整文献库。
 5. 依次打开字段审计、检索词与标注、排序复核文件。
-6. 打开 `docs/WEEKLY_REPORT_20260725.md`，总结可确认成果和待核对问题。
+6. 打开 `docs/reports/week1/WEEKLY_REPORT_20260725.md`，总结可确认成果和待核对问题。
 7. 最后展示下周计划。
 
 ## 3. 各类成果的一句话介绍
 
-- Git 协作规范：`docs/TEAM_GIT_GUIDE.md` 说明了 Issue、任务分支、精确暂存、Commit/Push/PR、审核、安全检查、冲突和异常处理。
-- 字段质量：`docs/OPENALEX_FIELD_AUDIT_W1.md` 对 100 条统一样例统计缺失，并记录了 HTML 标记、主题混入和引用量极值等问题。
-- 领域检索词：`docs/DOMAIN_QUERY_GUIDE_W1.md` 给出 5 个围绕恒星光谱分类、参数估计、降噪、异常检测和特征提取的查询方向。
+- Git 协作规范：`docs/collaboration/TEAM_GIT_GUIDE.md` 说明了 Issue、任务分支、精确暂存、Commit/Push/PR、审核、安全检查、冲突和异常处理。
+- 字段质量：`docs/reports/week1/OPENALEX_FIELD_AUDIT_W1.md` 对 100 条统一样例统计缺失，并记录了 HTML 标记、主题混入和引用量极值等问题。
+- 领域检索词：`docs/reports/week1/DOMAIN_QUERY_GUIDE_W1.md` 给出 5 个围绕恒星光谱分类、参数估计、降噪、异常检测和特征提取的查询方向。
 - 人工标注：`data/manual/relevance_labels_w1.csv` 已提交，但当前有 1 行 CSV 格式异常且无法与统一样例 ID 对应，需要先修复和确认来源。
-- 排序复核：`docs/RANKING_ANALYSIS_W1.md` 对统一样例前 20 名作人工复核，显示当前词项匹配和引用量因素会引入跨领域论文。
+- 排序复核：`docs/reports/week1/RANKING_ANALYSIS_W1.md` 对统一样例前 20 名作人工复核，显示当前词项匹配和引用量因素会引入跨领域论文。
 - 测试：根目录测试 CSV 和报告当前为空，不能作为已完成测试展示；项目负责人已完成一次 mock 回归验证。
 
 ## 4. 本周主要发现
@@ -43,7 +43,7 @@
 3. 为实验结果使用独立输出目录，避免默认 outputs 被连续运行覆盖。
 4. 补充可执行的命令行测试用例与测试报告。
 5. 在更稳定的人工样本基础上，再开展疑似重复复核和排序验证。
-6. 后续任务继续遵守 `docs/TEAM_GIT_GUIDE.md` 中的分支与 PR 流程。
+6. 后续任务继续遵守 `docs/collaboration/TEAM_GIT_GUIDE.md` 中的分支与 PR 流程。
 
 ## 6. 建议与老师讨论的问题
 

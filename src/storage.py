@@ -113,8 +113,8 @@ def save_to_sqlite(ranked_papers: list[dict], database_file: Path) -> None:
             """
         )
 
-        # 每次运行先清空旧结果，让 data/literature.db 始终代表最近一次运行。
-        # 这样初学者打开数据库时，不会混淆多次运行的历史数据。
+        # 每个 run 使用独立数据库；写入前清空表，保证数据库只表示本次实验。
+        # 这也让重复执行保存函数时不会在同一个 run 内累计旧记录。
         cursor.execute("DELETE FROM papers")
 
         insert_sql = """
