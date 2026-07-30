@@ -1,0 +1,11 @@
+metric,value
+query_1_count,60
+query_2_count,60
+total_raw_papers,120
+total_kept_papers,109
+exact_duplicate_count,11
+exact_same_openalex_id,11
+exact_same_doi,0
+exact_same_title_no_id,0
+suspected_pair_count,2
+reason_title_very_high_similarity|author_high_overlap|year_close,2
