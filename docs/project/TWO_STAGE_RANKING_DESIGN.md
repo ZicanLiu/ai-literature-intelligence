@@ -102,18 +102,24 @@ cited_by_count、publication_year 降序，保证结果确定可复现。
 ## 7. 离线评价指标（`src/evaluation.py`）
 
 人工等级：高度相关 = 2，部分相关 = 1，不相关 = 0。
-指标采用 **judged（condensed）口径**：未标注论文从 Top K 中移除后再计算，
-不以零增益占位置，也不进入分母；标签文件中不在本次排名列表内的论文
-不参与任何指标（含 IDCG 与 labeled_count）。
+指标采用**完整 judged（condensed）口径**：
 
-- judged Precision@K = Top K 中已标注论文里等级 ≥ 1 的数量 / 已标注论文数量；
-  Top K 中没有已标注论文时返回 None；
+1. 先从完整排名中移除没有有效人工标签的论文（未标注与"待讨论"）；
+2. 再从压缩后的已标注排名中取前 K 篇；
+3. judged Precision 与 judged NDCG 基于这 K 篇计算，分母/位置都用压缩后的结果；
+4. coverage_at_k 仍按原始 Top K 计算（原始前 K 篇中已标注的比例），
+   judged_count_at_k 同样按原始 Top K 统计，只服务于 coverage；
+5. 标签文件中不在本次排名列表内的论文不参与任何指标（含 IDCG 与
+   labeled_count）。
+
+- judged Precision@K = 压缩后前 K 篇已标注论文中等级 ≥ 1 的数量 / K 篇数量；
+  整个排名没有已标注论文时返回 None；
 - condensed DCG@K = Σ (2^等级 − 1) / log2(压缩后名次 + 1)，
   judged NDCG@K = condensed DCG@K / IDCG@K，IDCG 由本次排名中全部已标注论文
   等级降序排列计算；没有任何已标注论文时返回 None；
-- judged_count_at_k 与 coverage_at_k（= judged_count_at_k / Top K 实际大小）
-  说明标注覆盖程度，便于判断指标可信度；
-- Top K 不相关数量：只数明确标注为不相关的论文；
+- coverage_at_k = judged_count_at_k / 原始 Top K 实际大小，
+  用于说明指标可信度；
+- Top K 不相关数量：只数原始 Top K 中明确标注为不相关的论文；
 - 高相关样例平均排名：等级 2 论文名次的平均值（从 1 开始）。
 
 ## 8. 已知限制

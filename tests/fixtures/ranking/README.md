@@ -41,8 +41,8 @@ D3 = `deep sea fish`；查询 = `machine learning`。N = 3。
 ### 排序指标（ranking_known_answer.json）
 
 固定排名 [A, B, C, D, E]；标签 A = 2，B = 0，C = 1，E = 2，D 未标注。
-指标采用 judged（condensed）口径：未标注的 D 从 Top K 中移除后再计算，
-不占位置、不进分母。
+指标采用完整 judged（condensed）口径：先从完整排名中移除未标注的 D，
+得到压缩排名 [A, B, C, E]，再取前 K 篇计算；coverage 仍按原始 Top K 计算。
 
 - judged Precision@3 = Top 3（A、B、C，全部已标注）中等级 ≥ 1 的数量 2 / 3 ≈ 0.666667；
 - judged Precision@5 = 已标注的 A、B、C、E 中相关 3 / 4 = 0.75；

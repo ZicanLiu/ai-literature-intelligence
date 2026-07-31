@@ -5,8 +5,9 @@
 它位于两阶段排序之后，输入是排名列表和人工标签，输出是
 judged Precision@K、judged NDCG@K、Top K 不相关数量和高相关样例平均排名等指标。
 
-指标采用 judged（condensed）口径：未标注论文从 Top K 中移除后再计算，
-并同时报告 judged_count_at_k 与 coverage_at_k 说明标注覆盖程度；
+指标采用完整 judged（condensed）口径：先从整个排名中移除未标注论文，
+再取压缩后已标注排名的前 K 篇计算 Precision 与 NDCG；
+coverage_at_k 仍按原始 Top K 计算，说明标注覆盖程度；
 标签文件中不在本次排名列表内的论文不参与任何指标。
 
 重要边界：人工标签只用于离线评价，不进入任何线上评分公式；
@@ -136,13 +137,15 @@ def filter_grades_to_ranked(
 
 def judged_count_at_k(ranked_ids: list[str], grade_map: dict[str, int], k: int) -> int:
     """
-    统计 Top K 中有确定等级（已标注且非待讨论）的论文数量。
+    统计原始 Top K 中有确定等级（已标注且非待讨论）的论文数量。
 
     参数：
         ranked_ids：按排名从高到低排列的 openalex_id 列表。
         grade_map：openalex_id 到数值等级的字典，未标注论文不在其中。
         k：截断位置。
-    返回：Top K 中已标注论文数量。
+    返回：原始 Top K 中已标注论文数量。
+    异常或特殊情况：该计数只用于 coverage_at_k（原始 Top K 的标注覆盖程度），
+        与 judged 指标使用的完整压缩排名无关。
     """
     validate_k(k)
     return sum(1 for openalex_id in ranked_ids[:k] if openalex_id in grade_map)
@@ -152,31 +155,37 @@ def judged_precision_at_k(
     ranked_ids: list[str], grade_map: dict[str, int], k: int
 ) -> float | None:
     """
-    计算 judged Precision@K：Top K 中已标注论文里相关（等级 ≥ 1）的比例。
+    计算 judged Precision@K：压缩后已标注排名前 K 篇中相关（等级 ≥ 1）的比例。
 
-    采用 judged（condensed）口径：未标注论文先从 Top K 中移除，
-    分母是已标注论文数量而不是固定的 K，因此未标注论文不会拉低指标。
+    采用完整 judged（condensed）口径：先从整个排名中移除未标注论文，
+    再取压缩后已标注排名的前 K 篇，分母是这 K 篇的数量而不是固定的 K，
+    因此未标注论文不占位置、不进分母，也不会拉低指标。
 
     参数：
         ranked_ids：按排名从高到低排列的 openalex_id 列表。
         grade_map：openalex_id 到数值等级的字典，未标注论文不在其中。
         k：截断位置。
-    返回：0 到 1 之间的比例；Top K 中没有任何已标注论文时返回 None，
+    返回：0 到 1 之间的比例；整个排名中没有任何已标注论文时返回 None，
         因为此时比例无定义。
     """
     validate_k(k)
-    judged_ids = [
-        openalex_id for openalex_id in ranked_ids[:k] if openalex_id in grade_map
-    ]
-    if not judged_ids:
+    condensed_ids = [
+        openalex_id for openalex_id in ranked_ids if openalex_id in grade_map
+    ][:k]
+    if not condensed_ids:
         return None
-    relevant_count = sum(1 for openalex_id in judged_ids if grade_map[openalex_id] >= 1)
-    return relevant_count / len(judged_ids)
+    relevant_count = sum(
+        1 for openalex_id in condensed_ids if grade_map[openalex_id] >= 1
+    )
+    return relevant_count / len(condensed_ids)
 
 
 def judged_dcg_at_k(ranked_ids: list[str], grade_map: dict[str, int], k: int) -> float:
     """
-    计算 condensed DCG@K：未标注论文移除后按剩余位置折损的累计增益。
+    计算 condensed DCG@K：压缩后已标注排名前 K 篇的折损累计增益。
+
+    采用完整 condensed 口径：先从整个排名中移除未标注论文，
+    再取压缩后已标注排名的前 K 篇，按压缩后位置折损。
 
     参数：
         ranked_ids：按排名从高到低排列的 openalex_id 列表。
@@ -184,12 +193,12 @@ def judged_dcg_at_k(ranked_ids: list[str], grade_map: dict[str, int], k: int) ->
         k：截断位置。
     返回：DCG 值，增益为 2^等级 - 1，折损为 log2(压缩后位置 + 1)；
         未标注论文不占位置，不会以零增益压低指标。
-    异常或特殊情况：排名列表为空或 Top K 中无已标注论文时返回 0.0。
+    异常或特殊情况：排名列表为空或没有已标注论文时返回 0.0。
     """
     validate_k(k)
     condensed_ids = [
-        openalex_id for openalex_id in ranked_ids[:k] if openalex_id in grade_map
-    ]
+        openalex_id for openalex_id in ranked_ids if openalex_id in grade_map
+    ][:k]
     dcg = 0.0
     for rank_index, openalex_id in enumerate(condensed_ids):
         grade = grade_map[openalex_id]
@@ -272,9 +281,11 @@ def evaluate_ranking(
     """
     对一次排序结果计算全部离线评价指标。
 
-    指标统一采用 judged（condensed）口径：未标注论文从 Top K 中移除后再
-    计算 Precision 与 NDCG，未标注论文不会以零增益或固定分母压低指标；
-    标签文件中不在本次排名列表内的论文不参与任何指标和 labeled_count。
+    指标统一采用完整 judged（condensed）口径：先从整个排名中移除未标注
+    论文，再取压缩后已标注排名的前 K 篇计算 Precision 与 NDCG，未标注
+    论文不占位置、不进分母；coverage_at_k 与 judged_count_at_k 仍按原始
+    Top K 计算；标签文件中不在本次排名列表内的论文不参与任何指标和
+    labeled_count。
 
     参数：
         ranked_ids：按排名从高到低排列的 openalex_id 列表。

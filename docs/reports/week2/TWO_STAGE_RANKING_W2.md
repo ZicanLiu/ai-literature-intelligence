@@ -36,10 +36,11 @@
 - 旧版 `preliminary_score` 原样保留为 `baseline_preliminary_score`，
   `old_rank` 按旧规则重算，baseline 行为有测试守护。
 - 人工标签只用于离线评价，不进入任何评分公式；未标注论文不算不相关；
-  非法标签抛出 ValueError。评价指标采用 **judged（condensed）口径**：
-  未标注论文从 Top K 中移除后再算 judged Precision@K 与 judged NDCG@K，
-  同时报告 judged_count_at_k 与 coverage_at_k；
-  标签文件中不在本次排名内的论文不参与 IDCG 和 labeled_count。
+  非法标签抛出 ValueError。评价指标采用**完整 judged（condensed）口径**：
+  先从完整排名中移除未标注论文，再取压缩后已标注排名的前 K 篇计算
+  judged Precision@K 与 judged NDCG@K；coverage_at_k 与 judged_count_at_k
+  仍按原始 Top K 计算；标签文件中不在本次排名内的论文不参与 IDCG 和
+  labeled_count。
 
 ## 3. OpenAlex live 验证
 
@@ -121,21 +122,26 @@
 
 fixture（`tests/fixtures/ranking/`）为 12 篇合成论文，11 篇带人工等级
 （高度相关 4、部分相关 4、不相关 3），1 篇故意未标注，1 篇故意缺摘要。
-指标 K=10，judged 口径：两个排序的 Top 10 都含 9 篇已标注论文
-（judged_count_at_10 = 9，coverage_at_10 = 0.9）。baseline 与两阶段对比：
+指标 K=10，完整 judged（condensed）口径：先从完整排名移除未标注论文，
+再取压缩后已标注排名的前 10 篇计算；原始 Top 10 中两个排序都只有 9 篇
+已标注（judged_count_at_10 = 9，coverage_at_10 = 0.9）。
+baseline 与两阶段对比：
 
 | 指标 | baseline | 两阶段 |
 | --- | --- | --- |
-| judged Precision@10 | 0.7778（7/9） | 0.8889（8/9） |
-| judged NDCG@10 | 0.9354 | 0.9593 |
+| judged Precision@10 | 0.8 | 0.8 |
+| judged NDCG@10 | 0.9672 | 0.9593 |
 | Top 10 不相关数量 | 2 | 1 |
 | 高度相关平均排名 | 3.75 | 4.0 |
 
 两阶段后 4 篇高度相关全部进入前 9，3 篇不相关落到末 3 位；
 高引用（800）但无关的股市论文从第 6 降到第 10，高引用（500）深海鱼论文
-从第 10 降到第 11。高度相关平均排名略升 0.25：被救回的相关论文占据了前列，
-高度相关的 W9000000003 保持在第 9，部分相关论文的名次相应后移，
-属预期内的正常交换。
+从第 10 降到第 11。judged Precision 两者同为 0.8；judged NDCG 两阶段略低
+0.008：baseline 前 3 恰好全是高度相关，而两阶段把部分相关（等级 1）论文
+提到了第 3 位——这是压缩口径下等级分布的正常差异，不代表两阶段把不相关
+论文排前了（不相关论文实际全部后移）。高度相关平均排名略升 0.25：
+被救回的相关论文占据了前列，高度相关的 W9000000003 保持在第 9，
+部分相关论文的名次相应后移，属预期内的正常交换。
 
 fixture 只用于开发测试，以上数字不冒充真实领域评价结果。
 
@@ -175,8 +181,8 @@ space weather、cosmology 等"机器学习 + 其他领域"论文仍留在第 5�
 
 ## 6. 自动测试
 
-`python -m unittest discover -s tests/automated -p "test_*.py"`：**65 项全部通过**
-（既有 CLI 回归 7 项 + 相关性 24 项 + 指标与两阶段 34 项，
+`python -m unittest discover -s tests/automated -p "test_*.py"`：**67 项全部通过**
+（既有 CLI 回归 7 项 + 相关性 24 项 + 指标与两阶段 36 项，
 确认未影响旧功能）。新增覆盖：
 
 - `test_text_relevance.py`（24 项）：完全匹配、完全不匹配、缺摘要、缺标题、
@@ -184,8 +190,10 @@ space weather、cosmology 等"机器学习 + 其他领域"论文仍留在第 5�
   分数范围 [0,1]、组合权重固定、输入不被原地修改、IDF 与余弦的手算已知答案
   （`tfidf_known_answer.json`）、查询同时含已登录词与未登录词时未登录词被忽略
   且结果不变、全部查询词未登录时向量为空。
-- `test_evaluation.py`（34 项）：judged Precision@K / judged NDCG@K 手算已知
-  答案（`ranking_known_answer.json`）、judged_count_at_k 与 coverage_at_k、
+- `test_evaluation.py`（36 项）：judged Precision@K / judged NDCG@K 手算已知
+  答案（`ranking_known_answer.json`）、完整 condensed 口径边界（未标注论文
+  占据原始 Top K 首位时，先压缩再取前 K，Precision 与 NDCG 各一项）、
+  judged_count_at_k 与 coverage_at_k 按原始 Top K 计算、
   非法标签报错、未标注论文不算不相关也不稀释 judged 指标、待讨论按未标注、
   K 校验、标签文件中不在本次排名内的论文不参与 IDCG 与 labeled_count、
   第一阶段分层阈值、第二阶段排序稳定性与确定性、权重固定、baseline 分数与
@@ -213,7 +221,7 @@ space weather、cosmology 等"机器学习 + 其他领域"论文仍留在第 5�
 | 测试有已知答案 | ✔ 两个 known-answer JSON + 手算推导 README |
 | 人工标签不进入线上评分 | ✔ 仅评价路径使用；权重常量不含标签 |
 | 至少分析 5 个排名变化案例 | ✔ 第 5 节 6 例 |
-| 所有自动测试通过 | ✔ 65/65 |
+| 所有自动测试通过 | ✔ 67/67 |
 | 能解释 TF-IDF、余弦相似度和 NDCG | ✔ 设计文档第 3、7 节 |
 
 ## 9. 下一步（P1 选做）

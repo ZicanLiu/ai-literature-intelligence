@@ -171,6 +171,16 @@ class UnlabeledPaperTests(unittest.TestCase):
         self.assertEqual(judged_precision_at_k(["U", "A"], grade_map, 2), 1.0)
         self.assertEqual(judged_count_at_k(["U", "A"], grade_map, 2), 1)
 
+    def test_condensed_precision_takes_top_k_after_removing_unlabeled(self) -> None:
+        # 完整 condensed 口径：先删除未标注的 U，再从压缩排名取前 1 篇。
+        grade_map = build_grade_map({"A": "高度相关"})
+        self.assertEqual(judged_precision_at_k(["U", "A"], grade_map, 1), 1.0)
+
+    def test_condensed_ndcg_takes_top_k_after_removing_unlabeled(self) -> None:
+        # 同上：A 在压缩后排第 1，DCG@1 = IDCG@1，NDCG@1 = 1.0。
+        grade_map = build_grade_map({"A": "高度相关"})
+        self.assertEqual(judged_ndcg_at_k(["U", "A"], grade_map, 1), 1.0)
+
     def test_judged_metrics_are_none_without_any_judged_paper_in_top_k(self) -> None:
         grade_map = build_grade_map({"A": "高度相关"})
         self.assertIsNone(judged_precision_at_k(["U", "V"], grade_map, 2))
