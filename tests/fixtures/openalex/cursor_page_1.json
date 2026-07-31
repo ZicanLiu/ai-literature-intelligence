@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "count": 5,
+    "per_page": 3,
+    "next_cursor": "cursor-page-2"
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W2001",
+      "display_name": "Cursor fixture work 1",
+      "authorships": [],
+      "publication_year": 2020,
+      "doi": null,
+      "abstract_inverted_index": null,
+      "cited_by_count": 1,
+      "primary_location": null
+    },
+    {
+      "id": "https://openalex.org/W2002",
+      "display_name": "Cursor fixture work 2",
+      "authorships": [],
+      "publication_year": 2021,
+      "doi": null,
+      "abstract_inverted_index": null,
+      "cited_by_count": 2,
+      "primary_location": null
+    },
+    {
+      "id": "https://openalex.org/W2003",
+      "display_name": "Cursor fixture work 3",
+      "authorships": [],
+      "publication_year": 2022,
+      "doi": null,
+      "abstract_inverted_index": null,
+      "cited_by_count": 3,
+      "primary_location": null
+    }
+  ]
+}
