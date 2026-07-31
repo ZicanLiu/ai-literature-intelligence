@@ -90,8 +90,10 @@ def tfidf_vector(tokens: list[str], idf: dict[str, float]) -> dict[str, float]:
         tokens：单篇文档或查询的词项列表。
         idf：由 build_idf 统计的逆文档频率表。
     返回：词项到 TF-IDF 权重的字典（稀疏向量，只存非零项）。
-    异常或特殊情况：词项不在 IDF 表中（例如查询词不在语料里）时，
-        按 df = 0 的平滑 IDF 计算，避免查询向量丢失该词项。
+    异常或特殊情况：词项不在 IDF 表中（未登录词，例如查询词不在语料里）时
+        直接忽略。未登录词没有可比的 IDF 估计，给它赋任何回退权重都会
+        同时放大查询向量范数、压低所有已登录词的相似度，因此不参与计算；
+        全部词项都未登录时返回空向量，余弦相似度自然为 0。
     """
     if not tokens:
         return {}
@@ -100,12 +102,10 @@ def tfidf_vector(tokens: list[str], idf: dict[str, float]) -> dict[str, float]:
     for token in tokens:
         term_frequency[token] = term_frequency.get(token, 0) + 1
 
-    corpus_size = len(idf)
-    fallback_idf = math.log((corpus_size + 1) / (0 + 1)) + 1.0
-
     vector = {}
     for token, frequency in term_frequency.items():
-        vector[token] = frequency * idf.get(token, fallback_idf)
+        if token in idf:
+            vector[token] = frequency * idf[token]
     return vector
 
 

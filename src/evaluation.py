@@ -3,7 +3,11 @@
 
 这个文件负责用人工相关等级对排序结果做离线评价。
 它位于两阶段排序之后，输入是排名列表和人工标签，输出是
-Precision@K、NDCG@K、Top K 不相关数量和高相关样例平均排名等指标。
+judged Precision@K、judged NDCG@K、Top K 不相关数量和高相关样例平均排名等指标。
+
+指标采用 judged（condensed）口径：未标注论文从 Top K 中移除后再计算，
+并同时报告 judged_count_at_k 与 coverage_at_k 说明标注覆盖程度；
+标签文件中不在本次排名列表内的论文不参与任何指标。
 
 重要边界：人工标签只用于离线评价，不进入任何线上评分公式；
 未标注论文没有相关等级，不能自动算作不相关。
@@ -110,60 +114,103 @@ def validate_k(k: int) -> int:
     return k
 
 
-def precision_at_k(ranked_ids: list[str], grade_map: dict[str, int], k: int) -> float:
+def filter_grades_to_ranked(
+    ranked_ids: list[str], grade_map: dict[str, int]
+) -> dict[str, int]:
     """
-    计算 Precision@K：Top K 中已标注为相关（等级 ≥ 1）的比例。
+    只保留出现在本次排名列表中的已标注论文。
+
+    参数：
+        ranked_ids：按排名从高到低排列的 openalex_id 列表。
+        grade_map：openalex_id 到数值等级的字典。
+    返回：只包含 ranked_ids 中论文的等级字典；标签文件里不在本次排名中的
+        论文不参与 IDCG、labeled_count 或任何指标。
+    """
+    ranked_set = set(ranked_ids)
+    return {
+        openalex_id: grade
+        for openalex_id, grade in grade_map.items()
+        if openalex_id in ranked_set
+    }
+
+
+def judged_count_at_k(ranked_ids: list[str], grade_map: dict[str, int], k: int) -> int:
+    """
+    统计 Top K 中有确定等级（已标注且非待讨论）的论文数量。
 
     参数：
         ranked_ids：按排名从高到低排列的 openalex_id 列表。
         grade_map：openalex_id 到数值等级的字典，未标注论文不在其中。
-        k：截断位置，分母固定为 k。
-    返回：0 到 1 之间的比例。
-    异常或特殊情况：排名列表为空时返回 0.0；
-        未标注论文不计入分子，也不计入不相关。
+        k：截断位置。
+    返回：Top K 中已标注论文数量。
     """
     validate_k(k)
-    if not ranked_ids:
-        return 0.0
-    relevant_count = sum(
-        1 for openalex_id in ranked_ids[:k] if grade_map.get(openalex_id, 0) >= 1
-    )
-    return relevant_count / k
+    return sum(1 for openalex_id in ranked_ids[:k] if openalex_id in grade_map)
 
 
-def dcg_at_k(ranked_ids: list[str], grade_map: dict[str, int], k: int) -> float:
+def judged_precision_at_k(
+    ranked_ids: list[str], grade_map: dict[str, int], k: int
+) -> float | None:
     """
-    计算 DCG@K：按排名位置折损的累计增益。
+    计算 judged Precision@K：Top K 中已标注论文里相关（等级 ≥ 1）的比例。
+
+    采用 judged（condensed）口径：未标注论文先从 Top K 中移除，
+    分母是已标注论文数量而不是固定的 K，因此未标注论文不会拉低指标。
+
+    参数：
+        ranked_ids：按排名从高到低排列的 openalex_id 列表。
+        grade_map：openalex_id 到数值等级的字典，未标注论文不在其中。
+        k：截断位置。
+    返回：0 到 1 之间的比例；Top K 中没有任何已标注论文时返回 None，
+        因为此时比例无定义。
+    """
+    validate_k(k)
+    judged_ids = [
+        openalex_id for openalex_id in ranked_ids[:k] if openalex_id in grade_map
+    ]
+    if not judged_ids:
+        return None
+    relevant_count = sum(1 for openalex_id in judged_ids if grade_map[openalex_id] >= 1)
+    return relevant_count / len(judged_ids)
+
+
+def judged_dcg_at_k(ranked_ids: list[str], grade_map: dict[str, int], k: int) -> float:
+    """
+    计算 condensed DCG@K：未标注论文移除后按剩余位置折损的累计增益。
 
     参数：
         ranked_ids：按排名从高到低排列的 openalex_id 列表。
         grade_map：openalex_id 到数值等级的字典。
         k：截断位置。
-    返回：DCG 值，增益为 2^等级 - 1，折损为 log2(位置 + 1)；
-        未标注论文增益为 0，但仍占据排名位置。
-    异常或特殊情况：排名列表为空时返回 0.0。
+    返回：DCG 值，增益为 2^等级 - 1，折损为 log2(压缩后位置 + 1)；
+        未标注论文不占位置，不会以零增益压低指标。
+    异常或特殊情况：排名列表为空或 Top K 中无已标注论文时返回 0.0。
     """
     validate_k(k)
+    condensed_ids = [
+        openalex_id for openalex_id in ranked_ids[:k] if openalex_id in grade_map
+    ]
     dcg = 0.0
-    for rank_index, openalex_id in enumerate(ranked_ids[:k]):
-        grade = grade_map.get(openalex_id, 0)
+    for rank_index, openalex_id in enumerate(condensed_ids):
+        grade = grade_map[openalex_id]
         dcg += (2**grade - 1) / math.log2(rank_index + 2)
     return dcg
 
 
-def ndcg_at_k(
+def judged_ndcg_at_k(
     ranked_ids: list[str], grade_map: dict[str, int], k: int
 ) -> float | None:
     """
-    计算 NDCG@K：DCG@K 与理想排序 IDCG@K 的比值。
+    计算 judged NDCG@K：condensed DCG@K 与理想排序 IDCG@K 的比值。
 
     参数：
         ranked_ids：按排名从高到低排列的 openalex_id 列表。
-        grade_map：openalex_id 到数值等级的字典。
+        grade_map：openalex_id 到数值等级的字典，必须只包含本次排名中的论文
+            （可先用 filter_grades_to_ranked 过滤）。
         k：截断位置。
     返回：0 到 1 之间的 NDCG 值；没有任何已确定等级的论文时返回 None，
         因为理想排序不存在，NDCG 无定义。
-    异常或特殊情况：IDCG 由全部已标注论文的等级降序排列计算，
+    异常或特殊情况：IDCG 由本次排名中全部已标注论文的等级降序排列计算，
         未标注论文不进入理想排序。
     """
     validate_k(k)
@@ -173,7 +220,7 @@ def ndcg_at_k(
         ideal_dcg += (2**grade - 1) / math.log2(rank_index + 2)
     if ideal_dcg == 0.0:
         return None
-    return dcg_at_k(ranked_ids, grade_map, k) / ideal_dcg
+    return judged_dcg_at_k(ranked_ids, grade_map, k) / ideal_dcg
 
 
 def count_irrelevant_in_top_k(
@@ -225,26 +272,36 @@ def evaluate_ranking(
     """
     对一次排序结果计算全部离线评价指标。
 
+    指标统一采用 judged（condensed）口径：未标注论文从 Top K 中移除后再
+    计算 Precision 与 NDCG，未标注论文不会以零增益或固定分母压低指标；
+    标签文件中不在本次排名列表内的论文不参与任何指标和 labeled_count。
+
     参数：
         ranked_ids：按排名从高到低排列的 openalex_id 列表。
-        labels：openalex_id 到标签原文的字典；可以只覆盖部分论文。
+        labels：openalex_id 到标签原文的字典；可以只覆盖部分论文，
+            也可以包含不在本次排名中的论文（会被忽略）。
         k：截断位置，默认 10。
-    返回：包含 precision_at_k、ndcg_at_k、irrelevant_in_top_k、
-        average_rank_of_highly_relevant、labeled_count 和 k 的字典；
+    返回：包含 k、judged_precision_at_k、judged_ndcg_at_k、
+        irrelevant_in_top_k、average_rank_of_highly_relevant、
+        labeled_count、judged_count_at_k 和 coverage_at_k 的字典；
         指标无法定义时对应值为 None。
     异常或特殊情况：包含非法标签时抛出 ValueError。
     """
     validate_k(k)
-    grade_map = build_grade_map(labels)
+    grade_map = filter_grades_to_ranked(ranked_ids, build_grade_map(labels))
+    judged_count = judged_count_at_k(ranked_ids, grade_map, k)
+    top_k_size = len(ranked_ids[:k])
     return {
         "k": k,
-        "precision_at_k": precision_at_k(ranked_ids, grade_map, k),
-        "ndcg_at_k": ndcg_at_k(ranked_ids, grade_map, k),
+        "judged_precision_at_k": judged_precision_at_k(ranked_ids, grade_map, k),
+        "judged_ndcg_at_k": judged_ndcg_at_k(ranked_ids, grade_map, k),
         "irrelevant_in_top_k": count_irrelevant_in_top_k(ranked_ids, grade_map, k),
         "average_rank_of_highly_relevant": average_rank_of_highly_relevant(
             ranked_ids, grade_map
         ),
         "labeled_count": len(grade_map),
+        "judged_count_at_k": judged_count,
+        "coverage_at_k": (judged_count / top_k_size) if top_k_size else None,
     }
 
 

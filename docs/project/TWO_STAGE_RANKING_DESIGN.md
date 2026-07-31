@@ -44,7 +44,10 @@ TF-IDF 是**词法相关性基线**：它只衡量查询与论文在词项上的
 - 词袋模型：文档表示为词项多重集合，不考虑词序。
 - TF：词项在文档中的原始出现次数。
 - IDF：`ln((N + 1) / (df + 1)) + 1`，N 为语料文档数，df 为包含该词项的文档数。
-  平滑公式避免除以 0，保证查询词不在语料时仍为有限正数。
+  平滑公式避免除以 0。
+- 未登录词：不在语料词表中的查询词没有可比的 IDF 估计，直接忽略、不参与
+  向量计算；给它赋任何回退权重都会放大查询向量范数、压低所有已登录词的
+  相似度。全部查询词都未登录时查询向量为空，相似度为 0。
 - 稀疏向量：TF-IDF 向量用字典表示，只存非零项。
 - 余弦相似度：查询向量与文档向量的夹角余弦。TF-IDF 权重非负，
   所以取值恒在 [0, 1]；余弦相似度不受文档绝对长短影响，
@@ -61,8 +64,10 @@ TF-IDF 是**词法相关性基线**：它只衡量查询与论文在词项上的
 
 - `combined >= 0.20` → high；`>= 0.05` → medium；其余 → low。
 - 降权系数：high = 1.0，medium = 0.8，low = 0.5。
-- 阈值依据：在 100 条统一样例（`openalex_stellar_spectra_100.csv`）上，
-  两个候选关键词下三层数量为 14/59/24 与 4/46/47；在 60 条 live 数据上为
+- 阈值依据：在 100 条统一样例（`openalex_stellar_spectra_100.csv`，清洗去重后
+  97 条）上，两个候选关键词（`machine learning stellar spectra` 与
+  `machine learning stellar parameter estimation spectra`）下三层数量为
+  14/59/24 与 4/46/47；在 60 条 live 数据上为
   4/32/24（见 `docs/reports/week2/figures/stage1_relevance_distribution.png`），
   三层都非空且 low 层足以容纳明显无关论文。
 - 阈值是**先定后测**的固定常量，不随单次数据自动调整，也不参考人工标签。
@@ -97,10 +102,17 @@ cited_by_count、publication_year 降序，保证结果确定可复现。
 ## 7. 离线评价指标（`src/evaluation.py`）
 
 人工等级：高度相关 = 2，部分相关 = 1，不相关 = 0。
+指标采用 **judged（condensed）口径**：未标注论文从 Top K 中移除后再计算，
+不以零增益占位置，也不进入分母；标签文件中不在本次排名列表内的论文
+不参与任何指标（含 IDCG 与 labeled_count）。
 
-- Precision@K = Top K 中等级 ≥ 1 的数量 / K；
-- DCG@K = Σ (2^等级 − 1) / log2(名次 + 1)，NDCG@K = DCG@K / IDCG@K，
-  IDCG 由全部已标注论文等级降序排列计算；未标注论文增益为 0 但仍占名次；
+- judged Precision@K = Top K 中已标注论文里等级 ≥ 1 的数量 / 已标注论文数量；
+  Top K 中没有已标注论文时返回 None；
+- condensed DCG@K = Σ (2^等级 − 1) / log2(压缩后名次 + 1)，
+  judged NDCG@K = condensed DCG@K / IDCG@K，IDCG 由本次排名中全部已标注论文
+  等级降序排列计算；没有任何已标注论文时返回 None；
+- judged_count_at_k 与 coverage_at_k（= judged_count_at_k / Top K 实际大小）
+  说明标注覆盖程度，便于判断指标可信度；
 - Top K 不相关数量：只数明确标注为不相关的论文；
 - 高相关样例平均排名：等级 2 论文名次的平均值（从 1 开始）。
 
@@ -108,7 +120,7 @@ cited_by_count、publication_year 降序，保证结果确定可复现。
 
 - 词法相关性无法识别同义改写和领域变体。live 数据中
   "SPCANet: Stellar Parameters and Chemical Abundances..." 用词与查询重合少，
-  combined = 0.0397 被分到 low 层，排名 32 → 53；它很可能实际相关。
+  combined = 0.0397 被分到 low 层，排名 32 → 54；它很可能实际相关。
   这正是"词法相关性 ≠ 语义理解"的实例，也是本周不硬删除论文的原因。
 - 共享通用词的主题偏离论文（如标题含 machine learning 的股市论文）仍可能
   得到中等词法分数，词法方法无法根除这类问题。

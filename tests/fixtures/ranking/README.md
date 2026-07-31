@@ -41,13 +41,16 @@ D3 = `deep sea fish`；查询 = `machine learning`。N = 3。
 ### 排序指标（ranking_known_answer.json）
 
 固定排名 [A, B, C, D, E]；标签 A = 2，B = 0，C = 1，E = 2，D 未标注。
+指标采用 judged（condensed）口径：未标注的 D 从 Top K 中移除后再计算，
+不占位置、不进分母。
 
-- Precision@3 = Top 3（A、B、C）中等级 ≥ 1 的数量 2 / 3 ≈ 0.666667；
-- Precision@5 = 3 / 5 = 0.6；
-- DCG@3 = 3/log2(2) + 0/log2(3) + 1/log2(4) = 3.5，
-  IDCG@3 按已标注等级降序 [2, 2, 1] 计算 = 3 + 3/log2(3) + 1/log2(4) ≈ 5.392789，
-  NDCG@3 = 3.5 / 5.392789 ≈ 0.649015；
-- DCG@5 = 3 + 0 + 0.5 + 0 + 3/log2(6) ≈ 4.660558，
-  NDCG@5 ≈ 4.660558 / 5.392789 ≈ 0.864220；
+- judged Precision@3 = Top 3（A、B、C，全部已标注）中等级 ≥ 1 的数量 2 / 3 ≈ 0.666667；
+- judged Precision@5 = 已标注的 A、B、C、E 中相关 3 / 4 = 0.75；
+  judged_count_at_5 = 4，coverage_at_5 = 4 / 5 = 0.8；
+- condensed DCG@3 = 3/log2(2) + 0/log2(3) + 1/log2(4) = 3.5，
+  IDCG@3 按已标注等级降序 [2, 2, 1, 0] 截断计算 = 3 + 3/log2(3) + 1/log2(4) ≈ 5.392789，
+  judged NDCG@3 = 3.5 / 5.392789 ≈ 0.649015；
+- condensed DCG@5 = 3 + 0 + 0.5 + 3/log2(5) ≈ 4.792030（D 已移除，E 为第 4 个位置），
+  IDCG@5 = 5.392789（等级 0 增益为 0），judged NDCG@5 ≈ 0.888599；
 - Top 3 不相关数量 = 1（只有 B；D 未标注，不算不相关）；
 - 高度相关（A 排第 1，E 排第 5）平均排名 = (1 + 5) / 2 = 3.0。

@@ -24,10 +24,12 @@ from src.evaluation import (
     build_grade_map,
     count_irrelevant_in_top_k,
     evaluate_ranking,
+    filter_grades_to_ranked,
+    judged_count_at_k,
+    judged_ndcg_at_k,
+    judged_precision_at_k,
     load_label_csv,
-    ndcg_at_k,
     parse_relevance_label,
-    precision_at_k,
     validate_k,
     average_rank_of_highly_relevant,
 )
@@ -46,7 +48,7 @@ BASELINE_WEIGHTS_SNAPSHOT = {
 
 
 class KnownAnswerMetricTests(unittest.TestCase):
-    """Precision@K 与 NDCG@K 的手算已知答案。"""
+    """judged Precision@K 与 judged NDCG@K 的手算已知答案。"""
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -59,30 +61,45 @@ class KnownAnswerMetricTests(unittest.TestCase):
         cls.expected = cls.fixture["expected"]
         cls.tolerance = cls.fixture["tolerance"]
 
-    def test_precision_at_k_matches_hand_computed_values(self) -> None:
+    def test_judged_precision_at_k_matches_hand_computed_values(self) -> None:
         grade_map = build_grade_map(self.labels)
         self.assertAlmostEqual(
-            precision_at_k(self.ranked_ids, grade_map, 3),
-            self.expected["precision_at_3"],
+            judged_precision_at_k(self.ranked_ids, grade_map, 3),
+            self.expected["judged_precision_at_3"],
             delta=self.tolerance,
         )
         self.assertAlmostEqual(
-            precision_at_k(self.ranked_ids, grade_map, 5),
-            self.expected["precision_at_5"],
+            judged_precision_at_k(self.ranked_ids, grade_map, 5),
+            self.expected["judged_precision_at_5"],
             delta=self.tolerance,
         )
 
-    def test_ndcg_at_k_matches_hand_computed_values(self) -> None:
+    def test_judged_ndcg_at_k_matches_hand_computed_values(self) -> None:
         grade_map = build_grade_map(self.labels)
         self.assertAlmostEqual(
-            ndcg_at_k(self.ranked_ids, grade_map, 3),
-            self.expected["ndcg_at_3"],
+            judged_ndcg_at_k(self.ranked_ids, grade_map, 3),
+            self.expected["judged_ndcg_at_3"],
             delta=self.tolerance,
         )
         self.assertAlmostEqual(
-            ndcg_at_k(self.ranked_ids, grade_map, 5),
-            self.expected["ndcg_at_5"],
+            judged_ndcg_at_k(self.ranked_ids, grade_map, 5),
+            self.expected["judged_ndcg_at_5"],
             delta=self.tolerance,
+        )
+
+    def test_judged_count_and_coverage_match(self) -> None:
+        grade_map = build_grade_map(self.labels)
+        self.assertEqual(
+            judged_count_at_k(self.ranked_ids, grade_map, 3),
+            self.expected["judged_count_at_3"],
+        )
+        self.assertEqual(
+            judged_count_at_k(self.ranked_ids, grade_map, 5),
+            self.expected["judged_count_at_5"],
+        )
+        metrics = evaluate_ranking(self.ranked_ids, self.labels, 5)
+        self.assertAlmostEqual(
+            metrics["coverage_at_k"], self.expected["coverage_at_5"], delta=self.tolerance
         )
 
     def test_irrelevant_count_and_average_rank_match(self) -> None:
@@ -138,22 +155,35 @@ class LabelParsingTests(unittest.TestCase):
 
 
 class UnlabeledPaperTests(unittest.TestCase):
-    """未标注论文不能自动算作不相关。"""
+    """未标注论文不能自动算作不相关，也不能压低 judged 指标。"""
 
     def test_unlabeled_paper_is_not_counted_as_irrelevant(self) -> None:
         ranked_ids = ["X", "Y"]
         grade_map = build_grade_map({"X": "不相关"})
         self.assertEqual(count_irrelevant_in_top_k(ranked_ids, grade_map, 2), 1)
 
-    def test_unlabeled_paper_contributes_zero_gain_but_keeps_position(self) -> None:
+    def test_unlabeled_paper_does_not_penalize_judged_ndcg(self) -> None:
         grade_map = build_grade_map({"A": "高度相关"})
-        ndcg_with_gap = ndcg_at_k(["U", "A"], grade_map, 2)
-        self.assertIsNotNone(ndcg_with_gap)
-        self.assertLess(ndcg_with_gap, 1.0)
+        self.assertEqual(judged_ndcg_at_k(["U", "A"], grade_map, 2), 1.0)
+
+    def test_unlabeled_paper_does_not_dilute_judged_precision(self) -> None:
+        grade_map = build_grade_map({"A": "高度相关"})
+        self.assertEqual(judged_precision_at_k(["U", "A"], grade_map, 2), 1.0)
+        self.assertEqual(judged_count_at_k(["U", "A"], grade_map, 2), 1)
+
+    def test_judged_metrics_are_none_without_any_judged_paper_in_top_k(self) -> None:
+        grade_map = build_grade_map({"A": "高度相关"})
+        self.assertIsNone(judged_precision_at_k(["U", "V"], grade_map, 2))
+        # 排名列表中没有任何已标注论文时，过滤后等级表为空，NDCG 无定义。
+        self.assertIsNone(
+            judged_ndcg_at_k(
+                ["U", "V"], filter_grades_to_ranked(["U", "V"], grade_map), 2
+            )
+        )
 
     def test_ndcg_is_none_without_any_graded_label(self) -> None:
-        self.assertIsNone(ndcg_at_k(["A"], {}, 10))
-        self.assertIsNone(ndcg_at_k(["A"], build_grade_map({"A": "待讨论"}), 10))
+        self.assertIsNone(judged_ndcg_at_k(["A"], {}, 10))
+        self.assertIsNone(judged_ndcg_at_k(["A"], build_grade_map({"A": "待讨论"}), 10))
 
     def test_average_rank_is_none_without_highly_relevant(self) -> None:
         grade_map = build_grade_map({"A": "部分相关", "B": "不相关"})
@@ -164,6 +194,26 @@ class UnlabeledPaperTests(unittest.TestCase):
             with self.subTest(k=invalid_k):
                 with self.assertRaises(ValueError):
                     validate_k(invalid_k)
+
+
+class LabelsOutsideRankingTests(unittest.TestCase):
+    """标签文件中不在本次排名列表内的论文不参与 IDCG 和 labeled_count。"""
+
+    def test_filter_grades_to_ranked_drops_outside_labels(self) -> None:
+        grade_map = build_grade_map({"A": "高度相关", "Z": "高度相关"})
+        self.assertEqual(filter_grades_to_ranked(["A", "B"], grade_map), {"A": 2})
+
+    def test_outside_labels_do_not_change_ndcg_or_labeled_count(self) -> None:
+        labels_inside = {"A": "高度相关", "B": "不相关"}
+        labels_with_outside = dict(labels_inside, Z="高度相关", Y="高度相关")
+        ranked_ids = ["A", "B"]
+        inside = evaluate_ranking(ranked_ids, labels_inside, 2)
+        with_outside = evaluate_ranking(ranked_ids, labels_with_outside, 2)
+        self.assertEqual(with_outside["labeled_count"], 2)
+        self.assertEqual(with_outside["judged_ndcg_at_k"], inside["judged_ndcg_at_k"])
+        self.assertEqual(
+            with_outside["judged_precision_at_k"], inside["judged_precision_at_k"]
+        )
 
 
 class TwoStageRankingTests(unittest.TestCase):
@@ -268,6 +318,101 @@ class TwoStageRankingTests(unittest.TestCase):
         for case in cases:
             self.assertTrue(case["explanation"])
             self.assertIn("openalex_id", case)
+
+
+LIVE_SAMPLE_CSV = (
+    PROJECT_ROOT / "data" / "samples" / "w2" / "ranking" / "live_ranking_sample.csv"
+)
+LIVE_SAMPLE_KEYWORD = "machine learning stellar parameter estimation spectra"
+
+# 离线重算必须与样本一致的分数字段与名次字段。
+LIVE_REPRODUCIBLE_SCORE_FIELDS = [
+    "baseline_preliminary_score",
+    "title_relevance_score",
+    "abstract_relevance_score",
+    "combined_relevance_score",
+    "stage2_ranking_score",
+]
+LIVE_REPRODUCIBLE_RANK_FIELDS = ["old_rank", "new_rank"]
+
+# 样本必须包含的来源追踪字段。
+LIVE_PROVENANCE_FIELDS = ["keyword", "retrieved_at", "run_id"]
+
+# 样本必须包含的 baseline 完整度计算字段。
+LIVE_BASELINE_INPUT_FIELDS = [
+    "title",
+    "authors",
+    "publication_year",
+    "doi",
+    "abstract",
+    "cited_by_count",
+    "source_name",
+    "landing_page_url",
+]
+
+
+class LiveSampleFieldTests(unittest.TestCase):
+    """live 样本字段完整性：足以重算 baseline，且带来源追踪。"""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.rows = load_papers_csv(LIVE_SAMPLE_CSV)
+
+    def test_sample_contains_baseline_input_and_provenance_fields(self) -> None:
+        required = set(LIVE_BASELINE_INPUT_FIELDS) | set(LIVE_PROVENANCE_FIELDS)
+        for field in required:
+            with self.subTest(field=field):
+                self.assertIn(field, self.rows[0])
+
+    def test_provenance_fields_are_non_empty(self) -> None:
+        for row in self.rows:
+            for field in LIVE_PROVENANCE_FIELDS:
+                with self.subTest(field=field, openalex_id=row["openalex_id"]):
+                    self.assertTrue(str(row.get(field) or "").strip())
+            self.assertEqual(row["keyword"], LIVE_SAMPLE_KEYWORD)
+
+
+class LiveSampleReproductionTests(unittest.TestCase):
+    """从 live 样本 CSV 离线重算，结果必须与样本保存的分数和名次一致。
+
+    注意：recency_score 依赖运行时年份，样本在与 retrieved_at 不同的年份
+    重算时需要按样本 README 的流程重新生成，届时本测试也应随新样本一起更新。
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        raw_papers = load_papers_csv(LIVE_SAMPLE_CSV)
+        baseline_papers = prepare_baseline_papers(raw_papers, LIVE_SAMPLE_KEYWORD)
+        cls.ranked_papers = apply_two_stage_ranking(
+            baseline_papers, LIVE_SAMPLE_KEYWORD
+        )
+        cls.stored_by_id = {paper["openalex_id"]: paper for paper in raw_papers}
+
+    def test_every_stored_paper_is_reproduced(self) -> None:
+        self.assertEqual(len(self.ranked_papers), len(self.stored_by_id))
+        for paper in self.ranked_papers:
+            self.assertIn(paper["openalex_id"], self.stored_by_id)
+
+    def test_scores_match_stored_values(self) -> None:
+        for paper in self.ranked_papers:
+            stored = self.stored_by_id[paper["openalex_id"]]
+            for field in LIVE_REPRODUCIBLE_SCORE_FIELDS:
+                with self.subTest(field=field, openalex_id=paper["openalex_id"]):
+                    self.assertAlmostEqual(
+                        paper[field],
+                        float(stored[field]),
+                        places=4,
+                    )
+
+    def test_ranks_and_levels_match_stored_values(self) -> None:
+        for paper in self.ranked_papers:
+            stored = self.stored_by_id[paper["openalex_id"]]
+            for field in LIVE_REPRODUCIBLE_RANK_FIELDS:
+                with self.subTest(field=field, openalex_id=paper["openalex_id"]):
+                    self.assertEqual(paper[field], int(stored[field]))
+            self.assertEqual(
+                paper["stage1_relevance_level"], stored["stage1_relevance_level"]
+            )
 
 
 if __name__ == "__main__":

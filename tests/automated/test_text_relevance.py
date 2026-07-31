@@ -91,6 +91,35 @@ class TfidfKnownAnswerTests(unittest.TestCase):
                     delta=self.fixture["tolerance"],
                 )
 
+    def test_out_of_vocabulary_query_terms_are_ignored(self) -> None:
+        """查询同时包含已登录词和未登录词：未登录词直接忽略，结果同已知答案。"""
+        documents = {
+            name: tokenize_text(text)
+            for name, text in self.fixture["documents"].items()
+        }
+        idf = build_idf(list(documents.values()))
+        query_with_oov = self.fixture["query"] + " zzzqqq xxyyww"
+        query_vector = tfidf_vector(tokenize_text(query_with_oov), idf)
+        # 未登录词不进入查询向量，向量只剩已登录词项。
+        self.assertEqual(
+            query_vector, tfidf_vector(tokenize_text(self.fixture["query"]), idf)
+        )
+        for name, expected in self.fixture["expected_cosine"].items():
+            with self.subTest(document=name):
+                document_vector = tfidf_vector(documents[name], idf)
+                self.assertAlmostEqual(
+                    cosine_similarity(query_vector, document_vector),
+                    expected,
+                    delta=self.fixture["tolerance"],
+                )
+
+    def test_all_query_terms_out_of_vocabulary_give_empty_vector(self) -> None:
+        documents = [
+            tokenize_text(text) for text in self.fixture["documents"].values()
+        ]
+        idf = build_idf(documents)
+        self.assertEqual(tfidf_vector(["zzzqqq", "xxyyww"], idf), {})
+
 
 class RelevanceScoreTests(unittest.TestCase):
     """三个相关性分数字段的行为与边界。"""

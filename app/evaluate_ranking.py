@@ -32,6 +32,7 @@ from src.processor import (
     clean_papers,
     remove_duplicates,
 )
+from src.run_context import build_run_id
 from src.text_relevance import add_text_relevance_scores
 from src.utils import ensure_directories
 
@@ -95,10 +96,19 @@ ERROR_CASE_FIELDS = [
 LIVE_SAMPLE_FIELDS = [
     "openalex_id",
     "title",
+    "authors",
+    "publication_year",
+    "doi",
     "abstract",
     "cited_by_count",
-    "publication_year",
+    "source_name",
+    "landing_page_url",
+    "keyword",
+    "retrieved_at",
+    "run_id",
     "baseline_preliminary_score",
+    "title_relevance_score",
+    "abstract_relevance_score",
     "combined_relevance_score",
     "stage1_relevance_level",
     "stage2_ranking_score",
@@ -332,10 +342,14 @@ def print_metric_comparison(
     new_ids = [paper.get("openalex_id", "") for paper in new_order]
     old_metrics = evaluate_ranking(old_ids, labels, k)
     new_metrics = evaluate_ranking(new_ids, labels, k)
-    print(f"离线评价（K={k}，标签 {old_metrics['labeled_count']} 条，仅用于评价）")
+    print(
+        f"离线评价（judged 口径，K={k}，本次排名内标签 {old_metrics['labeled_count']} 条，"
+        f"Top {k} 已标注 {old_metrics['judged_count_at_k']} 条，"
+        f"覆盖率 {old_metrics['coverage_at_k']}，仅用于评价）"
+    )
     for metric in (
-        "precision_at_k",
-        "ndcg_at_k",
+        "judged_precision_at_k",
+        "judged_ndcg_at_k",
         "irrelevant_in_top_k",
         "average_rank_of_highly_relevant",
     ):
@@ -401,6 +415,10 @@ def main(argv: list[str] | None = None) -> int:
     if not output_dir.is_absolute():
         output_dir = PROJECT_ROOT / output_dir
 
+    # 每次运行都生成 run_id，写入样本 CSV 用于来源追踪；
+    # 本入口不创建实验目录，run_id 只作为本次运行的唯一标识。
+    run_id = build_run_id(args.mode, keyword, args.max_results)
+
     try:
         print("第 1 步：正在准备论文数据。")
         if args.mode == "live":
@@ -435,12 +453,13 @@ def main(argv: list[str] | None = None) -> int:
             sample_file = args.sample_csv
             if not sample_file.is_absolute():
                 sample_file = PROJECT_ROOT / sample_file
-            sample_rows = [
-                {field: paper.get(field) for field in LIVE_SAMPLE_FIELDS}
-                for paper in ranked_papers
-            ]
+            sample_rows = []
+            for paper in ranked_papers:
+                row = {field: paper.get(field) for field in LIVE_SAMPLE_FIELDS}
+                row["run_id"] = run_id
+                sample_rows.append(row)
             save_csv(sample_rows, LIVE_SAMPLE_FIELDS, sample_file)
-            print(f"已保存样本：{sample_file}")
+            print(f"已保存样本：{sample_file}（run_id：{run_id}）")
 
         if args.labels is not None:
             print("第 5 步：正在用人工标签做离线评价。")
