@@ -120,7 +120,7 @@ cited_by_count、publication_year 降序，保证结果确定可复现。
 
 - 词法相关性无法识别同义改写和领域变体。live 数据中
   "SPCANet: Stellar Parameters and Chemical Abundances..." 用词与查询重合少，
-  combined = 0.0397 被分到 low 层，排名 32 → 54；它很可能实际相关。
+  combined = 0.0397 被分到 low 层，排名 32 → 53；它很可能实际相关。
   这正是"词法相关性 ≠ 语义理解"的实例，也是本周不硬删除论文的原因。
 - 共享通用词的主题偏离论文（如标题含 machine learning 的股市论文）仍可能
   得到中等词法分数，词法方法无法根除这类问题。

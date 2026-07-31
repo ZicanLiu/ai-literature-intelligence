@@ -1,6 +1,6 @@
 ﻿openalex_id,title,cited_by_count,publication_year,baseline_preliminary_score,title_relevance_score,abstract_relevance_score,combined_relevance_score,stage1_relevance_score,stage1_relevance_level,stage2_ranking_score,old_rank,new_rank,rank_change
 https://openalex.org/W3161623437,Stellar Spectra Models Classification and Parameter Estimation Using Machine Learning Algorithms,6,2021,0.6498,0.6213,0.1773,0.4881,0.4881,high,0.4772,1,1,0
-https://openalex.org/W2032231736,Estimation of stellar atmospheric parameters from SDSS/SEGUE spectra,94,2007,0.4833,0.3027,0.1316,0.2513,0.2513,high,0.3617,19,2,17
+https://openalex.org/W2032231736,Estimation of stellar atmospheric parameters from SDSS/SEGUE spectra,94,2007,0.4833,0.3027,0.1316,0.2513,0.2513,high,0.3617,18,2,16
 https://openalex.org/W4224036191,Estimation of Stellar Atmospheric Parameters from LAMOST DR8 Low-resolution Spectra with 20 ≤ S/N &lt; 30,7,2022,0.5545,0.1959,0.2675,0.2174,0.2174,high,0.3608,4,3,1
 https://openalex.org/W2316951457,Stellar atmospheric parameter estimation using Gaussian process regression,31,2014,0.4042,0.3937,0.0763,0.2985,0.2985,high,0.3528,48,4,44
 https://openalex.org/W4384201335,Machine learning in solar physics,67,2023,0.5246,0.1842,0.1043,0.1602,0.1602,medium,0.3289,9,5,4
@@ -8,20 +8,20 @@ https://openalex.org/W2406349003,A survey of machine learning for big data proce
 https://openalex.org/W2920947047,The Challenge of Machine Learning in Space Weather: Nowcasting and Forecasting,401,2019,0.5083,0.1141,0.1312,0.1192,0.1192,medium,0.307,13,7,6
 https://openalex.org/W4372215216,Machine learning for observational cosmology,34,2023,0.5008,0.1761,0.0416,0.1357,0.1357,medium,0.3033,15,8,7
 https://openalex.org/W4353102922,Estimating stellar parameters from LAMOST low-resolution spectra,21,2023,0.5441,0.1697,0.1315,0.1582,0.1582,medium,0.3012,5,9,-4
-https://openalex.org/W4363678967,A Novel Approach Utilizing Machine Learning for the Early Diagnosis of Alzheimer's Disease,91,2023,0.4954,0.0941,0.0,0.0659,0.0659,medium,0.2984,16,10,6
-https://openalex.org/W4319592221,Deducing neutron star equation of state parameters directly from telescope spectra with uncertainty-aware machine learning,26,2023,0.5582,0.173,0.04,0.1331,0.1331,medium,0.296,3,11,-8
-https://openalex.org/W3155899199,Machine Learning Based Automatic Modulation Recognition for Wireless Communications: A Comprehensive Survey,174,2021,0.5185,0.0989,0.0318,0.0788,0.0788,medium,0.295,11,12,-1
-https://openalex.org/W4306248068,"Machine learning in electron microscopy for advanced nanocharacterization: current developments, available tools and future outlook",124,2022,0.4864,0.0868,0.0,0.0608,0.0608,medium,0.2917,18,13,5
-https://openalex.org/W4388221752,Machine Learning Model for Leak Detection Using Water Pipeline Vibration Sensor,54,2023,0.517,0.1017,0.0257,0.0789,0.0789,medium,0.2913,12,14,-2
-https://openalex.org/W4389613706,Deducing neutron star equation of state from telescope spectra with machine-learning-derived likelihoods,8,2023,0.5788,0.1868,0.1618,0.1793,0.1793,medium,0.2882,2,15,-13
-https://openalex.org/W2623459029,Photometric redshift estimation via deep learning,162,2017,0.4159,0.2263,0.0424,0.1712,0.1712,medium,0.2822,44,16,28
+https://openalex.org/W4319592221,Deducing neutron star equation of state parameters directly from telescope spectra with uncertainty-aware machine learning,26,2023,0.5582,0.173,0.04,0.1331,0.1331,medium,0.296,3,10,-7
+https://openalex.org/W3155899199,Machine Learning Based Automatic Modulation Recognition for Wireless Communications: A Comprehensive Survey,174,2021,0.5185,0.0989,0.0318,0.0788,0.0788,medium,0.295,11,11,0
+https://openalex.org/W4306248068,"Machine learning in electron microscopy for advanced nanocharacterization: current developments, available tools and future outlook",124,2022,0.4864,0.0868,0.0,0.0608,0.0608,medium,0.2917,17,12,5
+https://openalex.org/W4388221752,Machine Learning Model for Leak Detection Using Water Pipeline Vibration Sensor,54,2023,0.517,0.1017,0.0257,0.0789,0.0789,medium,0.2913,12,13,-1
+https://openalex.org/W4389613706,Deducing neutron star equation of state from telescope spectra with machine-learning-derived likelihoods,8,2023,0.5788,0.1868,0.1618,0.1793,0.1793,medium,0.2882,2,14,-12
+https://openalex.org/W4363678967,A Novel Approach Utilizing Machine Learning for the Early Diagnosis of Alzheimer's Disease,91,2023,0.4788,0.0941,0.0,0.0659,0.0659,medium,0.2851,20,15,5
+https://openalex.org/W2623459029,Photometric redshift estimation via deep learning,162,2017,0.4159,0.2263,0.0424,0.1712,0.1712,medium,0.2822,43,16,27
 https://openalex.org/W3009147880,Accurate Machine-learning Atmospheric Retrieval via a Neural-network Surrogate Model for Radiative Transfer,40,2022,0.5265,0.095,0.0867,0.0925,0.0925,medium,0.2778,7,17,-10
 https://openalex.org/W2907474932,Star formation rates and stellar masses from machine learning,53,2019,0.523,0.2052,0.0565,0.1606,0.1606,medium,0.2756,10,18,-8
 https://openalex.org/W4396945058,Using autoencoders and deep transfer learning to determine the stellar parameters of 286 CARMENES M dwarfs,14,2024,0.5304,0.0739,0.1095,0.0846,0.0846,medium,0.2746,6,19,-13
-https://openalex.org/W3118558754,mirkwood: Fast and Accurate SED Modeling Using Machine Learning,33,2021,0.4798,0.1212,0.0462,0.0987,0.0987,medium,0.2638,20,20,0
-https://openalex.org/W4286669192,The stellar parameters and elemental abundances from low-resolution spectra – I. 1.2 million giants from LAMOST DR8,24,2022,0.4887,0.1035,0.0403,0.0846,0.0846,medium,0.2628,17,21,-4
+https://openalex.org/W3118558754,mirkwood: Fast and Accurate SED Modeling Using Machine Learning,33,2021,0.4798,0.1212,0.0462,0.0987,0.0987,medium,0.2638,19,20,-1
+https://openalex.org/W4286669192,The stellar parameters and elemental abundances from low-resolution spectra – I. 1.2 million giants from LAMOST DR8,24,2022,0.4887,0.1035,0.0403,0.0846,0.0846,medium,0.2628,16,21,-5
 https://openalex.org/W2977076818,Galaxy morphological classification in deep-wide surveys via unsupervised machine learning,84,2019,0.4726,0.1038,0.0647,0.0921,0.0921,medium,0.259,23,22,1
-https://openalex.org/W2949389789,Information-rich localization microscopy through machine learning,55,2019,0.4176,0.1249,0.0304,0.0966,0.0966,medium,0.2508,43,23,20
+https://openalex.org/W2949389789,Information-rich localization microscopy through machine learning,55,2019,0.4176,0.1249,0.0304,0.0966,0.0966,medium,0.2508,42,23,19
 https://openalex.org/W4213268716,Deep learning application for stellar parameters determination: I-constraining the hyperparameters,13,2022,0.5079,0.0962,0.0468,0.0814,0.0814,medium,0.2476,14,24,-10
 https://openalex.org/W2923111827,Learning the relationship between galaxies spectra and their star formation histories using convolutional neural networks and cosmological simulations,47,2019,0.4521,0.1085,0.0593,0.0937,0.0937,medium,0.246,29,25,4
 https://openalex.org/W2808054733,Empirical Relations for the Accurate Estimation of Stellar Masses and Radii,33,2018,0.3998,0.1611,0.0488,0.1274,0.1274,medium,0.2392,50,26,24
@@ -30,7 +30,7 @@ https://openalex.org/W2211251945,Stellar parametrization from<i>Gaia</i>RVS spec
 https://openalex.org/W3088227899,Machines learn to infer stellar parameters just by looking at a large number of spectra,18,2020,0.4589,0.1033,0.071,0.0936,0.0936,medium,0.2358,26,29,-3
 https://openalex.org/W2006997511,Automatic stellar spectra parameterisation in the IR Ca ii triplet region,83,2011,0.4122,0.1213,0.0729,0.1068,0.1068,medium,0.2286,46,30,16
 https://openalex.org/W2139768786,Oscillation frequencies for 35<i>Kepler</i>solar-type planet-hosting stars using Bayesian techniques and machine learning,153,2015,0.4339,0.0824,0.0339,0.0679,0.0679,medium,0.2275,33,31,2
-https://openalex.org/W2375984290,Stellar classification from single-band imaging using machine learning,37,2016,0.4304,0.1711,0.0525,0.1355,0.1355,medium,0.2211,38,32,6
+https://openalex.org/W2375984290,Stellar classification from single-band imaging using machine learning,37,2016,0.4304,0.1711,0.0525,0.1355,0.1355,medium,0.2211,37,32,5
 https://openalex.org/W2963887511,ASTEROSEISMIC-BASED ESTIMATION OF THE SURFACE GRAVITY FOR THE LAMOST GIANT STARS,76,2015,0.3624,0.1068,0.0315,0.0842,0.0842,medium,0.2175,54,33,21
 https://openalex.org/W2143169117,Machine learning and cosmological simulations – I. Semi-analytical models,49,2015,0.3936,0.1236,0.0322,0.0962,0.0962,medium,0.212,52,34,18
 https://openalex.org/W2495294139,On the estimation of stellar parameters with uncertainty prediction from Generative Artificial Neural Networks: application to<i>Gaia</i>RVS simulated spectra,20,2016,0.3891,0.1728,0.0361,0.1318,0.1318,medium,0.2055,53,35,18
@@ -39,22 +39,22 @@ https://openalex.org/W3017279354,Painting a portrait of the Galactic disc with i
 https://openalex.org/W4285900142,<i>Gaia</i>Data Release 3,213,2022,0.4524,0.0,0.0188,0.0057,0.0057,low,0.1766,28,38,-10
 https://openalex.org/W2084341220,Statistical Modeling: The Two Cultures (with comments and a rejoinder by the author),4306,2001,0.4,0.0,0.0,0.0,0.0,low,0.175,49,39,10
 https://openalex.org/W2740236269,The Fourteenth Data Release of the Sloan Digital Sky Survey: First Spectroscopic Data from the Extended Baryon Oscillation Spectroscopic Survey and from the Second Phase of the Apache Point Observatory Galactic Evolution Experiment,1051,2018,0.4695,0.0,0.0438,0.0131,0.0131,low,0.1722,25,40,-15
-https://openalex.org/W4381612653,A calibration point for stellar evolution from massive star asteroseismology,57,2023,0.4322,0.0406,0.0,0.0284,0.0284,low,0.1703,36,41,-5
-https://openalex.org/W2772961215,Inferring the star formation histories of massive quiescent galaxies with bagpipes: evidence for multiple quenching mechanisms,790,2018,0.4392,0.0,0.0493,0.0148,0.0148,low,0.1684,31,42,-11
-https://openalex.org/W3172620183,Extending the evolution of the stellar mass–size relation at <i>z</i> ≤ 2 to low stellar mass galaxies from HFF and CANDELS,93,2021,0.4295,0.0482,0.0361,0.0446,0.0446,low,0.1665,39,43,-4
-https://openalex.org/W2905331806,"The Fifteenth Data Release of the Sloan Digital Sky Surveys: First Release of MaNGA-derived Quantities, Data Visualization Tools, and Stellar Library",353,2019,0.4571,0.0229,0.0223,0.0227,0.0227,low,0.1658,27,44,-17
-https://openalex.org/W4220667678,The EXPRES Stellar Signals Project II. State of the Field in Disentangling Photospheric Velocities,59,2022,0.4335,0.0309,0.0293,0.0304,0.0304,low,0.1638,34,45,-11
-https://openalex.org/W3038345459,Physics of Eclipsing Binaries. V. General Framework for Solving the Inverse Problem,209,2020,0.4317,0.0,0.0373,0.0112,0.0112,low,0.1627,37,46,-9
+https://openalex.org/W2772961215,Inferring the star formation histories of massive quiescent galaxies with bagpipes: evidence for multiple quenching mechanisms,790,2018,0.4392,0.0,0.0493,0.0148,0.0148,low,0.1684,31,41,-10
+https://openalex.org/W3172620183,Extending the evolution of the stellar mass–size relation at <i>z</i> ≤ 2 to low stellar mass galaxies from HFF and CANDELS,93,2021,0.4295,0.0482,0.0361,0.0446,0.0446,low,0.1665,38,42,-4
+https://openalex.org/W2905331806,"The Fifteenth Data Release of the Sloan Digital Sky Surveys: First Release of MaNGA-derived Quantities, Data Visualization Tools, and Stellar Library",353,2019,0.4571,0.0229,0.0223,0.0227,0.0227,low,0.1658,27,43,-16
+https://openalex.org/W4220667678,The EXPRES Stellar Signals Project II. State of the Field in Disentangling Photospheric Velocities,59,2022,0.4335,0.0309,0.0293,0.0304,0.0304,low,0.1638,34,44,-10
+https://openalex.org/W3038345459,Physics of Eclipsing Binaries. V. General Framework for Solving the Inverse Problem,209,2020,0.4317,0.0,0.0373,0.0112,0.0112,low,0.1627,36,45,-9
+https://openalex.org/W4381612653,A calibration point for stellar evolution from massive star asteroseismology,57,2023,0.4156,0.0406,0.0,0.0284,0.0284,low,0.1619,44,46,-2
 https://openalex.org/W2900811782,Accuracy and Precision of Industrial Stellar Abundances,177,2019,0.4324,0.0468,0.0371,0.0439,0.0439,low,0.1609,35,47,-12
-https://openalex.org/W4289710316,<i>Gaia</i> Data Release 2,475,2018,0.421,0.0,0.0358,0.0107,0.0107,low,0.1598,41,48,-7
+https://openalex.org/W4289710316,<i>Gaia</i> Data Release 2,475,2018,0.421,0.0,0.0358,0.0107,0.0107,low,0.1598,40,48,-8
 https://openalex.org/W3113695400,Stellar chromospheric activity of 1674 FGK stars from the AMBRE-HARPS sample,127,2020,0.4406,0.0332,0.0147,0.0276,0.0276,low,0.1594,30,49,-19
 https://openalex.org/W2916355868,Simultaneous calibration of spectro-photometric distances and the Gaia DR2 parallax zero-point offset with deep learning,169,2019,0.4108,0.0387,0.0064,0.029,0.029,low,0.1565,47,50,-3
-https://openalex.org/W2748443397,Application of Multi-task Sparse Lasso Feature Extraction and Support Vector Machine Regression in the Stellar Atmospheric Parameterization,5,2017,0.2776,0.0715,0.0,0.0501,0.0501,medium,0.1549,60,51,9
-https://openalex.org/W3216552048,SUPPNet: Neural network for stellar spectrum normalisation,22,2022,0.4191,0.0446,0.0595,0.049,0.049,low,0.1541,42,52,-10
-https://openalex.org/W3107253413,Investigating the young AU Mic system with SPIRou: large-scale stellar magnetic field and close-in planet mass,93,2020,0.4295,0.0263,0.0121,0.022,0.022,low,0.1534,40,53,-13
-https://openalex.org/W2999093079,SPCANet: Stellar Parameters and Chemical Abundances Network for LAMOST-II Medium Resolution Survey,67,2020,0.4379,0.0349,0.0508,0.0397,0.0397,low,0.153,32,54,-22
-https://openalex.org/W4288485600,The quest for stellar coronal mass ejections in late-type stars,110,2019,0.4155,0.0358,0.0142,0.0293,0.0293,low,0.1502,45,55,-10
-https://openalex.org/W2557534007,Standing on the Shoulders of Dwarfs: the Kepler Asteroseismic LEGACY Sample. I. Oscillation Mode Parameters,258,2017,0.3592,0.0,0.0227,0.0068,0.0068,low,0.1422,55,56,-1
+https://openalex.org/W3216552048,SUPPNet: Neural network for stellar spectrum normalisation,22,2022,0.4191,0.0446,0.0595,0.049,0.049,low,0.1541,41,51,-10
+https://openalex.org/W3107253413,Investigating the young AU Mic system with SPIRou: large-scale stellar magnetic field and close-in planet mass,93,2020,0.4295,0.0263,0.0121,0.022,0.022,low,0.1534,39,52,-13
+https://openalex.org/W2999093079,SPCANet: Stellar Parameters and Chemical Abundances Network for LAMOST-II Medium Resolution Survey,67,2020,0.4379,0.0349,0.0508,0.0397,0.0397,low,0.153,32,53,-21
+https://openalex.org/W4288485600,The quest for stellar coronal mass ejections in late-type stars,110,2019,0.4155,0.0358,0.0142,0.0293,0.0293,low,0.1502,45,54,-9
+https://openalex.org/W2557534007,Standing on the Shoulders of Dwarfs: the Kepler Asteroseismic LEGACY Sample. I. Oscillation Mode Parameters,258,2017,0.3592,0.0,0.0227,0.0068,0.0068,low,0.1422,55,55,0
+https://openalex.org/W2748443397,Application of Multi-task Sparse Lasso Feature Extraction and Support Vector Machine Regression in the Stellar Atmospheric Parameterization,5,2017,0.2609,0.0715,0.0,0.0501,0.0501,medium,0.1415,60,56,4
 https://openalex.org/W2087657262,"UV-TO-FIR ANALYSIS OF <i>SPITZER</i> /IRAC SOURCES IN THE EXTENDED GROTH STRIP. II. PHOTOMETRIC REDSHIFTS, STELLAR MASSES, AND STAR FORMATION RATES",123,2011,0.3395,0.0236,0.0241,0.0238,0.0238,low,0.128,56,57,-1
 https://openalex.org/W2100767934,Discovery of extended VHE<i>γ</i>-ray emission from the vicinity of the young massive stellar cluster Westerlund 1,121,2011,0.3389,0.0264,0.0188,0.0241,0.0241,low,0.1278,58,58,0
 https://openalex.org/W2141408672,The<i>Gaia</i>astrophysical parameters inference system (Apsis),145,2013,0.2987,0.0,0.0132,0.004,0.004,low,0.1255,59,59,0

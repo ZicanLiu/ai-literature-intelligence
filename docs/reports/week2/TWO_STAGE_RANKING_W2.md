@@ -49,8 +49,12 @@
   `data/samples/w2/ranking/README.md`
 - 样本含 baseline 重算所需的全部字段（doi、authors、source_name、
   landing_page_url 等）和来源追踪字段（keyword、retrieved_at、run_id）；
+  真正缺失的摘要保存为空值，不保存字符串 "nan"；
+  `load_papers_csv` 逐单元格用 `pd.isna` 把缺失值统一转成 None，
+  避免 NaN 被 `str()` 变成字符串 "nan" 而被完整度误判为字段存在
+  （不同 pandas 版本行为一致）；
   样本中 run_id 为
-  `20260731_163351611581_offline_machine-learning-stellar-parameter-estimation-sp_n60_21a53a`
+  `20260731_185604465127_offline_machine-learning-stellar-parameter-estimation-sp_n60_c8e68d`
   （重新生成样本的那次运行）
 - 第一阶段分层：high 4 / medium 32 / low 24
 - 复现命令（离线，从样本 CSV 重算全部分析）：
@@ -149,7 +153,7 @@ fixture 只用于开发测试，以上数字不冒充真实领域评价结果。
    需要说明：全谱拟合其实与恒星参数估计相关，这篇很可能是**误伤**
    （标题摘要不使用查询用词），详见第 7 节限制。
 3. **Photometric redshift estimation via deep learning**（引用 162，2017）
-   44 → 16。combined = 0.1712（medium 层）。"estimation via deep learning"
+   43 → 16。combined = 0.1712（medium 层）。"estimation via deep learning"
    与查询词重合，但研究对象是星系红移而非恒星光谱——词法重合带来的
    **边界上升**案例，词法方法无法进一步甄别。
 4. **Empirical Relations for the Accurate Estimation of Stellar...**（引用 33，2018）
@@ -158,7 +162,7 @@ fixture 只用于开发测试，以上数字不冒充真实领域评价结果。
    51 → 28。标题含 stellar parametrization 和 spectra，combined = 0.1277
    （medium 层），正常上升。
 6. 反例（不在前 5，单独列出）：**SPCANet: Stellar Parameters and Chemical
-   Abundances Network...**（引用 67）32 → 54。这是恒星参数估计的知名方法，
+   Abundances Network...**（引用 67）32 → 53。这是恒星参数估计的知名方法，
    但标题摘要用词（SPCANet、chemical abundances）与查询重合很少，
    combined = 0.0397 被分入 low 层。词法相关性识别不了这种领域变体，
    是本周**不硬删除论文**的直接理由。

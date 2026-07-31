@@ -233,14 +233,23 @@ def load_papers_csv(input_file: Path) -> list[dict]:
 
     参数：
         input_file：包含统一论文字段的 CSV 路径。
-    返回：原始论文字典列表，缺失值保持为空。
+    返回：原始论文字典列表，缺失值统一为 None。
     异常或特殊情况：文件不存在时抛出 ValueError。
+        缺失值必须逐单元格用 pd.isna 判断并转成 None：NaN 不能直接进入
+        下游清洗，否则会被 str() 变成字符串 "nan"，被误判为字段存在
+        （不同 pandas 版本对 where/to_dict 的 None 转换行为不一致，
+        逐单元格判断在所有版本下结果相同）。
     """
     input_path = Path(input_file)
     if not input_path.is_file():
         raise ValueError(f"输入 CSV 不存在：{input_path}")
     dataframe = pd.read_csv(input_path)
-    return dataframe.where(pd.notna(dataframe), None).to_dict("records")
+    records = []
+    for row in dataframe.to_dict("records"):
+        records.append(
+            {key: (None if pd.isna(value) else value) for key, value in row.items()}
+        )
+    return records
 
 
 def build_comparison_rows(ranked_papers: list[dict]) -> list[dict]:

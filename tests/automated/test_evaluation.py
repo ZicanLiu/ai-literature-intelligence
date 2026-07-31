@@ -363,6 +363,11 @@ class LiveSampleFieldTests(unittest.TestCase):
         for field in required:
             with self.subTest(field=field):
                 self.assertIn(field, self.rows[0])
+        # 缺失值必须保存为空（读入后为 None），不允许出现字符串 "nan"：
+        # 它会被 completeness 误判为字段存在，且不同 pandas 版本处理不一致。
+        for row in self.rows:
+            for value in row.values():
+                self.assertNotEqual(str(value).strip().lower(), "nan")
 
     def test_provenance_fields_are_non_empty(self) -> None:
         for row in self.rows:

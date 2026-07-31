@@ -6,7 +6,7 @@
 - 检索词（keyword）：`machine learning stellar parameter estimation spectra`
 - 请求数量：60；清洗去重后记录数量：60
 - 获取时间（retrieved_at，UTC）：2026-07-27T12:27:51Z
-- run_id：`20260731_163351611581_offline_machine-learning-stellar-parameter-estimation-sp_n60_21a53a`（重新生成本文件的那次运行；本文件由
+- run_id：`20260731_185604465127_offline_machine-learning-stellar-parameter-estimation-sp_n60_c8e68d`（重新生成本文件的那次运行；本文件由
   `python -m app.evaluate_ranking --mode offline --input <完整字段原始数据> --keyword "machine learning stellar parameter estimation spectra" --sample-csv data/samples/w2/ranking/live_ranking_sample.csv`
   生成）
 
@@ -23,6 +23,10 @@
   `data/analysis/w2_ranking/baseline_vs_two_stage.csv` 完全一致，
   由回归测试（`tests/automated/test_evaluation.py` 中 LiveSampleFieldTests
   与 LiveSampleReproductionTests）保证。
+- 2026-07-31 第二次修正：3 篇缺失摘要的论文曾被误存为字符串 `nan`
+  （NaN 在 CSV 读取后被 `str()` 化的结果），导致完整度被误判为字段存在；
+  现统一把真正缺失的值保存为空，`load_papers_csv` 逐单元格用 `pd.isna`
+  转成 None，不同 pandas 版本重算结果一致。
 
 ## 字段说明
 
