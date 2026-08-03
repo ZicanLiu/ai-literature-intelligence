@@ -87,27 +87,13 @@ def tokenize_title(title: str) -> set[str]:
 
 
 def jaccard_similarity(set_a: set, set_b: set) -> float:
-    """计算两个集合的 Jaccard 相似度。
-
-    参数：
-        set_a、set_b：两个集合。
-    返回：0 到 1 的 Jaccard 系数。两个集合均为空时返回 1.0。
-    """
     union = set_a | set_b
     if not union:
-        return 1.0
+        return 0.0
     return len(set_a & set_b) / len(union)
 
 
 def sequence_similarity(a: str, b: str) -> float:
-    """计算两个字符串的 SequenceMatcher 相似度。
-
-    参数：
-        a、b：两个标准化后的标题字符串。
-    返回：0 到 1 的 ratio 值。
-    """
-    if not a and not b:
-        return 1.0
     if not a or not b:
         return 0.0
     return SequenceMatcher(None, a, b).ratio()
@@ -136,17 +122,11 @@ def extract_author_surnames(authors: str) -> list[str]:
 
 
 def author_overlap_ratio(surnames_a: list[str], surnames_b: list[str]) -> float:
-    """计算两组作者姓氏的 Jaccard 重合度。
-
-    参数：
-        surnames_a、surnames_b：姓氏列表。
-    返回：0 到 1 的重合比例。两边都为空时返回 1.0。
-    """
     set_a = set(surnames_a)
     set_b = set(surnames_b)
     union = set_a | set_b
     if not union:
-        return 1.0
+        return 0.0
     return len(set_a & set_b) / len(union)
 
 
@@ -169,22 +149,6 @@ def normalize_doi(doi: str) -> str:
 
 
 def find_exact_duplicates(papers: list[dict]) -> dict:
-    """查找确定重复的论文。
-
-    三条规则（优先级依次降低）：
-      1. openalex_id 完全相同 → 同一实体返回两次
-      2. 非空 DOI 标准化后相同 → 相同论文不同版本
-      3. openalex_id 缺失时，标准化标题完全相同 → 缺少稳定标识
-
-    参数：
-        papers：包含 keyword、run_id、openalex_id、doi、title 等字段的论文列表。
-    返回：
-        {
-            "exact_duplicates": [...],
-            "kept_papers": [...],
-            "stats": {"same_openalex_id": N, "same_doi": N, "same_title_no_id": N}
-        }
-    """
     exact_duplicates = []
     kept_papers = []
     seen_ids = {}
@@ -211,18 +175,19 @@ def find_exact_duplicates(papers: list[dict]) -> dict:
             stats["same_doi"] += 1
             is_duplicate = True
 
-        if not is_duplicate and title_norm and title_norm in seen_titles_no_id:
-            record = _build_exact_dup(paper, seen_titles_no_id[title_norm], "same_title_no_id")
-            exact_duplicates.append(record)
-            stats["same_title_no_id"] += 1
-            is_duplicate = True
+        if not is_duplicate and title_norm and not oa_id and not doi:
+            if title_norm in seen_titles_no_id:
+                record = _build_exact_dup(paper, seen_titles_no_id[title_norm], "same_title_no_id")
+                exact_duplicates.append(record)
+                stats["same_title_no_id"] += 1
+                is_duplicate = True
 
         if not is_duplicate:
             if oa_id:
                 seen_ids[oa_id] = paper
             if doi:
                 seen_dois[doi] = paper
-            if title_norm and not doi:
+            if title_norm and not oa_id and not doi:
                 seen_titles_no_id[title_norm] = paper
             kept_papers.append(paper)
 
@@ -348,8 +313,12 @@ def find_suspected_duplicates(
             pj = papers[j]
             yj = _safe_int(pj.get("publication_year"))
             oa_id_j = (pj.get("openalex_id") or "").strip()
+            title_j_norm = normalize_title(pj.get("title") or "")
 
             if oa_id_i and oa_id_j and oa_id_i == oa_id_j:
+                continue
+
+            if not title_i_norm or not title_j_norm:
                 continue
 
             if yi is not None and yj is not None and abs(yi - yj) > 2:
@@ -359,7 +328,6 @@ def find_suspected_duplicates(
             if doi_i and doi_j and doi_i != doi_j:
                 continue
 
-            title_j_norm = normalize_title(pj.get("title") or "")
             tokens_j = tokenize_title(title_j_norm)
             surnames_j = extract_author_surnames(pj.get("authors") or "")
 

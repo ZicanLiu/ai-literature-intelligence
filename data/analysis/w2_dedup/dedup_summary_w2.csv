@@ -1,6 +1,4 @@
 metric,value
-query_1_count,60
-query_2_count,60
 total_raw_papers,120
 total_kept_papers,109
 exact_duplicate_count,11

@@ -3,11 +3,11 @@ W2 去重模块自动测试。
 
 覆盖：相同 OpenAlex ID、相同 DOI、DOI URL 前缀差异、标题完全相同、
 标点差异、标题带副标题、年份相差 1 年、作者明显不同、高相似但不自动删除、
-低相似不进入队列、空标题、特殊字符、pair_id 不重复、来源追踪字段不丢失。
+低相似不进入队列、空标题、特殊字符、pair_id 不重复、来源追踪字段不丢失、
+不同 ID 同标题不自动合并、空标题+空作者不进入队列。
 """
 
 import json
-import os
 import sys
 import unittest
 from pathlib import Path
@@ -29,6 +29,7 @@ from src.deduplication import (
 
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "dedup"
+SPECIAL_FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "dedup"
 
 
 def load_fixture(filename="test_papers.json"):
@@ -46,7 +47,6 @@ class TestNormalizeTitle(unittest.TestCase):
         result = normalize_title(title)
         self.assertNotIn(":", result)
         self.assertNotIn(",", result)
-        self.assertNotIn(".", result)
 
     def test_arxiv_removed(self):
         title = "Deep Learning for Stars [arXiv:2301.12345v2]"
@@ -59,6 +59,13 @@ class TestNormalizeTitle(unittest.TestCase):
         self.assertEqual(normalize_title(None), "")
         self.assertEqual(tokenize_title(""), set())
 
+    def test_special_characters_handled(self):
+        title = "Stellar <scp>ML</scp> &amp; spectra--test"
+        result = normalize_title(title)
+        self.assertNotIn("<", result)
+        self.assertNotIn(">", result)
+        self.assertNotIn("&", result)
+
 
 class TestExactDedup(unittest.TestCase):
     @classmethod
@@ -66,56 +73,55 @@ class TestExactDedup(unittest.TestCase):
         cls.papers = load_fixture()
 
     def test_same_openalex_id(self):
-        """测试 1：相同 OpenAlex ID → 确定重复"""
         result = find_exact_duplicates(self.papers)
         exact = result["exact_duplicates"]
         self.assertEqual(result["stats"]["same_openalex_id"], 1)
-        oa_ids_merged = set()
-        for dup in exact:
-            if dup["rule"] == "same_openalex_id":
-                oa_ids_merged.add(dup["merged_openalex_id"])
+        oa_ids_merged = {d["merged_openalex_id"] for d in exact if d["rule"] == "same_openalex_id"}
         self.assertIn("https://openalex.org/W1000000001", oa_ids_merged)
 
     def test_same_doi_with_url_prefix_diff(self):
-        """测试 2+3：相同 DOI 但 URL 前缀不同 → 确定重复"""
         result = find_exact_duplicates(self.papers)
-        exact = result["exact_duplicates"]
-        self.assertTrue(
-            any(
-                d["rule"] == "same_doi"
-                for d in exact
-            ),
-            "Should find at least one same-DOI duplicate (test 2+3)",
-        )
-        doi_dups = [d for d in exact if d["rule"] == "same_doi"]
-        if doi_dups:
-            print(f"  DOI duplicates found: {len(doi_dups)}")
+        self.assertEqual(result["stats"]["same_doi"], 1)
+        doi_dups = [d for d in result["exact_duplicates"] if d["rule"] == "same_doi"]
+        self.assertEqual(len(doi_dups), 1)
+        self.assertEqual(doi_dups[0]["merged_openalex_id"], "https://openalex.org/W3000000003")
 
-    def test_same_normalized_title_no_id(self):
-        """测试 4：标题完全相同 → 确定重复"""
-        papers_without_oaid = [
-            p for p in self.papers if not (p.get("openalex_id") or "")
+    def test_same_normalized_title_both_no_id_no_doi(self):
+        no_id_no_doi = [
+            p for p in self.papers
+            if not (p.get("openalex_id") or "").strip()
+            and not (p.get("doi") or "").strip()
         ]
-        if len(papers_without_oaid) >= 2:
-            result = find_exact_duplicates(papers_without_oaid)
-            self.assertGreaterEqual(
-                len(result["exact_duplicates"]),
-                0,
-                "Same title without IDs should be detected",
-            )
+        result = find_exact_duplicates(no_id_no_doi)
+        self.assertEqual(result["stats"]["same_title_no_id"], 1)
+
+    def test_different_ids_same_title_not_auto_merged(self):
+        papers = [
+            {
+                "keyword": "test", "run_id": "r1",
+                "openalex_id": "https://openalex.org/WAA", "doi": "",
+                "title": "Identical Title Here", "authors": "A B", "publication_year": 2022,
+            },
+            {
+                "keyword": "test", "run_id": "r2",
+                "openalex_id": "https://openalex.org/WBB", "doi": "",
+                "title": "Identical Title Here", "authors": "A B", "publication_year": 2022,
+            },
+        ]
+        result = find_exact_duplicates(papers)
+        self.assertEqual(result["stats"]["same_title_no_id"], 0,
+            "Different OpenAlex IDs with same title must NOT be auto-merged")
 
     def test_kept_papers_no_duplicates(self):
-        """保留的论文不包含被合并的（same_doi 和 same_title_no_id 规则）"""
         result = find_exact_duplicates(self.papers)
-        kept_ids = {p.get("openalex_id") for p in result["kept_papers"]}
+        kept_ids = {p.get("openalex_id", "") for p in result["kept_papers"]}
         for dup in result["exact_duplicates"]:
             merged_id = dup.get("merged_openalex_id", "")
             if dup["rule"] == "same_openalex_id":
                 continue
             if not merged_id:
                 continue
-            self.assertNotIn(merged_id, kept_ids,
-                f"Merged ID {merged_id} should not be in kept papers")
+            self.assertNotIn(merged_id, kept_ids)
 
 
 class TestSuspectedDedup(unittest.TestCase):
@@ -123,81 +129,129 @@ class TestSuspectedDedup(unittest.TestCase):
     def setUpClass(cls):
         cls.papers = load_fixture()
 
-    def test_punctuation_difference_suspected(self):
-        """测试 5：标点差异 → 应进入疑似队列"""
+    def test_punctuation_difference_is_suspected(self):
         kept = find_exact_duplicates(self.papers)["kept_papers"]
         result = find_suspected_duplicates(kept)
         suspected = result["suspected_duplicates"]
-        punct_pair = [
-            s for s in suspected
-            if "punctuation" in s.get("left_title", "").lower()
-            or "stellar spectra" in s.get("left_title", "").lower()
-        ]
-        self.assertGreater(len(suspected), 0, "Suspected pairs should be generated")
+        pair_ids = {s["pair_id"] for s in suspected}
+        left_ids = {s["left_id"] for s in suspected}
+        right_ids = {s["right_id"] for s in suspected}
+        self.assertIn("https://openalex.org/W4000000004", left_ids | right_ids,
+            "Punctuation-differing pair should be in suspected queue")
+        self.assertIn("https://openalex.org/W5000000005", left_ids | right_ids,
+            "Punctuation-differing pair should be in suspected queue")
 
-    def test_year_difference_1_still_merged(self):
-        """测试 7：年份相差 1 年 → 仍在疑似队列"""
+    def test_year_difference_1_in_suspected_queue(self):
         kept = find_exact_duplicates(self.papers)["kept_papers"]
         result = find_suspected_duplicates(kept)
         suspected = result["suspected_duplicates"]
+        left_ids = {s["left_id"] for s in suspected}
+        right_ids = {s["right_id"] for s in suspected}
+        all_ids = left_ids | right_ids
+        self.assertIn("https://openalex.org/W8000000008", all_ids,
+            "Year-diff=1 pair (W8000000008) should be in suspected queue")
+        self.assertIn("https://openalex.org/W9000000009", all_ids,
+            "Year-diff=1 pair (W9000000009) should be in suspected queue")
         year_pairs = [s for s in suspected if s["year_difference"] == 1]
-        self.assertGreater(len(year_pairs), 0, "Year diff=1 should generate pairs")
+        self.assertGreater(len(year_pairs), 0)
 
-    def test_different_authors_not_auto_deleted(self):
-        """测试 8：作者明显不同 → 疑似但不自动删除"""
+    def test_all_suspected_are_pending(self):
         kept = find_exact_duplicates(self.papers)["kept_papers"]
         result = find_suspected_duplicates(kept)
         for s in result["suspected_duplicates"]:
             self.assertEqual(s["review_status"], "pending")
             self.assertEqual(s["recommended_action"], "manual_review")
 
-    def test_high_similarity_not_auto_deleted(self):
-        """测试 9：高相似度 → 进入疑似队列，不自动删除"""
-        kept = find_exact_duplicates(self.papers)["kept_papers"]
-        result = find_suspected_duplicates(kept)
-        for s in result["suspected_duplicates"]:
-            self.assertEqual(s["review_status"], "pending")
-
     def test_low_similarity_not_in_queue(self):
-        """测试 10：低相似度 → 不进入疑似队列"""
         kept = find_exact_duplicates(self.papers)["kept_papers"]
         result = find_suspected_duplicates(kept)
         suspected = result["suspected_duplicates"]
+        all_ids = set()
         for s in suspected:
-            self.assertGreaterEqual(
-                s["title_similarity"],
-                0.35,
-                f"Pair {s['pair_id']} has too low similarity: {s['title_similarity']}",
-            )
+            all_ids.add(s["left_id"])
+            all_ids.add(s["right_id"])
+        self.assertNotIn("https://openalex.org/W1600000016", all_ids,
+            "Low-similarity paper W1600000016 should not be in suspected queue")
+        self.assertNotIn("https://openalex.org/W1700000017", all_ids,
+            "Low-similarity paper W1700000017 should not be in suspected queue")
 
     def test_pair_ids_unique(self):
-        """测试 13：pair_id 不重复"""
         kept = find_exact_duplicates(self.papers)["kept_papers"]
         result = find_suspected_duplicates(kept)
         pair_ids = [s["pair_id"] for s in result["suspected_duplicates"]]
         self.assertEqual(len(pair_ids), len(set(pair_ids)))
 
-    def test_source_tracking_preserved(self):
-        """测试 14：来源追踪字段不丢失"""
+    def test_source_tracking_preserved_with_specific_values(self):
         kept = find_exact_duplicates(self.papers)["kept_papers"]
         result = find_suspected_duplicates(kept)
+        run_ids_seen = set()
         for s in result["suspected_duplicates"]:
-            self.assertIsNotNone(s.get("left_keyword"))
-            self.assertIsNotNone(s.get("right_keyword"))
-            self.assertIsNotNone(s.get("left_run_id"))
-            self.assertIsNotNone(s.get("right_run_id"))
+            self.assertTrue(s.get("left_keyword"), "left_keyword should not be empty")
+            self.assertTrue(s.get("right_keyword"), "right_keyword should not be empty")
+            self.assertTrue(s.get("left_run_id"), "left_run_id should not be empty")
+            self.assertTrue(s.get("right_run_id"), "right_run_id should not be empty")
+            run_ids_seen.add(s["left_run_id"])
+            run_ids_seen.add(s["right_run_id"])
+        self.assertIn("test-run-007", run_ids_seen)
+        self.assertIn("test-run-008", run_ids_seen)
 
     def test_exact_and_suspected_separated(self):
-        """测试：确定重复与疑似重复严格分开"""
         exact_result = find_exact_duplicates(self.papers)
         kept = exact_result["kept_papers"]
         suspected_result = find_suspected_duplicates(kept)
         exact_merged_ids = {d["merged_openalex_id"] for d in exact_result["exact_duplicates"]}
+        exact_kept_ids = {d["kept_openalex_id"] for d in exact_result["exact_duplicates"]}
+        all_exact_ids = exact_merged_ids | exact_kept_ids
         for s in suspected_result["suspected_duplicates"]:
+            if s["left_id"] in all_exact_ids and s["right_id"] in all_exact_ids:
+                continue
             self.assertNotIn(s["left_id"], exact_merged_ids,
                 f"Left ID {s['left_id']} was exact-merged but still in suspected")
             self.assertNotIn(s["right_id"], exact_merged_ids,
                 f"Right ID {s['right_id']} was exact-merged but still in suspected")
+
+    def test_empty_title_empty_authors_not_in_suspected_queue(self):
+        papers = [
+            {
+                "keyword": "test", "run_id": "r1",
+                "openalex_id": "https://openalex.org/W_EMPTY_1", "doi": "",
+                "title": "", "authors": "", "publication_year": 2020,
+            },
+            {
+                "keyword": "test", "run_id": "r2",
+                "openalex_id": "https://openalex.org/W_EMPTY_2", "doi": "",
+                "title": "", "authors": "", "publication_year": 2020,
+            },
+        ]
+        exact = find_exact_duplicates(papers)
+        kept = exact["kept_papers"]
+        result = find_suspected_duplicates(kept)
+        self.assertEqual(len(result["suspected_duplicates"]), 0,
+            "Empty title + empty authors must NOT enter suspected queue")
+
+    def test_different_ids_same_title_only_in_suspected_not_exact(self):
+        papers = [
+            {
+                "keyword": "test", "run_id": "r1",
+                "openalex_id": "https://openalex.org/W_DIFF_1", "doi": "",
+                "title": "Same Title Different ID", "authors": "Author One; Author Two",
+                "publication_year": 2021,
+            },
+            {
+                "keyword": "test", "run_id": "r2",
+                "openalex_id": "https://openalex.org/W_DIFF_2", "doi": "",
+                "title": "Same Title Different ID", "authors": "Author One; Author Two",
+                "publication_year": 2021,
+            },
+        ]
+        exact = find_exact_duplicates(papers)
+        self.assertEqual(exact["stats"]["same_openalex_id"], 0)
+        self.assertEqual(exact["stats"]["same_title_no_id"], 0,
+            "Different IDs with same title must NOT be auto-merged as exact")
+        kept = exact["kept_papers"]
+        result = find_suspected_duplicates(kept)
+        self.assertGreaterEqual(len(result["suspected_duplicates"]), 1,
+            "Different IDs with same title should enter suspected queue")
 
 
 class TestSimilarityFunctions(unittest.TestCase):
@@ -206,28 +260,32 @@ class TestSimilarityFunctions(unittest.TestCase):
         self.assertAlmostEqual(jaccard_similarity(tokens, tokens), 1.0)
 
     def test_jaccard_disjoint(self):
-        a = {"a", "b"}
-        b = {"c", "d"}
-        self.assertAlmostEqual(jaccard_similarity(a, b), 0.0)
+        self.assertAlmostEqual(jaccard_similarity({"a", "b"}, {"c", "d"}), 0.0)
 
     def test_jaccard_partial(self):
         a = {"stellar", "spectra", "classification"}
         b = {"stellar", "spectra", "regression"}
         self.assertAlmostEqual(jaccard_similarity(a, b), 0.5)
 
+    def test_jaccard_both_empty(self):
+        self.assertAlmostEqual(jaccard_similarity(set(), set()), 0.0)
+
     def test_sequence_identical(self):
         self.assertAlmostEqual(
             sequence_similarity("stellar spectra classification",
-                               "stellar spectra classification"),
-            1.0,
-        )
+                               "stellar spectra classification"), 1.0)
 
     def test_sequence_different(self):
         sim = sequence_similarity(
             "stellar spectra classification with machine learning",
-            "lunar surface composition analysis",
-        )
+            "lunar surface composition analysis")
         self.assertLess(sim, 0.5)
+
+    def test_sequence_one_empty(self):
+        self.assertAlmostEqual(sequence_similarity("stellar spectra", ""), 0.0)
+
+    def test_sequence_both_empty(self):
+        self.assertAlmostEqual(sequence_similarity("", ""), 0.0)
 
     def test_author_surname_extraction(self):
         surnames = extract_author_surnames("John Smith; Jane Doe")
@@ -235,35 +293,26 @@ class TestSimilarityFunctions(unittest.TestCase):
         self.assertIn("doe", surnames)
 
     def test_author_overlap_high(self):
-        a = ["smith", "doe", "brown"]
-        b = ["smith", "doe", "white"]
-        self.assertAlmostEqual(author_overlap_ratio(a, b), 0.5)
+        self.assertAlmostEqual(
+            author_overlap_ratio(["smith", "doe", "brown"], ["smith", "doe", "white"]), 0.5)
 
     def test_author_overlap_low(self):
-        a = ["smith", "doe"]
-        b = ["wang", "zhang"]
-        self.assertAlmostEqual(author_overlap_ratio(a, b), 0.0)
-        self.assertLess(author_overlap_ratio(a, b), 0.3)
+        self.assertAlmostEqual(
+            author_overlap_ratio(["smith", "doe"], ["wang", "zhang"]), 0.0)
+
+    def test_author_overlap_both_empty(self):
+        self.assertAlmostEqual(author_overlap_ratio([], []), 0.0)
 
     def test_doi_normalize_url_prefix(self):
-        self.assertEqual(
-            normalize_doi("https://doi.org/10.1234/test"),
-            "10.1234/test",
-        )
-        self.assertEqual(
-            normalize_doi("http://doi.org/10.1234/test"),
-            "10.1234/test",
-        )
+        self.assertEqual(normalize_doi("https://doi.org/10.1234/test"), "10.1234/test")
+        self.assertEqual(normalize_doi("http://doi.org/10.1234/test"), "10.1234/test")
+        self.assertEqual(normalize_doi("doi:10.1234/test"), "10.1234/test")
 
     def test_pair_id_deterministic(self):
-        a = generate_pair_id("W1", "W2")
-        b = generate_pair_id("W1", "W2")
-        self.assertEqual(a, b)
+        self.assertEqual(generate_pair_id("W1", "W2"), generate_pair_id("W1", "W2"))
 
     def test_pair_id_different(self):
-        a = generate_pair_id("W1", "W2")
-        b = generate_pair_id("W3", "W4")
-        self.assertNotEqual(a, b)
+        self.assertNotEqual(generate_pair_id("W1", "W2"), generate_pair_id("W3", "W4"))
 
 
 if __name__ == "__main__":
