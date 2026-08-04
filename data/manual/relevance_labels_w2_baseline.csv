@@ -1,0 +1,51 @@
+annotation_id,openalex_id,title,relevance_label,reason
+1,https://openalex.org/W1,"Stellar populations with optical spectra: deep learning versus popular spectrum fitting codes",1,研究恒星光谱拟合，与恒星光谱检索任务相关
+2,https://openalex.org/W2,"Machine learning applications in Jupiter-host star classification using stellar spectra",1,利用恒星光谱做恒星分类，任务相关
+3,https://openalex.org/W3,"Stellar Spectra Models Classification and Parameter Estimation Using Machine Learning Algorithms",1,恒星光谱模型分类与参数估计，任务相关
+4,https://openalex.org/W4,"Mapping the Diversity of Galaxy Spectra with Deep Unsupervised Machine Learning",-1,标题含spectra，但研究星系光谱，非恒星光谱检索，困难负例
+5,https://openalex.org/W5,"Deducing neutron star equation of state parameters directly from telescope spectra with uncertainty-aware machine learning",-1,标题含spectra，研究中子星物态方程，不属于恒星光谱检索，困难负例
+6,https://openalex.org/W6,"Assessing the performance of LTE and NLTE synthetic stellar spectra in a machine learning framework",1,恒星合成光谱性能评估，任务相关
+7,https://openalex.org/W7,"Star formation rates and stellar masses from machine learning",0,研究恒星形成率、恒星质量，不涉及光谱检索
+8,https://openalex.org/W8,"Predicting the impact of feedback on matter clustering with machine learning in CAMELS",0,星系反馈模拟，和恒星光谱无关
+9,https://openalex.org/W9,"Stellar spectral interpolation using machine learning",1,恒星光谱插值算法，任务相关
+10,https://openalex.org/W10,"Unsupervised Learning for Stellar Spectra with Deep Normalizing Flows",1,恒星光谱无监督学习，任务相关
+11,https://openalex.org/W11,"Mimicking the halo-galaxy connection using machine learning",-1,标题含stellar，研究星系-暗物质晕关联，不涉及光谱检索，困难负例
+12,https://openalex.org/W12,"The <i>Gaia</i>-ESO Survey: Chemical evolution of Mg and Al in the Milky Way with machine learning",1,利用恒星光谱开展银河系化学演化研究，任务相关
+13,https://openalex.org/W13,"Identifying Symbiotic Stars with Machine Learning",1,基于恒星光谱识别共生星，任务相关
+14,https://openalex.org/W14,"Classification of large-scale stellar spectra based on the non-linearly assembling learning mechanism",1,大规模恒星光谱分类，任务相关
+15,https://openalex.org/W15,"Machine learning in solar physics",-1,标题含stellar相关范畴，研究太阳物理，不面向恒星光谱检索，困难负例
+16,https://openalex.org/W16,"Objective Separation between CII and CII Ratios on Feature Extraction with Machine Learning",0,光谱谱线比值研究，不针对恒星光谱检索
+17,https://openalex.org/W17,"Machine Learning Based Automatic Modulation Recognition for Wireless Communications",0,无线通信调制识别，完全无关
+18,https://openalex.org/W18,"Machine Learning Model for Leak Detection Using Water Pipeline Vibration Sensor",0,管道泄漏检测，完全无关
+19,https://openalex.org/W19,"The GALAH Survey: A New Sample of Extremely Metal-Poor Stars Using A Machine Learning Classification Algorithm",1,恒星金属丰度光谱分析，任务相关
+20,https://openalex.org/W20,"Estimating stellar parameters from LAMOST low-resolution spectra",1,基于低分辨率恒星光谱估算恒星参数，任务相关
+21,https://openalex.org/W21,"ODUSSEAS: a machine learning tool to derive effective temperature and metallicity for M dwarf stars",1,M型矮星恒星参数光谱反演，任务相关
+22,https://openalex.org/W22,"Unveiling the distinct formation pathways of the inner and outer discs of the Milky Way with Bayesian Machine Learning",0,银河系星盘形成演化，不涉及光谱检索
+23,https://openalex.org/W23,"The Challenge of Machine Learning in Space Weather: Nowcasting and Forecasting",-1,标题无直接光谱词汇，空间天气预报，普通负例
+24,https://openalex.org/W24,"Deep learning application for stellar parameters determination: I-constraining the hyperparameters",1,深度学习获取恒星光谱参数，任务相关
+25,https://openalex.org/W25,"Transferring spectroscopic stellar labels to 217 million <i>Gaia</i> DR3 XP stars with SHBoost",1,恒星光谱标签迁移，任务相关
+26,https://openalex.org/W26,"Classification and parameterization of a large <i>Gaia</i> sample of white dwarfs using XP spectra",1,白矮星光谱分类，任务相关
+27,https://openalex.org/W27,"“Full spectrum fitting with photometry in <scp>xp</scp>: stellar population versus dynamical masses",-1,标题含spectrum、stellar，研究星系恒星族群，非恒星光谱检索，困难负例
+28,https://openalex.org/W28,"TESS Stellar Rotation up to 80 Days in the Southern Continuous Viewing Zone",1,依靠恒星光谱测量恒星自转，任务相关
+29,https://openalex.org/W29,"Machine learning for observational cosmology",-1,标题含stellar领域范畴，观测宇宙学研究，不涉及恒星光谱检索，困难负例
+30,https://openalex.org/W30,"A MACHINE-LEARNING METHOD TO INFER FUNDAMENTAL STELLAR PARAMETERS FROM PHOTOMETRIC LIGHT CURVES",0,依靠光变曲线而非光谱获取恒星参数
+31,https://openalex.org/W31,"Modelling the galaxy-halo connection with machine learning",-1,标题含stellar相关天文范畴，星系暗晕模型，困难负例
+32,https://openalex.org/W32,"Automated Stellar Spectra Classification with Ensemble Convolutional Neural Network",1,集成CNN实现恒星光谱自动分类，任务相关
+33,https://openalex.org/W33,"The miniJPAS survey: star-galaxy classification using machine learning",-1,标题含star，区分恒星/星系图像，不处理恒星光谱，困难负例
+34,https://openalex.org/W34,"Galaxy morphological classification in deep-wide surveys via unsupervised machine learning",0,星系形态分类，无关恒星光谱
+35,https://openalex.org/W35,"Machines learn to infer stellar parameters just by looking at a large number of spectra",1,机器学习推断恒星光谱参数，任务相关
+36,https://openalex.org/W36,"A survey of machine learning for big data processing",0,通用大数据机器学习综述，无关
+37,https://openalex.org/W37,"Outshining by Recent Star Formation Prevents the Accurate Measurement of High-z Galaxy Stellar Masses",-1,标题含stellar，高红移星系恒星质量，不涉及恒星光谱检索，困难负例
+38,https://openalex.org/W38,"Prediction of stellar atmospheric parameters from spectra, spectral indices and spectral lines using machine learning",1,恒星大气光谱参数预测，任务相关
+39,https://openalex.org/W39,"A Machine Learning Method to Infer Fundamental Stellar Parameters From Photometric Light Curves",0,依靠测光曲线而非光谱，普通负例
+40,https://openalex.org/W40,"An active instance-based machine learning method for stellar population studies",-1,标题含stellar，星系恒星族群研究，不涉及恒星光谱检索，困难负例
+41,https://openalex.org/W41,"Machine learning in electron microscopy for advanced nanocharacterization",0,电子显微纳米表征，完全无关
+42,https://openalex.org/W42,"Stellar classification from single-band imaging using machine learning",0,单波段图像恒星分类，不使用光谱
+43,https://openalex.org/W43,"Machine-learning Classifiers for Intermediate Redshift Emission-line Galaxies",-1,标题无恒星光谱词汇，研究星系发射线，困难负例
+44,https://openalex.org/W44,"Testing stellar population models with integral field spectroscopy of early-type galaxies",-1,标题含stellar、spectroscopy，星系恒星族群模型，困难负例
+45,https://openalex.org/W45,"Stellar population synthesis models for machine learning applications",-1,标题含stellar，星系恒星族群合成，困难负例
+46,https://openalex.org/W46,"Spectral energy distribution fitting of galaxies with machine learning",-1,标题含spectral，星系SED拟合，困难负例
+47,https://openalex.org/W47,"A machine learning approach to identify stellar streams in the Milky Way",0,依靠天体位置搜寻星流，不使用光谱检索
+48,https://openalex.org/W48,"Estimating stellar ages from integrated light spectra of star clusters",1,星团集成光谱估算恒星年龄，任务相关
+49,https://openalex.org/W49,"Machine learning for stellar kinematics in dwarf galaxies",0,矮星系恒星运动学，不涉及光谱检索
+50,https://openalex.org/W50,"Stellar abundance analysis from high-resolution optical spectra",1,高分辨恒星光谱丰度分析，任务相关
