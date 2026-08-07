@@ -13,7 +13,7 @@
 | 排序评价模块（judged 口径） | `src/evaluation.py` | 已完成 |
 | 两阶段排序入口 | `app/evaluate_ranking.py` | 已完成 |
 | 相关性单元测试（24 项） | `tests/automated/test_text_relevance.py` | 已完成，全部通过 |
-| 指标与两阶段单元测试（34 项，含样本复现回归 5 项） | `tests/automated/test_evaluation.py` | 已完成，全部通过 |
+| 指标与两阶段单元测试（36 项，含样本复现回归 5 项） | `tests/automated/test_evaluation.py` | 已完成，全部通过 |
 | ranking fixture（12 篇合成论文 + 标签 + 已知答案） | `tests/fixtures/ranking/` | 已完成 |
 | live 样本（60 条，含完整 baseline 字段与来源追踪） | `data/samples/w2/ranking/live_ranking_sample.csv` | 已完成 |
 | 新旧排序逐论文对比 | `data/analysis/w2_ranking/baseline_vs_two_stage.csv` | 已完成 |
