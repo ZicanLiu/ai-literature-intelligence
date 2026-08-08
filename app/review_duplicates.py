@@ -24,7 +24,7 @@ DEFAULT_COMBINED_CSV = PROJECT_ROOT / "data" / "samples" / "w2" / "dedup" / "com
 ANALYSIS_DIR = PROJECT_ROOT / "data" / "analysis" / "w2_dedup"
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="W2 疑似重复人工审核 CLI")
     parser.add_argument(
         "--review-file",
@@ -42,11 +42,16 @@ def parse_args() -> argparse.Namespace:
         help="从 combined_w2_raw.csv 重新生成全部去重结果",
     )
     parser.add_argument(
+        "--stats",
+        action="store_true",
+        help="仅显示审核状态统计，不进入交互模式",
+    )
+    parser.add_argument(
         "--combined-csv",
         default=str(DEFAULT_COMBINED_CSV),
         help="合并原始数据 CSV 路径（与 --generate 配合使用）",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def load_review_file(path: str) -> list[dict]:
@@ -249,8 +254,8 @@ def interactive_review(rows: list[dict], path: str) -> None:
     print(f"\n审核完成！共审核 {reviewed}/{total} 对。")
 
 
-def main() -> int:
-    args = parse_args()
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
 
     if args.generate:
         return generate_results(args.combined_csv)

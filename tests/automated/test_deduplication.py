@@ -7,13 +7,19 @@ W2 去重模块自动测试。
 不同 ID 同标题不自动合并、空标题+空作者不进入队列。
 """
 
+import csv
+import io
 import json
 import sys
+import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from app import review_duplicates
 from src.deduplication import (
     author_overlap_ratio,
     extract_author_surnames,
@@ -30,6 +36,14 @@ from src.deduplication import (
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "dedup"
 SPECIAL_FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "dedup"
+COMBINED_SAMPLE = (
+    Path(__file__).resolve().parents[2]
+    / "data"
+    / "samples"
+    / "w2"
+    / "dedup"
+    / "combined_w2_raw.csv"
+)
 
 
 def load_fixture(filename="test_papers.json"):
@@ -313,6 +327,77 @@ class TestSimilarityFunctions(unittest.TestCase):
 
     def test_pair_id_different(self):
         self.assertNotEqual(generate_pair_id("W1", "W2"), generate_pair_id("W3", "W4"))
+
+
+class TestReviewDuplicatesCli(unittest.TestCase):
+    @staticmethod
+    def write_review_file(path: Path) -> None:
+        fields = [
+            "pair_id",
+            "left_id",
+            "right_id",
+            "left_title",
+            "right_title",
+            "review_status",
+        ]
+        with path.open("w", encoding="utf-8", newline="") as output:
+            writer = csv.DictWriter(output, fieldnames=fields)
+            writer.writeheader()
+            writer.writerow(
+                {
+                    "pair_id": "SP-test",
+                    "left_id": "W1",
+                    "right_id": "W2",
+                    "left_title": "First title",
+                    "right_title": "Second title",
+                    "review_status": "pending",
+                }
+            )
+
+    def test_generate_command_runs_without_argparse_error(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            review_file = temp_path / "suspected.csv"
+            with (
+                patch.object(review_duplicates, "ANALYSIS_DIR", temp_path / "analysis"),
+                patch.object(review_duplicates, "DEFAULT_REVIEW_FILE", review_file),
+                redirect_stdout(io.StringIO()),
+            ):
+                result = review_duplicates.main(
+                    ["--generate", "--combined-csv", str(COMBINED_SAMPLE)]
+                )
+            self.assertEqual(result, 0)
+            self.assertTrue((temp_path / "analysis" / "dedup_summary_w2.csv").exists())
+
+    def test_list_command_runs_without_stats_attribute_error(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            review_file = Path(temp_dir) / "suspected.csv"
+            self.write_review_file(review_file)
+            output = io.StringIO()
+            with redirect_stdout(output):
+                result = review_duplicates.main(
+                    ["--review-file", str(review_file), "--list"]
+                )
+            self.assertEqual(result, 0)
+            self.assertIn("共 1 对待审核", output.getvalue())
+
+    def test_stats_command_parses_and_runs(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            review_file = Path(temp_dir) / "suspected.csv"
+            self.write_review_file(review_file)
+            output = io.StringIO()
+            with redirect_stdout(output):
+                result = review_duplicates.main(
+                    ["--review-file", str(review_file), "--stats"]
+                )
+            self.assertEqual(result, 0)
+            self.assertIn("审核统计（共 1 对）", output.getvalue())
+
+    def test_unknown_argument_returns_argparse_error(self):
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit) as context:
+                review_duplicates.main(["--unknown-option"])
+        self.assertEqual(context.exception.code, 2)
 
 
 if __name__ == "__main__":
