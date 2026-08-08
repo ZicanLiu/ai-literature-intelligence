@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "count": 5,
+    "per_page": 3,
+    "next_cursor": null
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W2003",
+      "display_name": "Cursor fixture work 3 repeated",
+      "authorships": [],
+      "publication_year": 2022,
+      "doi": null,
+      "abstract_inverted_index": null,
+      "cited_by_count": 3,
+      "primary_location": null
+    },
+    {
+      "id": "https://openalex.org/W2004",
+      "display_name": "Cursor fixture work 4",
+      "authorships": [],
+      "publication_year": 2023,
+      "doi": null,
+      "abstract_inverted_index": null,
+      "cited_by_count": 4,
+      "primary_location": null
+    },
+    {
+      "id": "https://openalex.org/W2005",
+      "display_name": "Cursor fixture work 5",
+      "authorships": [],
+      "publication_year": 2024,
+      "doi": null,
+      "abstract_inverted_index": null,
+      "cited_by_count": 5,
+      "primary_location": null
+    }
+  ]
+}

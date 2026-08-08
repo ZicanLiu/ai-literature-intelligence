@@ -1,0 +1,2 @@
+﻿query_id,run_id,retrieved_at,keyword,requested_max_results,actual_result_count,page_count,request_count,retry_count,applied_filters,elapsed_seconds,stopped_reason,status,duplicate_ids_present
+openalex-v2-fda348a72056,openalex-v2-live-20260731T164003Z-c614ab58,2026-07-31T16:40:03+00:00,machine learning stellar spectra,120,120,2,2,0,"{""from_year"":2000}",4.714,max_results_reached,success,false

@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "count": 2,
+    "per_page": 20,
+    "next_cursor": null
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W1001",
+      "display_name": "Machine learning for stellar spectra",
+      "authorships": [
+        {
+          "author": {
+            "display_name": "Ada Example"
+          }
+        }
+      ],
+      "publication_year": 2022,
+      "doi": "https://doi.org/10.0000/example.1001",
+      "abstract_inverted_index": {
+        "stellar": [0],
+        "spectra": [1]
+      },
+      "cited_by_count": 12,
+      "primary_location": {
+        "landing_page_url": "https://example.org/works/1001",
+        "source": {
+          "display_name": "Example Astronomy Journal"
+        }
+      }
+    },
+    {
+      "id": "https://openalex.org/W1002",
+      "display_name": "Neural models of astronomical spectra",
+      "authorships": [],
+      "publication_year": 2023,
+      "doi": null,
+      "abstract_inverted_index": null,
+      "cited_by_count": 3,
+      "primary_location": null
+    }
+  ]
+}
