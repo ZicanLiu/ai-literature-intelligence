@@ -1,4 +1,4 @@
-query_id,run_id,keyword,原始数量,去重后数量,高度相关,部分相关,不相关
-q1,20260804_145052155379_mock,q1宽泛检索,20,18,10,5,3
-q2,20260804_145410442441_mock,q2方法导向检索,20,18,12,4,2
-q3,20260804_145527479153_mock,q3任务应用检索,20,18,11,5,2
+query_id,keyword,run_id,raw_count,deduplicated_count,labeled_subset_count,highly_relevant_count,partially_relevant_count,irrelevant_count,pending_review_count,retrieved_at,status
+q02_classification,stellar spectrum spectral classification machine learning,20260808_144344224124_live_pr31-q01_stellar-spectrum-spectral-classification-machine_n30_dae3d3,30,30,5,2,0,2,26,2026-08-08T14:43:44+08:00,success
+q03_parameters,stellar spectrum effective temperature surface gravity machine learning,20260808_144349256507_live_pr31-q02_stellar-spectrum-effective-temperature-surface-g_n30_3f6cf2,30,30,4,2,1,0,27,2026-08-08T14:43:49+08:00,success
+q04_preprocessing,stellar spectrum spectral denoising normalization machine learning,20260808_144352575552_live_pr31-q03_stellar-spectrum-spectral-denoising-normalizatio_n30_e4e706,30,30,4,2,0,2,26,2026-08-08T14:43:52+08:00,success

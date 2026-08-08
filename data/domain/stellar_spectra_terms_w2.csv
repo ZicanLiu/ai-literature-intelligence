@@ -1,43 +1,43 @@
-term_id,术语,normalized_term,类别,力量,include_in_query,示例,注释,资料来源
-1,star spectrum,star spectrum,object_term,9,True,star spectrum observation,恒星观测光谱,恒星物理
-2,spectral classification,spectral classification,task_term,9,True,MK恒星光谱分类,恒星光谱型判定,恒星物理
-3,redshift,redshift,spectrum_term,8,True,stellar redshift measurement,天体光谱红移,天体光谱分析
-4,blueshift,blueshift,spectrum_term,8,True,Doppler blueshift,多普勒蓝移,天体运动学
-5,spectral denoising,spectral denoising,method_term,8,True,stellar spectrum denoising,光谱噪声去除,光谱预处理
-6,PCA,principal component analysis,method_term,7,True,PCA spectral feature extraction,主成分分析光谱特征提取,天文数据挖掘
-7,absorption line,absorption line,spectrum_term,9,True,stellar absorption line,恒星吸收谱线,天体光谱学
-8,emission line,emission line,spectrum_term,9,True,nebula emission line,天体发射谱线,光谱观测
-9,stellar atmosphere,stellar atmosphere,object_term,8,True,stellar atmosphere model,恒星大气模型,恒星结构
-10,spectrum template,spectrum template,task_term,8,True,stellar template matching,光谱模板匹配算法,光谱检索
-11,flux calibration,flux calibration,method_term,8,True,spectral flux calibration,光谱流量定标,观测数据处理
-12,wavelength calibration,wavelength calibration,method_term,8,True,spectrum wavelength calibration,波长刻度校准,光谱处理
-13,spectral feature,spectral feature,spectrum_term,9,True,spectral absorption feature,光谱特征峰谷,特征提取
-14,galaxy spectrum,galaxy spectrum,spectrum_term,8,True,spiral galaxy spectrum,河外星系光谱,星系天文
-15,radial velocity,radial velocity,task_term,8,True,radial velocity from spectrum,光谱测算视向速度,多普勒光谱
-16,signal-to-noise ratio,signal-to-noise ratio,spectrum_term,7,True,spectrum SNR evaluation,光谱信噪比评估,观测质量
-17,continuum spectrum,continuum spectrum,spectrum_term,9,True,stellar continuum spectrum,光谱连续辐射基底,光谱拟合
-18,spectral fitting,spectral fitting,method_term,9,True,continuum fitting,谱线与连续谱拟合,光谱建模
-19,metal abundance,metal abundance,task_term,9,True,abundance from spectrum,光谱反演元素丰度,恒星化学
-20,effective temperature,effective temperature,task_term,9,True,Teff from spectrum,恒星有效温度估算,恒星参数估计
-21,surface gravity,surface gravity,task_term,8,True,log g spectral estimation,光谱估算恒星表面重力,恒星大气模型
-22,spectral index,spectral index,spectrum_term,7,True,spectral index measurement,光谱指数测算,星系研究
-23,binning,binning,method_term,6,True,spectrum binning resample,光谱分箱重采样,光谱预处理
-24,interstellar medium,interstellar medium,object_term,7,True,ISM extinction spectrum,星际介质消光光谱,星际天文
-25,dust extinction,dust extinction,spectrum_term,7,True,interstellar dust extinction curve,星际尘埃消光,光谱修正
-26,Doppler shift,Doppler shift,spectrum_term,8,True,Doppler shift spectroscopy,光谱多普勒频移测量,运动学
-27,spectral library,spectral library,task_term,8,True,stellar spectral library,标准恒星光谱库,机器学习数据集
-28,feature extraction,feature extraction,method_term,7,True,spectral feature extraction,光谱特征向量提取,AI光谱分析
-29,machine learning,machine learning,method_term,6,True,ML stellar spectrum analysis,机器学习解析恒星光谱,智能光谱处理
-30,template matching,template matching,method_term,8,True,spectral template matching,光谱模板匹配识别天体,检索算法
-31,B-type star,B-type star,object_term,6,False,B star spectrum,B型恒星样本,恒星分类
-32,G-type star,G-type star,object_term,6,False,G star spectrum,G型类太阳恒星,恒星分类
-33,M-type star,M-type star,object_term,6,False,M dwarf spectrum,M型红矮星,恒星分类
-34,spectral resolution,spectral resolution,spectrum_term,7,True,high resolution spectrum,光谱仪器分辨率指标,观测设备
-35,normalization,normalization,method_term,8,True,continuum normalization,光谱连续谱归一化,数据预处理
-36,outlier detection,outlier detection,method_term,7,True,abnormal spectrum detection,异常坏光谱识别,数据清洗
-37,quasar spectrum,quasar spectrum,weak_term,5,True,QSO spectrum,类星体光谱（弱相关）,活动星系核
-38,solar spectrum,solar spectrum,object_term,6,False,solar flux spectrum,太阳参考光谱,恒星参照样本
-39,line broadening,line broadening,spectrum_term,8,True,spectral line broadening mechanism,谱线展宽物理机制,光谱建模
-40,photometry,photometry,weak_term,4,False,broadband photometry,宽波段测光，无精细光谱,弱相关观测
-41,geology,geology,negative_term,1,False,rock spectroscopy,岩石光谱，非天文范畴,排除术语
-42,oceanography,oceanography,negative_term,1,False,ocean optical spectrum,海洋光学光谱，无关领域,排除术语
+term_id,term,normalized_term,category,strength,include_in_query,example,note,source,synonym
+term_001,stellar spectrum,stellar spectrum,spectrum_term,10,true,stellar spectrum analysis,恒星光谱核心术语,陈星妤 W2 原始领域词典,stellar spectra
+term_002,spectral classification,spectral classification,task_term,9,true,stellar spectral classification,光谱型判定任务,陈星妤 W2 原始领域词典,
+term_003,redshift,redshift,spectrum_term,7,true,stellar redshift measurement,光谱红移测量,陈星妤 W2 原始领域词典,
+term_004,blueshift,blueshift,spectrum_term,7,true,Doppler blueshift,光谱蓝移测量,陈星妤 W2 原始领域词典,
+term_005,spectral denoising,spectral denoising,method_term,9,true,stellar spectrum denoising,光谱噪声去除,陈星妤 W2 原始领域词典,
+term_006,principal component analysis,principal component analysis,method_term,7,true,PCA spectral feature extraction,主成分分析特征提取,陈星妤 W2 原始领域词典,PCA
+term_007,absorption line,absorption line,spectrum_term,9,true,stellar absorption line,恒星吸收谱线,陈星妤 W2 原始领域词典,
+term_008,emission line,emission line,spectrum_term,9,true,stellar emission line,天体发射谱线,陈星妤 W2 原始领域词典,
+term_009,stellar atmosphere,stellar atmosphere,object_term,9,true,stellar atmosphere model,恒星大气研究对象,陈星妤 W2 原始领域词典,
+term_010,spectrum template,spectrum template,task_term,7,true,stellar spectrum template,光谱模板构建,陈星妤 W2 原始领域词典,
+term_011,flux calibration,flux calibration,method_term,8,true,spectral flux calibration,光谱流量定标,陈星妤 W2 原始领域词典,
+term_012,wavelength calibration,wavelength calibration,method_term,8,true,spectrum wavelength calibration,波长校准,陈星妤 W2 原始领域词典,
+term_013,spectral feature,spectral feature,spectrum_term,8,true,spectral absorption feature,光谱特征,陈星妤 W2 原始领域词典,
+term_014,galaxy spectrum,galaxy spectrum,weak_term,5,false,galaxy spectrum analysis,可能召回星系光谱而偏离恒星对象,陈星妤 W2 原始领域词典,galaxy spectra
+term_015,radial velocity,radial velocity,task_term,9,true,radial velocity from spectrum,视向速度测量,陈星妤 W2 原始领域词典,
+term_016,signal-to-noise ratio,signal-to-noise ratio,spectrum_term,7,true,spectrum signal-to-noise ratio,光谱信噪比,陈星妤 W2 原始领域词典,SNR
+term_017,continuum spectrum,continuum spectrum,spectrum_term,8,true,stellar continuum spectrum,连续谱建模,陈星妤 W2 原始领域词典,
+term_018,spectral fitting,spectral fitting,method_term,9,true,stellar spectral fitting,光谱拟合,陈星妤 W2 原始领域词典,
+term_019,metal abundance,metal abundance,task_term,9,true,metal abundance from spectra,元素丰度反演,陈星妤 W2 原始领域词典,metallicity
+term_020,effective temperature,effective temperature,task_term,9,true,effective temperature from spectra,恒星有效温度估计,陈星妤 W2 原始领域词典,Teff
+term_021,surface gravity,surface gravity,task_term,9,true,surface gravity from spectra,恒星表面重力估计,陈星妤 W2 原始领域词典,log g
+term_022,spectral index,spectral index,spectrum_term,7,true,spectral index measurement,光谱指数测量,陈星妤 W2 原始领域词典,
+term_023,binning,binning,method_term,6,true,spectrum binning,光谱分箱重采样,陈星妤 W2 原始领域词典,
+term_024,interstellar medium,interstellar medium,weak_term,5,false,interstellar medium spectrum,对象可能偏离恒星光谱任务,陈星妤 W2 原始领域词典,ISM
+term_025,dust extinction,dust extinction,spectrum_term,7,true,dust extinction correction,消光修正,陈星妤 W2 原始领域词典,
+term_026,Doppler shift,doppler shift,spectrum_term,8,true,Doppler shift spectroscopy,多普勒频移,陈星妤 W2 原始领域词典,
+term_027,spectral library,spectral library,task_term,8,true,stellar spectral library,标准光谱库,陈星妤 W2 原始领域词典,
+term_028,feature extraction,feature extraction,method_term,8,true,spectral feature extraction,光谱特征提取,陈星妤 W2 原始领域词典,
+term_029,machine learning,machine learning,method_term,10,true,machine learning for stellar spectra,机器学习核心方法,陈星妤 W2 原始领域词典,ML
+term_030,template matching,template matching,method_term,8,true,spectral template matching,光谱模板匹配,陈星妤 W2 原始领域词典,
+term_031,B-type star,b-type star,object_term,6,false,B-type star spectrum,具体恒星类型扩展词,陈星妤 W2 原始领域词典,B star
+term_032,G-type star,g-type star,object_term,6,false,G-type star spectrum,具体恒星类型扩展词,陈星妤 W2 原始领域词典,G star
+term_033,M-type star,m-type star,object_term,6,false,M-type star spectrum,具体恒星类型扩展词,陈星妤 W2 原始领域词典,M dwarf
+term_034,spectral resolution,spectral resolution,spectrum_term,7,true,high-resolution spectrum,光谱分辨率,陈星妤 W2 原始领域词典,resolving power
+term_035,normalization,normalization,method_term,8,true,continuum normalization,连续谱归一化,陈星妤 W2 原始领域词典,
+term_036,outlier detection,outlier detection,method_term,7,true,spectral outlier detection,异常光谱识别,陈星妤 W2 原始领域词典,
+term_037,quasar spectrum,quasar spectrum,weak_term,4,false,quasar spectrum classification,属于天文光谱但对象偏离恒星,陈星妤 W2 原始领域词典,QSO spectrum
+term_038,solar spectrum,solar spectrum,weak_term,5,false,solar spectrum analysis,太阳光谱是否纳入需按任务边界判断,陈星妤 W2 原始领域词典,
+term_039,line broadening,line broadening,spectrum_term,8,true,spectral line broadening,谱线展宽,陈星妤 W2 原始领域词典,
+term_040,photometry,photometry,weak_term,3,false,broadband photometry,测光不等同于光谱,陈星妤 W2 原始领域词典,
+term_041,geology,geology,negative_term,1,false,rock spectroscopy,非天文地质光谱,陈星妤 W2 原始领域词典,
+term_042,oceanography,oceanography,negative_term,1,false,ocean optical spectrum,非天文海洋光谱,陈星妤 W2 原始领域词典,

@@ -1,19 +1,39 @@
-# 恒星光谱领域术语学习笔记 W2
-## 术语分类
-1. 对象实体（object_term）
-stellar atmosphere恒星大气、interstellar medium星际介质、B/G/M型恒星、solar spectrum太阳光谱。
+# 第二周领域检索学习记录
 
-2. 光谱特征术语（spectrum_term）
-redshift红移、blueshift蓝移、absorption line吸收线、emission line发射线、spectral feature光谱特征、continuum spectrum连续谱、line broadening谱线展宽、spectral resolution光谱分辨率。
+## 查询扩展是什么
 
-3. 处理方法（method_term）
-spectral denoising光谱降噪、wavelength calibration波长标定、flux calibration流量定标、spectral fitting光谱拟合、normalization归一化、PCA主成分分析、feature extraction特征提取、template matching模板匹配、outlier detection异常检测、binning分箱。
+查询扩展是在原始关键词基础上，加入领域对象、数据类型、方法和任务词，使检索覆盖不同
+研究表达。本项目没有生成所有词项的笛卡尔积，而是维护 6 组用途清楚的有限查询。这样
+更容易解释某条论文为什么被召回，也能稳定复现实验。
 
-4. 下游任务（task_term）
-spectral classification光谱分类、radial velocity视向速度测算、metal abundance金属丰度、effective temperature有效温度、surface gravity表面重力、spectral library光谱库。
+无限扩展通常会带来大量弱相关结果，并使不同查询之间高度重复。词典中的
+`include_in_query=false` 是明确边界：这些词可以用于分析误召回，但不能自动进入正式
+OpenAlex 查询。
 
-5. 弱相关（weak_term）
-photometry测光、quasar spectrum类星体光谱。
+## Precision 与 recall
 
-6. 负向无关（negative_term）
-geology地质学、oceanography海洋光学光谱，检索时用于过滤无关文献。
+- precision 关注“召回的结果里有多少真正相关”；
+- recall 关注“所有相关论文里有多少被检索到”。
+
+增加宽泛词通常可能提高 recall，同时降低 precision；增加对象和任务限制通常可能提高
+precision，但也可能漏掉同义表达。本周 3 组 live 只证明查询可运行和数据可追溯，尚不
+足以估计完整 recall。
+
+## 词项角色
+
+- positive term：直接指向目标对象、光谱数据或处理任务；
+- weak term：在特定语境可能相关，如 photometry、solar spectrum、quasar spectrum；
+- negative term：指向明显无关领域，如 geology、oceanography；
+- hard negative：表面命中多个关键词，但研究对象或数据类型仍不符合任务边界。
+
+negative term 不是用来发明 OpenAlex 的排除语法。本项目当前客户端使用普通 `search`
+字符串，因此负面词主要用于标注解释、误差分析和后续查询比较。
+
+## 标注与研究边界
+
+人工相关性判断依赖项目边界。例如“星系中的恒星族群光谱”“太阳物理”“星震功率谱”
+都可能与恒星研究有关，但不一定属于当前的恒星光谱机器学习处理。应记录具体理由和
+`review_status`，而不是把分歧隐藏在一个数字标签里。
+
+当前 37 条标签来自成员原判断与真实 ID 的精确标题映射，13 条是 AI 辅助草稿。后续只有
+在组员逐条复核并记录复核者后，才能把草稿状态改为人工确认。
