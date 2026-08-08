@@ -1,0 +1,3 @@
+annotation_id,openalex_id,source_query_ids,title,label,reason,object_type,task_type,matched_positive_terms,matched_negative_terms,evidence_source,annotator,review_status
+fixture_001,https://openalex.org/W100001,q01_broad_ml,Traceable stellar spectrum paper,高度相关,标题同时包含恒星光谱对象和目标任务,star,classification,stellar spectrum,,fixture sample,fixture,已确认
+fixture_002,https://openalex.org/W100002,q01_broad_ml,Traceable hard negative paper,待讨论,用于验证待讨论标签可以解析,unknown,unknown,,photometry,fixture sample,fixture,待人工复核

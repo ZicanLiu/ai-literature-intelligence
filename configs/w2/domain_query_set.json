@@ -1,0 +1,132 @@
+{
+  "schema_version": "1.0",
+  "source_terms": "data/domain/stellar_spectra_terms_w2.csv",
+  "query_count": 6,
+  "queries": [
+    {
+      "query_id": "q01_broad_ml",
+      "keyword": "stellar spectrum machine learning",
+      "description": "宽泛覆盖恒星光谱与机器学习交叉研究。",
+      "included_term_ids": [
+        "term_001",
+        "term_029"
+      ],
+      "included_terms": [
+        "stellar spectrum",
+        "machine learning"
+      ],
+      "categories": [
+        "spectrum_term",
+        "method_term"
+      ]
+    },
+    {
+      "query_id": "q02_classification",
+      "keyword": "stellar spectrum spectral classification machine learning",
+      "description": "聚焦恒星光谱自动分类。",
+      "included_term_ids": [
+        "term_001",
+        "term_002",
+        "term_029"
+      ],
+      "included_terms": [
+        "stellar spectrum",
+        "spectral classification",
+        "machine learning"
+      ],
+      "categories": [
+        "spectrum_term",
+        "task_term",
+        "method_term"
+      ]
+    },
+    {
+      "query_id": "q03_parameters",
+      "keyword": "stellar spectrum effective temperature surface gravity machine learning",
+      "description": "聚焦恒星参数估计。",
+      "included_term_ids": [
+        "term_001",
+        "term_020",
+        "term_021",
+        "term_029"
+      ],
+      "included_terms": [
+        "stellar spectrum",
+        "effective temperature",
+        "surface gravity",
+        "machine learning"
+      ],
+      "categories": [
+        "spectrum_term",
+        "task_term",
+        "method_term"
+      ]
+    },
+    {
+      "query_id": "q04_preprocessing",
+      "keyword": "stellar spectrum spectral denoising normalization machine learning",
+      "description": "聚焦光谱降噪与归一化预处理。",
+      "included_term_ids": [
+        "term_001",
+        "term_005",
+        "term_035",
+        "term_029"
+      ],
+      "included_terms": [
+        "stellar spectrum",
+        "spectral denoising",
+        "normalization",
+        "machine learning"
+      ],
+      "categories": [
+        "spectrum_term",
+        "method_term"
+      ]
+    },
+    {
+      "query_id": "q05_spectral_lines",
+      "keyword": "stellar spectrum absorption line emission line feature extraction",
+      "description": "聚焦谱线与特征提取。",
+      "included_term_ids": [
+        "term_001",
+        "term_007",
+        "term_008",
+        "term_028"
+      ],
+      "included_terms": [
+        "stellar spectrum",
+        "absorption line",
+        "emission line",
+        "feature extraction"
+      ],
+      "categories": [
+        "spectrum_term",
+        "method_term"
+      ]
+    },
+    {
+      "query_id": "q06_library_matching",
+      "keyword": "stellar spectrum spectral library template matching radial velocity metal abundance",
+      "description": "聚焦光谱库、模板匹配和物理量测定。",
+      "included_term_ids": [
+        "term_001",
+        "term_027",
+        "term_030",
+        "term_015",
+        "term_019"
+      ],
+      "included_terms": [
+        "stellar spectrum",
+        "spectral library",
+        "template matching",
+        "radial velocity",
+        "metal abundance"
+      ],
+      "categories": [
+        "spectrum_term",
+        "task_term",
+        "method_term"
+      ]
+    }
+  ]
+}
