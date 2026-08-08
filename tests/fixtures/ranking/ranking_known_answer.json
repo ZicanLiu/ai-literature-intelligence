@@ -1,0 +1,26 @@
+{
+  "description": "排序评价指标已知答案案例：固定排名 + 固定标签，指标采用 judged（condensed）口径，期望值按定义手算，推导见同目录 README.md。",
+  "ranked_ids": ["A", "B", "C", "D", "E"],
+  "labels": {
+    "A": "高度相关",
+    "B": "不相关",
+    "C": "部分相关",
+    "E": "高度相关"
+  },
+  "unlabeled_ids": ["D"],
+  "grade_scale": {"高度相关": 2, "部分相关": 1, "不相关": 0},
+  "expected": {
+    "judged_precision_at_3": 0.666667,
+    "judged_precision_at_5": 0.75,
+    "judged_ndcg_at_3": 0.649015,
+    "judged_ndcg_at_5": 0.888599,
+    "judged_count_at_3": 3,
+    "judged_count_at_5": 4,
+    "coverage_at_3": 1.0,
+    "coverage_at_5": 0.8,
+    "irrelevant_in_top_3": 1,
+    "irrelevant_in_top_5": 1,
+    "average_rank_of_highly_relevant": 3.0
+  },
+  "tolerance": 0.0001
+}

@@ -1,0 +1,12 @@
+openalex_id,label,reason
+https://openalex.org/W9000000001,高度相关,机器学习直接从光谱估计恒星参数，与查询完全对应
+https://openalex.org/W9000000002,高度相关,深度学习处理恒星光谱并预测大气参数
+https://openalex.org/W9000000003,高度相关,神经网络用光谱估计恒星参数
+https://openalex.org/W9000000004,高度相关,综述机器学习在恒星光谱参数估计中的应用
+https://openalex.org/W9000000005,部分相关,机器学习用于恒星光谱分类而非参数估计
+https://openalex.org/W9000000006,部分相关,恒星光谱星表但不涉及机器学习方法
+https://openalex.org/W9000000007,部分相关,机器学习方法相同但对象是星系形态而非恒星光谱
+https://openalex.org/W9000000008,部分相关,恒星参数估计但使用贝叶斯方法且摘要缺失
+https://openalex.org/W9000000009,不相关,深海鱼跟踪，主题完全无关但引用量高
+https://openalex.org/W9000000010,不相关,神经网络用于股市预测，领域完全无关且引用量很高
+https://openalex.org/W9000000011,不相关,古陶器测年，主题完全无关

@@ -1,0 +1,13 @@
+openalex_id,title,abstract,cited_by_count,publication_year,doi
+https://openalex.org/W9000000001,Machine Learning for Stellar Parameter Estimation from Spectra,We apply machine learning to estimate stellar atmospheric parameters such as effective temperature and surface gravity directly from low resolution spectra.,500,2021,10.9000/fixture.0001
+https://openalex.org/W9000000002,Deep Learning Stellar Spectra Analysis for Atmospheric Parameters,A deep learning model for stellar spectra that predicts atmospheric parameters including metallicity from survey spectra.,200,2022,10.9000/fixture.0002
+https://openalex.org/W9000000003,Estimating Stellar Atmospheric Parameters with Neural Networks and Spectra,Neural networks are trained on spectra to estimate stellar parameters for large spectroscopic surveys.,80,2020,10.9000/fixture.0003
+https://openalex.org/W9000000004,Machine Learning Applied to Stellar Spectra: A Review,This review summarizes machine learning methods for stellar spectra including parameter estimation and classification tasks.,350,2019,10.9000/fixture.0004
+https://openalex.org/W9000000005,Spectral Classification of Stars using Machine Learning,We classify stars into spectral types with machine learning classifiers trained on labeled spectra.,150,2021,10.9000/fixture.0005
+https://openalex.org/W9000000006,A Catalog of Stellar Spectra from the Sky Survey,We present a catalog of stellar spectra observed by the sky survey together with basic calibration details.,300,2018,10.9000/fixture.0006
+https://openalex.org/W9000000007,Machine Learning for Galaxy Morphology Classification,Machine learning methods classify galaxy morphology from imaging data in large surveys.,400,2022,10.9000/fixture.0007
+https://openalex.org/W9000000008,Stellar Parameter Estimation with Bayesian Methods,,60,2017,10.9000/fixture.0008
+https://openalex.org/W9000000009,Deep Sea Fish Tracking with Sonar,A sonar based system tracks deep sea fish for marine biology studies.,500,2020,10.9000/fixture.0009
+https://openalex.org/W9000000010,Stock Market Prediction from Financial Time Series,Deep neural networks predict stock market prices from financial time series.,800,2023,10.9000/fixture.0010
+https://openalex.org/W9000000011,Ancient Pottery Dating Techniques,A study of dating techniques for ancient pottery fragments.,20,2015,10.9000/fixture.0011
+https://openalex.org/W9000000012,Neural Networks for Stellar Wind Modeling,Neural networks model stellar wind properties from synthetic observations.,120,2023,10.9000/fixture.0012
