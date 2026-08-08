@@ -20,17 +20,18 @@ python -m app.quality_gate --level full
 | 测试组 | 数量 | 结果 |
 | --- | ---: | --- |
 | processor 回归 | 14 | 14/14 通过 |
-| quality gate/validation | 18 | 18/18 通过 |
+| quality gate/validation | 25 | 25/25 通过 |
 | main 原有输出测试 | 7 | 7/7 通过 |
-| 全量 | 39 | 39/39 通过 |
+| 全量 | 46 | 46/46 通过 |
 
 processor 回归覆盖空输入、空标题、缺失 DOI、DOI 标准化、严格重复、标题子字符串、
 大小写差异、引用极值、异常年份、缺失字段、评分范围和稀疏输入字段。没有修改
 `src/processor.py`。
 
 quality gate 测试覆盖正常 fixture、缺列、重复 ID、非法标签、关联失败、相似度和指标
-越界、失效 Markdown 链接、敏感文件名、安全摘要、run_config、返回码和递归保护。故意
-失败的 fixture 均被 validator 拦截。
+越界、失效 Markdown 链接、敏感文件名、安全摘要、run_config、返回码和递归保护。
+新增回归用例确认：去重前输入可包含重复 ID；整理数据仍要求唯一；负面 fixture 不参与
+正式数据契约扫描；只有 `tests/` 中语义明确的占位凭据可豁免，其他疑似凭据仍会报错。
 
 ## OpenAlex live
 

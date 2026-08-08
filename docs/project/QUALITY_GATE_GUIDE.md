@@ -32,6 +32,10 @@ basic 检查：
 5. 已跟踪或未忽略文件中是否存在敏感文件名、明显凭据模式或个人绝对路径；
 6. 标准 unittest discovery 是否通过。
 
+敏感扫描不会整体跳过 `tests/`。只有文件位于 `tests/` 且匹配值本身带有 `test`、
+`dummy`、`fake`、`placeholder` 等明确占位语义时，才按测试占位值处理；测试代码中的
+其他疑似凭据和普通源码中的硬编码值仍然报错。
+
 质量门禁执行测试时设置内部环境标记。若测试中的代码再次进入测试执行器，内层只返回
 warning，不再次启动 unittest，从而避免
 `test_quality_gate -> quality_gate -> test_quality_gate` 的递归。
@@ -42,6 +46,7 @@ full 包含全部 basic 检查，并增加：
 
 - 正式 CSV 的表头、重复表头和行列一致性；
 - `annotation_id`、`case_id`、`term_id` 等稳定 ID 的唯一性；
+- 整理样例、人工数据和去重后结果的 OpenAlex ID 唯一性；
 - 中文相关性标签合法性；
 - W2 标注 ID 到提交样例的关联；
 - `similarity_score`、Precision、NDCG 及 `*_score` 的 `[0,1]` 范围；
@@ -54,8 +59,10 @@ full 包含全部 basic 检查，并增加：
 `outputs/experiments/openalex_stellar_spectra_60` 同样以 warning 报告，不会把既有成果
 当作本次新增污染。
 
-故意失败的 fixture 位于 `tests/fixtures/validation/invalid/`，只由单元测试读取，不参与
-项目正式 JSON、CSV 和 Markdown 扫描；其余文件仍参与敏感模式检查。
+`data/samples/w2/dedup/` 是去重前输入，允许重复 OpenAlex ID，但仍执行 CSV 结构、
+字段和数值检查。故意失败的负面 fixture（`tests/fixtures/` 下名称或目录明确包含
+`invalid`、`deliberate`、`negative` 或 `expected_fail`）不参与正式 JSON、CSV、标签、
+唯一性和范围检查；它们仍由单元测试使用，也仍参与敏感信息扫描。
 
 ## 增加 validator
 

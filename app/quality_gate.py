@@ -38,7 +38,35 @@ SCORE_COLUMN_NAMES = {
     "ndcg",
     "metric_value",
 }
-INVALID_FIXTURE_PREFIX = "tests/fixtures/validation/invalid/"
+
+
+def is_negative_test_fixture(path: Path) -> bool:
+    """识别只用于断言失败路径的测试 fixture。"""
+    parts = tuple(part.casefold() for part in path.parts)
+    if len(parts) < 3 or parts[:2] != ("tests", "fixtures"):
+        return False
+    fixture_parts = parts[2:]
+    negative_directory_names = {"invalid", "negative", "expected_fail", "expected-fail"}
+    if any(part in negative_directory_names for part in fixture_parts[:-1]):
+        return True
+    filename = fixture_parts[-1]
+    return any(
+        marker in filename
+        for marker in ("invalid", "deliberate", "negative", "expected_fail", "expected-fail")
+    )
+
+
+def should_require_unique_openalex_id(path: Path) -> bool:
+    """按数据用途判断 OpenAlex ID 是否必须唯一。"""
+    parts = tuple(part.casefold() for part in path.parts)
+    if parts[:4] == ("data", "samples", "w2", "dedup"):
+        return False
+    if parts[:2] in {("data", "samples"), ("data", "manual")}:
+        return True
+    return (
+        parts[:3] == ("data", "analysis", "w2_dedup")
+        and path.stem.casefold().startswith("deduplicated")
+    )
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -87,9 +115,7 @@ def run_quality_gate(
         "required_directories",
         validate_required_directories(root, REQUIRED_DIRECTORIES),
     )
-    schema_files = [
-        path for path in files if not path.as_posix().startswith(INVALID_FIXTURE_PREFIX)
-    ]
+    schema_files = [path for path in files if not is_negative_test_fixture(path)]
     json_paths = [path for path in schema_files if path.suffix.casefold() == ".json"]
     for path in json_paths:
         add_check(
@@ -118,9 +144,7 @@ def _run_full_checks(root: Path, files: Sequence[Path], add_check) -> None:
     sample_ids: set[str] = set()
     annotation_tables: list[tuple[Path, list[dict[str, str]]]] = []
 
-    eligible_files = [
-        path for path in files if not path.as_posix().startswith(INVALID_FIXTURE_PREFIX)
-    ]
+    eligible_files = [path for path in files if not is_negative_test_fixture(path)]
     for path in [value for value in eligible_files if value.suffix.casefold() == ".csv"]:
         csv_result = validate_csv_file(root / path, path.as_posix())
         if path.as_posix() == "data/manual/relevance_labels_w1.csv" and csv_result.errors:
@@ -143,9 +167,7 @@ def _run_full_checks(root: Path, files: Sequence[Path], add_check) -> None:
                     f"unique:{path.as_posix()}:{column}",
                     validate_unique_ids(rows, column, path.as_posix()),
                 )
-        if "openalex_id" in headers and (
-            "data/samples/" in path.as_posix() or "data/manual/" in path.as_posix()
-        ):
+        if "openalex_id" in headers and should_require_unique_openalex_id(path):
             add_check(
                 f"unique:{path.as_posix()}:openalex_id",
                 validate_unique_ids(rows, "openalex_id", path.as_posix()),

@@ -39,6 +39,11 @@ def rows_from(result: ValidationResult) -> list[dict[str, str]]:
     return list(result.details.get("rows", []))
 
 
+def make_minimal_project(root: Path) -> None:
+    for name in ("app", "src", "tests", "docs", "data"):
+        (root / name).mkdir(parents=True, exist_ok=True)
+
+
 class ValidationFixtureTests(unittest.TestCase):
     def test_valid_fixture_passes_structure_ids_labels_relations_and_ranges(self) -> None:
         sample = validate_csv_file(VALID / "sample_ids.csv", required_headers=("openalex_id",))
@@ -159,6 +164,97 @@ class SecurityAndOrchestrationTests(unittest.TestCase):
         self.assertEqual(result.status, "failed")
         self.assertNotIn(secret, "\n".join(result.errors))
 
+    def test_obvious_placeholder_in_tests_is_allowed(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            path = root / "tests/automated/example.py"
+            path.parent.mkdir(parents=True)
+            path.write_text(
+                'api_key = "test-api-key-must-never-appear-in-output"\n',
+                encoding="utf-8",
+            )
+            result = scan_sensitive_risks(root, (Path("tests/automated/example.py"),))
+        self.assertEqual(result.status, "passed")
+
+    def test_secret_shaped_value_in_tests_still_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            path = root / "tests/automated/example.py"
+            path.parent.mkdir(parents=True)
+            secret = "production-" + "x" * 24
+            path.write_text(f'api_key = "{secret}"\n', encoding="utf-8")
+            result = scan_sensitive_risks(root, (Path("tests/automated/example.py"),))
+        self.assertEqual(result.status, "failed")
+        self.assertNotIn(secret, "\n".join(result.errors))
+
+    def test_placeholder_outside_tests_still_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            path = root / "src/example.py"
+            path.parent.mkdir(parents=True)
+            path.write_text(
+                'api_key = "test-api-key-must-never-appear-in-output"\n',
+                encoding="utf-8",
+            )
+            result = scan_sensitive_risks(root, (Path("src/example.py"),))
+        self.assertEqual(result.status, "failed")
+
+    def test_full_gate_allows_duplicate_ids_in_dedup_input(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            make_minimal_project(root)
+            path = root / "data/samples/w2/dedup/combined_raw.csv"
+            path.parent.mkdir(parents=True)
+            path.write_text(
+                "openalex_id,title\nhttps://openalex.org/W1,one\n"
+                "https://openalex.org/W1,two\n",
+                encoding="utf-8",
+            )
+            result = run_quality_gate(root, "full", run_tests=False, check_imports=False)
+        self.assertEqual(result.status, "passed")
+
+    def test_full_gate_rejects_duplicate_ids_in_curated_sample(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            make_minimal_project(root)
+            path = root / "data/samples/w2/ranking/papers.csv"
+            path.parent.mkdir(parents=True)
+            path.write_text(
+                "openalex_id,title\nhttps://openalex.org/W1,one\n"
+                "https://openalex.org/W1,two\n",
+                encoding="utf-8",
+            )
+            result = run_quality_gate(root, "full", run_tests=False, check_imports=False)
+        self.assertEqual(result.status, "failed")
+        self.assertTrue(any("ID 重复" in error for error in result.errors))
+
+    def test_full_gate_excludes_deliberately_invalid_fixture(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            make_minimal_project(root)
+            path = root / "tests/fixtures/ranking/labels_invalid_deliberate.csv"
+            path.parent.mkdir(parents=True)
+            path.write_text(
+                "openalex_id,label\nhttps://openalex.org/W1,非法标签\n",
+                encoding="utf-8",
+            )
+            result = run_quality_gate(root, "full", run_tests=False, check_imports=False)
+        self.assertEqual(result.status, "passed")
+
+    def test_full_gate_still_rejects_invalid_formal_labels(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            make_minimal_project(root)
+            path = root / "data/samples/w2/ranking/labels.csv"
+            path.parent.mkdir(parents=True)
+            path.write_text(
+                "openalex_id,label\nhttps://openalex.org/W1,非法标签\n",
+                encoding="utf-8",
+            )
+            result = run_quality_gate(root, "full", run_tests=False, check_imports=False)
+        self.assertEqual(result.status, "failed")
+        self.assertTrue(any("标签非法" in error for error in result.errors))
+
     def test_invalid_json_fails_without_exposing_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             path = Path(temporary_directory) / "broken.json"
@@ -170,8 +266,7 @@ class SecurityAndOrchestrationTests(unittest.TestCase):
     def test_basic_gate_can_validate_minimal_project_without_tests_or_imports(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
-            for name in ("app", "src", "tests", "docs", "data"):
-                (root / name).mkdir()
+            make_minimal_project(root)
             (root / "config.json").write_text(json.dumps({"ok": True}), encoding="utf-8")
             (root / "README.md").write_text("[config](config.json)\n", encoding="utf-8")
             result = run_quality_gate(

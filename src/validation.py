@@ -31,13 +31,23 @@ SENSITIVE_FILENAMES = (
     re.compile(r".*\.(?:pem|key|p12|pfx)$", re.IGNORECASE),
 )
 SECRET_PATTERNS = (
-    re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
-    re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}"),
-    re.compile(r"AKIA[0-9A-Z]{16}"),
+    re.compile(r"(?P<value>sk-[A-Za-z0-9_-]{20,})"),
+    re.compile(r"(?P<value>gh[pousr]_[A-Za-z0-9]{20,})"),
+    re.compile(r"(?P<value>AKIA[0-9A-Z]{16})"),
     re.compile(
-        r"(?:api[_-]?key|token|password)\s*[:=]\s*['\"][A-Za-z0-9_./+-]{16,}['\"]",
+        r"(?:api[_-]?key|token|password)\s*[:=]\s*['\"]"
+        r"(?P<value>[A-Za-z0-9_./+-]{16,})['\"]",
         re.IGNORECASE,
     ),
+)
+TEST_PLACEHOLDER_MARKERS = (
+    "test",
+    "dummy",
+    "fake",
+    "placeholder",
+    "example",
+    "not-real",
+    "must-never-appear",
 )
 _WINDOWS_USER_HOME = r"[A-Za-z]:\\" + "Users" + r"\\[^\\\s]+"
 _LINUX_USER_HOME = "/" + "home" + r"/[^/\s]+"
@@ -204,12 +214,33 @@ def scan_sensitive_risks(root: Path, relative_paths: Iterable[Path]) -> Validati
             result.add_warning(f"文本安全扫描无法读取：{relative.as_posix()}")
             continue
         checked_text += 1
-        if any(pattern.search(content) for pattern in SECRET_PATTERNS):
+        unsafe_secret_found = False
+        for pattern in SECRET_PATTERNS:
+            for match in pattern.finditer(content):
+                if not is_obvious_test_placeholder(relative, match.group("value")):
+                    unsafe_secret_found = True
+                    break
+            if unsafe_secret_found:
+                break
+        if unsafe_secret_found:
             result.add_error(f"发现疑似硬编码凭据：{relative.as_posix()}（内容已隐藏）")
         if LOCAL_PERSONAL_PATH.search(content):
             result.add_error(f"发现个人绝对路径：{relative.as_posix()}（路径已隐藏）")
     result.details["security_text_files_checked"] = checked_text
     return result
+
+
+def is_obvious_test_placeholder(relative_path: Path, value: str) -> bool:
+    """仅识别 tests/ 中带明确占位语义的疑似凭据值。"""
+    parts = tuple(part.casefold() for part in relative_path.parts)
+    if not parts or parts[0] != "tests":
+        return False
+    normalized = value.casefold()
+    for marker in TEST_PLACEHOLDER_MARKERS:
+        marker_pattern = rf"(?<![a-z0-9]){re.escape(marker)}(?![a-z0-9])"
+        if re.search(marker_pattern, normalized):
+            return True
+    return False
 
 
 def validate_csv_file(
