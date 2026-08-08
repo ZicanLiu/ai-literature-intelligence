@@ -1,0 +1,13 @@
+case_id,target,input_or_command,expected,actual,status,note
+W2-QG-001,CLI help,python -m app.quality_gate --help,显示 basic/full 和 root 参数,退出码 0 且参数可见,通过,未读取网络或密钥
+W2-QG-002,processor 回归,python -m unittest discover -s tests/automated -p test_processor.py -v,全部有效断言通过,14/14 通过,通过,基于 src.processor 真实 API
+W2-QG-003,quality gate 回归,python -m unittest discover -s tests/automated -p test_quality_gate.py -v,正常和失败 fixture 均按预期,18/18 通过,通过,使用 unittest 和 tempfile
+W2-QG-004,全量自动测试,python -m unittest discover -s tests/automated -p test_*.py -v,全部测试被 discovery,39/39 通过,通过,包含原有 7 项
+W2-QG-005,basic 门禁,python -m app.quality_gate --level basic,错误为 0 且退出码 0,错误 0、警告 0、退出码 0,通过,包含标准 unittest discovery
+W2-QG-006,full 门禁,python -m app.quality_gate --level full,错误为 0 且退出码 0,错误 0、警告 3、退出码 0,通过,警告为 W1 CSV 结构、W1 ID 关联和历史 experiment
+W2-QG-007,OpenAlex live,python -m app.main --mode live --keyword astronomical spectral classification machine learning --max-results 25,生成独立 live 实验并返回 25 条,25 条原始且去重后 25 条,通过,完整实验保存在系统临时目录
+W2-QG-008,live 数据验证,新 validator 检查 live CSV ID 分数和 run_config,CSV ID 分数和配置均通过,全部通过且仅 abstract 缺失 1 条,通过,只提交摘要
+W2-QG-009,缺列失败 fixture,missing_columns.csv 缺少 openalex_id,validator 返回 failed,按预期拦截,通过,负向 fixture 不进入项目级正式数据扫描
+W2-QG-010,失效链接 fixture,broken_link.md 指向不存在文件,validator 返回 failed,按预期拦截,通过,项目正式 Markdown 单独扫描
+W2-QG-011,敏感文件名,临时目录包含空 .env,只报告路径且不读取内容,按预期拦截且不输出内容,通过,测试结束后临时目录自动删除
+W2-QG-012,递归保护,ASTRO_QUALITY_GATE_RUNNING=1 时调用测试执行器,跳过嵌套 unittest 并给出 warning,按预期返回 already_running,通过,basic 仍保留自动测试检查

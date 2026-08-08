@@ -1,0 +1,2 @@
+case_id,similarity_score,precision,ndcg
+case_001,1.2,-0.1,not-a-number
