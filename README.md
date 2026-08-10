@@ -16,9 +16,9 @@
 
 第一版目标是做出一条简单、稳定、可运行、适合本科生逐步读懂和二次开发的最小流程，而不是追求复杂系统。
 
-稳定 baseline：**v0.2.0**；当前 `main` 已包含 W2 五项模块，Issue #21 分支正在形成
-v0.3.0 统一集成候选。当前候选修改仍在 `feat/w2-unified-pipeline` 未提交工作区，尚未
-合并 `main` 或正式发布。运行环境要求 **Python 3.10 或更高版本**。
+兼容 baseline 为 **v0.2.0**；当前 `main` 已正式包含 W2 五项模块、Unified Pipeline 与
+Batch Runner，并标记为 **v0.3.0**。W4 开始从工程集成转向科研问题、评价基准和 Pilot
+Annotation。运行环境要求 **Python 3.10 或更高版本**。
 
 当前验证状态：
 
@@ -107,7 +107,7 @@ python -m app.main --mode mock --keyword "machine learning stellar spectra" --ma
 python -m unittest discover -s tests/automated -p "test_*.py" -v
 ```
 
-### W2 统一 Pipeline（v0.3.0 候选）
+### W2 统一 Pipeline（v0.3.0）
 
 离线端到端示例不会联网，也不会读取 API Key：
 
@@ -259,6 +259,16 @@ v0.2 没有使用 TF-IDF、Embedding、RAG、大模型 API、Crossref 二次校�
 OpenAlex v2、两级去重、领域查询、质量门禁和 TF-IDF 两阶段排序已经进入 `main`；统一
 Pipeline 与批量集成的实际状态、验证记录和限制见第二周成果索引。v0.2.0 入口继续保留
 作为兼容 baseline。
+
+### 第四周协作入口
+
+- [W4 研究计划](docs/project/W4_RESEARCH_PLAN.md)
+- [W4 Query Relevance 标注指南](docs/project/W4_ANNOTATION_GUIDELINE.md)
+- [W4 Pilot Annotation 公共数据与任务命令](data/annotation_tasks/w4/README.md)
+
+第四周公共准备只冻结研究问题、60 个 query-paper pair、双标 assignment、个人任务生成器
+和格式 validator。当前仍是 Pilot Annotation 准备，不是已完成 benchmark、gold standard
+或算法优劣结论。
 
 ## 14. 后续可扩展方向
 

@@ -2,69 +2,107 @@
 
 更新时间：2026-08-10
 
-稳定基线：`52041a6`（tag `w2-stable-20260808`）
+最新公共基线：`899f745`（tag `v0.3.0`）
 
-Issue #21 开发分支：`feat/w2-unified-pipeline`
+当前公共准备分支：`chore/w4-benchmark-bootstrap`
 
-本页所述统一集成修改仍未 commit、未合并 `main`，v0.3.0 尚未正式发布。
+W2 Unified Pipeline 与 Batch Runner 已进入 `main`。本页新增的 W4 bootstrap 尚未合并
+`main`，当前状态是评价基准与 Pilot Annotation 的公共前置准备，不是已完成 benchmark。
 
 ## AI / 新成员接手入口
 
 开始新任务前，先阅读根目录 [`AGENTS.md`](../AGENTS.md) 和
-[`AI_PROJECT_ONBOARDING.md`](project/AI_PROJECT_ONBOARDING.md)，再以当前 Git 状态、源码、测试和 Issue 核对本页快照。
+[`AI_PROJECT_ONBOARDING.md`](project/AI_PROJECT_ONBOARDING.md)，再以当前 Git 状态、源码、
+测试和 Issue 核对本页快照。
 
-## 当前已验证范围
+W4 任务继续阅读：
+
+- [`W4_RESEARCH_PLAN.md`](project/W4_RESEARCH_PLAN.md)
+- [`W4_ANNOTATION_GUIDELINE.md`](project/W4_ANNOTATION_GUIDELINE.md)
+- [`data/annotation_tasks/w4/README.md`](../data/annotation_tasks/w4/README.md)
+
+## 当前稳定工程基础
 
 `main` 已包含 OpenAlex v2 分页/重试、领域查询、W2 两级去重、TF-IDF 两阶段排序与评价、
-质量门禁。旧 `python -m app.main` 继续作为 v0.2.0 baseline，支持 mock/live 获取、清洗、
-严格去重、`preliminary_score`、CSV、SQLite、图表和摘要。
+Unified Pipeline、Batch Runner 和 Quality Gate。旧 `python -m app.main` 继续作为 v0.2.0
+兼容 baseline。
 
-本分支新增统一 Pipeline：一个 parent run 可选择多组 acquisition query，清洗后附加来源，
-跨 query 精确去重并合并 provenance，再用显式 `ranking_keyword` 完成旧 baseline 与两阶段
-排序。疑似重复只进入 review queue，不自动删除。Batch Runner 复用同一 API 运行多个
-独立 parent run。
+Unified Pipeline 支持多 acquisition query、清洗后 provenance、跨 query exact dedup、
+不自动删除的 suspected review queue、显式 ranking keyword、旧 baseline 与 two-stage 排序、
+可选 judged 评价及阶段化输出。
 
 `preliminary_score` 和 TF-IDF 都是透明、可解释的项目 baseline，不代表论文真实学术价值
 或语义理解，也不能替代人工阅读。
 
-## 数据与评价状态
+## W4 当前目标
 
-- `data/samples/openalex_stellar_spectra_100.csv` 是 100 条 OpenAlex live 统一样例；
-- W1/W2 成员样例、分析、报告和历史 experiments 均保持原样；
-- W2 label CSV 共 50 行，其中 37 行来自原 PR 人工判断映射，13 行是
-  `AI-assisted-draft` 且待人工复核；统一 Pipeline 默认排除后 13 行；
-- 默认可用的 37 行仍标记“结构字段待组长抽查”，正式科研结论前需要继续核验；
-- 未标注论文不会被自动当作不相关，labels 只进入 judged 离线评价，不进入评分公式。
+W4 从工程集成转向：
 
-## Issue #21 验证
+- 把研究方向写成可执行的 research questions；
+- 区分 Query Relevance、Value Profile 和 Reading Priority；
+- 建立不依赖人工答案的 Pilot Candidate Pool；
+- 试运行独立双标、证据分级和 AI 使用记录；
+- 为后续 agreement、分歧裁决和公平排序实验准备数据接口。
 
-- 离线 E2E：2 queries，combined 8、exact 2、kept 6、suspected 1、ranked 6；
-- 小规模 live：`q02_classification`、`q03_parameters` 各 20 条，combined 40、exact 1、
-  kept/ranked 39、suspected 0；
-- live 两次请求各 1 页、无重试；输出完整，未发现 Key 赋值文本或个人绝对路径；
-- Batch 示例包含 3 个 offline item，每项产生独立 run；失败继续与停止策略均有自动测试；
-- live batch 另以 2 个 item、每项 10 条完成验收，两项均成功；临时配置未保留；
-- 自动测试共 204 项，204 通过、0 失败、0 error、0 skipped；Basic Gate 为
-  0 error / 0 warning，Full Gate 为 0 error / 3 个已知历史 warning。
+本周不实现 BM25、Embedding、SPECTER、BERT、RankNet、LambdaMART、LLM Reranker、
+Knowledge Graph 或大型多指标评价系统。
 
-## 输出状态
+## W4 Pilot v0.1 数据状态
 
-旧 v0.2 run 使用 `raw/tables/figures/reports/data` 结构；统一 Pipeline 使用
-`domain/retrieval/dedup/ranking/evaluation/reports` 结构，所有路径和实际参数写入
-`run_config.json`。三个 provenance list 在 CSV 中使用 JSON array string，能够无损恢复。
+- 来源：`data/samples/w2/domain_query/live_query_sample.csv`；
+- 三个 research query 分别映射 q02 classification、q03 parameters、q04 preprocessing；
+- 每个 research query 有 20 个 query-paper pair，共 60 pair；
+- 60 pair 对应 57 篇唯一 OpenAlex work；同一论文可因 query-dependent relevance 进入不同 RQ；
+- pool 由 top/middle/bottom/rank-shift 四个 bucket 各 5 条组成；
+- 选择只使用 retrieval provenance 和当前 baseline/two-stage ranking，没有读取人工 label；
+- 本次没有新增 OpenAlex live 请求；
+- manifest 已记录来源、Git revision、选择规则、计数和 SHA-256。
 
-普通 `outputs/experiments/` 和 `outputs/batches/` 默认忽略。本次 live/offline 验证只创建新
-目录，没有覆盖或提升为 baseline。
+当前目录是 `data/annotation_tasks/w4/`，表示待人工判断任务，不是
+`data/manual/w4_benchmark/`，也不使用 gold/ground truth 命名。
+
+## Assignment 与个人任务
+
+- 60 pair 全部有 primary；
+- 30 pair 有一个独立 secondary；
+- 共 90 次 assignment，六人各 15 条；
+- 三个 research query 各有 10 个 secondary overlap；
+- 没有第三标注者，primary 与 secondary 不相同；
+- 个人任务不显示分数、排名、引用信号、selection bucket、assignment role 或旧标签；
+- generator 默认拒绝覆盖，validator 只检查格式和数据契约，不判断标签正确性。
+
+个人结果尚未生成或合并。agreement、Kappa、分歧裁决及新 benchmark 排序评价也尚未实现。
+
+## 当前验证
+
+- W4 定向自动测试：10 项通过；
+- 全量自动测试：214 项，214 通过、0 失败、0 error、0 skipped；
+- Basic Quality Gate：0 error / 0 warning；
+- Full Quality Gate：0 error / 3 个既有历史 warning；
+- W4 Candidate Pool、assignment 和个人任务不变量均由自动测试覆盖；
+- 所有测试使用本地 fixture 或已提交样例，没有网络请求。
+
+Full Gate 的三个历史 warning：
+
+1. W1 标注保留一处 CSV 结构问题；
+2. `data/manual/relevance_labels_w1.csv` 有 19 个 ID 未与当前统一样例对齐；
+3. 历史已跟踪 experiment `openalex_stellar_spectra_60`。
+
+本次没有修改这些历史交付物，也没有新增 W4 error。
 
 ## 当前明确不包含
 
-本分支没有实现 confirmed review 应用、metadata fusion、SQLite v0.3 schema、排序图表重做、
-6/6 query 大规模 live、BM25、Embedding、LTR、PDF 解析、RAG、多 Agent、知识图谱或前端。
-v0.3.0 当前只是候选状态，必须经过人工 diff 评审、提交并合并后才能发布。
+- 正式大规模 benchmark、gold standard 或专家标注集；
+- 完成后的六人个人标签；
+- agreement 指标和 disagreement adjudication；
+- 使用新 Pilot label 比较 baseline 与 two-stage；
+- confirmed duplicate review 应用、metadata fusion、SQLite v0.3 schema；
+- BM25、Embedding、LTR、PDF 解析、RAG、多 Agent、知识图谱或前端。
 
 ## 下一步
 
-1. 人工查看 Pipeline/Batch Runner 的配置、provenance 和失败状态实现；
-2. 对 37 条映射标签完成组长抽查，另开 Issue 处理 13 条 AI-assisted draft；
-3. 决定是否把本次小规模 live run 提升为受控 evidence（默认不提交）；
-4. 把 metadata fusion、review decision 应用和 SQLite 升级拆成独立 P1 Issue。
+1. 评审并合并 W4 bootstrap；
+2. 为六名成员建立独立 W4 Issue 和分支边界；
+3. 每人生成自己的 15 条任务，完成主任务和 Query Relevance 标注；
+4. 各 PR 通过个人 validator、自动测试和人工审查；
+5. 所有个人结果合并后，另开公共任务处理 agreement、裁决和 benchmark 提升。

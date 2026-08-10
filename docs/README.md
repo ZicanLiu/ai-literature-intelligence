@@ -38,8 +38,17 @@
 - [组长集成技术记录](reports/week2/LEADER_TECHNICAL_NOTES_W2.md)
 - [v0.3.0 候选发布说明](reports/week2/V0.3.0_RELEASE_NOTES.md)
 
-五项成员功能已经进入 `main`；统一 Pipeline 与 Batch Runner 位于 Issue #21 开发分支，
-通过评审合并前仍属于 v0.3.0 候选，不代表已经正式发布。
+五项成员功能、统一 Pipeline 与 Batch Runner 已进入 `main`，并标记为 v0.3.0。旧
+`app.main` 仍保留为 v0.2.0 兼容 baseline。
+
+## 第四周研究评价
+
+- [W4 研究计划：评价基准与实验体系试运行](project/W4_RESEARCH_PLAN.md)
+- [W4 Query Relevance 标注指南](project/W4_ANNOTATION_GUIDELINE.md)
+- [W4 Pilot Annotation 公共数据与任务命令](../data/annotation_tasks/w4/README.md)
+
+当前只完成 benchmark bootstrap 和 Pilot Annotation 准备，不表示 agreement、裁决或算法
+比较已经完成。
 
 ## live 验证
 

@@ -1,0 +1,115 @@
+{
+  "schema_version": "1.0",
+  "pool_version": "w4_pilot_v0.1",
+  "status": "frozen",
+  "generated_at": "2026-08-10T19:36:11+08:00",
+  "git_revision": "899f745fc824204983c81cbf24819b44c9ca8b7d",
+  "git_revision_note": "生成前的公共基线 HEAD；包含本 manifest 的提交将在人工评审后产生。",
+  "reference_year": 2026,
+  "source_files": [
+    {
+      "path": "data/samples/w2/domain_query/live_query_sample.csv",
+      "sha256": "d9179396b22b223e58a730fc41a97f6c7f6a5c976042a97a881e51bc956eda34"
+    },
+    {
+      "path": "configs/w4/research_queries.json",
+      "sha256": "c77ec74ef4567614d3dfb6dab937b85398f95128cdb29e823587715002d99ab1"
+    }
+  ],
+  "candidate_pair_count": 60,
+  "unique_openalex_work_count": 57,
+  "counts_by_research_query": {
+    "rq01_stellar_classification": {
+      "acquisition_query_id": "q02_classification",
+      "eligible_count": 30,
+      "selected_count": 20,
+      "bucket_counts": {
+        "top": 5,
+        "rank_shift": 5,
+        "bottom": 5,
+        "middle": 5
+      }
+    },
+    "rq02_stellar_parameters": {
+      "acquisition_query_id": "q03_parameters",
+      "eligible_count": 30,
+      "selected_count": 20,
+      "bucket_counts": {
+        "bottom": 5,
+        "top": 5,
+        "rank_shift": 5,
+        "middle": 5
+      }
+    },
+    "rq03_spectral_preprocessing": {
+      "acquisition_query_id": "q04_preprocessing",
+      "eligible_count": 30,
+      "selected_count": 20,
+      "bucket_counts": {
+        "bottom": 5,
+        "top": 5,
+        "middle": 5,
+        "rank_shift": 5
+      }
+    }
+  },
+  "selection": {
+    "algorithm": "w4_stratified_rank_v1",
+    "rule": "对每个 acquisition query 的 30 条既有 live 命中重新计算当前 baseline 与two-stage ranking；选择 new_rank top 5、中间 5、bottom 5，再从剩余记录中按 abs(rank_change) 降序选择 5 条。",
+    "stable_input_order": "openalex_id, title",
+    "stable_tie_break": "abs(rank_change) desc, new_rank, openalex_id, title",
+    "pair_id_order": "selected records sorted by SHA-256(pool_version|research_query_id|openalex_id)",
+    "manual_labels_used": false,
+    "label_leakage_prevention": "未读取 W1/W2 relevance labels、AI-assisted labels、hard negative labels 或其他人工判断结果；个人任务不包含分数、排名、引用信号或 selection bucket。"
+  },
+  "assignment": {
+    "algorithm": "w4_balanced_double_annotation_v1",
+    "total_count": 90,
+    "primary_count": 60,
+    "secondary_count": 30,
+    "per_annotator": {
+      "liuzican": 15,
+      "wuziheng": 15,
+      "jiafucheng": 15,
+      "chenxingyu": 15,
+      "huangbin": 15,
+      "puzhengjie": 15
+    },
+    "secondary_by_research_query": {
+      "rq01_stellar_classification": 10,
+      "rq02_stellar_parameters": 10,
+      "rq03_spectral_preprocessing": 10
+    },
+    "partnership_counts": {
+      "chenxingyu|huangbin": 2,
+      "chenxingyu|jiafucheng": 3,
+      "chenxingyu|liuzican": 2,
+      "chenxingyu|puzhengjie": 2,
+      "chenxingyu|wuziheng": 2,
+      "huangbin|jiafucheng": 1,
+      "huangbin|liuzican": 2,
+      "huangbin|puzhengjie": 2,
+      "huangbin|wuziheng": 2,
+      "jiafucheng|liuzican": 2,
+      "jiafucheng|puzhengjie": 2,
+      "jiafucheng|wuziheng": 2,
+      "liuzican|puzhengjie": 1,
+      "liuzican|wuziheng": 2,
+      "puzhengjie|wuziheng": 3
+    }
+  },
+  "artifacts": {
+    "candidate_pool": {
+      "path": "data/annotation_tasks/w4/candidate_pool_v0.1.csv",
+      "sha256": "25f608eb4c94218dfa220ba108b15ec846b2bd418174501420a468c376ed17cc"
+    },
+    "assignments": {
+      "path": "data/annotation_tasks/w4/assignments_v0.1.csv",
+      "sha256": "5cbeccf6c48c92517df57804d07aa9bcf3f359abad2b4d18d9f7c7b271fa46a2"
+    },
+    "template": {
+      "path": "data/annotation_tasks/w4/annotation_template.csv",
+      "sha256": "62283283eff245bf3c787c4fac09ead906e0690e95140eb4fd7f63b2dc9c99da"
+    }
+  }
+}
