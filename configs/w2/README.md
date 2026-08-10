@@ -12,4 +12,7 @@ JSON，并通过稳定且唯一的 `query_id` 关联查询、样例和实验结�
 字段和调用方式，不能表述为已经完成的真实配置。成员原则上只修改自己负责的配置；
 需要调整他人配置或公共字段时，先在 Pull Request 中说明。最终正式配置由组长整合确认。
 
-本次脚手架不创建正式业务查询内容，具体配置由对应第二周任务提交。
+`domain_query_set.json` 已由领域词表生成；`integration_batch.example.json` 是可直接离线
+执行的三条集成示例，使用 `tests/fixtures/pipeline/`，不会请求 OpenAlex。真实 live batch
+应复制为本地配置后缩小请求规模，并继续保证 acquisition queries 与 ranking keyword
+分别显式填写。

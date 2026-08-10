@@ -30,10 +30,14 @@
 | `keyword` | 实际发送的完整关键词 |
 | `run_id` | 实际实验目录编号 |
 | `source_query_ids` | 同一论文来自多组查询时的 `query_id` 集合；序列化方式须在文件说明中注明 |
+| `source_run_ids` | 实际产生该论文的 child request/run ID 集合，不从字符串反向解析 query ID |
+| `source_keywords` | 命中该论文的 acquisition keyword 集合 |
 | `first_seen_run_id` | 候选记录在当前项目中首次出现的实验编号 |
 | `evidence_source` | 人工判断依据，例如标题、摘要、落地页或人工阅读记录 |
 
 来源字段必须能从配置、实验目录或说明文件追溯。无法确认的值留空并说明，不自行推断。
+统一 Pipeline 内存中三个 `source_*` 字段均为 `list[str]`；写入 CSV 时使用 JSON array
+字符串，读取时必须解析回数组。`query_id`、child run ID 和 parent run ID 是三类不同标识。
 
 ## 3. 人工标注
 
@@ -79,9 +83,11 @@
 | `abstract_relevance_score` | 摘要的词法相关性分数 |
 | `combined_relevance_score` | 标题和摘要相关性的组合分数 |
 | `stage1_relevance_score` | 第一阶段相关性筛选分数 |
+| `stage1_relevance_level` | 固定阈值产生的 `high`、`medium` 或 `low` 分层 |
 | `stage2_ranking_score` | 第二阶段综合排序分数 |
 | `old_rank` | 基线排序名次，使用从 1 开始的整数 |
 | `new_rank` | 新方案排序名次，使用从 1 开始的整数 |
+| `rank_change` | `old_rank - new_rank`，正数表示新排序上升 |
 
 分数字段的取值范围、缺失值处理和计算版本必须在对应报告中说明。TF-IDF 只是词法相关性
 基线，不代表真正的语义理解；人工标签只用于离线评价，不直接进入线上评分。

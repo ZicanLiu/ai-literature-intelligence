@@ -1,10 +1,13 @@
 # 文档索引
 
 这里按用途整理项目文档。第一次进入仓库时，建议先阅读根目录
-[`README.md`](../README.md) 和 [`CURRENT_STATUS.md`](CURRENT_STATUS.md)。
+[`AGENTS.md`](../AGENTS.md)、[`README.md`](../README.md)、
+[`AI 项目交接文档`](project/AI_PROJECT_ONBOARDING.md) 和
+[`CURRENT_STATUS.md`](CURRENT_STATUS.md)。
 
 ## 项目说明
 
+- [AI 项目交接与开发入口](project/AI_PROJECT_ONBOARDING.md)：组员和 AI Agent 接手最新代码时的详细项目上下文与开发入口
 - [架构与数据流](project/architecture.md)
 - [代码阅读与学习指南](project/learning_guide.md)
 - [后续功能路线](project/future_roadmap.md)
@@ -30,9 +33,13 @@
 - [第二周成果索引](reports/week2/README.md)
 - [第二周文件归属与协作边界](collaboration/W2_FILE_OWNERSHIP.md)
 - [第二周数据接口约定](project/W2_DATA_CONTRACTS.md)
+- [统一 Pipeline 使用与复现](project/UNIFIED_PIPELINE_GUIDE.md)
+- [批量实验指南](project/BATCH_EXPERIMENT_GUIDE.md)
+- [组长集成技术记录](reports/week2/LEADER_TECHNICAL_NOTES_W2.md)
+- [v0.3.0 候选发布说明](reports/week2/V0.3.0_RELEASE_NOTES.md)
 
-第二周业务功能仍处于计划或开发阶段；以上文档用于统一路径、责任边界和字段含义，
-不代表 v0.3.0 已经完成。
+五项成员功能已经进入 `main`；统一 Pipeline 与 Batch Runner 位于 Issue #21 开发分支，
+通过评审合并前仍属于 v0.3.0 候选，不代表已经正式发布。
 
 ## live 验证
 
@@ -40,7 +47,7 @@
 
 ## 当前状态
 
-- [第二周开始前的仓库基线](CURRENT_STATUS.md)
+- [当前仓库与集成状态](CURRENT_STATUS.md)
 
 文档中的未来文件名如果出现在计划章节中，只表示预期交付物，不代表当前已经实现；
 当前有效文件以本索引和仓库实际内容为准。

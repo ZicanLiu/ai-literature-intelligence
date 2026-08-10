@@ -1,5 +1,8 @@
 # 学习指南
 
+本文是 v0.2.0 baseline 的入门阅读顺序。需要接手 W2/v0.3.0 Unified Pipeline 时，先阅读
+[`AI_PROJECT_ONBOARDING.md`](AI_PROJECT_ONBOARDING.md)，再按本页理解旧入口。
+
 这份指南面向刚开始学习 Python 项目的本科生。建议按下面顺序阅读：
 
 阅读前先确认项目边界：真实数据来自 OpenAlex，不是 OpenAI；当前稳定功能不包含 PDF 解析。`preliminary_score` 只负责初步排序，不能解释为论文真实学术价值。

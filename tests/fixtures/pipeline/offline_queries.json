@@ -1,0 +1,109 @@
+{
+  "schema_version": "1.0",
+  "queries": {
+    "q01_broad_ml": {
+      "papers": [
+        {
+          "title": "Machine Learning for Stellar Spectrum Analysis",
+          "authors": ["Ada Alpha"],
+          "publication_year": 2024,
+          "doi": "https://doi.org/10.1000/w1",
+          "abstract": "Machine learning methods analyse stellar spectrum observations.",
+          "cited_by_count": 12,
+          "source_name": "Fixture Journal",
+          "openalex_id": "https://openalex.org/W1000000001",
+          "landing_page_url": "https://example.org/w1",
+          "retrieved_at": "2026-08-10T08:00:00+08:00"
+        },
+        {
+          "title": "Stellar Spectra Classification with Neural Networks",
+          "authors": ["Ben Beta"],
+          "publication_year": 2023,
+          "doi": "https://doi.org/10.1000/w2",
+          "abstract": "Neural machine learning classification of stellar spectra.",
+          "cited_by_count": 20,
+          "source_name": "Fixture Journal",
+          "openalex_id": "https://openalex.org/W1000000002",
+          "landing_page_url": "https://example.org/w2",
+          "retrieved_at": "2026-08-10T08:00:00+08:00"
+        },
+        {
+          "title": "Estimating Stellar Parameters from Spectra",
+          "authors": ["Cara Gamma"],
+          "publication_year": 2022,
+          "doi": "https://doi.org/10.1000/shared-doi",
+          "abstract": "Effective temperature and surface gravity estimation.",
+          "cited_by_count": 8,
+          "source_name": "Fixture Journal",
+          "openalex_id": "https://openalex.org/W1000000004",
+          "landing_page_url": "https://example.org/w4",
+          "retrieved_at": "2026-08-10T08:00:00+08:00"
+        },
+        {
+          "title": "Deep Learning Analysis of Stellar Spectra",
+          "authors": ["Dana Delta"],
+          "publication_year": 2021,
+          "doi": "",
+          "abstract": "A deep learning analysis workflow.",
+          "cited_by_count": 5,
+          "source_name": "Fixture Journal",
+          "openalex_id": "https://openalex.org/W1000000006",
+          "landing_page_url": "https://example.org/w6",
+          "retrieved_at": "2026-08-10T08:00:00+08:00"
+        }
+      ]
+    },
+    "q02_classification": {
+      "papers": [
+        {
+          "title": "Stellar Spectra Classification with Neural Networks",
+          "authors": ["Ben Beta"],
+          "publication_year": 2023,
+          "doi": "10.1000/w2",
+          "abstract": "Neural machine learning classification of stellar spectra.",
+          "cited_by_count": 20,
+          "source_name": "Fixture Journal",
+          "openalex_id": "https://openalex.org/W1000000002",
+          "landing_page_url": "https://example.org/w2",
+          "retrieved_at": "2026-08-10T08:01:00+08:00"
+        },
+        {
+          "title": "Automatic Classification of Stellar Spectra",
+          "authors": ["Evan Epsilon"],
+          "publication_year": 2025,
+          "doi": "https://doi.org/10.1000/w3",
+          "abstract": "Machine learning supports automatic spectral classification.",
+          "cited_by_count": 3,
+          "source_name": "Fixture Journal",
+          "openalex_id": "https://openalex.org/W1000000003",
+          "landing_page_url": "https://example.org/w3",
+          "retrieved_at": "2026-08-10T08:01:00+08:00"
+        },
+        {
+          "title": "Estimating Stellar Parameters from Spectra Extended Record",
+          "authors": ["Cara Gamma"],
+          "publication_year": 2022,
+          "doi": "10.1000/shared-doi",
+          "abstract": "A duplicate DOI record with a distinct OpenAlex ID.",
+          "cited_by_count": 9,
+          "source_name": "Fixture Journal",
+          "openalex_id": "https://openalex.org/W1000000005",
+          "landing_page_url": "https://example.org/w5",
+          "retrieved_at": "2026-08-10T08:01:00+08:00"
+        },
+        {
+          "title": "Deep Learning Analysis for Stellar Spectra",
+          "authors": ["Dana Delta"],
+          "publication_year": 2022,
+          "doi": "",
+          "abstract": "A closely related deep learning workflow.",
+          "cited_by_count": 6,
+          "source_name": "Fixture Journal",
+          "openalex_id": "https://openalex.org/W1000000007",
+          "landing_page_url": "https://example.org/w7",
+          "retrieved_at": "2026-08-10T08:01:00+08:00"
+        }
+      ]
+    }
+  }
+}

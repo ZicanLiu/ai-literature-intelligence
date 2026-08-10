@@ -1,0 +1,15 @@
+term_id,term,normalized_term,category,strength,include_in_query,example,note,source,synonym
+term_001,stellar spectrum,stellar spectrum,spectrum_term,10,true,stellar spectrum analysis,fixture term,offline test,stellar spectra
+term_002,spectral classification,spectral classification,task_term,9,true,stellar classification,fixture term,offline test,
+term_005,spectral denoising,spectral denoising,method_term,9,true,spectral denoising,fixture term,offline test,
+term_007,absorption line,absorption line,spectrum_term,9,true,absorption line,fixture term,offline test,
+term_008,emission line,emission line,spectrum_term,9,true,emission line,fixture term,offline test,
+term_015,radial velocity,radial velocity,task_term,9,true,radial velocity,fixture term,offline test,
+term_019,metal abundance,metal abundance,task_term,9,true,metal abundance,fixture term,offline test,
+term_020,effective temperature,effective temperature,task_term,9,true,effective temperature,fixture term,offline test,
+term_021,surface gravity,surface gravity,task_term,9,true,surface gravity,fixture term,offline test,
+term_027,spectral library,spectral library,task_term,8,true,spectral library,fixture term,offline test,
+term_028,feature extraction,feature extraction,method_term,8,true,feature extraction,fixture term,offline test,
+term_029,machine learning,machine learning,method_term,10,true,machine learning,fixture term,offline test,
+term_030,template matching,template matching,method_term,8,true,template matching,fixture term,offline test,
+term_035,normalization,normalization,method_term,8,true,spectrum normalization,fixture term,offline test,

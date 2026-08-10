@@ -36,6 +36,10 @@ outputs/reports/*.txt
 # 每次运行生成的普通实验默认不提交；已跟踪的历史实验不会受此规则影响。
 outputs/experiments/*
 
+# Batch 摘要与普通实验一样默认不提交，只保留目录说明。
+outputs/batches/*
+!outputs/batches/README.md
+
 # 质量门禁普通运行结果默认不提交，只跟踪目录说明。
 outputs/quality/*
 !outputs/quality/README.md
