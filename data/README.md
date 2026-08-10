@@ -9,6 +9,7 @@
 - `domain/`：第二周领域词典、同义词、任务词和排除词。
 - `processed/`：可由脚本重新生成的候选库、查询记录表等整理后数据。
 - `review/`：疑似重复和其他需要人工确认的结构化复核队列。
+- `annotation_tasks/`：待人工判断的任务池、分配和个人任务；不是确认后的 ground truth。
 - `samples/w2/`：第二周各任务经过整理、来源清楚且体积适中的 live 样例或摘要。
 
 当前统一真实样例是 `samples/openalex_stellar_spectra_100.csv`。它来自一次

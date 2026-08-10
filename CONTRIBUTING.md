@@ -112,3 +112,10 @@ Pull Request 必须写明：
 - Git 提交说明默认使用简洁中文，说明实际完成的事情，不把计划写成成果。
 - 分支可使用 `feature/`、`test/`、`data/`、`docs/`、`fix/` 或 `chore/` 等前缀。
 - 需要修改共享文件时先在 PR 描述中提出，由组长决定如何集成。
+
+## 8. 第四周人工标注任务
+
+涉及 W4 Query Relevance 标注的 Issue 还必须阅读
+[`W4_ANNOTATION_GUIDELINE.md`](docs/project/W4_ANNOTATION_GUIDELINE.md)。成员只生成和提交
+自己的 `data/annotation_tasks/w4/annotations/<slug>.csv`，不得修改公共 candidate pool、
+assignment、research query 配置或其他成员文件。

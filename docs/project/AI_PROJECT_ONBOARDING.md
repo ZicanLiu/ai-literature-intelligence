@@ -5,9 +5,9 @@
 本文帮助只熟悉 v0.2.0、只参与过某个 W2 模块，或第一次进入仓库的成员和 AI Agent 建立完整上下文。它不是永远正确的状态数据库。
 
 - 快照更新时间：2026-08-10
-- 对应开发分支：`feat/w2-unified-pipeline`
-- 基线：`52041a6`（`w2-stable-20260808`）
-- 候选状态：v0.3.0 Unified Pipeline，当前工作区尚未 commit、尚未合并 `main`、尚未发布
+- 对应公共基线：`899f745`（tag `v0.3.0`）
+- 当前准备分支：`chore/w4-benchmark-bootstrap`
+- 当前状态：Unified Pipeline 已进入 `main`；W4 benchmark bootstrap 正在准备，尚未合并
 
 每次开始新任务，都必须重新用 Git、源码和测试核对本文。事实优先级及长期规则见
 [`AGENTS.md`](../../AGENTS.md)，当前快照见 [`docs/CURRENT_STATUS.md`](../CURRENT_STATUS.md)。
@@ -18,7 +18,7 @@
 
 当前目标不只是“搜到论文”，而是形成一条可追溯、可复现、可比较的处理链。长期可以迁移到其他科研主题，但当前代码和样例仍以天文光谱为主。项目不声称已经实现论文真实价值判断、语义理解或自动科研结论生成。
 
-## 2. 从 v0.2.0 到 W2/v0.3.0 候选发生了什么
+## 2. 从 v0.2.0 到 W2/v0.3.0 发生了什么
 
 v0.2.0 入口仍然保留：
 
@@ -39,7 +39,7 @@ W2 的五项成员能力已经进入当前 `main` 基线：
 - TF-IDF 词法相关性、Stage 1 分层、Stage 2 排序和 judged 评价；
 - Basic/Full Quality Gate。
 
-Issue #21 的候选工作区进一步新增：
+Issue #21 进一步新增并已经进入当前 `main`：
 
 - `src.pipeline.run_unified_pipeline()`：把上述能力串成一个多 acquisition query 的 parent run；
 - `app.run_pipeline`：统一 Pipeline CLI；
@@ -48,7 +48,20 @@ Issue #21 的候选工作区进一步新增：
 - 清洗后 provenance、跨 query 精确去重的来源合并、显式 ranking keyword；
 - 独立输出目录、结构化失败状态和离线 E2E/batch 测试。
 
-旧 `app.main` 没有被删除，也没有被悄悄替换。它仍是兼容和教学 baseline；统一 Pipeline 是 v0.3.0 候选，而不是已经发布的正式版本。
+旧 `app.main` 没有被删除，也没有被悄悄替换。它仍是兼容和教学 baseline；统一 Pipeline
+和 Batch Runner 已随 v0.3.0 发布并成为 W4 的工程基础。
+
+### 当前从工程 Pipeline 转向研究评价
+
+W4 不继续堆新排序算法，而是先建立 research query、无标签泄漏 candidate pool、独立双标
+协议和可验证的个人任务。涉及 W4 benchmark 的 Issue 还必须继续阅读：
+
+- [`W4_RESEARCH_PLAN.md`](W4_RESEARCH_PLAN.md)
+- [`W4_ANNOTATION_GUIDELINE.md`](W4_ANNOTATION_GUIDELINE.md)
+- [`data/annotation_tasks/w4/README.md`](../../data/annotation_tasks/w4/README.md)
+
+当前只是 Pilot Annotation 准备，不能表述为大规模 benchmark、gold ground truth 或算法
+优劣结论。
 
 ## 3. 当前关键目录
 
@@ -57,10 +70,12 @@ Issue #21 的候选工作区进一步新增：
 | `app/` | CLI、参数校验、用户输出；不承载可复用算法 |
 | `src/` | 获取、清洗、去重、排序、评价、输出编排和验证逻辑 |
 | `configs/w2/` | W2 可复用配置与安全离线 batch 示例 |
+| `configs/w4/` | W4 research query 机器可读配置 |
 | `data/domain/` | 领域词表和生成的查询集合 |
 | `data/samples/` | 固定、可追溯的公开元数据样例 |
 | `data/manual/` | 人工或待复核标注、审核数据 |
 | `data/analysis/` | 可提交的分析结果，不等同于运行时输出 |
+| `data/annotation_tasks/` | 待人工判断的候选池、分配和个人任务，不是 ground truth |
 | `tests/automated/` | 标准库 `unittest` 自动测试 |
 | `tests/fixtures/` | 离线、确定、可重复的测试输入 |
 | `docs/project/` | 长期架构、接口和使用说明 |
@@ -383,7 +398,7 @@ Batch 输出位于 `outputs/batches/<batch_id>/`，包含 `batch_config.json`、
 
 当前测试体系包括模块单测、安全离线 fixture、Unified Pipeline E2E、失败边界、Batch Runner 和 Quality Gate 测试。它不依赖真实 API Key，也不应把测试输出写入正式实验目录。
 
-本文更新时的候选工作区快照为 **204 项自动测试全部通过**。该数字不是永久事实；开始任何新任务都必须重新运行：
+本文更新时的 W4 bootstrap 工作区快照为 **214 项自动测试全部通过**。该数字不是永久事实；开始任何新任务都必须重新运行：
 
 ```powershell
 python -m unittest discover -s tests/automated -p "test_*.py" -q
@@ -500,6 +515,7 @@ git diff --check，并报告实际 Git 状态、验证结果、限制和未完�
 
 ### P1 候选
 
+- 完成 W4 六人独立标注、agreement 计算和 disagreement adjudication；
 - 把人工 confirmed/distinct duplicate review decision 安全应用回数据集；
 - exact dedup 后的 metadata fusion 及字段冲突审计；
 - W2/v0.3 的 SQLite schema 和阶段化持久化；

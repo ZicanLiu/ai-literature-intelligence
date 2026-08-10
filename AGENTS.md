@@ -36,7 +36,7 @@ git branch --show-current
 git log -5 --oneline --decorate
 ```
 
-确认分支、HEAD 和未提交修改后，依次阅读本文件、[详细交接文档](docs/project/AI_PROJECT_ONBOARDING.md)、[当前状态](docs/CURRENT_STATUS.md)及当前 Issue。不得覆盖不属于本任务的工作区修改。
+确认分支、HEAD 和未提交修改后，依次阅读本文件、[详细交接文档](docs/project/AI_PROJECT_ONBOARDING.md)、[当前状态](docs/CURRENT_STATUS.md)及当前 Issue。里程碑相关任务还必须继续阅读 `CURRENT_STATUS` 指向的当周计划。不得覆盖不属于本任务的工作区修改。
 
 ## 4. 架构边界
 
@@ -44,7 +44,7 @@ git log -5 --oneline --decorate
 - `src/`：可复用业务逻辑；
 - 依赖方向只能是 `app → src`，不得新增 `src → app`；
 - `python -m app.main` 保留 v0.2.0 baseline；
-- `python -m app.run_pipeline` 是 W2/v0.3.0 Unified Pipeline 候选入口；
+- `python -m app.run_pipeline` 是 v0.3.0 Unified Pipeline 入口；
 - `python -m app.batch_runner` 是复用统一 Pipeline 的批量实验入口；
 - Quality Gate 是工程验收工具，不是论文处理或评分步骤。
 
@@ -104,4 +104,5 @@ AI 可以读取项目文件、搜索调用关系、运行离线测试与安全 f
 - [批量实验指南](docs/project/BATCH_EXPERIMENT_GUIDE.md)
 - [W2 数据接口约定](docs/project/W2_DATA_CONTRACTS.md)
 - [v0.3.0 候选发布说明](docs/reports/week2/V0.3.0_RELEASE_NOTES.md)
+- [W4 研究计划](docs/project/W4_RESEARCH_PLAN.md)
 - [贡献指南](CONTRIBUTING.md)

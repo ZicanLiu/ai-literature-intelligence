@@ -1,6 +1,6 @@
 # 后续路线图
 
-v0.2.0 只完成文献获取、清洗、严格去重、初步排序和结构化输出。W2 已进一步加入领域查询、OpenAlex v2 分页与重试、两级去重、TF-IDF 两阶段排序、离线评价和质量门禁；Issue #21 的 Unified Pipeline 与 Batch Runner 仍是 v0.3.0 候选，尚未正式发布。
+v0.2.0 只完成文献获取、清洗、严格去重、初步排序和结构化输出。W2 已进一步加入领域查询、OpenAlex v2 分页与重试、两级去重、TF-IDF 两阶段排序、离线评价和质量门禁；Unified Pipeline 与 Batch Runner 已随 v0.3.0 进入 `main`。W4 当前开始试运行评价基准和人工 Query Relevance 协议。
 
 当前状态以 [`CURRENT_STATUS.md`](../CURRENT_STATUS.md) 为准，详细交接见
 [`AI_PROJECT_ONBOARDING.md`](AI_PROJECT_ONBOARDING.md)。下列内容均为尚未实现或尚未完成验收的方向。

@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "pilot_version": "w4_pilot_v0.1",
+  "queries": [
+    {
+      "research_query_id": "rq01_stellar_classification",
+      "question_zh": "机器学习如何用于恒星光谱分类或恒星类型识别？",
+      "question_en": "How is machine learning used to classify stellar spectra or identify stellar types?",
+      "acquisition_query_ids": [
+        "q02_classification"
+      ],
+      "ranking_keyword": "machine learning stellar spectrum classification stellar type identification",
+      "scope_in": [
+        "以恒星光谱为输入的自动分类",
+        "恒星光谱型或恒星类型识别",
+        "机器学习是完成分类任务的核心方法"
+      ],
+      "scope_out": [
+        "星系、超新星或医学光谱分类",
+        "不使用恒星光谱数据的恒星分类",
+        "机器学习只在背景中出现"
+      ],
+      "description": "聚焦机器学习驱动的恒星光谱分类与类型识别，不把其他天体或其他光谱领域的分类任务纳入核心范围。"
+    },
+    {
+      "research_query_id": "rq02_stellar_parameters",
+      "question_zh": "机器学习如何从恒星光谱估计有效温度、表面重力、金属丰度等恒星物理或大气参数？",
+      "question_en": "How is machine learning used to estimate stellar physical or atmospheric parameters, including effective temperature, surface gravity, and metallicity, from stellar spectra?",
+      "acquisition_query_ids": [
+        "q03_parameters"
+      ],
+      "ranking_keyword": "machine learning stellar spectra effective temperature surface gravity metallicity parameter estimation",
+      "scope_in": [
+        "从恒星光谱估计 Teff、log g、metallicity 或其他恒星参数",
+        "数据驱动或机器学习的恒星标签推断",
+        "参数估计是论文的核心输出或任务"
+      ],
+      "scope_out": [
+        "只使用已有恒星参数进行其他研究",
+        "不从恒星光谱估计参数",
+        "机器学习只在背景中出现"
+      ],
+      "description": "聚焦以恒星光谱为输入的物理量或大气参数估计，区分参数推断任务与仅使用既有参数的下游研究。"
+    },
+    {
+      "research_query_id": "rq03_spectral_preprocessing",
+      "question_zh": "机器学习如何用于恒星光谱的预处理、降噪、归一化、校准或质量改进？",
+      "question_en": "How is machine learning used for preprocessing, denoising, normalization, calibration, or quality improvement of stellar spectra?",
+      "acquisition_query_ids": [
+        "q04_preprocessing"
+      ],
+      "ranking_keyword": "machine learning stellar spectrum preprocessing denoising normalization calibration quality improvement",
+      "scope_in": [
+        "恒星光谱降噪、归一化、校准或伪影处理",
+        "机器学习直接改善恒星光谱数据质量",
+        "预处理是论文的核心方法或研究任务"
+      ],
+      "scope_out": [
+        "没有恒星光谱输入的一般数据清洗",
+        "预处理只是常规步骤且不是研究重点",
+        "其他领域的光谱降噪或校准"
+      ],
+      "description": "聚焦机器学习在恒星光谱预处理和质量改进中的直接作用，不把一般性数据清洗视为核心相关。"
+    }
+  ]
+}
