@@ -8,6 +8,7 @@ dedup/          确定重复、疑似重复和非重复案例
 domain_query/   领域词典、查询生成和标注案例
 validation/     正常与故意错误的数据验收案例
 ranking/        TF-IDF、排序和指标已知答案案例
+pipeline/       多查询、provenance、统一排序与 batch 离线端到端案例
 ```
 
 统一规则：

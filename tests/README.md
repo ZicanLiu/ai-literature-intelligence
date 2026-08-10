@@ -12,12 +12,14 @@ python -m unittest discover -s tests/automated -p "test_*.py" -v
 ```
 
 当前重点覆盖：mock CLI 成功运行、完整产物、运行计数、相同关键词连续运行不覆盖、
-不同关键词隔离、中文或特殊字符关键词、非法数量、空关键词和自定义输出目录。
+不同关键词隔离、中文或特殊字符关键词、非法数量、空关键词和自定义输出目录；W2 还覆盖
+多查询 provenance 合并、OpenAlex ID/DOI 精确去重、疑似队列不删除、显式 ranking
+keyword、Pipeline CSV 往返、可选评价，以及 Batch Runner 的独立 run 和失败继续策略。
 
 ## 第二周 fixture
 
 `tests/fixtures/` 保存小型、可解释的离线测试输入。OpenAlex、去重、领域查询、质量验收
-和排序任务各自使用独立子目录，具体约定见
+排序与统一 Pipeline 任务各自使用独立子目录，具体约定见
 [`fixtures/README.md`](fixtures/README.md)。成员不修改其他任务的 fixture。
 
 自动测试不得联网、不得读取 `.env` 或真实 API Key。live 验证属于单独的人工验证，

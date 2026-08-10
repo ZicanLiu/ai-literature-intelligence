@@ -1,5 +1,8 @@
 # 架构说明
 
+本文专门记录仍被保留的 v0.2.0 baseline 架构。当前 W2/v0.3.0 Unified Pipeline 候选没有替换该入口；两者关系和最新架构见
+[`AI_PROJECT_ONBOARDING.md`](AI_PROJECT_ONBOARDING.md)。
+
 本项目第一版只实现一条清晰、稳定、可演示的数据流：
 
 ```text

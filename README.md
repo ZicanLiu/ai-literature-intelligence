@@ -1,12 +1,24 @@
 # astro-spectrum-literature-mvp
 
+## 开发者 / AI Agent 开始前必读
+
+如果准备开发新 Issue、让代码 AI 修改项目、从旧分支同步最新代码，或接手其他成员成果，请先阅读：
+
+1. [`AGENTS.md`](AGENTS.md)：高优先级开发规则与安全边界；
+2. [`AI Project Onboarding`](docs/project/AI_PROJECT_ONBOARDING.md)：当前架构、数据流和交接上下文；
+3. [`Current Status`](docs/CURRENT_STATUS.md)：分支、版本、验证和待办快照。
+
+不要直接根据旧代码、旧压缩包或历史聊天开始修改。
+
 ## 1. 项目简介
 
 本项目是一个面向 SRTP 第一阶段演示的 Python MVP，用于完成“AI 在天文光谱数据处理中的应用文献”的智能检索、结构化处理与初步文献排序。
 
 第一版目标是做出一条简单、稳定、可运行、适合本科生逐步读懂和二次开发的最小流程，而不是追求复杂系统。
 
-当前版本：**v0.2.0**。运行环境要求 **Python 3.10 或更高版本**。
+稳定 baseline：**v0.2.0**；当前 `main` 已包含 W2 五项模块，Issue #21 分支正在形成
+v0.3.0 统一集成候选。当前候选修改仍在 `feat/w2-unified-pipeline` 未提交工作区，尚未
+合并 `main` 或正式发布。运行环境要求 **Python 3.10 或更高版本**。
 
 当前验证状态：
 
@@ -95,6 +107,29 @@ python -m app.main --mode mock --keyword "machine learning stellar spectra" --ma
 python -m unittest discover -s tests/automated -p "test_*.py" -v
 ```
 
+### W2 统一 Pipeline（v0.3.0 候选）
+
+离线端到端示例不会联网，也不会读取 API Key：
+
+```powershell
+python -m app.run_pipeline --query-ids q01_broad_ml q02_classification `
+  --ranking-keyword "machine learning stellar parameter estimation spectra" `
+  --mode offline --max-results-per-query 10 `
+  --terms tests/fixtures/pipeline/domain_terms.csv `
+  --offline-fixture tests/fixtures/pipeline/offline_queries.json `
+  --labels tests/fixtures/pipeline/labels.csv
+```
+
+`--query-ids` 只决定获取范围；`--ranking-keyword` 必须显式提供，并统一用于合并候选集的
+baseline 与两阶段排序。详细说明见
+[`docs/project/UNIFIED_PIPELINE_GUIDE.md`](docs/project/UNIFIED_PIPELINE_GUIDE.md)。
+
+三条离线 batch 示例：
+
+```powershell
+python -m app.batch_runner --config configs/w2/integration_batch.example.json
+```
+
 ## 7. live 模式运行命令
 
 live 模式会请求 OpenAlex：
@@ -111,7 +146,10 @@ OPENALEX_API_KEY=your_openalex_api_key_here
 
 不要把真实 Key 写入代码、README、日志或 mock 数据。
 
-OpenAlex 的 `per_page` 范围为 1—100。本项目 v0.2 单次最多请求 100 条；如果 `--max-results` 大于 100，live 请求会自动限制为 100 条。当前暂不实现分页。
+OpenAlex 的 `per_page` 范围为 1—100。旧 `python -m app.main` 是 v0.2 baseline，单次
+最多请求 100 条且不分页；如果 `--max-results` 大于 100，会自动限制为 100 条。新的
+`python -m app.run_pipeline` 使用 OpenAlex v2，支持 cursor pagination 和多组
+acquisition query。
 
 ## 8. 输出文件说明
 
@@ -143,6 +181,7 @@ docs/reports/                周报、分析与 live 验证记录
 tests/{automated,manual}/     离线自动测试与手工测试记录
 outputs/baselines/           经确认的稳定基线
 outputs/experiments/         默认生成、通常不提交的独立实验
+outputs/batches/             默认生成、通常不提交的批量摘要
 ```
 
 ## 9. 初步排序公式
@@ -217,16 +256,18 @@ v0.2 没有使用 TF-IDF、Embedding、RAG、大模型 API、Crossref 二次校�
 - [第二周文件归属与协作边界](docs/collaboration/W2_FILE_OWNERSHIP.md)
 - [第二周数据接口约定](docs/project/W2_DATA_CONTRACTS.md)
 
-这些页面只建立协作目录和接口。OpenAlex v2、疑似重复复核、领域查询、质量门禁、
-TF-IDF 排序和批量集成仍处于计划或开发阶段，不属于当前 v0.2.0 稳定功能。
+OpenAlex v2、两级去重、领域查询、质量门禁和 TF-IDF 两阶段排序已经进入 `main`；统一
+Pipeline 与批量集成的实际状态、验证记录和限制见第二周成果索引。v0.2.0 入口继续保留
+作为兼容 baseline。
 
 ## 14. 后续可扩展方向
 
 - Crossref DOI 二次校验
-- 标题模糊去重
-- TF-IDF 或 Embedding 语义相关性
+- metadata fusion 与人工去重结论应用
+- BM25、Embedding、混合排序或 learning-to-rank 对照实验
 - 摘要大模型结构化提取
-- 人工评价样本
+- 扩大并复核人工评价 benchmark
+- Unified Pipeline 的 SQLite 与排序可视化
 - 更完善的价值评价模型
 - 多领域主题切换
 - Web 前端

@@ -16,6 +16,7 @@
 import hashlib
 import re
 import uuid
+from copy import deepcopy
 from difflib import SequenceMatcher
 
 from src.utils import current_timestamp, value_is_missing
@@ -148,7 +149,26 @@ def normalize_doi(doi: str) -> str:
     return d.strip()
 
 
-def find_exact_duplicates(papers: list[dict]) -> dict:
+PROVENANCE_LIST_FIELDS = (
+    "source_query_ids",
+    "source_run_ids",
+    "source_keywords",
+)
+
+
+def find_exact_duplicates(
+    papers: list[dict], *, merge_provenance: bool = False
+) -> dict:
+    """识别确定重复；可选地把重复来源合并到首条保留记录。
+
+    ``merge_provenance`` 默认关闭，因此旧 CLI 和既有调用的 first-seen 行为
+    保持不变。统一 Pipeline 显式开启该选项，把三个 list 型来源字段稳定
+    去重合并；除 provenance 外不做 metadata fusion。
+    """
+    # Pipeline 合并 provenance 时，输出语义是新阶段快照，不能通过共享 dict/list
+    # 反向污染 retrieval 阶段的 combined_papers。默认模式继续沿用旧对象语义。
+    working_papers = deepcopy(papers) if merge_provenance else papers
+
     exact_duplicates = []
     kept_papers = []
     seen_ids = {}
@@ -157,30 +177,41 @@ def find_exact_duplicates(papers: list[dict]) -> dict:
 
     stats = {"same_openalex_id": 0, "same_doi": 0, "same_title_no_id": 0}
 
-    for paper in papers:
+    for paper in working_papers:
         oa_id = (paper.get("openalex_id") or "").strip()
         doi = normalize_doi(paper.get("doi") or "")
         title_norm = normalize_title(paper.get("title") or "")
-        is_duplicate = False
-
+        matches: list[tuple[str, dict]] = []
         if oa_id and oa_id in seen_ids:
-            record = _build_exact_dup(paper, seen_ids[oa_id], "same_openalex_id")
-            exact_duplicates.append(record)
-            stats["same_openalex_id"] += 1
-            is_duplicate = True
+            matches.append(("same_openalex_id", seen_ids[oa_id]))
+        if doi and doi in seen_dois:
+            matches.append(("same_doi", seen_dois[doi]))
+        if title_norm and not oa_id and not doi and title_norm in seen_titles_no_id:
+            matches.append(("same_title_no_id", seen_titles_no_id[title_norm]))
 
-        if not is_duplicate and doi and doi in seen_dois:
-            record = _build_exact_dup(paper, seen_dois[doi], "same_doi")
-            exact_duplicates.append(record)
-            stats["same_doi"] += 1
-            is_duplicate = True
+        matched_entities = {id(kept_paper) for _rule, kept_paper in matches}
+        if merge_provenance and len(matched_entities) > 1:
+            raise ValueError(
+                "确定去重标识冲突：同一记录的 OpenAlex ID 与 DOI 指向不同保留实体；"
+                "已停止自动合并，请人工核查。"
+            )
 
-        if not is_duplicate and title_norm and not oa_id and not doi:
-            if title_norm in seen_titles_no_id:
-                record = _build_exact_dup(paper, seen_titles_no_id[title_norm], "same_title_no_id")
-                exact_duplicates.append(record)
-                stats["same_title_no_id"] += 1
-                is_duplicate = True
+        is_duplicate = bool(matches)
+        if is_duplicate:
+            reason, kept_paper = matches[0]
+            record = _build_exact_dup(paper, kept_paper, reason)
+            exact_duplicates.append(record)
+            stats[reason] += 1
+            if merge_provenance:
+                _merge_provenance_lists(kept_paper, paper)
+                # 已通过可靠 exact identifier 合并后，duplicate 自身携带的其他
+                # OpenAlex ID/DOI 也成为同一 kept entity 的 alias，供后续记录命中。
+                if oa_id:
+                    seen_ids[oa_id] = kept_paper
+                if doi:
+                    seen_dois[doi] = kept_paper
+                if title_norm and not oa_id and not doi:
+                    seen_titles_no_id[title_norm] = kept_paper
 
         if not is_duplicate:
             if oa_id:
@@ -196,6 +227,21 @@ def find_exact_duplicates(papers: list[dict]) -> dict:
         "kept_papers": kept_papers,
         "stats": stats,
     }
+
+
+def _merge_provenance_lists(kept_paper: dict, duplicate_paper: dict) -> None:
+    """只合并统一 Pipeline 的 list 型来源字段，并保持首次出现顺序。"""
+    for field in PROVENANCE_LIST_FIELDS:
+        merged: list[str] = []
+        for paper in (kept_paper, duplicate_paper):
+            value = paper.get(field, [])
+            values = value if isinstance(value, list) else [value]
+            for item in values:
+                text = str(item).strip() if item is not None else ""
+                if text and text not in merged:
+                    merged.append(text)
+        if merged:
+            kept_paper[field] = merged
 
 
 def _build_exact_dup(duplicate_paper: dict, kept_paper: dict, reason: str) -> dict:

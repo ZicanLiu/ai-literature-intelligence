@@ -254,13 +254,16 @@ def count_missing_fields(papers: list[dict]) -> dict:
     return missing_counts
 
 
-def add_preliminary_scores(papers: list[dict], keyword: str) -> list[dict]:
+def add_preliminary_scores(
+    papers: list[dict], keyword: str, *, reference_year: int | None = None
+) -> list[dict]:
     """
     为论文计算初步文献排序分。
 
     参数：
         papers：去重后的论文列表。
         keyword：用户输入的检索关键词。
+        reference_year：可选的固定近期程度参考年；None 保持旧运行时年份行为。
     返回：按 preliminary_score 从高到低排序后的论文列表。
     异常或特殊情况：论文列表为空时返回空列表；缺失字段按 0 分参与对应子分计算。
     """
@@ -272,7 +275,7 @@ def add_preliminary_scores(papers: list[dict], keyword: str) -> list[dict]:
     for paper in papers:
         relevance_score = calculate_relevance_score(paper, keyword)
         impact_score = calculate_impact_score(paper, max_log_citation)
-        recency_score = calculate_recency_score(paper)
+        recency_score = calculate_recency_score(paper, reference_year=reference_year)
         completeness_score = calculate_completeness_score(paper)
 
         # 初步排序分只是一条透明的辅助规则：
@@ -410,12 +413,15 @@ def calculate_impact_score(paper: dict, max_log_citation: float) -> float:
     return math.log1p(max(0, citation_count)) / max_log_citation
 
 
-def calculate_recency_score(paper: dict) -> float:
+def calculate_recency_score(
+    paper: dict, reference_year: int | None = None
+) -> float:
     """
     根据发表年份计算近期程度分。
 
     参数：
         paper：单篇论文。
+        reference_year：可选的固定评分参考年；None 保持旧行为，使用运行时当前年。
     返回：0 到 1 之间的近期程度分。
     异常或特殊情况：年份缺失时返回 0；未来年份按 1 分处理。
     """
@@ -423,7 +429,16 @@ def calculate_recency_score(paper: dict) -> float:
     if publication_year is None:
         return 0.0
 
-    current_year = datetime.now().year
+    if reference_year is None:
+        current_year = datetime.now().year
+    elif (
+        isinstance(reference_year, bool)
+        or not isinstance(reference_year, int)
+        or not 1000 <= reference_year <= 9999
+    ):
+        raise ValueError("reference_year 必须是 1000 到 9999 的整数或 None。")
+    else:
+        current_year = reference_year
     age = current_year - publication_year
     if age <= 0:
         return 1.0

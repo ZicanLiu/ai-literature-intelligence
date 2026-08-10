@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "batch_name": "w2-offline-integration-example",
+  "continue_on_error": true,
+  "terms_path": "tests/fixtures/pipeline/domain_terms.csv",
+  "items": [
+    {
+      "item_id": "broad_ml",
+      "enabled": true,
+      "acquisition_query_ids": ["q01_broad_ml"],
+      "ranking_keyword": "machine learning stellar parameter estimation spectra",
+      "mode": "offline",
+      "max_results_per_query": 10,
+      "offline_fixture_path": "tests/fixtures/pipeline/offline_queries.json"
+    },
+    {
+      "item_id": "classification",
+      "enabled": true,
+      "acquisition_query_ids": ["q02_classification"],
+      "ranking_keyword": "machine learning stellar parameter estimation spectra",
+      "mode": "offline",
+      "max_results_per_query": 10,
+      "offline_fixture_path": "tests/fixtures/pipeline/offline_queries.json"
+    },
+    {
+      "item_id": "combined_queries",
+      "enabled": true,
+      "acquisition_query_ids": ["q01_broad_ml", "q02_classification"],
+      "ranking_keyword": "machine learning stellar parameter estimation spectra",
+      "mode": "offline",
+      "max_results_per_query": 10,
+      "offline_fixture_path": "tests/fixtures/pipeline/offline_queries.json",
+      "labels_path": "tests/fixtures/pipeline/labels.csv"
+    }
+  ]
+}
