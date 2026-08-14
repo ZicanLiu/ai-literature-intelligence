@@ -255,6 +255,34 @@ class SecurityAndOrchestrationTests(unittest.TestCase):
         self.assertEqual(result.status, "failed")
         self.assertTrue(any("标签非法" in error for error in result.errors))
 
+    def test_full_gate_accepts_w4_digit_annotation_labels(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            make_minimal_project(root)
+            path = root / "data/annotation_tasks/w4/annotations/puzhengjie.csv"
+            path.parent.mkdir(parents=True)
+            path.write_text(
+                "pair_id,label\nw4_rq01_001,2\nw4_rq01_002,1\n"
+                "w4_rq01_003,0\nw4_rq01_004,?\n",
+                encoding="utf-8",
+            )
+            result = run_quality_gate(root, "full", run_tests=False, check_imports=False)
+        self.assertEqual(result.status, "passed")
+
+    def test_full_gate_still_rejects_invalid_w4_annotation_labels(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            make_minimal_project(root)
+            path = root / "data/annotation_tasks/w4/annotations/puzhengjie.csv"
+            path.parent.mkdir(parents=True)
+            path.write_text(
+                "pair_id,label\nw4_rq01_001,3\n",
+                encoding="utf-8",
+            )
+            result = run_quality_gate(root, "full", run_tests=False, check_imports=False)
+        self.assertEqual(result.status, "failed")
+        self.assertTrue(any("标签非法" in error for error in result.errors))
+
     def test_invalid_json_fails_without_exposing_content(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             path = Path(temporary_directory) / "broken.json"

@@ -24,6 +24,7 @@ from src.validation import (
     validate_tracked_experiments,
     validate_unique_ids,
 )
+from src.annotation_validation import VALID_LABELS
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -67,6 +68,19 @@ def should_require_unique_openalex_id(path: Path) -> bool:
         parts[:3] == ("data", "analysis", "w2_dedup")
         and path.stem.casefold().startswith("deduplicated")
     )
+
+
+# W4 标注任务目录使用数字 Query Relevance 等级（2/1/0/?），
+# 与 W2 的中文相关性标签词汇不同；单一事实来源是 src.annotation_validation。
+W4_ANNOTATION_DATA_PREFIX = ("data", "annotation_tasks", "w4")
+
+
+def allowed_relevance_labels(path: Path) -> set[str]:
+    """按数据契约选择 label 列的允许词汇。"""
+    parts = tuple(part.casefold() for part in path.parts)
+    if parts[:3] == W4_ANNOTATION_DATA_PREFIX:
+        return set(VALID_LABELS)
+    return set(ALLOWED_RELEVANCE_LABELS)
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -190,7 +204,7 @@ def _run_full_checks(root: Path, files: Sequence[Path], add_check) -> None:
                     validate_label_values(
                         rows,
                         label_column,
-                        ALLOWED_RELEVANCE_LABELS,
+                        allowed_relevance_labels(path),
                         path.as_posix(),
                     ),
                 )
