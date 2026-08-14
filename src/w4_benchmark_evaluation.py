@@ -47,6 +47,9 @@ W4_LABEL_TO_GRADE = {
 # 待讨论与空标签都没有确定等级，评价时按未标注处理。
 W4_UNGRADED_LABELS = {"?", ""}
 
+# W4 允许的非空标签取值；空标签表示未标注（partial annotation），由加载逻辑单独跳过。
+W4_ALLOWED_LABELS = frozenset({"2", "1", "0", "?"})
+
 # 评价截断位置。只保留 Issue 要求的 K，不额外增加指标数量。
 METRIC_KS = (5, 10)
 
@@ -116,8 +119,11 @@ def load_benchmark_labels(label_file: Path) -> dict[str, str]:
     参数：
         label_file：包含 pair_id 和 label 两列的 CSV 路径。个人标注 CSV 同样满足
             该契约，因此也能直接作为输入（覆盖率由 coverage 指标真实反映）。
-    返回：pair_id 到标签原文的字典；label 为空的行按未标注跳过。
-    异常或特殊情况：文件不存在或缺少必需列时抛出 ValueError。
+    返回：pair_id 到标签原文的字典；label 为空的行按未标注跳过（partial
+        annotation 允许，不要求覆盖全部 pair）。
+    异常或特殊情况：文件不存在、缺少必需列、pair_id 重复（不允许
+        last-row-wins）、有标签但缺 pair_id、或非空标签不在 2/1/0/? 内时，
+        抛出 ValueError。
     """
     label_path = Path(label_file)
     if not label_path.is_file():
@@ -126,11 +132,27 @@ def load_benchmark_labels(label_file: Path) -> dict[str, str]:
     if not {"pair_id", "label"} <= set(_fields):
         raise ValueError("benchmark labels CSV 必须包含 pair_id 和 label 两列。")
     labels: dict[str, str] = {}
+    seen_pair_ids: set[str] = set()
     for row in rows:
         pair_id = (row.get("pair_id") or "").strip()
         label = (row.get("label") or "").strip()
-        if pair_id and label:
-            labels[pair_id] = label
+        if not pair_id:
+            if label:
+                raise ValueError("benchmark labels 存在有标签但缺少 pair_id 的行。")
+            continue
+        if pair_id in seen_pair_ids:
+            raise ValueError(
+                f"benchmark labels pair_id 重复：{pair_id!r}，不允许 last-row-wins。"
+            )
+        seen_pair_ids.add(pair_id)
+        if not label:
+            continue
+        if label not in W4_ALLOWED_LABELS:
+            raise ValueError(
+                f"benchmark labels 包含非法标签：pair_id={pair_id!r}, "
+                f"label={label!r}。允许的取值：2/1/0/? 或空。"
+            )
+        labels[pair_id] = label
     return labels
 
 
@@ -165,6 +187,79 @@ def build_source_index(source_file: Path) -> dict[str, dict[str, str]]:
         if openalex_id:
             index[openalex_id] = row
     return index
+
+
+def validate_benchmark_inputs(
+    pool_rows: list[dict[str, Any]],
+    labels: dict[str, str],
+    research_queries: dict[str, Any],
+) -> None:
+    """校验 benchmark 输入契约；违反任一约束时抛出 ValueError。
+
+    - candidate pool 每行必须包含 ``REQUIRED_POOL_FIELDS``，且 pair_id 唯一；
+    - 同一 RQ 内 (research_query_id, openalex_id) 不允许重复；
+    - candidate pool 不允许未知 RQ，正式 research_queries.json 中的 RQ 也不能
+      整个缺失；
+    - label 的 pair_id 必须存在于 candidate pool。
+
+    partial annotation 本身允许：labels 不要求覆盖 candidate pool 的全部 pair。
+    """
+    formal_query_ids = [
+        str(query["research_query_id"]) for query in research_queries["queries"]
+    ]
+    known_query_ids = set(formal_query_ids)
+
+    seen_pair_ids: set[str] = set()
+    seen_query_works: set[tuple[str, str]] = set()
+    pool_query_ids: set[str] = set()
+    for row in pool_rows:
+        missing = REQUIRED_POOL_FIELDS.difference(row)
+        if missing:
+            raise ValueError(
+                "candidate pool 缺少字段：" + ", ".join(sorted(missing))
+            )
+        pair_id = str(row.get("pair_id") or "").strip()
+        query_id = str(row.get("research_query_id") or "").strip()
+        openalex_id = str(row.get("openalex_id") or "").strip()
+        if not pair_id:
+            raise ValueError("candidate pool 存在缺少 pair_id 的行。")
+        if not openalex_id:
+            raise ValueError(
+                f"candidate pool 存在缺少 openalex_id 的行：{pair_id!r}。"
+            )
+        if pair_id in seen_pair_ids:
+            raise ValueError(f"candidate pool pair_id 重复：{pair_id!r}。")
+        seen_pair_ids.add(pair_id)
+        if query_id not in known_query_ids:
+            raise ValueError(
+                f"candidate pool 包含未知 research_query_id：{query_id!r}。"
+            )
+        pool_query_ids.add(query_id)
+        query_work = (query_id, openalex_id)
+        if query_work in seen_query_works:
+            raise ValueError(
+                "同一 RQ 内 (research_query_id, openalex_id) 重复："
+                f"{query_id!r}, {openalex_id!r}。"
+            )
+        seen_query_works.add(query_work)
+
+    missing_queries = [
+        query_id for query_id in formal_query_ids if query_id not in pool_query_ids
+    ]
+    if missing_queries:
+        raise ValueError(
+            "candidate pool 缺失正式 research query："
+            + ", ".join(missing_queries)
+            + "。"
+        )
+
+    unknown_label_ids = sorted(set(labels).difference(seen_pair_ids))
+    if unknown_label_ids:
+        raise ValueError(
+            "benchmark labels 包含不在 candidate pool 中的 pair_id："
+            + ", ".join(unknown_label_ids)
+            + "。"
+        )
 
 
 def rank_query_papers(
@@ -251,18 +346,21 @@ def compute_method_metrics(
 def average_metrics(
     metrics_list: list[dict[str, float | int | None]],
 ) -> dict[str, float | int | None]:
-    """对多个 RQ 的指标做 macro average；None 值跳过，全部为 None 时保持 None。"""
+    """对多个 RQ 的指标做 macro average。
+
+    任一 RQ 的指标为 None（该截断下无确定等级）时，macro 对应指标同样保持
+    None：不能用部分 RQ 的平均冒充全部 Research Query 的整体结果，避免
+    partial judgement 被误读成三组 Query 的平均。
+    """
     averaged: dict[str, float | int | None] = {}
     for key in METRIC_KEYS:
-        values = [
-            float(metrics[key])
-            for metrics in metrics_list
-            if metrics.get(key) is not None
-        ]
-        if not values:
+        values = [metrics.get(key) for metrics in metrics_list]
+        if not values or any(value is None for value in values):
             averaged[key] = None
         else:
-            averaged[key] = round(sum(values) / len(values), 6)
+            averaged[key] = round(
+                sum(float(value) for value in values) / len(values), 6
+            )
     return averaged
 
 
@@ -271,29 +369,34 @@ def classify_error_case(
 ) -> list[str]:
     """按 Issue 第八节识别候选错误类型，只给类型代码，不给最终结论。
 
-    A：人工高度相关，但 two-stage 排名靠后；
+    A：人工高度相关，但至少一种方法将其排出 Top-K；
     B：人工不相关，但进入任一方法的 Top-K；
     C：baseline 排名高、two-stage 明显降低；
     D：two-stage 排名高、baseline 较低；
-    E：人工标注为待讨论（两种方法都难以给出可靠判断）。
+    E：共同失败——高度相关但两种方法都在 Top-K 外，或不相关但两种方法都进入
+        Top-K。E 可以与 A/B 同时出现。
+
+    ``?`` 表示人工证据不足，不等于「两种方法都困难」，不触发 E。
 
     返回命中类型列表（可能为空，表示未命中任何候选类型）。
     """
     label_text = str(human_label or "").strip()
     grade = parse_w4_label(label_text)
     rank_delta = baseline_rank - two_stage_rank
+    baseline_in_top_k = baseline_rank <= ERROR_TOP_K
+    two_stage_in_top_k = two_stage_rank <= ERROR_TOP_K
     types: list[str] = []
-    if grade == 2 and two_stage_rank > ERROR_TOP_K:
+    if grade == 2 and (not baseline_in_top_k or not two_stage_in_top_k):
         types.append("A")
-    if grade == 0 and (
-        baseline_rank <= ERROR_TOP_K or two_stage_rank <= ERROR_TOP_K
-    ):
+    if grade == 0 and (baseline_in_top_k or two_stage_in_top_k):
         types.append("B")
-    if baseline_rank <= ERROR_TOP_K and rank_delta <= -ERROR_RANK_DELTA_THRESHOLD:
+    if baseline_in_top_k and rank_delta <= -ERROR_RANK_DELTA_THRESHOLD:
         types.append("C")
-    if two_stage_rank <= ERROR_TOP_K and rank_delta >= ERROR_RANK_DELTA_THRESHOLD:
+    if two_stage_in_top_k and rank_delta >= ERROR_RANK_DELTA_THRESHOLD:
         types.append("D")
-    if label_text == "?":
+    if (grade == 2 and not baseline_in_top_k and not two_stage_in_top_k) or (
+        grade == 0 and baseline_in_top_k and two_stage_in_top_k
+    ):
         types.append("E")
     return types
 
@@ -350,14 +453,13 @@ def evaluate_benchmark(
                 },
             },
             "macro": {"baseline": {指标...}, "two_stage": {指标...}},
+            "reference_year": int,
         }
+
+    输入契约由 ``validate_benchmark_inputs`` 强制校验；任一正式 RQ 对某指标
+    无定义时，macro 对应指标保持 None（见 ``average_metrics``）。
     """
-    if pool_rows:
-        missing = REQUIRED_POOL_FIELDS.difference(set(pool_rows[0]))
-        if missing:
-            raise ValueError(
-                "candidate pool 缺少字段：" + ", ".join(sorted(missing))
-            )
+    validate_benchmark_inputs(pool_rows, labels, research_queries)
 
     pool_by_query: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in pool_rows:
@@ -388,19 +490,44 @@ def evaluate_benchmark(
         "baseline": average_metrics([per_query[qid]["baseline"] for qid in query_ids]),
         "two_stage": average_metrics([per_query[qid]["two_stage"] for qid in query_ids]),
     }
-    return {"per_query": per_query, "macro": macro}
+    return {
+        "per_query": per_query,
+        "macro": macro,
+        "reference_year": reference_year,
+    }
 
 
 def build_metric_rows(result: dict[str, Any]) -> list[dict[str, Any]]:
-    """把评价结果展平成 CSV 行：每个 RQ × 方法一行，最后是 macro 汇总。"""
+    """把评价结果展平成 CSV 行：每个 RQ × 方法一行，最后是 macro 汇总。
+
+    每行保留 reference_year / pair_count / labeled_count，方便复现实验并判断
+    partial coverage；macro 行的 pair/labeled 为全部 RQ 合计。
+    """
+    reference_year = result.get("reference_year")
     rows: list[dict[str, Any]] = []
+    total_pair_count = 0
+    total_labeled_count = 0
     for query_id, query_result in result["per_query"].items():
+        total_pair_count += query_result["pair_count"]
+        total_labeled_count += query_result["labeled_count"]
         for method in ("baseline", "two_stage"):
-            row: dict[str, Any] = {"research_query_id": query_id, "method": method}
+            row: dict[str, Any] = {
+                "research_query_id": query_id,
+                "method": method,
+                "reference_year": reference_year,
+                "pair_count": query_result["pair_count"],
+                "labeled_count": query_result["labeled_count"],
+            }
             row.update(query_result[method])
             rows.append(row)
     for method in ("baseline", "two_stage"):
-        row = {"research_query_id": "macro", "method": method}
+        row = {
+            "research_query_id": "macro",
+            "method": method,
+            "reference_year": reference_year,
+            "pair_count": total_pair_count,
+            "labeled_count": total_labeled_count,
+        }
         row.update(result["macro"][method])
         rows.append(row)
     return rows

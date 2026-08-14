@@ -37,7 +37,13 @@ DEFAULT_SOURCE = (
 )
 DEFAULT_RESEARCH_QUERIES = PROJECT_ROOT / "configs" / "w4" / "research_queries.json"
 
-METRIC_CSV_FIELDS = ["research_query_id", "method"] + METRIC_KEYS
+METRIC_CSV_FIELDS = [
+    "research_query_id",
+    "method",
+    "reference_year",
+    "pair_count",
+    "labeled_count",
+] + METRIC_KEYS
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -140,6 +146,7 @@ def main(argv: list[str] | None = None) -> int:
     _write_csv(error_cases_csv, ERROR_CASE_FIELDS, error_rows)
     print(f"已保存 error case 底稿：{_display(error_cases_csv)}")
 
+    print(f"\nreference_year：{result['reference_year']}（baseline recency_score 固定参考年）")
     print("\n按 Research Question 分开评价：")
     for query_id, query_result in result["per_query"].items():
         print(f"  {query_id}（pair {query_result['pair_count']}，labeled {query_result['labeled_count']}）")
@@ -167,6 +174,16 @@ def main(argv: list[str] | None = None) -> int:
             f"Cov@10={_fmt(metrics['coverage_at_10'])} "
             f"irr@5={metrics['irrelevant_top_5']} "
             f"irr@10={metrics['irrelevant_top_10']}"
+        )
+    macro_incomplete = any(
+        result["macro"][method].get(key) is None
+        for method in ("baseline", "two_stage")
+        for key in METRIC_KEYS
+    )
+    if macro_incomplete:
+        print(
+            "\n注意：benchmark judgement 尚不完整——至少一个正式 Research Query "
+            "缺少有效标签，macro 中对应指标为 None，不能当作三组 Query 的平均值。"
         )
     print("\n说明：指标为 judged（condensed）口径；None 表示该截断下无确定等级，"
           "不代表 0 分。error case 只给类型代码，不做原因结论。")
