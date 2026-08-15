@@ -1,15 +1,15 @@
 finding_id,finding_type,pair_ids,openalex_ids,description,is_problem,recommendation
-A01,unique_paper_count,,"60 条 pair（含跨 RQ）",候选池 60 个 pair 对应 57 篇唯一 OpenAlex work，与 manifest 一致,no,无需处理
+A01,unique_record_vs_entity,,"60 条 pair（含跨 RQ）",候选池 60 个 query-paper pair 对应 57 个 unique OpenAlex work records（OpenAlex ID）；其中发现 2 对高置信 same-paper entity alias，若未来完成 canonical entity consolidation，约对应 55 个论文实体,no,报告应区分 OpenAlex record 与 canonical entity，不把 57 当作最终论文实体数
 A02,cross_rq_reuse,"w4_rq01_011, w4_rq02_014","https://openalex.org/W2777402735",Carbon Stars Identified from LAMOST DR4 同时出现在 RQ01（分类）与 RQ02（参数），合理的 query-dependent reuse,no,保持 query-paper pair 为单位，不按论文去重
 A03,cross_rq_reuse,"w4_rq01_006, w4_rq03_020","https://openalex.org/W4384201335",Machine learning in solar physics 同时出现在 RQ01 与 RQ03，review 类论文对两个问题均可能有交集,no,保持 query-paper pair 为单位
 A04,cross_rq_reuse_content_concern,"w4_rq01_014, w4_rq03_003","https://openalex.org/W3155899199",无线通信 AMR 综述同时进入 RQ01 与 RQ03，内容与恒星光谱无关，属于词汇级误命中,no,结构上不违反去重边界；建议标注阶段如实判为 0
-A05,exact_dup_missed_same_rq,"w4_rq02_002, w4_rq02_011","https://openalex.org/W3106471209, https://openalex.org/W2795071146",同一 RQ02 内两篇论文标题完全相同（Dissecting stellar chemical abundance space with t-SNE），DOI 仅差 /pdf 后缀，属同一实体却未被 exact dedup 捕获,yes,记录后提交公共复核；不在 W4 内改 dedup
-A06,exact_dup_missed_same_rq,"w4_rq03_004, w4_rq03_011","https://openalex.org/W3103819337, https://openalex.org/W2607233176",同一 RQ03 内两篇论文标题完全相同（Unsupervised feature-learning for galaxy SEDs），DOI 仅差 /pdf 后缀，属同一实体却未被 exact dedup 捕获,yes,记录后提交公共复核；不在 W4 内改 dedup
-A07,doi_suffix_normalization,,"见 A05/A06",src/deduplication.py 的 normalize_doi 只去除前缀 https://doi.org/ 等，不去除 /pdf 后缀，导致 10.1051/.../201833099 与 .../201833099/pdf 被判为不同 DOI,no,记录为后续 dedup 改进建议，不在 W4 内修改
+A05,entity_alias_outside_contract,"w4_rq02_002, w4_rq02_011","https://openalex.org/W3106471209, https://openalex.org/W2795071146",同一 RQ02 内两篇标题相同、DOI 主体相同（仅差 /pdf 后缀）但 OpenAlex ID 不同的记录，属高置信 same-paper entity alias；当前 normalize_doi 不去 /pdf、suspected 跳过双侧非空不同 DOI，故既未命中 same_doi 也未进入 suspected queue，属当前 contract 尚未覆盖的 alias,no,记录为后续 DOI canonicalization / dedup 改进项；不在 W4 内改 dedup
+A06,entity_alias_outside_contract,"w4_rq03_004, w4_rq03_011","https://openalex.org/W3103819337, https://openalex.org/W2607233176",同一 RQ03 内两篇标题相同、DOI 主体相同（仅差 /pdf 后缀）但 OpenAlex ID 不同的记录，属高置信 same-paper entity alias；当前 contract 未覆盖，未进入 exact 也未进入 suspected,no,记录为后续 DOI canonicalization / dedup 改进项；不在 W4 内改 dedup
+A07,doi_suffix_normalization,,"见 A05/A06",src/deduplication.py 的 normalize_doi 只去除前缀 https://doi.org/ 等、不去除 /pdf 后缀，导致 10.1051/.../201833099 与 .../201833099/pdf 被判为不同 DOI，因此不命中 same_doi；同时 suspected 对双侧非空不同 DOI 直接跳过,no,记录为后续 DOI canonicalization 改进建议，不在 W4 内修改
 A08,same_rq_duplicate_check,,"(无)",未发现同一 RQ 下 openalex_id 重复的记录,no,无需处理
 A09,doi_conflict_check,,"(无)",未发现同一 DOI 指向不同 openalex_id 的冲突（strip /pdf 前）,no,无需处理
-A10,suspected_boundary_respected,"w4_rq01_001, w4_rq01_019",,Stellar Classification by Machine Learning 与 Stellar classification from single-band imaging 标题相似度 0.73，但研究对象/方法不同，未进入 exact 合并，符合疑似边界,no,保持现状
-A11,title_similar_not_auto_deleted,"w4_rq01_001, w4_rq01_009",,Stellar Classification by Machine Learning 与 miniJPAS star-galaxy classification 相似度 0.67，属不同任务，未自动删除,no,保持现状
+A10,title_similarity_example,"w4_rq01_001, w4_rq01_019",,人工审计中的 title-similarity 示例：Stellar Classification by Machine Learning 与 Stellar classification from single-band imaging 标题相似度 0.73，研究对象/方法不同，仅凭标题不能安全合并,no,作为标题相似不能安全合并的示例，不暗示已进入 suspected queue
+A11,title_similarity_example,"w4_rq01_001, w4_rq01_009",,人工审计中的 title-similarity 示例：Stellar Classification by Machine Learning 与 miniJPAS star-galaxy classification 相似度 0.67，属不同任务，仅凭标题不能安全合并,no,作为标题相似不能安全合并的示例，不暗示已进入 suspected queue
 A12,missing_abstract,"w4_rq01_017","https://openalex.org/W2078829410",标题正常但摘要为空，影响人工标注判断,no,标注时按标题+外部页面判断，必要时标 ?
 A13,missing_abstract,"w4_rq02_001","https://openalex.org/W1653774948",Nucleosynthesis in Stellar Explosions（1984）摘要为空,no,标注时查外部页面，必要时标 ?
 A14,missing_abstract,"w4_rq02_015","https://openalex.org/W3161474384",Internal mixing of rotating stars 摘要为空,no,标注时查外部页面，必要时标 ?
