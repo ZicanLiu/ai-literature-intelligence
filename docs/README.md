@@ -50,8 +50,9 @@
 - [W4 versioned judged-set artifact](../data/benchmarks/w4_query_relevance/README.md)
 
 W4 六人 annotation、Agreement Analyzer、entity/provenance/query-boundary audit 和 evaluator
-已进入 `main`。当前 60-pair judged set 仍是 `proposed/draft`：3 个分歧已有 AI proposal，
-但尚待独立人工 adjudication；不得用于正式 W5 实验或称为 gold ground truth。
+已进入 `main`。60-pair Blind AI Audit 与独立人工 review 已完成，
+`w4_query_relevance_pilot_v0.1.0` 状态为 `approved` 并通过 strict validator；该集合仍不得称为
+gold ground truth。
 
 ## live 验证
 

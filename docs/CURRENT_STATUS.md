@@ -53,28 +53,32 @@ Kappa `0.9343`。RQ01/RQ02 各 10/10 一致；RQ03 为 7/10 一致。
 
 当前 versioned artifact 位于：
 
-`data/benchmarks/w4_query_relevance/v0.1.0-draft.1/`
+`data/benchmarks/w4_query_relevance/v0.1.0/`
 
-准确状态是 **proposed/draft**，不是 approved benchmark：
+准确状态是 **approved**，正式版本为 `w4_query_relevance_pilot_v0.1.0`：
 
 - 评价目标仅为 Query Relevance；标签为 `0/1/2` graded relevance；
 - 共 60/60 record-level query-paper pair，每个 Research Query 20/20；
-- 30 条来自 primary single annotation，保留 `single_annotation` provenance；
-- 27 条双标一致，直接形成共同 judgement；
-- 3 条 RQ03 分歧仍没有 human final label；
-- 3 条均有明确标记为 `pending_human_review` 的 AI adjudication proposal；
+- 30 条来自 primary single annotation，27 条来自双标一致，3 条来自原始 disagreement；
+- 独立 Blind AI Audit 在读取人工答案前完成并冻结；与 57 条当时可用 human final label 比较后，
+  54 条一致、3 条不一致；当时其余 3 条尚无原始 human final label；
+- 六条 review queue 均由非该 pair 原 annotator 的人类 reviewer 完成：3 条原 disagreement
+  proposal 获 approve，3 条既有 judgement 经明确 `modify` 决定更新；
+- 所有 60 条 final label 均为 `0/1/2`，无 `?`、空值或 `pending_human_review`；
 - manifest 固定 candidate pool、assignment、query config、来源样例、pool manifest、六人
-  annotation、judgements 和 proposals 的 SHA-256，并记录完整冻结 `input_set_identity`；
-- draft 的 package-level approval checklist 全部保持未完成，不可直接用于正式实验。
+  annotation、judgements、proposals 和 Blind AI Audit provenance 的 SHA-256，并记录完整冻结
+  `input_set_identity`；
+- approved manifest 绑定被审核 parent draft；manifest SHA-256 为
+  `d503f5c2448409a9433bf3ffeada3890c7ddb31237bc7c95c529014b5fb8d094`。
 
 陈星妤的 15 条已由本人实际审核确认；本次只修正 review provenance，不改变其标签。贾馥诚
-的标签是带逐行 AI assistance 记录的人工判断；仓库不声称存在 GitHub 本人再确认记录，正式
-promotion checklist 仍要求核对该 provenance。
+的标签是带逐行 AI assistance 记录的人工判断；团队已核对该 provenance，仓库仍不声称存在
+GitHub 本人再确认记录。
 
 默认 `python -m app.validate_w4_benchmark` 是 strict，只接受 approved、无 draft 后缀、
 60/60 final label、完整人工 adjudication/approval checklist 和冻结 hash 完全匹配的 package。
-Approved package 还必须绑定实际被审核 draft 的 manifest hash/input-set identity。当前 draft 只能用
-`--allow-draft` 做结构复核，正式 evaluator 会拒绝它。
+当前 approved package 已通过 strict validator；保留的 parent draft 仍只能用 `--allow-draft`
+做结构复核，正式 evaluator 会拒绝 draft。
 
 ## Entity alias 与评价单位
 
@@ -92,7 +96,7 @@ pool、不静默删除 alias、不扩大 dedup；未来可另建 canonicalized/s
 
 ```powershell
 python -m app.evaluate_w4_benchmark --strict `
-  --benchmark-manifest <approved-manifest.json> `
+  --benchmark-manifest data/benchmarks/w4_query_relevance/v0.1.0/manifest.json `
   --output-dir <experiment-output-dir>
 ```
 
@@ -110,25 +114,21 @@ Git revision/clean state、Python/依赖/平台、benchmark version/hash/input i
 
 - 六个 annotation validator：全部通过；
 - Agreement Analyzer：`complete`，30/30 comparable，3 个 disagreement；
-- agreement/evaluator/strict validator 定向测试：84 项通过；
-- 全量离线自动测试：300 项通过，0 failure / 0 error / 0 skipped；
-- Basic Quality Gate：扫描 226 个文件，0 error / 0 warning，PASSED；
-- Full Quality Gate：扫描 226 个文件，0 error / 3 个既有历史 warning，PASSED；
+- approved benchmark strict validator：60/60，通过；
+- agreement/evaluator/strict validator 定向测试：87 项通过；
+- 全量离线自动测试：303 项通过，0 failure / 0 error / 0 skipped；
+- Basic Quality Gate：扫描 235 个文件，0 error / 0 warning，PASSED；
+- Full Quality Gate：扫描 235 个文件，0 error / 3 个既有历史 warning，PASSED；
 - 所有测试使用本地 fixture 或已提交样例，没有新增 live 请求。
 
 Full Gate 的三个 warning 与此前公共基线一致：W1 一处历史 CSV 结构问题、
 `data/manual/relevance_labels_w1.csv` 的 19 个旧 ID 未对齐当前统一样例、一个历史已跟踪
 experiment `openalex_stellar_spectra_60`。本次没有修改这些历史 evidence，也没有新增 warning。
 
-## 下一步（进入 W5 前的最小人工工作）
+## 下一步
 
-1. 独立 reviewer 对 3 个 proposal 逐条 approve 或 modify，并记录 final label、姓名、时间和说明；
-2. 核对贾馥诚的“人工判断 + AI assistance” provenance，不补造 GitHub 确认；
-3. 复制为新的无 draft 版本，更新 version/status/artifact hashes，并绑定被审核 draft manifest
-   hash 与 `input_set_identity`；
-4. 填写 package-level approval metadata/checklist，运行默认 strict benchmark validator；
-5. 人工检查本分支完整 diff，合并后在 clean Git 工作树中开始 W5 算法实验；
-6. W5 比较固定同一 candidate/query/benchmark/reference year，不查看当前 label 调权重。
-
-在上述 1–4 完成前，可以审查协议和运行 smoke/partial 测试，但不得把当前 draft 作为 approved
-benchmark 或据此宣布算法优劣。
+1. 人工检查本分支完整 diff；
+2. 合并后在 clean Git 工作树中，使用 approved manifest 开始 W5 正式算法实验；
+3. W5 比较固定同一 candidate/query/benchmark/reference year，不查看当前 label 调权重；
+4. 继续把该集合准确表述为 **human annotation + independent blind AI evidence audit + human
+   review/adjudication**，不称为 gold standard、expert ground truth 或 pure human ground truth。

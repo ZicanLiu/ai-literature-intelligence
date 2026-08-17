@@ -1,8 +1,9 @@
 {
   "schema_version": "1.0",
   "comparison_version": "w4_blind_ai_audit_comparison_v0.1",
-  "status": "pending_human_review",
+  "status": "human_review_completed",
   "completed_at": "2026-08-17T17:56:06+08:00",
+  "human_review_completed_at": "2026-08-17T18:11:25+08:00",
   "comparison_scope": "60 frozen W4 query-paper pairs",
   "blind_audit": {
     "manifest_path": "data/analysis/w4_blind_ai_audit/manifest_v0.1.json",
@@ -25,7 +26,7 @@
     "high_confidence_disagreement_count": 2,
     "low_confidence_audit_count": 0,
     "required_review_count": 6,
-    "reviewer_completed_count": 0
+    "reviewer_completed_count": 6
   },
   "results_by_query": {
     "rq01_stellar_classification": {
@@ -69,7 +70,15 @@
       "w4_rq03_011": 0
     },
     "blind_ai_matches_existing_proposal_count": 3,
-    "human_review_still_required": true
+    "human_review_still_required": false
+  },
+  "human_review_decisions": {
+    "w4_rq02_013": {"decision": "modify", "final_label": 0, "reviewer": "liuzican"},
+    "w4_rq03_005": {"decision": "modify", "final_label": 0, "reviewer": "liuzican"},
+    "w4_rq03_006": {"decision": "approve", "final_label": 0, "reviewer": "liuzican"},
+    "w4_rq03_007": {"decision": "modify", "final_label": 1, "reviewer": "liuzican"},
+    "w4_rq03_009": {"decision": "approve", "final_label": 0, "reviewer": "huangbin"},
+    "w4_rq03_011": {"decision": "approve", "final_label": 0, "reviewer": "liuzican"}
   },
   "artifacts": {
     "comparison": {
@@ -78,17 +87,15 @@
     },
     "review_queue": {
       "path": "data/analysis/w4_blind_ai_audit/review_queue_v0.1.csv",
-      "sha256": "55f77d665fac60e6e724b2b83ff55de2599747d2da58dc0cbba1b634f9a58e35",
-      "reviewer_fields_initially_blank": true
+      "sha256": "718a12bc499d7cc65a4014baab6ee22584d3056d721076aa39ac9eb419aaf65e",
+      "reviewer_fields_initially_blank": true,
+      "reviewer_completed_count": 6
     }
   },
   "benchmark_promotion": {
-    "approved_benchmark_generated": false,
-    "reason": "Six required human reviews remain incomplete; three of them are the original pending adjudications and three are newly identified human-final versus blind-AI conflicts.",
-    "minimum_remaining_work": [
-      "A human reviewer records decision, final label, note, reviewer identity and reviewed_at for all six review-queue rows.",
-      "The existing Jia Fucheng annotation provenance checklist is verified without inventing a confirmation record.",
-      "Only then create a new non-draft approved package bound to the reviewed parent draft and blind-audit provenance, and run strict validation."
-    ]
+    "approved_benchmark_generated": true,
+    "approved_version": "w4_query_relevance_pilot_v0.1.0",
+    "approved_manifest_path": "data/benchmarks/w4_query_relevance/v0.1.0/manifest.json",
+    "description": "human annotation + independent blind AI evidence audit + independent human review/adjudication"
   }
 }

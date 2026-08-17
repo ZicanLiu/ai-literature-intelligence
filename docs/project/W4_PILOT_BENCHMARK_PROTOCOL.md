@@ -1,6 +1,6 @@
 # W4 Pilot Query Relevance Benchmark 收口协议
 
-状态：协议有效；当前 judged-set artifact 为 `proposed/draft`，尚未 approved。
+状态：协议有效；`w4_query_relevance_pilot_v0.1.0` 已 approved 并通过 strict validator。
 
 ## 1. 名称、目标与边界
 
@@ -32,7 +32,10 @@ Value Profile 或 Reading Priority。标签使用 graded relevance：
    `pending_human_review`；
 5. 独立人工 reviewer 可 `approve` proposal 或 `modify` label，必须记录 reviewer、最终标签、
    带时区的 ISO-8601 时间和说明；之后才能标为 `adjudicated`。分歧 pair 不允许用 `ready`
-   绕过 adjudication；proposal 仍为 `pending_human_review` 时不能进入 approved benchmark。
+   绕过 adjudication；proposal 仍为 `pending_human_review` 时不能进入 approved benchmark；
+6. 冻结 Blind AI Audit 后，如 AI 与 single annotation 或双标一致 judgement 冲突，独立人类
+   reviewer 可基于 RQ、论文证据和双方 rationale 作 `modify` 决定。必须保留原 annotation，
+   并以 `blind_ai_audit_human_review` basis 记录 AI assistance、reviewer、时间和说明。
 
 后续版本可继续为当前 `single_annotation` pair 增加独立复标；这会产生新 benchmark 版本，
 不得覆盖 v0.1 的 provenance。
@@ -61,9 +64,8 @@ provenance；adjudication 中 AI 明确建议标签时记录 `label_suggestion`�
 失效，但禁止把 AI-assisted judgement 表述为纯人工或专家 ground truth。
 
 陈星妤的 15 条 annotation 已由本人实际审核确认；本次只修正其 review provenance，不改变
-任何标签。贾馥诚的标签是人工判断并带逐行 AI 辅助记录；仓库中没有可据以声称“本人在
-GitHub 再确认”的记录，因此 approved 前保留一项 provenance confirmation checklist，不能
-补造记录。
+任何标签。贾馥诚的标签是人工判断并带逐行 AI 辅助记录；团队已核对这一 provenance，仓库中
+仍没有可据以声称“本人在 GitHub 再确认”的记录，也不能补造记录。
 
 ## 5. Versioning 与 hash 规则
 
@@ -90,12 +92,12 @@ Approved manifest 必须通过 `parent_package` 记录实际被审核 draft mani
 人工 review/final label 等允许变化，没有改写 proposal 证据、原 annotation provenance 或输入集。
 因此同时修改输入文件和 approved manifest 的自报 hash 也不能形成有效 package。
 
-当前 artifact：
+当前 approved artifact：
 
-`data/benchmarks/w4_query_relevance/v0.1.0-draft.1/`
+`data/benchmarks/w4_query_relevance/v0.1.0/`
 
-其状态为 `proposed`，只可用于协议和结构复核。正式实验必须使用不含 `draft` 后缀且
-`status=approved` 的新版本。
+它绑定保留在 `v0.1.0-draft.1/` 的 parent draft，60/60 label 完整且无 pending review；
+manifest SHA-256 为 `d503f5c2448409a9433bf3ffeada3890c7ddb31237bc7c95c529014b5fb8d094`。
 
 ## 6. Record-level entity policy
 
@@ -118,10 +120,11 @@ same-paper alias：
 python -m app.validate_w4_benchmark --allow-draft
 ```
 
-默认 validator 是 strict，会拒绝当前 draft：
+默认 validator 是 strict；验证 approved package：
 
 ```powershell
-python -m app.validate_w4_benchmark --manifest <approved-manifest.json>
+python -m app.validate_w4_benchmark `
+  --manifest data/benchmarks/w4_query_relevance/v0.1.0/manifest.json
 ```
 
 Strict 至少要求：60/60、三个 RQ 各 20/20、pair 全量且唯一、无未知 pair、所有
@@ -146,14 +149,16 @@ python -m app.evaluate_w4_benchmark --strict `
 reference year、两种方法的实际固定配置、运行时间和输出文件 hash。未使用 `--strict` 的旧
 `--labels` 入口只保留 smoke/partial evaluation 能力，不得作为正式 W5 实验。
 
-## 8. Approved 前最小 checklist
+## 8. v0.1 approved 收口记录
 
-1. 三个 disagreement 均由独立人类 reviewer approve 或 modify；
-2. proposal 与 judgement 同时记录 final label、decision、reviewer、reviewed_at 和 note；
-3. 核对贾馥诚的人工判断 + AI assistance provenance，不伪造 GitHub 确认记录；
-4. 复制为新的无 draft 版本目录，更新 version、status 和全部 artifact hash；approved manifest
-   绑定本 draft 的 manifest hash 与 `input_set_identity`；
-5. 填完 package-level approval metadata/checklist，并确认不可变 proposal/provenance 未改写；
-6. 默认 strict validator 通过；
-7. 在 clean Git 工作树中运行正式 evaluator；
-8. 人工审查完整 diff 后，才允许将该版本用于正式算法实验。
+1. 60 条 Blind AI Audit 已在 human comparison 前完成并冻结；
+2. 六条 review queue 均由非该 pair 原 annotator 的人类 reviewer 完成；
+3. 三个 disagreement proposal 与 judgement 均记录 final label、decision、reviewer、reviewed_at
+   和 note；另三条 human-vs-AI conflict 保留独立 `modify` provenance；
+4. 贾馥诚的人工判断 + AI assistance provenance 已核对，未伪造 GitHub 确认记录；
+5. approved package 绑定 parent draft manifest hash 与 `input_set_identity`，不可变输入和原始
+   annotation 均未改写；
+6. package-level checklist 已完成，默认 strict validator 已通过；
+7. 正式 evaluator 仍须在 clean Git 工作树中运行；
+8. 使用时必须表述为 **human annotation + independent blind AI evidence audit + human
+   review/adjudication**。

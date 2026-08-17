@@ -1,0 +1,170 @@
+{
+  "schema_version": "1.0",
+  "benchmark_name": "w4_pilot_query_relevance_record_level",
+  "benchmark_version": "w4_query_relevance_pilot_v0.1.0",
+  "status": "approved",
+  "display_name": "W4 Pilot Adjudicated Judged Set",
+  "evaluation_target": "query_relevance",
+  "label_scheme": {
+    "type": "graded_relevance",
+    "allowed_values": [0, 1, 2]
+  },
+  "record_unit": "research_query_id + openalex_id",
+  "entity_policy": "record-level Pilot Benchmark; high-confidence same-paper aliases remain separate frozen v0.1 records",
+  "generated_at": "2026-08-17T18:11:25+08:00",
+  "generated_from_git_revision": "c54fdd072fd755432e636bd695dbc0bf664725a4",
+  "reference_year": 2026,
+  "input_set_identity": "sha256:dff3f396c6ae5ac1614bfdedcdaacec845e65e8522f5967ca668d2dd9e2ecc88",
+  "parent_package": {
+    "path": "data/benchmarks/w4_query_relevance/v0.1.0-draft.1/manifest.json",
+    "sha256": "6d71d914c88f1dfd7909fdc2d9705e4b238d51f362d1ce16eeda111044e2bd01",
+    "benchmark_version": "w4_query_relevance_pilot_v0.1.0-draft.1",
+    "input_set_identity": "sha256:dff3f396c6ae5ac1614bfdedcdaacec845e65e8522f5967ca668d2dd9e2ecc88"
+  },
+  "approval": {
+    "status": "approved",
+    "approved_by": "liuzican",
+    "approved_at": "2026-08-17T18:11:25+08:00",
+    "review_note": "Six blind-AI review-queue decisions were confirmed through human team discussion; w4_rq03_009 was independently reviewed by huangbin because liuzican was an original annotator.",
+    "checklist": {
+      "all_disagreements_human_reviewed": true,
+      "original_annotation_provenance_verified": true,
+      "frozen_input_anchor_verified": true,
+      "jiafucheng_provenance_checked": true,
+      "parent_draft_reviewed": true
+    }
+  },
+  "counts": {
+    "pair_count": 60,
+    "research_query_count": 3,
+    "single_annotation_pairs": 30,
+    "agreement_pairs": 27,
+    "disagreement_pairs": 3,
+    "pending_human_review_pairs": 0
+  },
+  "inputs": {
+    "candidate_pool": {
+      "path": "data/annotation_tasks/w4/candidate_pool_v0.1.csv",
+      "sha256": "25f608eb4c94218dfa220ba108b15ec846b2bd418174501420a468c376ed17cc",
+      "version": "w4_pilot_v0.1"
+    },
+    "assignments": {
+      "path": "data/annotation_tasks/w4/assignments_v0.1.csv",
+      "sha256": "5cbeccf6c48c92517df57804d07aa9bcf3f359abad2b4d18d9f7c7b271fa46a2",
+      "version": "w4_pilot_v0.1"
+    },
+    "research_queries": {
+      "path": "configs/w4/research_queries.json",
+      "sha256": "c77ec74ef4567614d3dfb6dab937b85398f95128cdb29e823587715002d99ab1",
+      "version": "w4_pilot_v0.1"
+    },
+    "source_sample": {
+      "path": "data/samples/w2/domain_query/live_query_sample.csv",
+      "sha256": "d9179396b22b223e58a730fc41a97f6c7f6a5c976042a97a881e51bc956eda34"
+    },
+    "pool_manifest": {
+      "path": "data/annotation_tasks/w4/pool_manifest_v0.1.json",
+      "sha256": "4105ca89174c1705766567c3968c0bd9114fdd13c43309a8eec1cc29547cd405",
+      "version": "w4_pilot_v0.1"
+    },
+    "annotations": {
+      "liuzican": {
+        "path": "data/annotation_tasks/w4/annotations/liuzican.csv",
+        "sha256": "c96c7cf6b085632ae2e307674ebe53724f1b2b9248dc241e8149cc63af8c2b52"
+      },
+      "wuziheng": {
+        "path": "data/annotation_tasks/w4/annotations/wuziheng.csv",
+        "sha256": "70179464b3cef919f359e3ede6fd29680bf3c2ee165f22cc9d694488ebc31d44"
+      },
+      "jiafucheng": {
+        "path": "data/annotation_tasks/w4/annotations/jiafucheng.csv",
+        "sha256": "2c7cd7e9f1e8df26ac2b920883c8b9d5ad7f57157851a330a4d8bee16fa53540"
+      },
+      "chenxingyu": {
+        "path": "data/annotation_tasks/w4/annotations/chenxingyu.csv",
+        "sha256": "1ba56d7c1a5476e1fc12a095b563e1fa3994fa092357dca457954784a9ffc14b"
+      },
+      "huangbin": {
+        "path": "data/annotation_tasks/w4/annotations/huangbin.csv",
+        "sha256": "5ba5dcb95d1b3f329fa5bab9ae2d87415a5bcf8f5954c0a1b3b268dd80d08abb"
+      },
+      "puzhengjie": {
+        "path": "data/annotation_tasks/w4/annotations/puzhengjie.csv",
+        "sha256": "e0d01760f4e5f4ce23e6178761a66e675e8b7ad6877eb6da04129bb680e5674f"
+      }
+    }
+  },
+  "artifacts": {
+    "judgements": {
+      "path": "data/benchmarks/w4_query_relevance/v0.1.0/judgements.csv",
+      "sha256": "1de3da2e280481df20a9971b0e42f89996f1a05260ef6104c1403707d212d305"
+    },
+    "adjudication_proposals": {
+      "path": "data/benchmarks/w4_query_relevance/v0.1.0/adjudication_proposals.csv",
+      "sha256": "c05d99dd04028cceb0dcaec648a7b7780f61c1f3c9ad99d8f299e3b5ba6ee028"
+    }
+  },
+  "blind_ai_audit_provenance": {
+    "description": "human annotation + independent blind AI evidence audit + independent human review/adjudication",
+    "blind_phase_completed_before_human_comparison": true,
+    "required_review_count": 6,
+    "completed_review_count": 6,
+    "reviewer_independence_checked": true,
+    "files": {
+      "blind_manifest": {
+        "path": "data/analysis/w4_blind_ai_audit/manifest_v0.1.json",
+        "sha256": "c4af19aab26944808f04dea39e820e8043e3cf921eb97a03ee7cf3bc457cb7fc"
+      },
+      "blind_audit": {
+        "path": "data/analysis/w4_blind_ai_audit/blind_ai_audit_v0.1.csv",
+        "sha256": "bf4e68759dfa5c860b9f3edf4001423a018973a90bc525cc636fb01bcf2b848e"
+      },
+      "human_ai_comparison": {
+        "path": "data/analysis/w4_blind_ai_audit/human_ai_comparison_v0.1.csv",
+        "sha256": "fbf56d905227e4ce583a1caa214169baebd97d4ecda3e56d031dbc0674a8ed79"
+      },
+      "review_queue": {
+        "path": "data/analysis/w4_blind_ai_audit/review_queue_v0.1.csv",
+        "sha256": "718a12bc499d7cc65a4014baab6ee22584d3056d721076aa39ac9eb419aaf65e"
+      },
+      "comparison_summary": {
+        "path": "data/analysis/w4_blind_ai_audit/comparison_summary_v0.1.json",
+        "sha256": "e7708f5c98da824936e4deef9d907eb497b0af4a47ac680a31f83c68b538c7e6"
+      }
+    }
+  },
+  "annotation_review_provenance": {
+    "chenxingyu": {
+      "status": "human_confirmed",
+      "note": "The annotator reviewed and confirmed all 15 submitted judgements; this factual correction changes no original label."
+    },
+    "jiafucheng": {
+      "status": "human_judgement_with_recorded_ai_assistance",
+      "github_self_confirmation_recorded": false,
+      "protocol_review_checklist_required": false,
+      "protocol_review_confirmed_by": "liuzican",
+      "protocol_review_confirmed_at": "2026-08-17T18:11:25+08:00",
+      "protocol_review_note": "Team review confirmed that the submitted labels are human judgements with per-row AI assistance recorded as translation, explanation, or label suggestion; no nonexistent GitHub self-confirmation is asserted.",
+      "note": "The labels are human judgements with per-row AI assistance provenance. No nonexistent GitHub self-confirmation is asserted."
+    }
+  },
+  "known_record_aliases": [
+    {
+      "research_query_id": "rq02_stellar_parameters",
+      "pair_ids": ["w4_rq02_002", "w4_rq02_011"],
+      "policy": "retain_as_separate_records_in_v0.1"
+    },
+    {
+      "research_query_id": "rq03_spectral_preprocessing",
+      "pair_ids": ["w4_rq03_004", "w4_rq03_011"],
+      "policy": "retain_as_separate_records_in_v0.1"
+    }
+  ],
+  "promotion_evidence": [
+    "all six blind-AI review-queue rows have independent human decisions",
+    "all three original disagreement proposals are reviewed and retain original annotation/proposal provenance",
+    "three additional human judgements are explicitly modified through blind_ai_audit_human_review provenance",
+    "Jia Fucheng provenance was checked without inventing a GitHub confirmation",
+    "approved artifacts are stored in a new non-draft package bound to the reviewed parent draft"
+  ]
+}

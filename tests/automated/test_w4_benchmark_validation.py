@@ -33,6 +33,14 @@ DRAFT_MANIFEST = (
     / "manifest.json"
 )
 APPROVED_VERSION = "w4_query_relevance_pilot_v0.1.0"
+APPROVED_MANIFEST = (
+    PROJECT_ROOT
+    / "data"
+    / "benchmarks"
+    / "w4_query_relevance"
+    / "v0.1.0"
+    / "manifest.json"
+)
 
 
 class BenchmarkPackageValidationTests(unittest.TestCase):
@@ -288,6 +296,67 @@ class BenchmarkPackageValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "parent draft"):
             self._strict(package)
 
+    def test_approved_package_accepts_reviewed_blind_audit_overrides(self) -> None:
+        package = self._copy_package(self.root / "blind_audit_overrides")
+        self._approve(package)
+        _fields, judgements = read_csv_rows(package["judgements"])
+        by_pair = {row["pair_id"]: row for row in judgements}
+        for pair_id, final_label in (
+            ("w4_rq02_013", "0"),
+            ("w4_rq03_005", "0"),
+        ):
+            row = by_pair[pair_id]
+            row.update(
+                {
+                    "final_label": final_label,
+                    "judgement_status": "adjudicated",
+                    "judgement_basis": "blind_ai_audit_human_review",
+                    "adjudication_ai_assistance": "label_suggestion",
+                    "review_decision": "modify",
+                    "reviewer": "independent_reviewer",
+                    "reviewed_at": "2026-08-17T12:30:00+08:00",
+                    "review_note": "human review after independent blind AI audit",
+                }
+            )
+        write_csv_rows(package["judgements"], JUDGEMENT_FIELDS, judgements)
+        self._refresh_artifact_hash(package, "judgements")
+
+        result = self._strict(package)
+
+        self.assertEqual(result["labels"]["w4_rq02_013"], "0")
+        self.assertEqual(result["labels"]["w4_rq03_005"], "0")
+
+    def test_approved_package_rejects_original_annotator_as_reviewer(self) -> None:
+        package = self._copy_package(self.root / "non_independent_reviewer")
+        self._approve(package)
+        _fields, judgements = read_csv_rows(package["judgements"])
+        target = next(
+            row for row in judgements if row["agreement_status"] == "disagreement"
+        )
+        target["reviewer"] = target["primary_annotator"]
+        write_csv_rows(package["judgements"], JUDGEMENT_FIELDS, judgements)
+        _fields, proposals = read_csv_rows(package["adjudication_proposals"])
+        proposal = next(row for row in proposals if row["pair_id"] == target["pair_id"])
+        proposal["reviewer"] = target["primary_annotator"]
+        write_csv_rows(package["adjudication_proposals"], PROPOSAL_FIELDS, proposals)
+        self._refresh_artifact_hash(package, "judgements")
+        self._refresh_artifact_hash(package, "adjudication_proposals")
+
+        with self.assertRaisesRegex(ValueError, "独立 reviewer"):
+            self._strict(package)
+
+    def test_approved_package_rejects_blind_audit_provenance_hash_drift(self) -> None:
+        package = self._copy_package(self.root / "blind_audit_hash_drift")
+        self._approve(package)
+        manifest = self._load_manifest(package)
+        manifest["blind_ai_audit_provenance"]["files"]["blind_audit"][
+            "sha256"
+        ] = "0" * 64
+        self._write_manifest(package, manifest)
+
+        with self.assertRaisesRegex(ValueError, "hash"):
+            self._strict(package)
+
     def test_approved_status_cannot_reuse_draft_version(self) -> None:
         package = self._copy_package(self.root / "draft_version")
         manifest = self._load_manifest(package)
@@ -382,6 +451,10 @@ class BenchmarkPackageValidationTests(unittest.TestCase):
             "review_note": "test package approval",
             "checklist": {field: True for field in APPROVAL_CHECKLIST_FIELDS},
         }
+        approved_manifest = json.loads(APPROVED_MANIFEST.read_text(encoding="utf-8"))
+        manifest["blind_ai_audit_provenance"] = approved_manifest[
+            "blind_ai_audit_provenance"
+        ]
         jia = manifest["annotation_review_provenance"]["jiafucheng"]
         jia.update(
             {

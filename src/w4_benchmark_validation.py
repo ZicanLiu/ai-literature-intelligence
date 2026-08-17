@@ -105,6 +105,14 @@ APPROVAL_CHECKLIST_FIELDS = (
     "parent_draft_reviewed",
 )
 
+BLIND_AUDIT_PROVENANCE_FILES = (
+    "blind_manifest",
+    "blind_audit",
+    "human_ai_comparison",
+    "review_queue",
+    "comparison_summary",
+)
+
 JUDGEMENT_FIELDS = [
     "pair_id",
     "research_query_id",
@@ -302,6 +310,7 @@ def validate_benchmark_package(
         require_approved=require_approved,
     )
     if manifest.get("status") == "approved":
+        _validate_blind_ai_audit_provenance(manifest, project_root=root)
         _validate_parent_package(
             manifest=manifest,
             manifest_file=manifest_file,
@@ -646,14 +655,26 @@ def _validate_judgements(
                 raise ValueError(f"single annotation pair 不得伪造 secondary：{pair_id}。")
             if row["agreement_status"] != "single_annotation":
                 raise ValueError(f"single annotation 状态不匹配：{pair_id}。")
-            if (
-                row["judgement_status"] != "ready"
-                or row["judgement_basis"] != "primary_annotation"
-            ):
-                raise ValueError(f"single annotation judgement provenance 无效：{pair_id}。")
-            if final_label != row["primary_label"]:
-                raise ValueError(f"single annotation judgement 必须来自 primary：{pair_id}。")
-            _require_blank_review_fields(row, pair_id=pair_id)
+            if row["judgement_status"] == "ready":
+                if row["judgement_basis"] != "primary_annotation":
+                    raise ValueError(
+                        f"single annotation judgement provenance 无效：{pair_id}。"
+                    )
+                if final_label != row["primary_label"]:
+                    raise ValueError(
+                        f"single annotation judgement 必须来自 primary：{pair_id}。"
+                    )
+                _require_blank_review_fields(row, pair_id=pair_id)
+            elif row["judgement_status"] == "adjudicated":
+                _validate_blind_audit_human_override(
+                    row,
+                    pair_id=pair_id,
+                    original_label=row["primary_label"],
+                )
+            else:
+                raise ValueError(
+                    f"single annotation 只能是 ready 或完成人工 blind-audit review：{pair_id}。"
+                )
         else:
             _compare_annotation_provenance(
                 row,
@@ -667,14 +688,24 @@ def _validate_judgements(
             if row["primary_label"] == row["secondary_label"]:
                 if row["agreement_status"] != "agreement":
                     raise ValueError(f"双标一致 pair 的状态必须是 agreement：{pair_id}。")
-                if (
-                    row["judgement_status"] != "ready"
-                    or row["judgement_basis"] != "double_annotation_agreement"
-                ):
-                    raise ValueError(f"双标一致 judgement provenance 无效：{pair_id}。")
-                if final_label != row["primary_label"]:
-                    raise ValueError(f"双标一致 judgement 必须直接采用共同标签：{pair_id}。")
-                _require_blank_review_fields(row, pair_id=pair_id)
+                if row["judgement_status"] == "ready":
+                    if row["judgement_basis"] != "double_annotation_agreement":
+                        raise ValueError(f"双标一致 judgement provenance 无效：{pair_id}。")
+                    if final_label != row["primary_label"]:
+                        raise ValueError(
+                            f"双标一致 judgement 必须直接采用共同标签：{pair_id}。"
+                        )
+                    _require_blank_review_fields(row, pair_id=pair_id)
+                elif row["judgement_status"] == "adjudicated":
+                    _validate_blind_audit_human_override(
+                        row,
+                        pair_id=pair_id,
+                        original_label=row["primary_label"],
+                    )
+                else:
+                    raise ValueError(
+                        f"双标一致 pair 只能是 ready 或完成人工 blind-audit review：{pair_id}。"
+                    )
             else:
                 disagreement_ids.add(pair_id)
                 if row["agreement_status"] != "disagreement":
@@ -728,6 +759,7 @@ def _validate_judgements(
                         raise ValueError(
                             f"已 adjudicated pair 必须记录 final/reviewer/time/note：{pair_id}。"
                         )
+                    _require_independent_reviewer(row, pair_id=pair_id)
                     _require_iso8601(
                         row["reviewed_at"], f"judgement reviewed_at ({pair_id})"
                     )
@@ -810,6 +842,78 @@ def _require_blank_review_fields(row: dict[str, str], *, pair_id: str) -> None:
     )
     if any(row[field].strip() for field in fields):
         raise ValueError(f"非分歧 judgement 不得包含 adjudication/review 字段：{pair_id}。")
+
+
+def _validate_blind_audit_human_override(
+    row: dict[str, str], *, pair_id: str, original_label: str
+) -> None:
+    """Validate an explicit human override triggered by the frozen blind audit."""
+    if row["judgement_basis"] != "blind_ai_audit_human_review":
+        raise ValueError(f"blind-audit override 必须记录独立 review provenance：{pair_id}。")
+    if row["final_label"] not in APPROVED_LABELS:
+        raise ValueError(f"blind-audit override 必须记录最终 0/1/2：{pair_id}。")
+    if row["final_label"] == original_label:
+        raise ValueError(f"未修改原 judgement 时不得伪造 blind-audit override：{pair_id}。")
+    if row["proposed_label"].strip():
+        raise ValueError(f"非原始分歧的 blind-audit override 不得伪造 proposal：{pair_id}。")
+    if row["adjudication_ai_assistance"] != "label_suggestion":
+        raise ValueError(f"blind-audit override 必须记录 AI label_suggestion provenance：{pair_id}。")
+    if row["review_decision"] != "modify":
+        raise ValueError(f"blind-audit override 必须记录 modify 决定：{pair_id}。")
+    if any(
+        not row[field].strip()
+        for field in ("reviewer", "reviewed_at", "review_note")
+    ):
+        raise ValueError(
+            f"blind-audit override 必须记录 reviewer/time/note：{pair_id}。"
+        )
+    _require_independent_reviewer(row, pair_id=pair_id)
+    _require_iso8601(row["reviewed_at"], f"blind-audit reviewed_at ({pair_id})")
+
+
+def _require_independent_reviewer(row: dict[str, str], *, pair_id: str) -> None:
+    original_annotators = {
+        value
+        for value in (row["primary_annotator"], row["secondary_annotator"])
+        if value.strip()
+    }
+    if row["reviewer"] in original_annotators:
+        raise ValueError(f"独立 reviewer 不得是该 pair 的原 annotator：{pair_id}。")
+
+
+def _validate_blind_ai_audit_provenance(
+    manifest: dict[str, Any], *, project_root: Path
+) -> None:
+    provenance = manifest.get("blind_ai_audit_provenance")
+    if not isinstance(provenance, dict):
+        raise ValueError("approved benchmark 必须保留 Blind AI Audit provenance。")
+    if provenance.get("description") != (
+        "human annotation + independent blind AI evidence audit + "
+        "independent human review/adjudication"
+    ):
+        raise ValueError("Blind AI Audit provenance description 无效。")
+    if (
+        provenance.get("blind_phase_completed_before_human_comparison") is not True
+        or provenance.get("reviewer_independence_checked") is not True
+    ):
+        raise ValueError("Blind AI Audit 必须在 human comparison 前冻结并核对 reviewer independence。")
+    required_reviews = provenance.get("required_review_count")
+    if (
+        not isinstance(required_reviews, int)
+        or isinstance(required_reviews, bool)
+        or required_reviews <= 0
+        or provenance.get("completed_review_count") != required_reviews
+    ):
+        raise ValueError("Blind AI Audit review queue 必须全部完成人工复核。")
+    files = provenance.get("files")
+    if not isinstance(files, dict) or set(files) != set(BLIND_AUDIT_PROVENANCE_FILES):
+        raise ValueError("Blind AI Audit provenance 文件集合不完整。")
+    for name in BLIND_AUDIT_PROVENANCE_FILES:
+        _validate_file_reference(
+            project_root,
+            files[name],
+            f"blind_ai_audit_provenance.files.{name}",
+        )
 
 
 def _validate_approval_metadata(
@@ -951,14 +1055,12 @@ def _validate_parent_package(
             "openalex_id",
             "proposed_label",
             "agreement_status",
-            "judgement_basis",
             "primary_annotator",
             "primary_label",
             "primary_ai_assistance",
             "secondary_annotator",
             "secondary_label",
             "secondary_ai_assistance",
-            "adjudication_ai_assistance",
         ),
         label="judgements",
     )

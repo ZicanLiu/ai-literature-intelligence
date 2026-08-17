@@ -7,8 +7,8 @@
 - 快照更新时间：2026-08-17
 - 对应公共 `main` 基线：`7125455`（W4 PR #42–#47 已合并）
 - 当前收口分支：`codex/w5-baseline-closure`（未 push、未 merge）
-- 当前状态：W1–W4 工程和六人 Pilot Annotation 已集成；versioned judged set 仍是
-  `proposed/draft`，待 3 个分歧的独立人工 adjudication 后才能进入正式 W5 实验
+- 当前状态：W1–W4 工程、六人 Pilot Annotation、独立 Blind AI Audit 与人工复核已完成；
+  `w4_query_relevance_pilot_v0.1.0` 已批准并通过 strict validator
 
 每次开始新任务，都必须重新用 Git、源码和测试核对本文。事实优先级及长期规则见
 [`AGENTS.md`](../../AGENTS.md)，当前快照见 [`docs/CURRENT_STATUS.md`](../CURRENT_STATUS.md)。
@@ -63,9 +63,10 @@ query-boundary audits 和 evaluator 合并到 `main`。涉及 benchmark 或 W5 �
 - [`W4_PILOT_BENCHMARK_PROTOCOL.md`](W4_PILOT_BENCHMARK_PROTOCOL.md)
 - [`data/annotation_tasks/w4/README.md`](../../data/annotation_tasks/w4/README.md)
 
-当前 60-pair judged set 是 `proposed/draft`：30 个 single annotation、27 个双标一致 judgement
-和 3 个 pending AI adjudication proposal。它不能表述为 approved benchmark、gold ground
-truth 或算法优劣结论。
+当前 60-pair **W4 Pilot Adjudicated Judged Set** 位于
+`data/benchmarks/w4_query_relevance/v0.1.0/`，状态为 `approved`。它由六人原始 annotation、
+独立 Blind AI evidence audit 和独立人类 review/adjudication 共同形成；不能表述为 gold
+standard、expert ground truth、pure human ground truth 或算法优劣结论。
 
 ## 3. 当前关键目录
 
@@ -360,9 +361,15 @@ W4 Pilot 是另一套 query-dependent relevance 协议：评价单位为
 Relevance。六人原始 annotation 不改写；双标一致项直接形成 judgement，分歧必须独立
 adjudication，AI proposal 不能冒充人类最终裁决。
 
-当前 versioned artifact 在 `data/benchmarks/w4_query_relevance/v0.1.0-draft.1/`，状态
-`proposed`。它保留 60/60 pair，但 3 个 disagreement 的 `final_label` 为空；默认 strict
-validator 和 formal evaluator 都会拒绝。旧 `--labels` 评价入口只服务 smoke/partial evaluation。
+当前 approved artifact 在 `data/benchmarks/w4_query_relevance/v0.1.0/`，保留 60/60 pair，
+所有 `final_label` 均为 `0/1/2`，无 pending review；其 manifest SHA-256 为
+`d503f5c2448409a9433bf3ffeada3890c7ddb31237bc7c95c529014b5fb8d094`。旧 `--labels`
+评价入口只服务 smoke/partial evaluation。
+
+Blind AI Audit 在读取任何 human label、proposal、agreement 或排名信号前完成并冻结。随后 60 条
+逐一比较，形成 6 条人工 review queue：3 个原 disagreement proposal 获独立人类 approve，
+另 3 个既有 judgement 经独立人类 `modify`；AI label 没有自动覆盖 human label。Approved
+package 保留 blind artifact、comparison、review queue 和 reviewer 决定的 hash provenance。
 
 Strict promotion 不是把 `judgement_status` 和 manifest hash 手工改成看似完成：每个分歧都必须
 在 proposal 与 judgement 中留下匹配的 human reviewer、approve/modify、final label、带时区时间
@@ -543,8 +550,6 @@ git diff --check，并报告实际 Git 状态、验证结果、限制和未完�
 
 ### P1 候选
 
-- 完成 W4 三个 disagreement 的独立人工 adjudication，并提升为 approved judged-set 版本；
-- 核对贾馥诚的人工判断 + AI assistance provenance，不补造 GitHub 本人确认记录；
 - 把人工 confirmed/distinct duplicate review decision 安全应用回数据集；
 - exact dedup 后的 metadata fusion 及字段冲突审计；
 - W2/v0.3 的 SQLite schema 和阶段化持久化；
