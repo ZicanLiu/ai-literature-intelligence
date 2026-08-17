@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0",
+  "contract_name": "w5_method_ranking",
+  "contract_version": "1.0",
+  "artifact_type": "method_ranking",
+  "method": {
+    "method_id": "tfidf_two_stage_v1",
+    "display_name": "B1 TF-IDF two-stage v1",
+    "family": "baseline",
+    "parameters": {
+      "scoring_module": "src.ranking.apply_two_stage_ranking",
+      "tfidf_title_weight": 0.7,
+      "tfidf_abstract_weight": 0.3,
+      "stage1_high_threshold": 0.2,
+      "stage1_medium_threshold": 0.05,
+      "stage1_level_gate": {
+        "high": 1.0,
+        "medium": 0.8,
+        "low": 0.5
+      },
+      "stage2_score_weights": {
+        "relevance_score": 0.5,
+        "impact_score": 0.25,
+        "recency_score": 0.15,
+        "completeness_score": 0.1
+      },
+      "reference_year": 2026
+    },
+    "model": null
+  },
+  "inputs": {
+    "candidate_pool": {
+      "path": "data/annotation_tasks/w4/candidate_pool_v0.1.csv",
+      "sha256": "25f608eb4c94218dfa220ba108b15ec846b2bd418174501420a468c376ed17cc",
+      "version": "w4_pilot_v0.1"
+    },
+    "research_queries": {
+      "path": "configs/w4/research_queries.json",
+      "sha256": "c77ec74ef4567614d3dfb6dab937b85398f95128cdb29e823587715002d99ab1",
+      "version": "w4_pilot_v0.1"
+    }
+  },
+  "ranking": {
+    "path": "ranking.csv",
+    "sha256": "29188a495e9e05cdb8853fb5bd3bf3b22972e5cba8b84b4a6724575e74c84df5",
+    "row_count": 60,
+    "score_direction": "higher_is_better",
+    "tie_breaking": [
+      "score_desc",
+      "pair_id_asc"
+    ]
+  },
+  "generation": {
+    "generated_at": "2026-08-17T22:03:04+08:00",
+    "duration_seconds": 0.00235,
+    "git_revision": "ff571e252b7c53aed9fb13f909ea43d237ac7b60",
+    "git_worktree_clean": true,
+    "python": {
+      "version": "3.14.0",
+      "implementation": "CPython"
+    },
+    "platform": {
+      "system": "Windows",
+      "release": "11",
+      "machine": "AMD64"
+    },
+    "dependencies": {}
+  },
+  "label_access": {
+    "benchmark_labels_read": false,
+    "declaration": "Ranking generation did not read benchmark labels, judgements, annotations, AI audit results or any W5 evaluation metrics."
+  }
+}
