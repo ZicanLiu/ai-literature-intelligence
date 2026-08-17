@@ -2,13 +2,13 @@
 
 更新时间：2026-08-17
 
-最新公共 `main` 基线：`d558a088`（PR #48 已合并）
+W5 Contract 的已核对前置基线：`d558a088`（PR #48 已合并）。
 
-当前公共准备工作：在 `d558a088` 上建立 W5 Method Ranking Contract Bootstrap；本地任务分支
-为 `codex/w5-method-contract-bootstrap`。
+W5 Method Ranking Contract v1.0 已建立，作为六名成员并行开发的公共接口。当前公共 `main`
+的准确 HEAD 不在文档中预写；接手任务时必须以当前 `git log`、`origin/main` 和 GitHub 为准。
 
-v0.3.0 tag 仍指向较早的 W2 发布基线 `899f745`；`d558a088` 是当前公共 Git 基线，不能
-用旧 tag 或旧文档快照替代。
+v0.3.0 tag 仍指向较早的 W2 发布基线 `899f745`；不能用旧 tag、`d558a088` 前置基线或旧文档
+快照替代当前 Git/源码/测试事实。
 
 ## AI / 新成员接手入口
 
@@ -112,7 +112,7 @@ reference year 强制继承 approved benchmark。成功运行必须生成 `exper
 Git revision/clean state、Python/依赖/平台、benchmark version/hash/input identity/parent draft、
 输入 hash、reference year、实际方法配置、时间和输出文件 hash。
 
-## W5 Method Ranking Contract Bootstrap
+## W5 Method Ranking Contract v1.0
 
 W5 的公共实验边界是固定 60-pair Candidate Pool 内的 Query-Relevance ranking/reranking，
 不是端到端 retrieval recall benchmark。公共 contract v1.0 规定每个方法输出严格五列：
@@ -133,9 +133,10 @@ ranking hash、Git clean revision、Python/平台/依赖、运行时间和 label
 - 六个 annotation validator：全部通过；
 - Agreement Analyzer：`complete`，30/30 comparable，3 个 disagreement；
 - approved benchmark strict validator：60/60，通过；
+- W4 validator 默认 approved / 显式 draft strict / draft review 入口：4 项回归测试通过；
 - W5 method contract / validator / evaluator adapter 定向测试：21 项通过；
-- agreement/evaluator/strict validator/W5 contract 相关定向测试：108 项通过；
-- 全量离线自动测试：324 项通过，0 failure / 0 error / 0 skipped；
+- agreement/evaluator/strict validator/W5 contract 相关定向测试：111 项通过；
+- 全量离线自动测试：327 项通过，0 failure / 0 error / 0 skipped；
 - Basic Quality Gate：扫描 242 个文件，0 error / 0 warning，PASSED；
 - Full Quality Gate：扫描 242 个文件，0 error / 3 个既有历史 warning，PASSED；
 - 所有测试使用本地 fixture 或已提交样例，没有新增 live 请求。
@@ -146,9 +147,8 @@ experiment `openalex_stellar_spectra_60`。本次没有修改这些历史 eviden
 
 ## 下一步
 
-1. 人工检查并合并 W5 公共 Bootstrap；
-2. 六个 W5 Issue 从包含 Bootstrap 的同一 `main` 独立开分支；
-3. 正式方法先生成并冻结通过 validator 的 artifact，再使用 approved benchmark 评价；
-4. W5 比较固定同一 candidate/query/benchmark，不查看当前 label 调参数或挑选 run；
-5. 继续把该集合准确表述为 **human annotation + independent blind AI evidence audit + human
+1. 六个 W5 Issue 从包含 Contract v1.0 的最新 `main` 独立开分支；
+2. 正式方法先生成并冻结通过 validator 的 artifact，再使用 approved benchmark 评价；
+3. W5 比较固定同一 candidate/query/benchmark，不查看当前 label 调参数或挑选 run；
+4. 继续把该集合准确表述为 **human annotation + independent blind AI evidence audit + human
    review/adjudication**，不称为 gold standard、expert ground truth 或 pure human ground truth。

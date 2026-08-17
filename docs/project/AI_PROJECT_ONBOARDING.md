@@ -5,10 +5,11 @@
 本文帮助只熟悉 v0.2.0、只参与过某个 W2 模块，或第一次进入仓库的成员和 AI Agent 建立完整上下文。它不是永远正确的状态数据库。
 
 - 快照更新时间：2026-08-17
-- 对应公共 `main` 基线：`d558a088`（PR #48 已合并）
-- 当前公共准备：基于 `d558a088` 建立 W5 Method Ranking Contract Bootstrap
+- W5 Contract 前置基线：`d558a088`（PR #48 已合并；仅作历史锚点）
+- 当前公共能力：W5 Method Ranking Contract v1.0 已建立，供六名成员并行开发
 - 当前状态：W1–W4 工程、六人 Pilot Annotation、独立 Blind AI Audit 与人工复核已完成；
-  `w4_query_relevance_pilot_v0.1.0` 已批准并通过 strict validator
+  `w4_query_relevance_pilot_v0.1.0` 已批准并通过 strict validator。公共 `main` 的准确 HEAD
+  必须在接手任务时用当前 Git/GitHub 重新核对，不在本文预写未来 merge SHA
 
 每次开始新任务，都必须重新用 Git、源码和测试核对本文。事实优先级及长期规则见
 [`AGENTS.md`](../../AGENTS.md)，当前快照见 [`docs/CURRENT_STATUS.md`](../CURRENT_STATUS.md)。
@@ -442,7 +443,7 @@ Batch 输出位于 `outputs/batches/<batch_id>/`，包含 `batch_config.json`、
 
 当前测试体系包括模块单测、安全离线 fixture、Unified Pipeline E2E、失败边界、Batch Runner 和 Quality Gate 测试。它不依赖真实 API Key，也不应把测试输出写入正式实验目录。
 
-本文更新时的 W5 公共 Bootstrap 工作区测试数以
+本文更新时的 W5 Method Ranking Contract v1.0 测试数以
 [`CURRENT_STATUS.md`](../CURRENT_STATUS.md) 的实际验证记录为准。该数字不是永久事实；
 开始任何新任务都必须重新运行：
 
@@ -463,7 +464,7 @@ python -m app.quality_gate --level full
 - Full：包含 Basic，并增加 CSV 结构、唯一 ID、标签引用、数值范围、run config 和已跟踪实验检查；
 - error 会使 CLI 返回非零；warning 需要人工阅读，但不会单独导致失败。
 
-W5 公共 Bootstrap 的最终 Basic/Full 结果以 [`CURRENT_STATUS.md`](../CURRENT_STATUS.md) 为准。
+W5 Contract v1.0 的 Basic/Full 结果以 [`CURRENT_STATUS.md`](../CURRENT_STATUS.md) 为准。
 此前公共基线的 Full Gate 有三个历史 warning：
 
 1. 一条 W1 标注 CSV 的逗号未按 CSV 规则转义；
