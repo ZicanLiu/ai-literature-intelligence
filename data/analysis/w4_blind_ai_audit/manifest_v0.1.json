@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0",
+  "audit_name": "W4 60-pair Query-Relevance Blind AI Audit",
+  "audit_version": "w4_blind_ai_audit_v0.1",
+  "status": "blind_completed",
+  "audit_status_value": "blind_completed",
+  "blind_phase_completed_at": "2026-08-17T17:52:24+08:00",
+  "auditor": "openai_codex",
+  "evaluation_target": "query_relevance",
+  "label_scheme": {
+    "type": "graded_relevance",
+    "allowed_values": [0, 1, 2]
+  },
+  "confidence_values": ["high", "medium", "low"],
+  "pair_count": 60,
+  "unique_pair_count": 60,
+  "counts_by_query_and_label": {
+    "rq01_stellar_classification": {"0": 16, "1": 0, "2": 4},
+    "rq02_stellar_parameters": {"0": 11, "1": 3, "2": 6},
+    "rq03_spectral_preprocessing": {"0": 18, "1": 1, "2": 1}
+  },
+  "confidence_counts": {
+    "high": 56,
+    "medium": 4,
+    "low": 0
+  },
+  "external_lookup_count": 4,
+  "blind_protocol": {
+    "allowed_inputs": [
+      "research_query_id and frozen research query definitions",
+      "paper title and abstract",
+      "paper identity metadata",
+      "publisher or author-provided scholarly sources when evidence escalation was necessary"
+    ],
+    "excluded_inputs": [
+      "raw human annotation CSV files",
+      "human or final labels in judgements.csv",
+      "adjudication_proposals.csv contents",
+      "agreement analyzer outputs and disagreement records",
+      "preliminary, TF-IDF, Stage 1, Stage 2, baseline or two-stage scores and rankings",
+      "per-pair selection_bucket values"
+    ],
+    "independence_statement": "All 60 AI labels were completed before any existing human label, judgement, proposal, agreement output, rationale, or per-pair ranking signal was read.",
+    "frozen_after_hash": true,
+    "post_comparison_policy": "Human comparison may add separate review or comment artifacts but must not overwrite this blind audit CSV."
+  },
+  "inputs": {
+    "candidate_pool": {
+      "path": "data/annotation_tasks/w4/candidate_pool_v0.1.csv",
+      "sha256": "25f608eb4c94218dfa220ba108b15ec846b2bd418174501420a468c376ed17cc",
+      "fields_used": [
+        "pair_id",
+        "research_query_id",
+        "openalex_id",
+        "title",
+        "abstract",
+        "landing_page_url",
+        "publication_year",
+        "doi"
+      ],
+      "per_pair_selection_bucket_used": false
+    },
+    "research_queries": {
+      "path": "configs/w4/research_queries.json",
+      "sha256": "c77ec74ef4567614d3dfb6dab937b85398f95128cdb29e823587715002d99ab1"
+    }
+  },
+  "external_sources": [
+    {
+      "pair_id": "w4_rq01_017",
+      "source_type": "publisher",
+      "url": "https://www.mi-research.net/cn/article/id/32d80f01-fc5f-444f-b93c-20e9df006701"
+    },
+    {
+      "pair_id": "w4_rq02_004",
+      "source_type": "arxiv",
+      "url": "https://arxiv.org/abs/1510.00111"
+    },
+    {
+      "pair_id": "w4_rq02_006",
+      "source_type": "publisher",
+      "url": "https://www.aanda.org/articles/aa/abs/2013/05/aa20961-12/aa20961-12.html"
+    },
+    {
+      "pair_id": "w4_rq03_007",
+      "source_type": "arxiv",
+      "url": "https://arxiv.org/abs/2201.10639"
+    }
+  ],
+  "artifact": {
+    "path": "data/analysis/w4_blind_ai_audit/blind_ai_audit_v0.1.csv",
+    "sha256": "bf4e68759dfa5c860b9f3edf4001423a018973a90bc525cc636fb01bcf2b848e"
+  }
+}

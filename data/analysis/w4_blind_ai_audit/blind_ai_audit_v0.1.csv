@@ -1,0 +1,61 @@
+pair_id,research_query_id,openalex_id,ai_label,confidence,reason,evidence_level,evidence_source,external_lookup_used,evidence_url,audit_status
+w4_rq01_001,rq01_stellar_classification,https://openalex.org/W4293191352,0,high,"核心任务是区分 star、galaxy 和 quasar 的天体类别，不是以恒星光谱预测恒星光谱型或恒星类型。",A,title_abstract,false,,blind_completed
+w4_rq01_002,rq01_stellar_classification,https://openalex.org/W2778437674,0,high,"研究对象是星系形态，输入为测光与形态参数；既非恒星光谱，也非恒星类型识别。",A,title_abstract,false,,blind_completed
+w4_rq01_003,rq01_stellar_classification,https://openalex.org/W3113695400,0,high,"论文测量并分析 FGK 星的色球活动与变异，没有把机器学习用于恒星光谱分类。",A,title_abstract,false,,blind_completed
+w4_rq01_004,rq01_stellar_classification,https://openalex.org/W2567715800,2,high,"以 GALAH 恒星光谱为输入，用 t-SNE 辅助识别并分类正常、特殊和问题光谱形态，分类是核心任务。",A,title_abstract,false,,blind_completed
+w4_rq01_005,rq01_stellar_classification,https://openalex.org/W2006224949,0,high,"研究 Kepler 亮度时序中的行星凌星与发生率，不处理恒星光谱分类。",A,title_abstract,false,,blind_completed
+w4_rq01_006,rq01_stellar_classification,https://openalex.org/W4384201335,0,high,"这是太阳物理机器学习的宽泛综述，摘要未给出以恒星光谱进行恒星类型分类的核心任务。",A,title_abstract,false,,blind_completed
+w4_rq01_007,rq01_stellar_classification,https://openalex.org/W1663830336,0,high,"The Cannon 从光谱推断大气参数和丰度标签，核心是连续参数估计而非恒星类型分类。",A,title_abstract,false,,blind_completed
+w4_rq01_008,rq01_stellar_classification,https://openalex.org/W2921395996,2,high,"以恒星光谱为输入，经归一化后用随机森林分类，并评估光谱特征；与 RQ 直接对应。",A,title_abstract,false,,blind_completed
+w4_rq01_009,rq01_stellar_classification,https://openalex.org/W3043645409,0,high,"输入是多波段测光和形态参数，任务是 star/galaxy 点源与延展源分类，不是恒星光谱型分类。",A,title_abstract,false,,blind_completed
+w4_rq01_010,rq01_stellar_classification,https://openalex.org/W3121170300,0,high,"随机森林用于 Kepler 光变曲线的旋转信号检测和周期选择，数据模态与目标任务均不符。",A,title_abstract,false,,blind_completed
+w4_rq01_011,rq01_stellar_classification,https://openalex.org/W2777402735,2,high,"机器学习从七百多万条 LAMOST 光谱中识别碳星，并依据光谱特征划分多个碳星亚型。",A,title_abstract,false,,blind_completed
+w4_rq01_012,rq01_stellar_classification,https://openalex.org/W2406349003,0,high,"一般性机器学习与大数据综述，没有恒星光谱或恒星类型识别任务。",A,title_abstract,false,,blind_completed
+w4_rq01_013,rq01_stellar_classification,https://openalex.org/W2127375519,0,high,"输入是测光亮度变化与颜色，输出是 Teff、log g 和 [Fe/H]，既非光谱输入也非分类任务。",A,title_abstract,false,,blind_completed
+w4_rq01_014,rq01_stellar_classification,https://openalex.org/W3155899199,0,high,"研究无线通信中的调制识别，文中的 spectrum 指无线电频谱而非恒星光谱。",A,title_abstract,false,,blind_completed
+w4_rq01_015,rq01_stellar_classification,https://openalex.org/W2899864468,0,high,"随机森林的实际输入是多波段颜色，任务为 star/galaxy/QSO 分类及温度回归，不是恒星光谱型识别。",A,title_abstract,false,,blind_completed
+w4_rq01_016,rq01_stellar_classification,https://openalex.org/W4312712330,0,medium,"尽管摘要泛称 spectral features，明确输出只是 Galaxy 与 Star 的天体类别，不是恒星光谱型或恒星亚型。",A,title_abstract,false,,blind_completed
+w4_rq01_017,rq01_stellar_classification,https://openalex.org/W2078829410,2,high,"原论文摘要说明用机器学习分析发射线星光谱，自动识别 Be/B[e] 星并分类其类型，直接符合 RQ。",B,title_abstract;publisher,true,https://www.mi-research.net/cn/article/id/32d80f01-fc5f-444f-b93c-20e9df006701,blind_completed
+w4_rq01_018,rq01_stellar_classification,https://openalex.org/W4306248068,0,high,"主题是电子显微镜中的机器学习；天文学只作为背景领域出现。",A,title_abstract,false,,blind_completed
+w4_rq01_019,rq01_stellar_classification,https://openalex.org/W2375984290,0,high,"虽预测恒星光谱型，但输入是单波段成像的衍射图样而非恒星光谱，属于明确的 wrong modality。",A,title_abstract,false,,blind_completed
+w4_rq01_020,rq01_stellar_classification,https://openalex.org/W2611629499,0,high,"研究星系中的 AGN 吸积率分布，没有机器学习恒星光谱分类任务。",A,title_abstract,false,,blind_completed
+w4_rq02_001,rq02_stellar_parameters,https://openalex.org/W1653774948,0,high,"主题是恒星爆炸中的核合成，不是从观测恒星光谱进行机器学习参数推断。",A,title_abstract,false,,blind_completed
+w4_rq02_002,rq02_stellar_parameters,https://openalex.org/W3106471209,0,high,"t-SNE 分析的是已经得到的化学丰度空间，用于族群结构和 chemical tagging，并不从光谱估计参数。",A,title_abstract,false,,blind_completed
+w4_rq02_003,rq02_stellar_parameters,https://openalex.org/W2594445930,1,medium,"论文核心是经验恒星光谱模板库，并提供自动识别光谱型与金属丰度的代码；与参数推断有实质交集，但 ML 推断不是唯一核心贡献。",A,title_abstract,false,,blind_completed
+w4_rq02_004,rq02_stellar_parameters,https://openalex.org/W2211251945,2,high,"论文以 Gaia RVS 恒星光谱恢复 Teff、log g、[M/H] 等，并明确比较含人工神经网络在内的参数化方法。",B,title_abstract;arxiv,true,https://arxiv.org/abs/1510.00111,blind_completed
+w4_rq02_005,rq02_stellar_parameters,https://openalex.org/W3107253413,0,high,"光谱与高斯过程用于活动过滤、径向速度和行星质量研究，不是估计恒星大气参数。",A,title_abstract,false,,blind_completed
+w4_rq02_006,rq02_stellar_parameters,https://openalex.org/W2043055070,2,high,"对恒星光谱库做 PCA，并用标准星校准主成分到有效温度的映射，核心输出是 Teff。",B,title_abstract;publisher,true,https://www.aanda.org/articles/aa/abs/2013/05/aa20961-12/aa20961-12.html,blind_completed
+w4_rq02_007,rq02_stellar_parameters,https://openalex.org/W2797439311,0,high,"由多历元径向速度寻找伴星并拟合轨道参数，不是从光谱推断 Teff、log g、丰度等恒星参数。",A,title_abstract,false,,blind_completed
+w4_rq02_008,rq02_stellar_parameters,https://openalex.org/W2032231736,2,high,"从 SDSS/SEGUE 观测光谱用非线性回归直接估计 Teff、log g 和 [Fe/H]，与 RQ 完全对应。",A,title_abstract,false,,blind_completed
+w4_rq02_009,rq02_stellar_parameters,https://openalex.org/W2900811782,1,medium,"综述恒星光谱化学丰度的自动化确定与校准，并讨论 data-driven 方法；相关性真实但机器学习只是更宽流程的一部分。",A,title_abstract,false,,blind_completed
+w4_rq02_010,rq02_stellar_parameters,https://openalex.org/W2072609734,0,high,"研究系外行星透射光谱和凌星光变噪声，输出行星大气约束而非恒星参数。",A,title_abstract,false,,blind_completed
+w4_rq02_011,rq02_stellar_parameters,https://openalex.org/W2795071146,0,high,"t-SNE 用于已知恒星丰度向量的结构分析和 chemical tagging，不执行从光谱到参数的推断。",A,title_abstract,false,,blind_completed
+w4_rq02_012,rq02_stellar_parameters,https://openalex.org/W2969434441,2,high,"SLAM 以 LAMOST 光谱为输入，用支持向量回归预测 Teff、log g、金属丰度和多种元素丰度。",A,title_abstract,false,,blind_completed
+w4_rq02_013,rq02_stellar_parameters,https://openalex.org/W2139768786,0,high,"机器学习仅用于星震频率提取的质量保证，参数约束来自光变功率谱而非恒星光谱回归。",A,title_abstract,false,,blind_completed
+w4_rq02_014,rq02_stellar_parameters,https://openalex.org/W2777402735,0,high,"核心任务是从 LAMOST 光谱识别并分类碳星；大气参数只是少量候选的辅助描述，不是 ML 参数估计输出。",A,title_abstract,false,,blind_completed
+w4_rq02_015,rq02_stellar_parameters,https://openalex.org/W3161474384,0,high,"主题是由偶极重力模推断旋转星内部混合，没有从恒星光谱进行机器学习大气参数估计。",A,title_abstract,false,,blind_completed
+w4_rq02_016,rq02_stellar_parameters,https://openalex.org/W2740236269,1,high,"SDSS 数据发布明确包含 The Cannon 从 APOGEE 光谱生成恒星参数这一 ML 产品，但论文主体是多巡天数据发布而非参数算法。",A,title_abstract,false,,blind_completed
+w4_rq02_017,rq02_stellar_parameters,https://openalex.org/W2006997511,2,high,"核心是用自动分析与分类算法从 Ca II 三重线区恒星光谱稳健估计恒星参数。",A,title_abstract,false,,blind_completed
+w4_rq02_018,rq02_stellar_parameters,https://openalex.org/W2531334071,2,high,"用 The Cannon 对 52 万余条 RAVE 光谱做数据驱动重分析，直接推断 Teff、log g 和多元素丰度。",A,title_abstract,false,,blind_completed
+w4_rq02_019,rq02_stellar_parameters,https://openalex.org/W2971836485,0,high,"这是引力波双致密星并合事件目录，数据和参数均不是恒星观测光谱与大气参数。",A,title_abstract,false,,blind_completed
+w4_rq02_020,rq02_stellar_parameters,https://openalex.org/W3122729254,0,high,"综述通过亮度振荡开展星震学，没有机器学习从恒星光谱估计大气参数的核心任务。",A,title_abstract,false,,blind_completed
+w4_rq03_001,rq03_spectral_preprocessing,https://openalex.org/W2745394653,0,high,"卷积网络分析银河中心伽马射线图像与点源贡献，既非恒星光谱，也非光谱预处理。",A,title_abstract,false,,blind_completed
+w4_rq03_002,rq03_spectral_preprocessing,https://openalex.org/W7130819561,0,high,"癌症多模态数据与基础模型综述，研究领域、对象和数据均不符合天文恒星光谱 RQ。",A,title_abstract,false,,blind_completed
+w4_rq03_003,rq03_spectral_preprocessing,https://openalex.org/W3155899199,0,high,"无线通信的 spectrum sensing 与调制识别并非天文恒星光谱处理。",A,title_abstract,false,,blind_completed
+w4_rq03_004,rq03_spectral_preprocessing,https://openalex.org/W3103819337,0,high,"对象是星系 spectro-photometric SED，去噪自编码器用于无监督特征表示与族群结构，不是恒星光谱质量恢复。",A,title_abstract,false,,blind_completed
+w4_rq03_005,rq03_spectral_preprocessing,https://openalex.org/W3088227899,0,high,"自编码重建只是学习表示的辅助任务，主要目标是发现与恒星参数相关的潜在特征，并未对观测光谱做降噪或质量恢复。",A,title_abstract,false,,blind_completed
+w4_rq03_006,rq03_spectral_preprocessing,https://openalex.org/W2065532082,0,high,"方法清除的是 Kepler 测光光变曲线的系统误差；虽属去噪，但 wrong modality，不是恒星光谱。",A,title_abstract,false,,blind_completed
+w4_rq03_007,rq03_spectral_preprocessing,https://openalex.org/W4220667678,1,medium,"比较含机器学习在内的多种方法，以建模并去除恒星活动导致的光谱/RV 扰动；与质量校正相关，但直接产物主要是修正后的 RV 而非光谱预处理。",B,title_abstract;arxiv,true,https://arxiv.org/abs/2201.10639,blind_completed
+w4_rq03_008,rq03_spectral_preprocessing,https://openalex.org/W4387971543,0,high,"JADES 红外成像数据发布和测光目录，不是机器学习恒星光谱预处理。",A,title_abstract,false,,blind_completed
+w4_rq03_009,rq03_spectral_preprocessing,https://openalex.org/W4391340948,0,high,"网络根据恒星参数生成合成光谱，方向是 parameters-to-spectrum 的 synthesis，不是改善观测光谱质量。",A,title_abstract,false,,blind_completed
+w4_rq03_010,rq03_spectral_preprocessing,https://openalex.org/W4399876663,0,high,"这是无监督学习在天文学中的宽泛综述，摘要没有把恒星光谱预处理或质量改进作为核心范围。",A,title_abstract,false,,blind_completed
+w4_rq03_011,rq03_spectral_preprocessing,https://openalex.org/W2607233176,0,high,"对象是星系 SED，去噪自编码器服务于特征学习和星系族群表示；wrong object 且非恒星观测光谱清洗。",A,title_abstract,false,,blind_completed
+w4_rq03_012,rq03_spectral_preprocessing,https://openalex.org/W4388514441,0,high,"deep-REMAP 的核心输出是 Teff、log g、metallicity 等恒星参数，属于下游回归而非光谱预处理。",A,title_abstract,false,,blind_completed
+w4_rq03_013,rq03_spectral_preprocessing,https://openalex.org/W4401837813,0,high,"CWT 把光谱转为特征图并由网络分类 BAFGK 类型；这是下游特征工程与分类，不是降噪、校准或质量恢复。",A,title_abstract,false,,blind_completed
+w4_rq03_014,rq03_spectral_preprocessing,https://openalex.org/W3134861754,2,high,"深度贝叶斯模型直接对真实 SDSS 恒星光谱降噪、处理相关噪声、缺失通量、天光线与宇宙线，预处理是核心贡献。",A,title_abstract,false,,blind_completed
+w4_rq03_015,rq03_spectral_preprocessing,https://openalex.org/W4391229918,0,high,"处理对象是超新星遗迹 SN1006 的 X 射线成像重建，不是恒星光谱。",A,title_abstract,false,,blind_completed
+w4_rq03_016,rq03_spectral_preprocessing,https://openalex.org/W4288083930,0,high,"机器学习模拟并拟合 II 型超新星合成光谱；对象不是恒星，任务也是生成/建模而非观测光谱预处理。",A,title_abstract,false,,blind_completed
+w4_rq03_017,rq03_spectral_preprocessing,https://openalex.org/W4306968094,0,high,"综述深度学习分析星系巡天，主要面向星系图像、分类等任务，不是恒星光谱质量改进。",A,title_abstract,false,,blind_completed
+w4_rq03_018,rq03_spectral_preprocessing,https://openalex.org/W4284680505,0,high,"虽包含光谱预处理与 XGBoost，但对象是煤矿混合水 UV-Vis 光谱，属于明确的 wrong domain。",A,title_abstract,false,,blind_completed
+w4_rq03_019,rq03_spectral_preprocessing,https://openalex.org/W4353102922,0,high,"StarGRUNet 从低分辨率恒星光谱估计大气参数与丰度，核心是下游回归，不是预处理或质量恢复。",A,title_abstract,false,,blind_completed
+w4_rq03_020,rq03_spectral_preprocessing,https://openalex.org/W4384201335,0,high,"太阳物理机器学习综述仅泛述自动分析，摘要未提供机器学习直接改善恒星光谱质量的证据。",A,title_abstract,false,,blind_completed
