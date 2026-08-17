@@ -46,3 +46,6 @@ outputs/quality/*
 
 # outputs/baselines/ 和 outputs/live_test_*/ 不在忽略列表中。
 # 这些目录只保存经过来源、安全和可复现性检查、确有必要长期保留的基线或实验结果。
+
+# Reasonix agent 本地配置（含个人绝对路径与权限规则，不提交）。
+reasonix.toml
