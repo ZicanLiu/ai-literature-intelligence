@@ -71,6 +71,9 @@ Domain Terms → Domain Query Set → Acquisition Queries → OpenAlex v2
   成员判断历史或把 AI proposal 表述成人类最终裁决；
 - W4 v0.1 是 record-level query-paper benchmark；已知 same-paper alias 必须保留并显式记录，
   不得为提高指标静默合并或删除。
+- W5 正式方法必须使用统一 Method Ranking Contract；ranking generation 只能读取冻结 Candidate
+  Pool 和 Research Query，不得读取 approved benchmark label/judgement。参数、模型和 artifact
+  必须先冻结再评价，不得根据正式 label 或指标回调。
 
 ## 6. 开发边界
 
@@ -83,6 +86,8 @@ Domain Terms → Domain Query Set → Acquisition Queries → OpenAlex v2
 - 把 AI-assisted label 表述为人工 ground truth；
 - 把 proposed/draft judged set 用作正式实验，或绕过 approved status、60/60 identity 和冻结
   artifact hash 的 strict validator；
+- 绕过 W5 method-output validator、混用不同 Candidate Pool/RQ，或把含 benchmark 答案的 artifact
+  当作正式 ranking；
 - 为“更高级”而擅自替换算法、调权重或扩大 Issue 范围；
 - 删除断言、放宽错误或把 error 降级为 warning 来换取通过；
 - 提交普通 `outputs/experiments/`、`outputs/batches/` 或本地数据库。
@@ -114,4 +119,5 @@ AI 可以读取项目文件、搜索调用关系、运行离线测试与安全 f
 - [v0.3.0 候选发布说明](docs/reports/week2/V0.3.0_RELEASE_NOTES.md)
 - [W4 研究计划](docs/project/W4_RESEARCH_PLAN.md)
 - [W4 Pilot Benchmark 收口协议](docs/project/W4_PILOT_BENCHMARK_PROTOCOL.md)
+- [W5 Method Ranking Contract 与公共实验协议](docs/project/W5_METHOD_RANKING_CONTRACT.md)
 - [贡献指南](CONTRIBUTING.md)

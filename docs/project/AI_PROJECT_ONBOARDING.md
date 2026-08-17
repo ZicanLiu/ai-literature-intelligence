@@ -5,10 +5,11 @@
 本文帮助只熟悉 v0.2.0、只参与过某个 W2 模块，或第一次进入仓库的成员和 AI Agent 建立完整上下文。它不是永远正确的状态数据库。
 
 - 快照更新时间：2026-08-17
-- 对应公共 `main` 基线：`7125455`（W4 PR #42–#47 已合并）
-- 当前收口分支：`codex/w5-baseline-closure`（未 push、未 merge）
+- W5 Contract 前置基线：`d558a088`（PR #48 已合并；仅作历史锚点）
+- 当前公共能力：W5 Method Ranking Contract v1.0 已建立，供六名成员并行开发
 - 当前状态：W1–W4 工程、六人 Pilot Annotation、独立 Blind AI Audit 与人工复核已完成；
-  `w4_query_relevance_pilot_v0.1.0` 已批准并通过 strict validator
+  `w4_query_relevance_pilot_v0.1.0` 已批准并通过 strict validator。公共 `main` 的准确 HEAD
+  必须在接手任务时用当前 Git/GitHub 重新核对，不在本文预写未来 merge SHA
 
 每次开始新任务，都必须重新用 Git、源码和测试核对本文。事实优先级及长期规则见
 [`AGENTS.md`](../../AGENTS.md)，当前快照见 [`docs/CURRENT_STATUS.md`](../CURRENT_STATUS.md)。
@@ -67,6 +68,11 @@ query-boundary audits 和 evaluator 合并到 `main`。涉及 benchmark 或 W5 �
 `data/benchmarks/w4_query_relevance/v0.1.0/`，状态为 `approved`。它由六人原始 annotation、
 独立 Blind AI evidence audit 和独立人类 review/adjudication 共同形成；不能表述为 gold
 standard、expert ground truth、pure human ground truth 或算法优劣结论。
+
+W5 在这 60 个冻结 pair 内进行 Query-Relevance ranking/reranking，不是端到端 retrieval
+recall benchmark。所有正式方法必须遵守
+[`W5_METHOD_RANKING_CONTRACT.md`](W5_METHOD_RANKING_CONTRACT.md)，算法生成阶段不得读取
+approved benchmark label；ranking 与参数先冻结，再由评价阶段连接 judgement。
 
 ## 3. 当前关键目录
 
@@ -383,6 +389,12 @@ hash 进行交叉验证。因此同步篡改输入和 package hash 仍会失败�
 Git 工作树 clean，reference year 继承 benchmark；实验 manifest 同时记录 Python、必要依赖和平台
 信息，避免程序自己的输出造成 dirty-state 误判。
 
+W5 公共 contract 另行规定算法无关的 60 行 ranking CSV 和 method manifest。业务 validator
+位于 `src.w5_method_contract`，CLI 为 `python -m app.validate_w5_method --manifest <path>`；
+它只读取冻结 Candidate Pool、Research Query 与 method package，不读取 judgement。
+`src.w4_benchmark_evaluation.evaluate_contract_ranking()` 在评价阶段消费 validator 返回结果，
+使后续 sparse/dense/neural/hybrid 方法无需在 evaluator 中各写一套特殊路径。
+
 ## 12. Batch Runner
 
 Batch Runner 读取 JSON 配置，对每个 enabled item 构造 `PipelineConfig`，然后顺序调用同一个 `run_unified_pipeline()`。每项独立保存 parent run；batch 目录只保存配置快照和机器/人工可读摘要。
@@ -431,7 +443,8 @@ Batch 输出位于 `outputs/batches/<batch_id>/`，包含 `batch_config.json`、
 
 当前测试体系包括模块单测、安全离线 fixture、Unified Pipeline E2E、失败边界、Batch Runner 和 Quality Gate 测试。它不依赖真实 API Key，也不应把测试输出写入正式实验目录。
 
-本文更新时的 W5 前置收口工作区快照为 **300 项自动测试全部通过**。该数字不是永久事实；
+本文更新时的 W5 Method Ranking Contract v1.0 测试数以
+[`CURRENT_STATUS.md`](../CURRENT_STATUS.md) 的实际验证记录为准。该数字不是永久事实；
 开始任何新任务都必须重新运行：
 
 ```powershell
@@ -451,7 +464,7 @@ python -m app.quality_gate --level full
 - Full：包含 Basic，并增加 CSV 结构、唯一 ID、标签引用、数值范围、run config 和已跟踪实验检查；
 - error 会使 CLI 返回非零；warning 需要人工阅读，但不会单独导致失败。
 
-W5 前置收口的最终 Basic/Full 结果以 [`CURRENT_STATUS.md`](../CURRENT_STATUS.md) 为准。
+W5 Contract v1.0 的 Basic/Full 结果以 [`CURRENT_STATUS.md`](../CURRENT_STATUS.md) 为准。
 此前公共基线的 Full Gate 有三个历史 warning：
 
 1. 一条 W1 标注 CSV 的逗号未按 CSV 规则转义；
@@ -511,15 +524,16 @@ git diff --stat
 3. 阅读本交接文档；
 4. 阅读 `docs/CURRENT_STATUS.md`；
 5. 阅读当前 Issue 和相关模块文档；
-6. 若使用 AI，先让 AI 只读审计实际代码、测试和 Git 状态；
-7. 从最新 `main` 创建独立 feature/fix/docs/test 分支；
-8. 按最小范围实现，不改无关模块；
-9. 运行与修改直接相关的定向测试；
-10. 运行完整离线自动测试；
-11. 运行适用的 Quality Gate；
-12. 检查 `git diff --check`、`git status` 和完整 diff；
-13. 由成员或组长人工审查边界、数据和结论；
-14. 再 commit、push、创建 PR，等待审核合并。
+6. W5 排序方法还必须阅读 `docs/project/W5_METHOD_RANKING_CONTRACT.md`；
+7. 若使用 AI，先让 AI 只读审计实际代码、测试和 Git 状态；
+8. 从最新 `main` 创建独立 feature/fix/docs/test 分支；
+9. 按最小范围实现，不改无关模块；
+10. 运行与修改直接相关的定向测试；
+11. 运行完整离线自动测试；
+12. 运行适用的 Quality Gate；
+13. 检查 `git diff --check`、`git status` 和完整 diff；
+14. 由成员或组长人工审查边界、数据和结论；
+15. 再 commit、push、创建 PR，等待审核合并。
 
 可复制到 Issue 的入口说明：
 
@@ -591,6 +605,9 @@ v0.2 preliminary_score
 
 未来可将 BM25、semantic embedding、hybrid ranking、learning-to-rank 作为候选实验，但它们目前都 **NOT IMPLEMENTED**，项目也没有采用 RankNet。
 
+W5 公共 ranking/manifest contract、validator、无标签 fixture 和 evaluator adapter 已建立；这只
+表示不同算法具备统一集成接口，不表示任何候选算法或正式比较结果已经实现。
+
 公平比较应保持：
 
 ```text
@@ -614,6 +631,8 @@ v0.2 preliminary_score
   trusted frozen-input hash、parent draft、人工 adjudication/provenance checklist 的 strict
   validator；
 - 在 dirty Git 工作树中启动正式 benchmark 实验，或让 CLI reference year 静默偏离 benchmark；
+- 让 W5 ranking generation 读取 approved label/judgement，或看正式指标后调参、挑 run；
+- 输出缺失 pair、混合 method_id、非确定 rank 或未通过 W5 method-output validator 的 artifact；
 - 直接改 baseline 公式或成员结论，却没有独立 Issue 和证据；
 - 只跑自己新增的测试，不跑全量测试和门禁；
 - 提交普通 experiment、batch 输出、本地数据库或敏感配置；

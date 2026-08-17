@@ -10,7 +10,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 from app.evaluate_w4_benchmark import main as evaluate_cli_main
-from app.validate_w4_benchmark import main as validate_cli_main
+from app.validate_w4_benchmark import (
+    DEFAULT_MANIFEST,
+    main as validate_cli_main,
+)
 from src.annotation_tasks import read_csv_rows, sha256_file, write_csv_rows
 from src.w4_benchmark_artifact import build_benchmark_draft
 from src.w4_benchmark_validation import (
@@ -365,13 +368,26 @@ class BenchmarkPackageValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "draft"):
             self._strict(package)
 
-    def test_default_validator_cli_rejects_draft_and_review_mode_accepts_it(self) -> None:
+    def test_default_manifest_points_to_approved_v010(self) -> None:
+        self.assertEqual(DEFAULT_MANIFEST.resolve(), APPROVED_MANIFEST.resolve())
+
+    def test_default_validator_cli_accepts_approved_package(self) -> None:
+        output = io.StringIO()
+        with redirect_stdout(output):
+            exit_code = validate_cli_main([])
+        self.assertEqual(exit_code, 0)
+        self.assertIn("mode=strict-approved", output.getvalue())
+        self.assertIn("status=approved", output.getvalue())
+        self.assertIn("pairs=60", output.getvalue())
+
+    def test_explicit_draft_is_rejected_by_strict_mode(self) -> None:
         strict_output = io.StringIO()
         with redirect_stdout(strict_output):
             strict_code = validate_cli_main(["--manifest", str(DRAFT_MANIFEST)])
         self.assertEqual(strict_code, 1)
         self.assertIn("approved", strict_output.getvalue())
 
+    def test_explicit_draft_is_accepted_by_review_mode(self) -> None:
         review_output = io.StringIO()
         with redirect_stdout(review_output):
             review_code = validate_cli_main(

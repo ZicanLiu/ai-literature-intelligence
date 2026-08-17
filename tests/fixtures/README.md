@@ -9,6 +9,7 @@ domain_query/   领域词典、查询生成和标注案例
 validation/     正常与故意错误的数据验收案例
 ranking/        TF-IDF、排序和指标已知答案案例
 pipeline/       多查询、provenance、统一排序与 batch 离线端到端案例
+w5_method_contract/ 无标签的 60-pair 合法排名，用于 contract/RRF/evaluator/error-analysis
 ```
 
 统一规则：

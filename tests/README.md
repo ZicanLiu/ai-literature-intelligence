@@ -16,7 +16,8 @@ python -m unittest discover -s tests/automated -p "test_*.py" -v
 多查询 provenance 合并、OpenAlex ID/DOI 精确去重、疑似队列不删除、显式 ranking
 keyword、Pipeline CSV 往返、可选评价，以及 Batch Runner 的独立 run 和失败继续策略。
 W4 还覆盖 Candidate Pool 冻结不变量、60/30/90 双标分配、六人个人任务生成、默认拒绝
-覆盖、只读字段保护和标注枚举/证据契约；全部使用既有公开样例和临时目录，不联网。
+覆盖、只读字段保护和标注枚举/证据契约；W5 覆盖统一 method ranking/manifest validator、
+无标签 fixture 和 evaluator adapter。全部使用既有公开样例和临时目录，不联网。
 
 ## 第二周 fixture
 

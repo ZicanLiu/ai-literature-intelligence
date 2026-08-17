@@ -14,7 +14,7 @@ DEFAULT_MANIFEST = (
     / "data"
     / "benchmarks"
     / "w4_query_relevance"
-    / "v0.1.0-draft.1"
+    / "v0.1.0"
     / "manifest.json"
 )
 

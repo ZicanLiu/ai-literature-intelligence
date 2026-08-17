@@ -54,6 +54,14 @@ W4 六人 annotation、Agreement Analyzer、entity/provenance/query-boundary aud
 `w4_query_relevance_pilot_v0.1.0` 状态为 `approved` 并通过 strict validator；该集合仍不得称为
 gold ground truth。
 
+## 第五周排序实验
+
+- [W5 Method Ranking Contract 与公共实验协议](project/W5_METHOD_RANKING_CONTRACT.md)
+
+W5 公共 Bootstrap 固定了算法无关的 ranking CSV、method manifest、validator、无标签 fixture
+和 evaluator adapter。当前实验边界是冻结 60-pair Candidate Pool 内的 Query-Relevance
+ranking/reranking，不是整个 OpenAlex 空间的 retrieval recall benchmark。
+
 ## live 验证
 
 - [2026-07-18 OpenAlex live 测试报告](reports/live/LIVE_TEST_REPORT_20260718.md)

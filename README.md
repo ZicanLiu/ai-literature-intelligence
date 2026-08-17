@@ -276,6 +276,15 @@ record-level pair 和两对高置信 alias；独立 Blind AI Audit 和 6 条人�
 版本保留 60/60 final label、parent draft 和完整 provenance，可用于后续正式算法实验。本项目
 不使用 gold standard 或 ground truth 命名。
 
+### 第五周公共排序接口
+
+- [W5 Method Ranking Contract 与公共实验协议](docs/project/W5_METHOD_RANKING_CONTRACT.md)
+
+W5 在同一冻结 60-pair Candidate Pool 上比较 Query-Relevance ranking/reranking，不是端到端
+retrieval recall benchmark。所有正式方法统一输出 60 行 ranking CSV 与配套 manifest；算法生成
+阶段不得读取 approved benchmark label。公共 validator、evaluator adapter 及两个无标签 fixture
+允许 BM25、Dense、Cross-Encoder、RRF、Error Analysis 和 CI 任务从同一 `main` 独立开发。
+
 ## 14. 后续可扩展方向
 
 - Crossref DOI 二次校验
