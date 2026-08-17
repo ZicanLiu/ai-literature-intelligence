@@ -4,11 +4,14 @@
 
 - `judgements.csv`：60/60 pair；57 条已有直接 judgement，3 条 `final_label` 仍为空；
 - `adjudication_proposals.csv`：3 个 AI-assisted proposal，保留双方原判断和 reviewer 可填写列；
-- `manifest.json`：冻结输入、六人 annotation、artifact hash、alias policy 和 promotion checklist。
+- `manifest.json`：冻结输入、六人 annotation、artifact hash、完整 input-set identity、alias policy
+  和未完成的 promotion checklist。
 
 Reviewer 应复制到新的 approved 版本目录后填写 review 结果，不覆盖此 draft。具体协议、字段
 语义、versioning 和 strict evaluator 命令见
 [`W4_PILOT_BENCHMARK_PROTOCOL.md`](../../../docs/project/W4_PILOT_BENCHMARK_PROTOCOL.md)。
+Approved manifest 必须绑定此 draft manifest 的路径/hash/version/input-set identity；仅刷新新
+package 的自报 hash 或 judgement status 不构成有效人工批准。
 
 当前 draft 可复现生成：
 

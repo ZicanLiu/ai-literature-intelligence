@@ -364,6 +364,18 @@ adjudication，AI proposal 不能冒充人类最终裁决。
 `proposed`。它保留 60/60 pair，但 3 个 disagreement 的 `final_label` 为空；默认 strict
 validator 和 formal evaluator 都会拒绝。旧 `--labels` 评价入口只服务 smoke/partial evaluation。
 
+Strict promotion 不是把 `judgement_status` 和 manifest hash 手工改成看似完成：每个分歧都必须
+在 proposal 与 judgement 中留下匹配的 human reviewer、approve/modify、final label、带时区时间
+和 note；proposal 的两位 annotator、原 label/reason 会重新同 assignments 和六份原始 annotation
+交叉验证。Approved package 还要完成 package-level checklist，并绑定实际被审核 draft manifest
+的 hash 和完整冻结 `input_set_identity`。
+
+冻结输入不以 approved manifest 自报 hash 为信任根。Validator 使用 package 外的 W4 v0.1
+trust anchors 校验冻结 pool manifest，再解析其中的 candidate/assignment/query/source 路径和
+hash 进行交叉验证。因此同步篡改输入和 package hash 仍会失败。正式 evaluator 必须在输出前确认
+Git 工作树 clean，reference year 继承 benchmark；实验 manifest 同时记录 Python、必要依赖和平台
+信息，避免程序自己的输出造成 dirty-state 误判。
+
 ## 12. Batch Runner
 
 Batch Runner 读取 JSON 配置，对每个 enabled item 构造 `PipelineConfig`，然后顺序调用同一个 `run_unified_pipeline()`。每项独立保存 parent run；batch 目录只保存配置快照和机器/人工可读摘要。
@@ -412,7 +424,7 @@ Batch 输出位于 `outputs/batches/<batch_id>/`，包含 `batch_config.json`、
 
 当前测试体系包括模块单测、安全离线 fixture、Unified Pipeline E2E、失败边界、Batch Runner 和 Quality Gate 测试。它不依赖真实 API Key，也不应把测试输出写入正式实验目录。
 
-本文更新时的 W5 前置收口工作区快照为 **290 项自动测试全部通过**。该数字不是永久事实；
+本文更新时的 W5 前置收口工作区快照为 **300 项自动测试全部通过**。该数字不是永久事实；
 开始任何新任务都必须重新运行：
 
 ```powershell
@@ -594,7 +606,9 @@ v0.2 preliminary_score
 - 自动删除 suspected duplicate；
 - 把 AI-assisted label 冒充人工 ground truth；
 - 把 `proposed/draft` judged set 传给正式实验，或绕过 approved status、60/60 identity 和
-  candidate/query/source hash 的 strict validator；
+  trusted frozen-input hash、parent draft、人工 adjudication/provenance checklist 的 strict
+  validator；
+- 在 dirty Git 工作树中启动正式 benchmark 实验，或让 CLI reference year 静默偏离 benchmark；
 - 直接改 baseline 公式或成员结论，却没有独立 Issue 和证据；
 - 只跑自己新增的测试，不跑全量测试和门禁；
 - 提交普通 experiment、batch 输出、本地数据库或敏感配置；

@@ -21,8 +21,11 @@
 
 from __future__ import annotations
 
+import importlib.metadata
 import json
+import platform
 import subprocess
+import sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -101,6 +104,50 @@ REQUIRED_POOL_FIELDS = {"pair_id", "research_query_id", "openalex_id"}
 ERROR_TOP_K = 5
 ERROR_RANK_DELTA_THRESHOLD = 5
 
+REPRODUCIBILITY_DEPENDENCIES = (
+    "requests",
+    "pandas",
+    "matplotlib",
+    "python-dotenv",
+)
+
+
+def capture_experiment_environment(
+    *, project_root: str | Path
+) -> dict[str, Any]:
+    """Capture formal-run Git/Python/dependency state before any output exists."""
+    root = Path(project_root).resolve()
+    git_revision, git_dirty = _git_state(root)
+    requirements_path = root / "requirements.txt"
+    dependencies: dict[str, str | None] = {}
+    for distribution in REPRODUCIBILITY_DEPENDENCIES:
+        try:
+            dependencies[distribution] = importlib.metadata.version(distribution)
+        except importlib.metadata.PackageNotFoundError:
+            dependencies[distribution] = None
+    requirements: dict[str, str | None] = {
+        "path": "requirements.txt",
+        "sha256": (
+            sha256_file(requirements_path) if requirements_path.is_file() else None
+        ),
+    }
+    return {
+        "git_revision": git_revision,
+        "git_dirty": git_dirty,
+        "python": {
+            "version": platform.python_version(),
+            "implementation": platform.python_implementation(),
+            "cache_tag": sys.implementation.cache_tag,
+        },
+        "platform": {
+            "system": platform.system(),
+            "release": platform.release(),
+            "machine": platform.machine(),
+        },
+        "requirements": requirements,
+        "dependencies": dependencies,
+    }
+
 
 def write_experiment_manifest(
     *,
@@ -113,6 +160,7 @@ def write_experiment_manifest(
     reference_year: int,
     metrics_path: str | Path,
     error_cases_path: str | Path,
+    environment_snapshot: dict[str, Any],
 ) -> dict[str, Any]:
     """Write the mandatory reproducibility manifest for a strict experiment."""
     root = Path(project_root).resolve()
@@ -124,18 +172,27 @@ def write_experiment_manifest(
     source = Path(source_path)
     metrics = Path(metrics_path)
     error_cases = Path(error_cases_path)
-    git_revision, git_dirty = _git_state(root)
     payload = {
         "schema_version": "1.0",
         "experiment_type": "w4_query_relevance_strict_benchmark",
         "created_at": datetime.now().astimezone().isoformat(timespec="seconds"),
-        "git_revision": git_revision,
-        "git_dirty": git_dirty,
+        "git_revision": environment_snapshot["git_revision"],
+        "git_dirty": environment_snapshot["git_dirty"],
+        "environment": {
+            "python": environment_snapshot["python"],
+            "platform": environment_snapshot["platform"],
+            "requirements": environment_snapshot["requirements"],
+            "dependencies": environment_snapshot["dependencies"],
+        },
         "benchmark": {
             "version": benchmark_package["manifest"]["benchmark_version"],
             "status": benchmark_package["manifest"]["status"],
             "manifest_path": _safe_project_path(benchmark_manifest, root),
             "manifest_sha256": benchmark_package["benchmark_hash"],
+            "input_set_identity": benchmark_package["input_set_identity"],
+            "parent_draft_manifest_sha256": benchmark_package["manifest"][
+                "parent_package"
+            ]["sha256"],
         },
         "inputs": {
             "candidate_pool": {

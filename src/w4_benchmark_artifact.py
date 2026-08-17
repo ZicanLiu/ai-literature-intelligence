@@ -24,6 +24,8 @@ from src.w4_benchmark_validation import (
     BENCHMARK_VERSION,
     JUDGEMENT_FIELDS,
     PROPOSAL_FIELDS,
+    compute_input_set_identity,
+    validate_proposal_annotation_provenance,
 )
 
 
@@ -174,12 +176,24 @@ def build_benchmark_draft(
                 proposal = proposals_by_pair.get(pair_id)
                 if proposal is None:
                     raise ValueError(f"双标分歧缺少 adjudication proposal：{pair_id}。")
-                _validate_proposal_against_pair(
+                validate_proposal_annotation_provenance(
                     proposal,
                     pool_row=pool_row,
                     primary=primary,
                     secondary=secondary,
                 )
+                if proposal["proposal_status"] != "pending_human_review":
+                    raise ValueError(
+                        f"当前 AI proposal 必须标记 pending_human_review：{pair_id}。"
+                    )
+                if (
+                    proposal["proposed_final_label"] not in {"0", "1", "2"}
+                    or not proposal["proposal_reason"].strip()
+                    or not proposal["evidence_sources"].strip()
+                ):
+                    raise ValueError(
+                        f"adjudication proposal 必须记录 0/1/2、理由和证据来源：{pair_id}。"
+                    )
                 row.update(
                     {
                         "final_label": "",
@@ -200,6 +214,16 @@ def build_benchmark_draft(
 
     write_csv_rows(paths["judgements"], JUDGEMENT_FIELDS, judgements)
     status_counts = Counter(row["agreement_status"] for row in judgements)
+    input_refs = {
+        "candidate_pool": _file_ref(paths["candidate_pool"], root, version="w4_pilot_v0.1"),
+        "assignments": _file_ref(paths["assignments"], root, version="w4_pilot_v0.1"),
+        "research_queries": _file_ref(paths["research_queries"], root, version="w4_pilot_v0.1"),
+        "source_sample": _file_ref(paths["source_sample"], root),
+        "pool_manifest": _file_ref(paths["pool_manifest"], root, version="w4_pilot_v0.1"),
+        "annotations": {
+            slug: _file_ref(path, root) for slug, path in annotation_paths.items()
+        },
+    }
     manifest = {
         "schema_version": "1.0",
         "benchmark_name": BENCHMARK_NAME,
@@ -219,6 +243,21 @@ def build_benchmark_draft(
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "generated_from_git_revision": _git_revision(root),
         "reference_year": reference_year,
+        "input_set_identity": compute_input_set_identity(input_refs),
+        "parent_package": None,
+        "approval": {
+            "status": "pending_human_review",
+            "approved_by": "",
+            "approved_at": "",
+            "review_note": "",
+            "checklist": {
+                "all_disagreements_human_reviewed": False,
+                "original_annotation_provenance_verified": False,
+                "frozen_input_anchor_verified": False,
+                "jiafucheng_provenance_checked": False,
+                "parent_draft_reviewed": False,
+            },
+        },
         "counts": {
             "pair_count": len(judgements),
             "research_query_count": len(
@@ -232,16 +271,7 @@ def build_benchmark_draft(
                 for row in judgements
             ),
         },
-        "inputs": {
-            "candidate_pool": _file_ref(paths["candidate_pool"], root, version="w4_pilot_v0.1"),
-            "assignments": _file_ref(paths["assignments"], root, version="w4_pilot_v0.1"),
-            "research_queries": _file_ref(paths["research_queries"], root, version="w4_pilot_v0.1"),
-            "source_sample": _file_ref(paths["source_sample"], root),
-            "pool_manifest": _file_ref(paths["pool_manifest"], root, version="w4_pilot_v0.1"),
-            "annotations": {
-                slug: _file_ref(path, root) for slug, path in annotation_paths.items()
-            },
-        },
+        "inputs": input_refs,
         "artifacts": {
             "judgements": _file_ref(paths["judgements"], root),
             "adjudication_proposals": _file_ref(paths["proposals"], root),
@@ -289,7 +319,11 @@ def build_benchmark_draft(
         encoding="utf-8",
         newline="\n",
     )
-    return {name: path for name, path in paths.items() if name in {"judgements", "manifest", "proposals"}}
+    return {
+        name: path
+        for name, path in paths.items()
+        if name in {"judgements", "manifest", "proposals"}
+    }
 
 
 def _proposal_index(rows: list[dict[str, str]]) -> dict[str, dict[str, str]]:
@@ -300,36 +334,6 @@ def _proposal_index(rows: list[dict[str, str]]) -> dict[str, dict[str, str]]:
             raise ValueError("adjudication proposal 的 pair_id 必须非空且唯一。")
         result[pair_id] = row
     return result
-
-
-def _validate_proposal_against_pair(
-    proposal: dict[str, str],
-    *,
-    pool_row: dict[str, str],
-    primary: dict[str, str],
-    secondary: dict[str, str],
-) -> None:
-    pair_id = pool_row["pair_id"]
-    expected = {
-        "research_query_id": pool_row["research_query_id"],
-        "openalex_id": pool_row["openalex_id"],
-        "title": pool_row["title"],
-        "annotator_a": primary["annotator"],
-        "label_a": primary["label"],
-        "reason_a": primary["reason"],
-        "annotator_b": secondary["annotator"],
-        "label_b": secondary["label"],
-        "reason_b": secondary["reason"],
-    }
-    for field, value in expected.items():
-        if proposal[field] != value:
-            raise ValueError(f"adjudication proposal 的 {field} 与原始证据不一致：{pair_id}。")
-    if proposal["proposed_final_label"] not in {"0", "1", "2"}:
-        raise ValueError(f"adjudication proposal 必须给出 0/1/2：{pair_id}。")
-    if proposal["proposal_status"] != "pending_human_review":
-        raise ValueError(f"当前 AI proposal 必须标记 pending_human_review：{pair_id}。")
-    if not proposal["proposal_reason"].strip() or not proposal["evidence_sources"].strip():
-        raise ValueError(f"adjudication proposal 必须记录理由和证据来源：{pair_id}。")
 
 
 def _file_ref(path: Path, root: Path, *, version: str | None = None) -> dict[str, str]:

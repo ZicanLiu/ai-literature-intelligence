@@ -24,6 +24,7 @@ from src.w4_benchmark_evaluation import (
     build_error_cases,
     build_metric_rows,
     build_source_index,
+    capture_experiment_environment,
     evaluate_benchmark,
     load_benchmark_labels,
     write_experiment_manifest,
@@ -85,8 +86,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--reference-year",
         type=int,
-        default=2026,
-        help="baseline recency_score 的固定参考年，与 candidate pool 生成一致。",
+        default=None,
+        help=(
+            "baseline recency_score 的固定参考年；strict 模式继承 benchmark，"
+            "显式传入时必须完全一致；partial 模式默认 2026。"
+        ),
     )
     parser.add_argument(
         "--output-dir",
@@ -130,6 +134,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         benchmark_package = None
+        environment_snapshot = None
         if args.strict:
             if args.benchmark_manifest is None:
                 raise ValueError("strict 模式必须提供 --benchmark-manifest。")
@@ -154,6 +159,30 @@ def main(argv: list[str] | None = None) -> int:
             research_queries_path = package_paths["research_queries"]
             source_path = package_paths["source_sample"]
             labels = benchmark_package["labels"]
+            benchmark_reference_year = int(
+                benchmark_package["manifest"]["reference_year"]
+            )
+            if (
+                args.reference_year is not None
+                and args.reference_year != benchmark_reference_year
+            ):
+                raise ValueError(
+                    "strict 模式的 --reference-year 必须与 approved benchmark "
+                    f"一致：{args.reference_year} != {benchmark_reference_year}。"
+                )
+            reference_year = benchmark_reference_year
+            environment_snapshot = capture_experiment_environment(
+                project_root=PROJECT_ROOT
+            )
+            if environment_snapshot["git_dirty"] is not False:
+                state = (
+                    "dirty working tree"
+                    if environment_snapshot["git_dirty"] is True
+                    else "无法确认 working tree clean"
+                )
+                raise ValueError(f"strict 正式实验拒绝 {state}。")
+            if not environment_snapshot["git_revision"]:
+                raise ValueError("strict 正式实验无法记录 Git revision。")
         else:
             if args.benchmark_manifest is not None:
                 raise ValueError("--benchmark-manifest 只能与 --strict 一起使用。")
@@ -165,6 +194,9 @@ def main(argv: list[str] | None = None) -> int:
             research_queries_path = args.research_queries or DEFAULT_RESEARCH_QUERIES
             source_path = args.source or DEFAULT_SOURCE
             labels = load_benchmark_labels(args.labels)
+            reference_year = (
+                args.reference_year if args.reference_year is not None else 2026
+            )
 
         _pool_fields, pool_rows = read_csv_rows(candidate_pool_path)
         research_queries = load_research_queries(research_queries_path)
@@ -174,13 +206,17 @@ def main(argv: list[str] | None = None) -> int:
             labels=labels,
             research_queries=research_queries,
             source_index=source_index,
-            reference_year=args.reference_year,
+            reference_year=reference_year,
         )
     except (OSError, UnicodeError, ValueError) as error:
         print(f"输入读取失败：{error}")
         return 1
 
-    output_dir = args.output_dir if args.output_dir.is_absolute() else PROJECT_ROOT / args.output_dir
+    output_dir = (
+        args.output_dir
+        if args.output_dir.is_absolute()
+        else PROJECT_ROOT / args.output_dir
+    )
     metrics_csv = args.metrics_csv or (output_dir / "w4_benchmark_metrics.csv")
     error_cases_csv = args.error_cases or (output_dir / "w4_ranking_error_cases.csv")
     metrics_csv = _resolve(metrics_csv)
@@ -206,16 +242,20 @@ def main(argv: list[str] | None = None) -> int:
             candidate_pool_path=candidate_pool_path,
             research_queries_path=research_queries_path,
             source_path=source_path,
-            reference_year=args.reference_year,
+            reference_year=reference_year,
             metrics_path=metrics_csv,
             error_cases_path=error_cases_csv,
+            environment_snapshot=environment_snapshot,
         )
         print(f"已保存正式实验 manifest：{_display(experiment_manifest)}")
 
     print(f"\nreference_year：{result['reference_year']}（baseline recency_score 固定参考年）")
     print("\n按 Research Question 分开评价：")
     for query_id, query_result in result["per_query"].items():
-        print(f"  {query_id}（pair {query_result['pair_count']}，labeled {query_result['labeled_count']}）")
+        print(
+            f"  {query_id}（pair {query_result['pair_count']}，"
+            f"labeled {query_result['labeled_count']}）"
+        )
         for method in ("baseline", "two_stage"):
             metrics = query_result[method]
             print(

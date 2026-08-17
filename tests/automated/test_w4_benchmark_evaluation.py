@@ -31,6 +31,7 @@ from src.w4_benchmark_evaluation import (
     build_error_cases,
     build_metric_rows,
     build_source_index,
+    capture_experiment_environment,
     classify_error_case,
     compute_method_metrics,
     evaluate_benchmark,
@@ -48,6 +49,21 @@ RESEARCH_QUERIES = PROJECT_ROOT / "configs" / "w4" / "research_queries.json"
 SOURCE_CSV = (
     PROJECT_ROOT / "data" / "samples" / "w2" / "domain_query" / "live_query_sample.csv"
 )
+
+
+class ExperimentEnvironmentTests(unittest.TestCase):
+    def test_capture_records_git_python_requirements_and_dependencies(self) -> None:
+        snapshot = capture_experiment_environment(project_root=PROJECT_ROOT)
+        self.assertTrue(snapshot["git_revision"])
+        self.assertIsInstance(snapshot["git_dirty"], bool)
+        self.assertTrue(snapshot["python"]["version"])
+        self.assertTrue(snapshot["python"]["implementation"])
+        self.assertEqual(snapshot["requirements"]["path"], "requirements.txt")
+        self.assertEqual(len(snapshot["requirements"]["sha256"]), 64)
+        self.assertEqual(
+            set(snapshot["dependencies"]),
+            {"requests", "pandas", "matplotlib", "python-dotenv"},
+        )
 
 
 class W4LabelParsingTests(unittest.TestCase):

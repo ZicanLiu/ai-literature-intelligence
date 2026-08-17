@@ -31,7 +31,8 @@ Value Profile 或 Reading Priority。标签使用 graded relevance：
 4. adjudication 完成前 `final_label` 为空。AI 可写 `proposed_label`，但状态必须是
    `pending_human_review`；
 5. 独立人工 reviewer 可 `approve` proposal 或 `modify` label，必须记录 reviewer、最终标签、
-   时间和说明；之后才能标为 `adjudicated`。
+   带时区的 ISO-8601 时间和说明；之后才能标为 `adjudicated`。分歧 pair 不允许用 `ready`
+   绕过 adjudication；proposal 仍为 `pending_human_review` 时不能进入 approved benchmark。
 
 后续版本可继续为当前 `single_annotation` pair 增加独立复标；这会产生新 benchmark 版本，
 不得覆盖 v0.1 的 provenance。
@@ -78,6 +79,17 @@ candidate pool、assignment、research query config、来源样例、pool manife
 annotation、judgements 和 adjudication proposals 的路径与 SHA-256。任一冻结输入或 judgement
 发生变化，都必须生成新版本和新 hash。approved 版本不可原地修改。
 
+Package 自报 hash 不是信任根。Strict validator 还会使用 package 之外、经代码审查固定的 W4
+v0.1 trust anchors 验证 `pool_manifest_v0.1.json` 本身，并解析该 pool manifest，交叉核对其中的
+candidate pool、assignments、research query config 和 source sample 原始路径/hash；六份原始
+annotation 也绑定到独立可信 hash。所有冻结输入和六份 annotation 共同形成
+`input_set_identity`。
+
+Approved manifest 必须通过 `parent_package` 记录实际被审核 draft manifest 的路径、SHA-256、
+版本和 `input_set_identity`。Validator 会重新验证 parent draft，并确认 approved package 只增加
+人工 review/final label 等允许变化，没有改写 proposal 证据、原 annotation provenance 或输入集。
+因此同时修改输入文件和 approved manifest 的自报 hash 也不能形成有效 package。
+
 当前 artifact：
 
 `data/benchmarks/w4_query_relevance/v0.1.0-draft.1/`
@@ -114,7 +126,10 @@ python -m app.validate_w4_benchmark --manifest <approved-manifest.json>
 
 Strict 至少要求：60/60、三个 RQ 各 20/20、pair 全量且唯一、无未知 pair、所有
 `final_label` 都是 `0/1/2`、无 pending review、status 为 approved、版本不含 draft，并且冻结
-candidate/query/source 等 hash 全部匹配。
+candidate/query/source 等 hash 全部匹配。对三个 disagreement，它还要求 proposal 与 judgement
+同时是已人工复核状态，decision/final label/reviewer/带时区时间/note 完整一致；并把 proposal
+中的 annotator、原 label、原 reason 重新同 assignments 和六份原始 annotation 交叉验证。
+Package-level `approval.checklist` 必须全部完成，不能只修改 `judgement_status`。
 
 正式评价命令必须显式使用 strict package：
 
@@ -124,16 +139,21 @@ python -m app.evaluate_w4_benchmark --strict `
   --output-dir <experiment-output-dir>
 ```
 
-正式运行会额外写 `experiment_manifest.json`，记录 Git revision/dirty state、benchmark
-version/hash、candidate/query/source hash、reference year、两种方法的实际固定配置、运行时间和
-输出文件 hash。未使用 `--strict` 的旧 `--labels` 入口只保留 smoke/partial evaluation 能力，
-不得作为正式 W5 实验。
+正式运行会在产生任何输出前采集 Git 状态并拒绝 dirty/无法确认 clean 的工作树；程序随后写入
+自身输出不会反过来污染该快照。Strict 的 reference year 必须继承 approved benchmark，显式 CLI
+参数不一致时直接拒绝。`experiment_manifest.json` 记录 Git revision/clean state、Python 与必要
+依赖/平台信息、benchmark version/hash/input-set/parent-draft hash、candidate/query/source hash、
+reference year、两种方法的实际固定配置、运行时间和输出文件 hash。未使用 `--strict` 的旧
+`--labels` 入口只保留 smoke/partial evaluation 能力，不得作为正式 W5 实验。
 
 ## 8. Approved 前最小 checklist
 
 1. 三个 disagreement 均由独立人类 reviewer approve 或 modify；
 2. proposal 与 judgement 同时记录 final label、decision、reviewer、reviewed_at 和 note；
 3. 核对贾馥诚的人工判断 + AI assistance provenance，不伪造 GitHub 确认记录；
-4. 复制为新的无 draft 版本目录，更新 version、status 和全部 artifact hash；
-5. 默认 strict validator 通过；
-6. 人工审查完整 diff 后，才允许将该版本用于正式算法实验。
+4. 复制为新的无 draft 版本目录，更新 version、status 和全部 artifact hash；approved manifest
+   绑定本 draft 的 manifest hash 与 `input_set_identity`；
+5. 填完 package-level approval metadata/checklist，并确认不可变 proposal/provenance 未改写；
+6. 默认 strict validator 通过；
+7. 在 clean Git 工作树中运行正式 evaluator；
+8. 人工审查完整 diff 后，才允许将该版本用于正式算法实验。

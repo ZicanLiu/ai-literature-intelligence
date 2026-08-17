@@ -15,9 +15,24 @@
   },
   "record_unit": "research_query_id + openalex_id",
   "entity_policy": "record-level Pilot Benchmark; high-confidence same-paper aliases remain separate frozen v0.1 records",
-  "generated_at": "2026-08-17T16:40:06+08:00",
-  "generated_from_git_revision": "7125455662094c85e4c937983631e36bee0d69ba",
+  "generated_at": "2026-08-17T17:27:35+08:00",
+  "generated_from_git_revision": "06ad439cc9c55c404fbb748c0b026f042b83e98c",
   "reference_year": 2026,
+  "input_set_identity": "sha256:dff3f396c6ae5ac1614bfdedcdaacec845e65e8522f5967ca668d2dd9e2ecc88",
+  "parent_package": null,
+  "approval": {
+    "status": "pending_human_review",
+    "approved_by": "",
+    "approved_at": "",
+    "review_note": "",
+    "checklist": {
+      "all_disagreements_human_reviewed": false,
+      "original_annotation_provenance_verified": false,
+      "frozen_input_anchor_verified": false,
+      "jiafucheng_provenance_checked": false,
+      "parent_draft_reviewed": false
+    }
+  },
   "counts": {
     "pair_count": 60,
     "research_query_count": 3,

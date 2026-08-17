@@ -64,14 +64,16 @@ Kappa `0.9343`。RQ01/RQ02 各 10/10 一致；RQ03 为 7/10 一致。
 - 3 条 RQ03 分歧仍没有 human final label；
 - 3 条均有明确标记为 `pending_human_review` 的 AI adjudication proposal；
 - manifest 固定 candidate pool、assignment、query config、来源样例、pool manifest、六人
-  annotation、judgements 和 proposals 的 SHA-256。
+  annotation、judgements 和 proposals 的 SHA-256，并记录完整冻结 `input_set_identity`；
+- draft 的 package-level approval checklist 全部保持未完成，不可直接用于正式实验。
 
 陈星妤的 15 条已由本人实际审核确认；本次只修正 review provenance，不改变其标签。贾馥诚
 的标签是带逐行 AI assistance 记录的人工判断；仓库不声称存在 GitHub 本人再确认记录，正式
 promotion checklist 仍要求核对该 provenance。
 
 默认 `python -m app.validate_w4_benchmark` 是 strict，只接受 approved、无 draft 后缀、
-60/60 final label 和冻结 hash 完全匹配的 package。当前 draft 只能用
+60/60 final label、完整人工 adjudication/approval checklist 和冻结 hash 完全匹配的 package。
+Approved package 还必须绑定实际被审核 draft 的 manifest hash/input-set identity。当前 draft 只能用
 `--allow-draft` 做结构复核，正式 evaluator 会拒绝它。
 
 ## Entity alias 与评价单位
@@ -95,16 +97,21 @@ python -m app.evaluate_w4_benchmark --strict `
 ```
 
 Strict 会拒绝非 60/60、每 RQ 非 20/20、缺失/未知/重复 pair、`?`/空/非法 final label、
-未 approved package，以及 candidate/query/source 等冻结 hash 漂移。成功的正式实验必须生成
-`experiment_manifest.json`，记录 Git revision/dirty state、benchmark version/hash、输入 hash、
-reference year、实际方法配置、时间和输出文件 hash。
+未 approved package、分歧缺少完整 human reviewer/decision/time/note、proposal 与原 annotation
+provenance 不一致，以及 candidate/query/source 等冻结 hash 漂移。冻结输入同时修改并刷新
+package 自报 hash 仍会被 package 外 trust anchor 和 pool manifest 交叉验证拒绝。
+
+正式 evaluator 在任何输出前采集 Git 状态，拒绝 dirty 或无法确认 clean 的工作树；strict
+reference year 强制继承 approved benchmark。成功运行必须生成 `experiment_manifest.json`，记录
+Git revision/clean state、Python/依赖/平台、benchmark version/hash/input identity/parent draft、
+输入 hash、reference year、实际方法配置、时间和输出文件 hash。
 
 ## 当前验证
 
 - 六个 annotation validator：全部通过；
 - Agreement Analyzer：`complete`，30/30 comparable，3 个 disagreement；
-- agreement/evaluator/strict validator 定向测试：74 项通过；
-- 全量离线自动测试：290 项通过，0 failure / 0 error / 0 skipped；
+- agreement/evaluator/strict validator 定向测试：84 项通过；
+- 全量离线自动测试：300 项通过，0 failure / 0 error / 0 skipped；
 - Basic Quality Gate：扫描 226 个文件，0 error / 0 warning，PASSED；
 - Full Quality Gate：扫描 226 个文件，0 error / 3 个既有历史 warning，PASSED；
 - 所有测试使用本地 fixture 或已提交样例，没有新增 live 请求。
@@ -117,9 +124,10 @@ experiment `openalex_stellar_spectra_60`。本次没有修改这些历史 eviden
 
 1. 独立 reviewer 对 3 个 proposal 逐条 approve 或 modify，并记录 final label、姓名、时间和说明；
 2. 核对贾馥诚的“人工判断 + AI assistance” provenance，不补造 GitHub 确认；
-3. 复制为新的无 draft 版本，更新 version/status/artifact hashes；
-4. 运行默认 strict benchmark validator；
-5. 人工检查本分支完整 diff，合并后再从最新 `main` 开始 W5 算法实验；
+3. 复制为新的无 draft 版本，更新 version/status/artifact hashes，并绑定被审核 draft manifest
+   hash 与 `input_set_identity`；
+4. 填写 package-level approval metadata/checklist，运行默认 strict benchmark validator；
+5. 人工检查本分支完整 diff，合并后在 clean Git 工作树中开始 W5 算法实验；
 6. W5 比较固定同一 candidate/query/benchmark/reference year，不查看当前 label 调权重。
 
 在上述 1–4 完成前，可以审查协议和运行 smoke/partial 测试，但不得把当前 draft 作为 approved

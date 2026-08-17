@@ -7,14 +7,18 @@ import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 from app.evaluate_w4_benchmark import main as evaluate_cli_main
 from app.validate_w4_benchmark import main as validate_cli_main
 from src.annotation_tasks import read_csv_rows, sha256_file, write_csv_rows
 from src.w4_benchmark_artifact import build_benchmark_draft
 from src.w4_benchmark_validation import (
+    APPROVAL_CHECKLIST_FIELDS,
     JUDGEMENT_FIELDS,
     PROPOSAL_FIELDS,
+    TRUSTED_W4_V01_REVIEW_DRAFT,
+    compute_input_set_identity,
     validate_benchmark_package,
 )
 
@@ -48,6 +52,9 @@ class BenchmarkPackageValidationTests(unittest.TestCase):
         self.assertEqual(result["pair_count"], 60)
         self.assertEqual(result["manifest"]["status"], "proposed")
         self.assertEqual(len(result["labels"]), 57)
+        self.assertEqual(
+            result["benchmark_hash"], TRUSTED_W4_V01_REVIEW_DRAFT["sha256"]
+        )
         with self.assertRaisesRegex(ValueError, "未 approved"):
             validate_benchmark_package(
                 DRAFT_MANIFEST,
@@ -153,10 +160,133 @@ class BenchmarkPackageValidationTests(unittest.TestCase):
             with self.subTest(input=name):
                 package = self._copy_package(self.root / f"hash_{name}")
                 self._approve(package)
-                with package[name].open("ab") as handle:
-                    handle.write(b"\n")
+                manifest = self._load_manifest(package)
+                manifest["inputs"][name]["sha256"] = "0" * 64
+                self._write_manifest(package, manifest)
                 with self.assertRaisesRegex(ValueError, "hash"):
                     self._strict(package)
+
+    def test_strict_rejects_manual_ready_bypass_while_proposals_are_pending(self) -> None:
+        package = self._copy_package(self.root / "manual_ready_bypass")
+        self._approve(package)
+        _fields, judgements = read_csv_rows(package["judgements"])
+        for row in judgements:
+            if row["agreement_status"] == "disagreement":
+                row["judgement_status"] = "ready"
+                row["final_label"] = row["proposed_label"]
+                for field in ("review_decision", "reviewer", "reviewed_at", "review_note"):
+                    row[field] = ""
+        write_csv_rows(package["judgements"], JUDGEMENT_FIELDS, judgements)
+
+        _fields, proposals = read_csv_rows(package["adjudication_proposals"])
+        for row in proposals:
+            row["proposal_status"] = "pending_human_review"
+            for field in (
+                "review_decision",
+                "reviewed_label",
+                "reviewer",
+                "reviewed_at",
+                "review_note",
+            ):
+                row[field] = ""
+        write_csv_rows(package["adjudication_proposals"], PROPOSAL_FIELDS, proposals)
+        self._refresh_artifact_hash(package, "judgements")
+        self._refresh_artifact_hash(package, "adjudication_proposals")
+
+        with self.assertRaisesRegex(ValueError, "双标分歧只能"):
+            self._strict(package)
+
+    def test_strict_rejects_incomplete_human_adjudication_record(self) -> None:
+        package = self._copy_package(self.root / "missing_review_note")
+        self._approve(package)
+        _fields, judgements = read_csv_rows(package["judgements"])
+        for row in judgements:
+            if row["agreement_status"] == "disagreement":
+                row["review_note"] = ""
+        write_csv_rows(package["judgements"], JUDGEMENT_FIELDS, judgements)
+        _fields, proposals = read_csv_rows(package["adjudication_proposals"])
+        for row in proposals:
+            row["review_note"] = ""
+        write_csv_rows(package["adjudication_proposals"], PROPOSAL_FIELDS, proposals)
+        self._refresh_artifact_hash(package, "judgements")
+        self._refresh_artifact_hash(package, "adjudication_proposals")
+        with self.assertRaisesRegex(ValueError, "reviewer/time/note"):
+            self._strict(package)
+
+    def test_strict_rejects_self_reported_tampered_frozen_input(self) -> None:
+        package = self._copy_package(self.root / "self_reported_input")
+        self._approve(package)
+        tampered = self.root / "candidate_pool_tampered.csv"
+        shutil.copy2(package["candidate_pool"], tampered)
+        with tampered.open("ab") as handle:
+            handle.write(b"\n")
+        manifest = self._load_manifest(package)
+        manifest["inputs"]["candidate_pool"] = {
+            "path": tampered.relative_to(PROJECT_ROOT).as_posix(),
+            "sha256": sha256_file(tampered),
+            "version": "w4_pilot_v0.1",
+        }
+        manifest["input_set_identity"] = compute_input_set_identity(
+            manifest["inputs"]
+        )
+        self._write_manifest(package, manifest)
+
+        with self.assertRaisesRegex(ValueError, "可信 W4 v0.1 锚点"):
+            self._strict(package)
+
+    def test_strict_rechecks_proposal_against_original_annotations(self) -> None:
+        for field, value in (
+            ("annotator_a", "forged_annotator"),
+            ("label_a", "9"),
+            ("reason_a", "forged reason"),
+        ):
+            with self.subTest(field=field):
+                package = self._copy_package(self.root / f"proposal_{field}")
+                self._approve(package)
+                _fields, proposals = read_csv_rows(
+                    package["adjudication_proposals"]
+                )
+                proposals[0][field] = value
+                write_csv_rows(
+                    package["adjudication_proposals"],
+                    PROPOSAL_FIELDS,
+                    proposals,
+                )
+                self._refresh_artifact_hash(package, "adjudication_proposals")
+                with self.assertRaisesRegex(ValueError, "原始 annotation provenance"):
+                    self._strict(package)
+
+    def test_approved_package_requires_complete_human_review_checklist(self) -> None:
+        package = self._copy_package(self.root / "incomplete_checklist")
+        self._approve(package)
+        manifest = self._load_manifest(package)
+        manifest["approval"]["checklist"][
+            "original_annotation_provenance_verified"
+        ] = False
+        self._write_manifest(package, manifest)
+        with self.assertRaisesRegex(ValueError, "全部 protocol"):
+            self._strict(package)
+
+    def test_approved_package_must_bind_reviewed_parent_draft(self) -> None:
+        package = self._copy_package(self.root / "missing_parent")
+        self._approve(package)
+        manifest = self._load_manifest(package)
+        manifest["parent_package"] = None
+        self._write_manifest(package, manifest)
+        with self.assertRaisesRegex(ValueError, "parent draft"):
+            self._strict(package)
+
+    def test_approved_package_cannot_rewrite_parent_proposal_evidence(self) -> None:
+        package = self._copy_package(self.root / "rewritten_proposal")
+        self._approve(package)
+        _fields, proposals = read_csv_rows(package["adjudication_proposals"])
+        proposals[0]["proposal_reason"] += " forged post-review change"
+        write_csv_rows(
+            package["adjudication_proposals"], PROPOSAL_FIELDS, proposals
+        )
+        self._refresh_artifact_hash(package, "adjudication_proposals")
+        with self.assertRaisesRegex(ValueError, "parent draft"):
+            self._strict(package)
 
     def test_approved_status_cannot_reuse_draft_version(self) -> None:
         package = self._copy_package(self.root / "draft_version")
@@ -195,23 +325,8 @@ class BenchmarkPackageValidationTests(unittest.TestCase):
         package: dict[str, Path] = {"manifest": destination / "manifest.json"}
 
         for name, reference in manifest["inputs"].items():
-            if name == "annotations":
-                continue
-            source = PROJECT_ROOT / reference["path"]
-            target = destination / "inputs" / name / source.name
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
-            reference["path"] = target.relative_to(PROJECT_ROOT).as_posix()
-            reference["sha256"] = sha256_file(target)
-            package[name] = target
-
-        for slug, reference in manifest["inputs"]["annotations"].items():
-            source = PROJECT_ROOT / reference["path"]
-            target = destination / "inputs" / "annotations" / source.name
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
-            reference["path"] = target.relative_to(PROJECT_ROOT).as_posix()
-            reference["sha256"] = sha256_file(target)
+            if name != "annotations":
+                package[name] = PROJECT_ROOT / reference["path"]
 
         for name, reference in manifest["artifacts"].items():
             source = PROJECT_ROOT / reference["path"]
@@ -253,6 +368,29 @@ class BenchmarkPackageValidationTests(unittest.TestCase):
         manifest["benchmark_version"] = APPROVED_VERSION
         manifest["display_name"] = "W4 Pilot Adjudicated Judged Set"
         manifest["counts"]["pending_human_review_pairs"] = 0
+        parent_manifest = json.loads(DRAFT_MANIFEST.read_text(encoding="utf-8"))
+        manifest["parent_package"] = {
+            "path": DRAFT_MANIFEST.relative_to(PROJECT_ROOT).as_posix(),
+            "sha256": sha256_file(DRAFT_MANIFEST),
+            "benchmark_version": parent_manifest["benchmark_version"],
+            "input_set_identity": manifest["input_set_identity"],
+        }
+        manifest["approval"] = {
+            "status": "approved",
+            "approved_by": "test_reviewer",
+            "approved_at": "2026-08-17T12:00:00+08:00",
+            "review_note": "test package approval",
+            "checklist": {field: True for field in APPROVAL_CHECKLIST_FIELDS},
+        }
+        jia = manifest["annotation_review_provenance"]["jiafucheng"]
+        jia.update(
+            {
+                "protocol_review_checklist_required": False,
+                "protocol_review_confirmed_by": "test_reviewer",
+                "protocol_review_confirmed_at": "2026-08-17T12:00:00+08:00",
+                "protocol_review_note": "AI assistance provenance checked",
+            }
+        )
         manifest["artifacts"]["judgements"]["sha256"] = sha256_file(
             package["judgements"]
         )
@@ -292,7 +430,16 @@ class StrictEvaluatorTests(unittest.TestCase):
         self._approve(package)
         output_dir = self.root / "experiment"
         output = io.StringIO()
-        with redirect_stdout(output):
+        clean_environment = _environment_snapshot(dirty=False)
+
+        def capture_before_outputs(**_kwargs: object) -> dict:
+            self.assertFalse(output_dir.exists())
+            return clean_environment
+
+        with patch(
+            "app.evaluate_w4_benchmark.capture_experiment_environment",
+            side_effect=capture_before_outputs,
+        ), redirect_stdout(output):
             exit_code = evaluate_cli_main(
                 [
                     "--strict",
@@ -313,6 +460,12 @@ class StrictEvaluatorTests(unittest.TestCase):
             sha256_file(package["manifest"]),
         )
         self.assertEqual(experiment["reference_year"], 2026)
+        self.assertEqual(experiment["git_dirty"], False)
+        self.assertEqual(experiment["environment"]["python"]["version"], "3.test")
+        self.assertIn("pandas", experiment["environment"]["dependencies"])
+        self.assertEqual(
+            experiment["environment"]["requirements"]["sha256"], "a" * 64
+        )
         self.assertEqual(set(experiment["methods"]), {"baseline", "two_stage"})
         self.assertEqual(len(experiment["output_files"]), 2)
         for item in experiment["output_files"]:
@@ -336,6 +489,49 @@ class StrictEvaluatorTests(unittest.TestCase):
         self.assertIn("approved", output.getvalue())
         self.assertFalse(output_dir.exists())
 
+    def test_strict_evaluator_rejects_dirty_tree_before_any_output(self) -> None:
+        package = self._copy_package(self.root / "dirty_eval")
+        self._approve(package)
+        output_dir = self.root / "dirty_output"
+        output = io.StringIO()
+        with patch(
+            "app.evaluate_w4_benchmark.capture_experiment_environment",
+            return_value=_environment_snapshot(dirty=True),
+        ), redirect_stdout(output):
+            exit_code = evaluate_cli_main(
+                [
+                    "--strict",
+                    "--benchmark-manifest",
+                    str(package["manifest"]),
+                    "--output-dir",
+                    str(output_dir),
+                ]
+            )
+        self.assertEqual(exit_code, 1)
+        self.assertIn("dirty working tree", output.getvalue())
+        self.assertFalse(output_dir.exists())
+
+    def test_strict_evaluator_rejects_reference_year_mismatch_without_outputs(self) -> None:
+        package = self._copy_package(self.root / "wrong_year_eval")
+        self._approve(package)
+        output_dir = self.root / "wrong_year_output"
+        output = io.StringIO()
+        with redirect_stdout(output):
+            exit_code = evaluate_cli_main(
+                [
+                    "--strict",
+                    "--benchmark-manifest",
+                    str(package["manifest"]),
+                    "--reference-year",
+                    "2025",
+                    "--output-dir",
+                    str(output_dir),
+                ]
+            )
+        self.assertEqual(exit_code, 1)
+        self.assertIn("reference-year", output.getvalue())
+        self.assertFalse(output_dir.exists())
+
 
 def _git_revision() -> str:
     import subprocess
@@ -348,6 +544,26 @@ def _git_revision() -> str:
         check=True,
     )
     return completed.stdout.strip()
+
+
+def _environment_snapshot(*, dirty: bool) -> dict:
+    return {
+        "git_revision": _git_revision(),
+        "git_dirty": dirty,
+        "python": {
+            "version": "3.test",
+            "implementation": "CPython",
+            "cache_tag": "cpython-test",
+        },
+        "platform": {"system": "test", "release": "test", "machine": "test"},
+        "requirements": {"path": "requirements.txt", "sha256": "a" * 64},
+        "dependencies": {
+            "requests": "test",
+            "pandas": "test",
+            "matplotlib": "test",
+            "python-dotenv": "test",
+        },
+    }
 
 
 if __name__ == "__main__":
