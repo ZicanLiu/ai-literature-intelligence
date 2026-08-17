@@ -684,6 +684,81 @@ def evaluate_benchmark(
     }
 
 
+def evaluate_contract_ranking(
+    *,
+    pool_rows: list[dict[str, Any]],
+    labels: dict[str, str],
+    research_queries: dict[str, Any],
+    method_package: dict[str, Any],
+) -> dict[str, Any]:
+    """Evaluate one already-validated W5 Method Ranking Contract artifact.
+
+    ``method_package`` must be the result of
+    :func:`src.w5_method_contract.validate_method_output`.  The method artifact is
+    generated and frozen without labels; this adapter joins approved labels only
+    at evaluation time and reuses the existing judged metric implementation.  It
+    is intentionally method-agnostic, so sparse, dense, neural, hybrid and
+    baseline outputs share the same path.
+    """
+    validate_benchmark_inputs(pool_rows, labels, research_queries)
+    method_id = str(method_package.get("method_id") or "").strip()
+    ranking_rows = method_package.get("ranking_rows")
+    if not method_id or not isinstance(ranking_rows, list):
+        raise ValueError("method_package 必须来自 W5 method-output validator。")
+
+    pool_pair_ids = {str(row.get("pair_id") or "") for row in pool_rows}
+    ranking_pair_ids = {
+        str(row.get("pair_id") or "")
+        for row in ranking_rows
+        if isinstance(row, dict)
+    }
+    if ranking_pair_ids != pool_pair_ids or len(ranking_rows) != len(pool_rows):
+        raise ValueError("method ranking 的 pair identity 与 Candidate Pool 不一致。")
+    pool_query_by_pair = {
+        str(row.get("pair_id") or ""): str(row.get("research_query_id") or "")
+        for row in pool_rows
+    }
+
+    rows_by_query: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in ranking_rows:
+        if not isinstance(row, dict) or row.get("method_id") != method_id:
+            raise ValueError("method_package 包含无效或混合 method_id 的 ranking row。")
+        pair_id = str(row.get("pair_id") or "")
+        query_id = str(row.get("research_query_id") or "")
+        if query_id != pool_query_by_pair[pair_id]:
+            raise ValueError("method ranking 的 RQ/pair identity 与 Candidate Pool 不一致。")
+        rows_by_query[query_id].append(row)
+
+    query_ids = [
+        str(query["research_query_id"]) for query in research_queries["queries"]
+    ]
+    per_query: dict[str, dict[str, Any]] = {}
+    for query_id in query_ids:
+        query_rows = sorted(
+            rows_by_query.get(query_id, []), key=lambda row: row["rank"]
+        )
+        ranked_pair_ids = [str(row["pair_id"]) for row in query_rows]
+        grade_map: dict[str, int] = {}
+        for pair_id in ranked_pair_ids:
+            grade = parse_w4_label(labels.get(pair_id))
+            if grade is not None:
+                grade_map[pair_id] = grade
+        per_query[query_id] = {
+            "metrics": compute_method_metrics(ranked_pair_ids, grade_map),
+            "pair_count": len(ranked_pair_ids),
+            "labeled_count": len(grade_map),
+            "ranked_pair_ids": ranked_pair_ids,
+        }
+
+    return {
+        "method_id": method_id,
+        "per_query": per_query,
+        "macro": average_metrics(
+            [per_query[query_id]["metrics"] for query_id in query_ids]
+        ),
+    }
+
+
 def build_metric_rows(result: dict[str, Any]) -> list[dict[str, Any]]:
     """把评价结果展平成 CSV 行：每个 RQ × 方法一行，最后是 macro 汇总。
 

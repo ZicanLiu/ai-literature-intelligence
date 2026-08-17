@@ -2,11 +2,12 @@
 
 更新时间：2026-08-17
 
-最新公共 `main` 基线：`7125455`（已合并 W4 PR #42–#47）
+最新公共 `main` 基线：`d558a088`（PR #48 已合并）
 
-当前 W5 前置收口分支：`codex/w5-baseline-closure`（未 push、未 merge）
+当前公共准备工作：在 `d558a088` 上建立 W5 Method Ranking Contract Bootstrap；本地任务分支
+为 `codex/w5-method-contract-bootstrap`。
 
-v0.3.0 tag 仍指向较早的 W2 发布基线 `899f745`；`7125455` 是当前 Git/源码/测试事实，不能
+v0.3.0 tag 仍指向较早的 W2 发布基线 `899f745`；`d558a088` 是当前公共 Git 基线，不能
 用旧 tag 或旧文档快照替代。
 
 ## AI / 新成员接手入口
@@ -17,7 +18,8 @@ v0.3.0 tag 仍指向较早的 W2 发布基线 `899f745`；`7125455` 是当前 Gi
 2. [`AI_PROJECT_ONBOARDING.md`](project/AI_PROJECT_ONBOARDING.md)；
 3. 本页和当前 Issue；
 4. benchmark/W5 实验任务继续阅读
-   [`W4_PILOT_BENCHMARK_PROTOCOL.md`](project/W4_PILOT_BENCHMARK_PROTOCOL.md)。
+   [`W4_PILOT_BENCHMARK_PROTOCOL.md`](project/W4_PILOT_BENCHMARK_PROTOCOL.md) 和
+   [`W5_METHOD_RANKING_CONTRACT.md`](project/W5_METHOD_RANKING_CONTRACT.md)。
 
 所有状态都要重新用当前 Git、源码和实际测试核对。
 
@@ -110,15 +112,32 @@ reference year 强制继承 approved benchmark。成功运行必须生成 `exper
 Git revision/clean state、Python/依赖/平台、benchmark version/hash/input identity/parent draft、
 输入 hash、reference year、实际方法配置、时间和输出文件 hash。
 
+## W5 Method Ranking Contract Bootstrap
+
+W5 的公共实验边界是固定 60-pair Candidate Pool 内的 Query-Relevance ranking/reranking，
+不是端到端 retrieval recall benchmark。公共 contract v1.0 规定每个方法输出严格五列：
+`pair_id,research_query_id,method_id,score,rank`；每个 RQ 恰好 20 条，score 统一
+higher-is-better，并以 `score desc → pair_id asc` 确定性排序。
+
+每个正式方法还必须配套 manifest，记录算法族、参数、模型/revision/adapter、冻结输入及
+ranking hash、Git clean revision、Python/平台/依赖、运行时间和 label-access 声明。算法生成阶段
+不得读取 approved benchmark label/judgement；参数和 artifact 必须先冻结再进入评价。
+
+`src.w5_method_contract` 和 `app.validate_w5_method` 提供公共 validator；
+`evaluate_contract_ranking()` 是现有 W4 evaluator 的最小算法无关 adapter。两个无标签 fixture
+位于 `tests/fixtures/w5_method_contract/`，使 RRF、Error Analysis 和 CI 不必等待真实排序器。
+完整协议见 [`W5_METHOD_RANKING_CONTRACT.md`](project/W5_METHOD_RANKING_CONTRACT.md)。
+
 ## 当前验证
 
 - 六个 annotation validator：全部通过；
 - Agreement Analyzer：`complete`，30/30 comparable，3 个 disagreement；
 - approved benchmark strict validator：60/60，通过；
-- agreement/evaluator/strict validator 定向测试：87 项通过；
-- 全量离线自动测试：303 项通过，0 failure / 0 error / 0 skipped；
-- Basic Quality Gate：扫描 235 个文件，0 error / 0 warning，PASSED；
-- Full Quality Gate：扫描 235 个文件，0 error / 3 个既有历史 warning，PASSED；
+- W5 method contract / validator / evaluator adapter 定向测试：21 项通过；
+- agreement/evaluator/strict validator/W5 contract 相关定向测试：108 项通过；
+- 全量离线自动测试：324 项通过，0 failure / 0 error / 0 skipped；
+- Basic Quality Gate：扫描 242 个文件，0 error / 0 warning，PASSED；
+- Full Quality Gate：扫描 242 个文件，0 error / 3 个既有历史 warning，PASSED；
 - 所有测试使用本地 fixture 或已提交样例，没有新增 live 请求。
 
 Full Gate 的三个 warning 与此前公共基线一致：W1 一处历史 CSV 结构问题、
@@ -127,8 +146,9 @@ experiment `openalex_stellar_spectra_60`。本次没有修改这些历史 eviden
 
 ## 下一步
 
-1. 人工检查本分支完整 diff；
-2. 合并后在 clean Git 工作树中，使用 approved manifest 开始 W5 正式算法实验；
-3. W5 比较固定同一 candidate/query/benchmark/reference year，不查看当前 label 调权重；
-4. 继续把该集合准确表述为 **human annotation + independent blind AI evidence audit + human
+1. 人工检查并合并 W5 公共 Bootstrap；
+2. 六个 W5 Issue 从包含 Bootstrap 的同一 `main` 独立开分支；
+3. 正式方法先生成并冻结通过 validator 的 artifact，再使用 approved benchmark 评价；
+4. W5 比较固定同一 candidate/query/benchmark，不查看当前 label 调参数或挑选 run；
+5. 继续把该集合准确表述为 **human annotation + independent blind AI evidence audit + human
    review/adjudication**，不称为 gold standard、expert ground truth 或 pure human ground truth。
