@@ -39,6 +39,37 @@ v0.1 已冻结。需要修改候选或 research query 时必须建立新版本�
 每条命令只生成该成员被分配的 15 条，不生成其他人的空白结果，也不会显示 assignment
 role、selection bucket、分数、排名、引用信号或旧标签。
 
+## Agreement Analyzer
+
+合并成员结果和生成待人工仲裁队列：
+
+```powershell
+python -m app.analyze_annotation_agreement
+```
+
+默认输出到 `data/analysis/w4_annotation_agreement/`：
+
+- `agreement_summary.json`：输入完整度、总体指标和 RQ-level 指标；
+- `double_annotations.csv`：当前真正具备两份独立结果的 pair；
+- `disagreements.csv`：标签不同的 pair，只供后续人工 adjudication。
+
+Analyzer 严格使用 `assignments_v0.1.csv` 中的 primary/secondary 配对，并通过现有 W4
+assignment invariant 和个人 annotation validator 校验输入。缺少整个成员文件时仍稳定输出
+`analysis_status=partial`、缺失成员和缺失 pair；已经存在但缺 pair、重复 pair 或包含非法
+label 的成员文件属于损坏输入，会明确失败，不会静默选择或跳过。
+
+指标口径：
+
+- Exact Agreement 使用所有当前可比较 pair，包括含 `?` 的 pair；
+- Cohen's Kappa 只使用双方均为正式 `0/1/2` 的 pair；
+- Weighted Cohen's Kappa 同样排除 `?`，采用 **quadratic weighting**；
+- 样本不足、单一类别等无法计算 Kappa 的情况使用 JSON `null`，并提供结构化
+  `status/reason`，不会写出 `NaN`；
+- disagreement queue 不包含最终标签，也不会修改任何成员 annotation。
+
+只有 `analysis_status=complete` 且 30 个 expected double pair 全部 comparable 时，才可把
+总体指标解释为完整 W4 Pilot agreement。当前阶段不得补造缺失成员标签。
+
 ## 完成后验证
 
 ```powershell
