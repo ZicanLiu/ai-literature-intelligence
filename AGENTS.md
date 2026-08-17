@@ -65,6 +65,12 @@ Domain Terms → Domain Query Set → Acquisition Queries → OpenAlex v2
 - Stage 1 的 `high/medium/low` 是算法分层，不是人工的“高度相关/部分相关/不相关”标签；
 - OpenAlex v2 的页内/跨页 ID 去重是获取层防重复，不等于 W2 entity exact dedup；
 - suspected duplicate 只进入人工复核队列，不得自动删除。
+- W4 Pilot Benchmark 只评价 Query Relevance，使用 `0/1/2` graded relevance；个人标注的
+  `?`、空值和未完成 adjudication 不得进入 approved benchmark；
+- 原始 annotation、judgement、AI assistance 和 adjudication 是不同 provenance 层；不得改写
+  成员判断历史或把 AI proposal 表述成人类最终裁决；
+- W4 v0.1 是 record-level query-paper benchmark；已知 same-paper alias 必须保留并显式记录，
+  不得为提高指标静默合并或删除。
 
 ## 6. 开发边界
 
@@ -75,6 +81,8 @@ Domain Terms → Domain Query Set → Acquisition Queries → OpenAlex v2
 - 为通过测试修改历史 fixture/evidence 的原始结论；
 - 隐式选择 ranking keyword，丢弃 provenance，或自动删除 suspected duplicate；
 - 把 AI-assisted label 表述为人工 ground truth；
+- 把 proposed/draft judged set 用作正式实验，或绕过 approved status、60/60 identity 和冻结
+  artifact hash 的 strict validator；
 - 为“更高级”而擅自替换算法、调权重或扩大 Issue 范围；
 - 删除断言、放宽错误或把 error 降级为 warning 来换取通过；
 - 提交普通 `outputs/experiments/`、`outputs/batches/` 或本地数据库。
@@ -105,4 +113,5 @@ AI 可以读取项目文件、搜索调用关系、运行离线测试与安全 f
 - [W2 数据接口约定](docs/project/W2_DATA_CONTRACTS.md)
 - [v0.3.0 候选发布说明](docs/reports/week2/V0.3.0_RELEASE_NOTES.md)
 - [W4 研究计划](docs/project/W4_RESEARCH_PLAN.md)
+- [W4 Pilot Benchmark 收口协议](docs/project/W4_PILOT_BENCHMARK_PROTOCOL.md)
 - [贡献指南](CONTRIBUTING.md)

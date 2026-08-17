@@ -8,6 +8,11 @@
 
 任务分支：`feature/w4-leader-research-integration`
 
+> 后续状态（2026-08-17）：本报告第 4 节是 2026-08-15 的历史缺口快照。W4 PR #42–#47
+> 后来已合并，六人 annotation 和 Agreement Analyzer 已完成；当前仍待完成的是 3 个 RQ03
+> disagreement 的独立人工 adjudication 与 approved judged-set promotion。最新事实见
+> [`docs/CURRENT_STATUS.md`](../../CURRENT_STATUS.md)。
+
 ## 1. 核查结论
 
 当前三个 Research Question 的分工清楚，可以继续作为 W4 及后续排序实验的研究框架，

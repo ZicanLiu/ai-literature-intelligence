@@ -1,0 +1,127 @@
+{
+  "schema_version": "1.0",
+  "analysis_status": "complete",
+  "metric_policy": {
+    "exact_agreement_scope": "all comparable pairs, including pairs containing '?'",
+    "kappa_labels": [
+      "0",
+      "1",
+      "2"
+    ],
+    "question_mark_policy": "pairs containing '?' are counted separately and excluded from Kappa",
+    "weighted_kappa": "quadratic"
+  },
+  "annotators": {
+    "expected": [
+      "liuzican",
+      "wuziheng",
+      "jiafucheng",
+      "chenxingyu",
+      "huangbin",
+      "puzhengjie"
+    ],
+    "found": [
+      "liuzican",
+      "wuziheng",
+      "jiafucheng",
+      "chenxingyu",
+      "huangbin",
+      "puzhengjie"
+    ],
+    "missing": [],
+    "found_file_count": 6
+  },
+  "coverage": {
+    "expected_double_pairs": 30,
+    "comparable_double_pairs": 30,
+    "missing_double_pairs": 0,
+    "completion_rate": 1.0,
+    "missing_pair_details": []
+  },
+  "overall": {
+    "total_comparable_pairs": 30,
+    "exact_agreement_count": 27,
+    "exact_agreement_rate": 0.9,
+    "exact_agreement_status": "computed",
+    "exact_agreement_reason": null,
+    "pairs_with_question_mark": 0,
+    "kappa_eligible_pairs": 30,
+    "cohens_kappa": 0.8133,
+    "cohens_kappa_status": "computed",
+    "cohens_kappa_reason": null,
+    "weighted_cohens_kappa_quadratic": 0.9343,
+    "weighted_cohens_kappa_status": "computed",
+    "weighted_cohens_kappa_reason": null
+  },
+  "rq_breakdown": {
+    "rq01_stellar_classification": {
+      "coverage": {
+        "expected_double_pairs": 10,
+        "comparable_double_pairs": 10,
+        "missing_double_pairs": 0,
+        "completion_rate": 1.0
+      },
+      "metrics": {
+        "total_comparable_pairs": 10,
+        "exact_agreement_count": 10,
+        "exact_agreement_rate": 1.0,
+        "exact_agreement_status": "computed",
+        "exact_agreement_reason": null,
+        "pairs_with_question_mark": 0,
+        "kappa_eligible_pairs": 10,
+        "cohens_kappa": 1.0,
+        "cohens_kappa_status": "computed",
+        "cohens_kappa_reason": null,
+        "weighted_cohens_kappa_quadratic": 1.0,
+        "weighted_cohens_kappa_status": "computed",
+        "weighted_cohens_kappa_reason": null
+      }
+    },
+    "rq02_stellar_parameters": {
+      "coverage": {
+        "expected_double_pairs": 10,
+        "comparable_double_pairs": 10,
+        "missing_double_pairs": 0,
+        "completion_rate": 1.0
+      },
+      "metrics": {
+        "total_comparable_pairs": 10,
+        "exact_agreement_count": 10,
+        "exact_agreement_rate": 1.0,
+        "exact_agreement_status": "computed",
+        "exact_agreement_reason": null,
+        "pairs_with_question_mark": 0,
+        "kappa_eligible_pairs": 10,
+        "cohens_kappa": 1.0,
+        "cohens_kappa_status": "computed",
+        "cohens_kappa_reason": null,
+        "weighted_cohens_kappa_quadratic": 1.0,
+        "weighted_cohens_kappa_status": "computed",
+        "weighted_cohens_kappa_reason": null
+      }
+    },
+    "rq03_spectral_preprocessing": {
+      "coverage": {
+        "expected_double_pairs": 10,
+        "comparable_double_pairs": 10,
+        "missing_double_pairs": 0,
+        "completion_rate": 1.0
+      },
+      "metrics": {
+        "total_comparable_pairs": 10,
+        "exact_agreement_count": 7,
+        "exact_agreement_rate": 0.7,
+        "exact_agreement_status": "computed",
+        "exact_agreement_reason": null,
+        "pairs_with_question_mark": 0,
+        "kappa_eligible_pairs": 10,
+        "cohens_kappa": 0.2105,
+        "cohens_kappa_status": "computed",
+        "cohens_kappa_reason": null,
+        "weighted_cohens_kappa_quadratic": 0.2105,
+        "weighted_cohens_kappa_status": "computed",
+        "weighted_cohens_kappa_reason": null
+      }
+    }
+  }
+}

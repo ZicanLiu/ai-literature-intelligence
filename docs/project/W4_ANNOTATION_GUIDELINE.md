@@ -228,3 +228,10 @@ python -m app.validate_annotation_task `
 
 Validator 只检查 assignment、只读字段、枚举、证据和 CSV 契约，不会根据 label 判断“标得
 对不对”。通过 validator 也不表示该标签已经成为 ground truth。
+
+## 12. 进入 versioned judged set
+
+个人 annotation 中的 `?` 可以触发讨论，但 approved benchmark 只允许 `0/1/2`。双标一致
+项可直接形成 judgement；双标分歧必须经过独立人工 adjudication。原始 CSV、AI assistance
+和证据 provenance 不得改写。完整 promotion、versioning、alias 和 strict evaluator 规则见
+[`W4_PILOT_BENCHMARK_PROTOCOL.md`](W4_PILOT_BENCHMARK_PROTOCOL.md)。
