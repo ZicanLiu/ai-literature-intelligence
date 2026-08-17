@@ -1,13 +1,13 @@
 """W4 Pilot Benchmark 的 Baseline vs Two-stage 统一评价入口。
 
-未来输入：最终 adjudicated benchmark labels + Candidate Pool + 现有
-Baseline / Two-stage ranking；输出统一实验结果（按 RQ 分开 + macro）与
-error case 底稿。
+partial/smoke 模式继续接受 labels CSV；正式模式只接受通过 strict validator 的
+approved versioned benchmark package。两种模式都复用现有 Baseline / Two-stage
+ranking，并输出按 RQ 分开的结果与 error case 底稿。
 
 用法示例：
 
     python -m app.evaluate_w4_benchmark \\
-        --labels data/annotation_tasks/w4/adjudicated_labels.csv
+        --strict --benchmark-manifest data/benchmarks/.../manifest.json
 """
 
 from __future__ import annotations
@@ -24,9 +24,12 @@ from src.w4_benchmark_evaluation import (
     build_error_cases,
     build_metric_rows,
     build_source_index,
+    capture_experiment_environment,
     evaluate_benchmark,
     load_benchmark_labels,
+    write_experiment_manifest,
 )
+from src.w4_benchmark_validation import validate_benchmark_package
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -53,32 +56,41 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--candidate-pool",
         type=Path,
-        default=DEFAULT_DATA_DIR / "candidate_pool_v0.1.csv",
-        help="W4 candidate pool CSV。",
+        help="W4 candidate pool CSV；partial 模式默认使用冻结 v0.1。",
     )
     parser.add_argument(
         "--labels",
         type=Path,
-        required=True,
-        help="adjudicated benchmark labels（pair_id,label）；个人标注 CSV 也可直接使用。",
+        help="partial/smoke labels（pair_id,label）；strict 模式禁止使用此参数。",
     )
     parser.add_argument(
         "--research-queries",
         type=Path,
-        default=DEFAULT_RESEARCH_QUERIES,
-        help="W4 research query 配置 JSON。",
+        help="W4 research query 配置 JSON；partial 模式默认使用冻结 v0.1。",
     )
     parser.add_argument(
         "--source",
         type=Path,
-        default=DEFAULT_SOURCE,
-        help="既有 W2 live 样例 CSV，用于补全排序字段。",
+        help="既有 W2 live 样例 CSV；partial 模式默认使用冻结来源。",
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="正式 benchmark 模式：只接受 approved 60/60 versioned package。",
+    )
+    parser.add_argument(
+        "--benchmark-manifest",
+        type=Path,
+        help="strict 模式必需的 approved benchmark manifest.json。",
     )
     parser.add_argument(
         "--reference-year",
         type=int,
-        default=2026,
-        help="baseline recency_score 的固定参考年，与 candidate pool 生成一致。",
+        default=None,
+        help=(
+            "baseline recency_score 的固定参考年；strict 模式继承 benchmark，"
+            "显式传入时必须完全一致；partial 模式默认 2026。"
+        ),
     )
     parser.add_argument(
         "--output-dir",
@@ -95,6 +107,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--error-cases",
         type=Path,
         help="error case CSV 路径；默认 output-dir/w4_ranking_error_cases.csv。",
+    )
+    parser.add_argument(
+        "--experiment-manifest",
+        type=Path,
+        help="strict 模式实验 manifest 路径；默认 output-dir/experiment_manifest.json。",
     )
     return parser.parse_args(argv)
 
@@ -116,23 +133,90 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
 
     try:
-        _pool_fields, pool_rows = read_csv_rows(args.candidate_pool)
-        labels = load_benchmark_labels(args.labels)
-        research_queries = load_research_queries(args.research_queries)
-        source_index = build_source_index(args.source)
+        benchmark_package = None
+        environment_snapshot = None
+        if args.strict:
+            if args.benchmark_manifest is None:
+                raise ValueError("strict 模式必须提供 --benchmark-manifest。")
+            if args.labels is not None:
+                raise ValueError("strict 模式从 approved package 读取标签，禁止 --labels。")
+            benchmark_package = validate_benchmark_package(
+                args.benchmark_manifest,
+                project_root=PROJECT_ROOT,
+                require_approved=True,
+            )
+            package_paths = benchmark_package["paths"]
+            _reject_input_mismatch(
+                args.candidate_pool, package_paths["candidate_pool"], "candidate pool"
+            )
+            _reject_input_mismatch(
+                args.research_queries,
+                package_paths["research_queries"],
+                "research query config",
+            )
+            _reject_input_mismatch(args.source, package_paths["source_sample"], "source")
+            candidate_pool_path = package_paths["candidate_pool"]
+            research_queries_path = package_paths["research_queries"]
+            source_path = package_paths["source_sample"]
+            labels = benchmark_package["labels"]
+            benchmark_reference_year = int(
+                benchmark_package["manifest"]["reference_year"]
+            )
+            if (
+                args.reference_year is not None
+                and args.reference_year != benchmark_reference_year
+            ):
+                raise ValueError(
+                    "strict 模式的 --reference-year 必须与 approved benchmark "
+                    f"一致：{args.reference_year} != {benchmark_reference_year}。"
+                )
+            reference_year = benchmark_reference_year
+            environment_snapshot = capture_experiment_environment(
+                project_root=PROJECT_ROOT
+            )
+            if environment_snapshot["git_dirty"] is not False:
+                state = (
+                    "dirty working tree"
+                    if environment_snapshot["git_dirty"] is True
+                    else "无法确认 working tree clean"
+                )
+                raise ValueError(f"strict 正式实验拒绝 {state}。")
+            if not environment_snapshot["git_revision"]:
+                raise ValueError("strict 正式实验无法记录 Git revision。")
+        else:
+            if args.benchmark_manifest is not None:
+                raise ValueError("--benchmark-manifest 只能与 --strict 一起使用。")
+            if args.labels is None:
+                raise ValueError("partial/smoke 模式必须提供 --labels。")
+            candidate_pool_path = args.candidate_pool or (
+                DEFAULT_DATA_DIR / "candidate_pool_v0.1.csv"
+            )
+            research_queries_path = args.research_queries or DEFAULT_RESEARCH_QUERIES
+            source_path = args.source or DEFAULT_SOURCE
+            labels = load_benchmark_labels(args.labels)
+            reference_year = (
+                args.reference_year if args.reference_year is not None else 2026
+            )
+
+        _pool_fields, pool_rows = read_csv_rows(candidate_pool_path)
+        research_queries = load_research_queries(research_queries_path)
+        source_index = build_source_index(source_path)
+        result = evaluate_benchmark(
+            pool_rows=pool_rows,
+            labels=labels,
+            research_queries=research_queries,
+            source_index=source_index,
+            reference_year=reference_year,
+        )
     except (OSError, UnicodeError, ValueError) as error:
         print(f"输入读取失败：{error}")
         return 1
 
-    result = evaluate_benchmark(
-        pool_rows=pool_rows,
-        labels=labels,
-        research_queries=research_queries,
-        source_index=source_index,
-        reference_year=args.reference_year,
+    output_dir = (
+        args.output_dir
+        if args.output_dir.is_absolute()
+        else PROJECT_ROOT / args.output_dir
     )
-
-    output_dir = args.output_dir if args.output_dir.is_absolute() else PROJECT_ROOT / args.output_dir
     metrics_csv = args.metrics_csv or (output_dir / "w4_benchmark_metrics.csv")
     error_cases_csv = args.error_cases or (output_dir / "w4_ranking_error_cases.csv")
     metrics_csv = _resolve(metrics_csv)
@@ -146,10 +230,32 @@ def main(argv: list[str] | None = None) -> int:
     _write_csv(error_cases_csv, ERROR_CASE_FIELDS, error_rows)
     print(f"已保存 error case 底稿：{_display(error_cases_csv)}")
 
+    if args.strict:
+        experiment_manifest = args.experiment_manifest or (
+            output_dir / "experiment_manifest.json"
+        )
+        experiment_manifest = _resolve(experiment_manifest)
+        write_experiment_manifest(
+            output_path=experiment_manifest,
+            project_root=PROJECT_ROOT,
+            benchmark_package=benchmark_package,
+            candidate_pool_path=candidate_pool_path,
+            research_queries_path=research_queries_path,
+            source_path=source_path,
+            reference_year=reference_year,
+            metrics_path=metrics_csv,
+            error_cases_path=error_cases_csv,
+            environment_snapshot=environment_snapshot,
+        )
+        print(f"已保存正式实验 manifest：{_display(experiment_manifest)}")
+
     print(f"\nreference_year：{result['reference_year']}（baseline recency_score 固定参考年）")
     print("\n按 Research Question 分开评价：")
     for query_id, query_result in result["per_query"].items():
-        print(f"  {query_id}（pair {query_result['pair_count']}，labeled {query_result['labeled_count']}）")
+        print(
+            f"  {query_id}（pair {query_result['pair_count']}，"
+            f"labeled {query_result['labeled_count']}）"
+        )
         for method in ("baseline", "two_stage"):
             metrics = query_result[method]
             print(
@@ -188,6 +294,15 @@ def main(argv: list[str] | None = None) -> int:
     print("\n说明：指标为 judged（condensed）口径；None 表示该截断下无确定等级，"
           "不代表 0 分。error case 只给类型代码，不做原因结论。")
     return 0
+
+
+def _reject_input_mismatch(
+    supplied: Path | None, expected: Path, label: str
+) -> None:
+    if supplied is not None and supplied.resolve() != expected.resolve():
+        raise ValueError(
+            f"strict 模式的 {label} 必须与 benchmark manifest 锁定路径一致。"
+        )
 
 
 def _fmt(value: object) -> str:

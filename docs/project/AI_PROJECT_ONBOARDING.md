@@ -4,10 +4,11 @@
 
 本文帮助只熟悉 v0.2.0、只参与过某个 W2 模块，或第一次进入仓库的成员和 AI Agent 建立完整上下文。它不是永远正确的状态数据库。
 
-- 快照更新时间：2026-08-10
-- 对应公共基线：`899f745`（tag `v0.3.0`）
-- 当前准备分支：`chore/w4-benchmark-bootstrap`
-- 当前状态：Unified Pipeline 已进入 `main`；W4 benchmark bootstrap 正在准备，尚未合并
+- 快照更新时间：2026-08-17
+- 对应公共 `main` 基线：`7125455`（W4 PR #42–#47 已合并）
+- 当前收口分支：`codex/w5-baseline-closure`（未 push、未 merge）
+- 当前状态：W1–W4 工程、六人 Pilot Annotation、独立 Blind AI Audit 与人工复核已完成；
+  `w4_query_relevance_pilot_v0.1.0` 已批准并通过 strict validator
 
 每次开始新任务，都必须重新用 Git、源码和测试核对本文。事实优先级及长期规则见
 [`AGENTS.md`](../../AGENTS.md)，当前快照见 [`docs/CURRENT_STATUS.md`](../CURRENT_STATUS.md)。
@@ -18,7 +19,7 @@
 
 当前目标不只是“搜到论文”，而是形成一条可追溯、可复现、可比较的处理链。长期可以迁移到其他科研主题，但当前代码和样例仍以天文光谱为主。项目不声称已经实现论文真实价值判断、语义理解或自动科研结论生成。
 
-## 2. 从 v0.2.0 到 W2/v0.3.0 发生了什么
+## 2. 从 v0.2.0 到 W2/v0.3.0，再到 W4 发生了什么
 
 v0.2.0 入口仍然保留：
 
@@ -51,17 +52,21 @@ Issue #21 进一步新增并已经进入当前 `main`：
 旧 `app.main` 没有被删除，也没有被悄悄替换。它仍是兼容和教学 baseline；统一 Pipeline
 和 Batch Runner 已随 v0.3.0 发布并成为 W4 的工程基础。
 
-### 当前从工程 Pipeline 转向研究评价
+### 从工程 Pipeline 转向研究评价
 
-W4 不继续堆新排序算法，而是先建立 research query、无标签泄漏 candidate pool、独立双标
-协议和可验证的个人任务。涉及 W4 benchmark 的 Issue 还必须继续阅读：
+W4 没有继续堆新排序算法，而是建立 research query、无标签泄漏 candidate pool、独立双标
+协议和可验证的个人任务。W4 PR #42–#47 已将六人 annotation、agreement、entity/provenance/
+query-boundary audits 和 evaluator 合并到 `main`。涉及 benchmark 或 W5 实验还必须阅读：
 
 - [`W4_RESEARCH_PLAN.md`](W4_RESEARCH_PLAN.md)
 - [`W4_ANNOTATION_GUIDELINE.md`](W4_ANNOTATION_GUIDELINE.md)
+- [`W4_PILOT_BENCHMARK_PROTOCOL.md`](W4_PILOT_BENCHMARK_PROTOCOL.md)
 - [`data/annotation_tasks/w4/README.md`](../../data/annotation_tasks/w4/README.md)
 
-当前只是 Pilot Annotation 准备，不能表述为大规模 benchmark、gold ground truth 或算法
-优劣结论。
+当前 60-pair **W4 Pilot Adjudicated Judged Set** 位于
+`data/benchmarks/w4_query_relevance/v0.1.0/`，状态为 `approved`。它由六人原始 annotation、
+独立 Blind AI evidence audit 和独立人类 review/adjudication 共同形成；不能表述为 gold
+standard、expert ground truth、pure human ground truth 或算法优劣结论。
 
 ## 3. 当前关键目录
 
@@ -76,6 +81,7 @@ W4 不继续堆新排序算法，而是先建立 research query、无标签泄�
 | `data/manual/` | 人工或待复核标注、审核数据 |
 | `data/analysis/` | 可提交的分析结果，不等同于运行时输出 |
 | `data/annotation_tasks/` | 待人工判断的候选池、分配和个人任务，不是 ground truth |
+| `data/benchmarks/` | versioned judged-set artifact；draft 与 approved 必须由 status/hash 区分 |
 | `tests/automated/` | 标准库 `unittest` 自动测试 |
 | `tests/fixtures/` | 离线、确定、可重复的测试输入 |
 | `docs/project/` | 长期架构、接口和使用说明 |
@@ -350,6 +356,33 @@ preliminary_score =
 
 当前 W2 label CSV 共 50 行：37 行来自原 PR 人工判断映射，13 行为 `AI-assisted-draft` 且待人工复核。Unified Pipeline 默认排除后 13 行；37 行仍需组长抽查，不能称为正式 gold ground truth。重复 `openalex_id` 会直接报错，不采用静默覆盖。
 
+W4 Pilot 是另一套 query-dependent relevance 协议：评价单位为
+`research_query_id + openalex_id`，标签为 `0/1/2` graded relevance，只评价 Query
+Relevance。六人原始 annotation 不改写；双标一致项直接形成 judgement，分歧必须独立
+adjudication，AI proposal 不能冒充人类最终裁决。
+
+当前 approved artifact 在 `data/benchmarks/w4_query_relevance/v0.1.0/`，保留 60/60 pair，
+所有 `final_label` 均为 `0/1/2`，无 pending review；其 manifest SHA-256 为
+`d503f5c2448409a9433bf3ffeada3890c7ddb31237bc7c95c529014b5fb8d094`。旧 `--labels`
+评价入口只服务 smoke/partial evaluation。
+
+Blind AI Audit 在读取任何 human label、proposal、agreement 或排名信号前完成并冻结。随后 60 条
+逐一比较，形成 6 条人工 review queue：3 个原 disagreement proposal 获独立人类 approve，
+另 3 个既有 judgement 经独立人类 `modify`；AI label 没有自动覆盖 human label。Approved
+package 保留 blind artifact、comparison、review queue 和 reviewer 决定的 hash provenance。
+
+Strict promotion 不是把 `judgement_status` 和 manifest hash 手工改成看似完成：每个分歧都必须
+在 proposal 与 judgement 中留下匹配的 human reviewer、approve/modify、final label、带时区时间
+和 note；proposal 的两位 annotator、原 label/reason 会重新同 assignments 和六份原始 annotation
+交叉验证。Approved package 还要完成 package-level checklist，并绑定实际被审核 draft manifest
+的 hash 和完整冻结 `input_set_identity`。
+
+冻结输入不以 approved manifest 自报 hash 为信任根。Validator 使用 package 外的 W4 v0.1
+trust anchors 校验冻结 pool manifest，再解析其中的 candidate/assignment/query/source 路径和
+hash 进行交叉验证。因此同步篡改输入和 package hash 仍会失败。正式 evaluator 必须在输出前确认
+Git 工作树 clean，reference year 继承 benchmark；实验 manifest 同时记录 Python、必要依赖和平台
+信息，避免程序自己的输出造成 dirty-state 误判。
+
 ## 12. Batch Runner
 
 Batch Runner 读取 JSON 配置，对每个 enabled item 构造 `PipelineConfig`，然后顺序调用同一个 `run_unified_pipeline()`。每项独立保存 parent run；batch 目录只保存配置快照和机器/人工可读摘要。
@@ -398,7 +431,8 @@ Batch 输出位于 `outputs/batches/<batch_id>/`，包含 `batch_config.json`、
 
 当前测试体系包括模块单测、安全离线 fixture、Unified Pipeline E2E、失败边界、Batch Runner 和 Quality Gate 测试。它不依赖真实 API Key，也不应把测试输出写入正式实验目录。
 
-本文更新时的 W4 bootstrap 工作区快照为 **214 项自动测试全部通过**。该数字不是永久事实；开始任何新任务都必须重新运行：
+本文更新时的 W5 前置收口工作区快照为 **300 项自动测试全部通过**。该数字不是永久事实；
+开始任何新任务都必须重新运行：
 
 ```powershell
 python -m unittest discover -s tests/automated -p "test_*.py" -q
@@ -417,7 +451,8 @@ python -m app.quality_gate --level full
 - Full：包含 Basic，并增加 CSV 结构、唯一 ID、标签引用、数值范围、run config 和已跟踪实验检查；
 - error 会使 CLI 返回非零；warning 需要人工阅读，但不会单独导致失败。
 
-本文更新时 Basic 为 0 error / 0 warning；Full 为 0 error / 3 warning。三个 warning 均是现有历史 W1/旧输出快照：
+W5 前置收口的最终 Basic/Full 结果以 [`CURRENT_STATUS.md`](../CURRENT_STATUS.md) 为准。
+此前公共基线的 Full Gate 有三个历史 warning：
 
 1. 一条 W1 标注 CSV 的逗号未按 CSV 规则转义；
 2. `data/manual/relevance_labels_w1.csv` 有 19 个 OpenAlex ID 未与当前统一样例对齐；
@@ -515,7 +550,6 @@ git diff --check，并报告实际 Git 状态、验证结果、限制和未完�
 
 ### P1 候选
 
-- 完成 W4 六人独立标注、agreement 计算和 disagreement adjudication；
 - 把人工 confirmed/distinct duplicate review decision 安全应用回数据集；
 - exact dedup 后的 metadata fusion 及字段冲突审计；
 - W2/v0.3 的 SQLite schema 和阶段化持久化；
@@ -560,7 +594,7 @@ v0.2 preliminary_score
 公平比较应保持：
 
 ```text
-固定 baseline → 候选方法 → 同一 benchmark → 同一评价口径 → 误差案例分析
+固定 baseline → 候选方法 → 同一 approved benchmark → 同一评价口径 → 误差案例分析
 ```
 
 不能在不同查询、不同样例、不同标签覆盖率下只比较一个分数，也不能一边查看评价结果一边无记录地调权重。
@@ -576,6 +610,10 @@ v0.2 preliminary_score
 - 把 OpenAlex v2 获取层 ID 防重复当成 W2 entity dedup；
 - 自动删除 suspected duplicate；
 - 把 AI-assisted label 冒充人工 ground truth；
+- 把 `proposed/draft` judged set 传给正式实验，或绕过 approved status、60/60 identity 和
+  trusted frozen-input hash、parent draft、人工 adjudication/provenance checklist 的 strict
+  validator；
+- 在 dirty Git 工作树中启动正式 benchmark 实验，或让 CLI reference year 静默偏离 benchmark；
 - 直接改 baseline 公式或成员结论，却没有独立 Issue 和证据；
 - 只跑自己新增的测试，不跑全量测试和门禁；
 - 提交普通 experiment、batch 输出、本地数据库或敏感配置；

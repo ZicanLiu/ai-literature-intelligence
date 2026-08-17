@@ -1,0 +1,31 @@
+﻿pair_id,research_query_id,annotator_a,label_a,confidence_a,reason_a,annotator_b,label_b,confidence_b,reason_b
+w4_rq01_004,rq01_stellar_classification,chenxingyu,2,high,输入为 GALAH 恒星光谱；t-SNE 映射光谱形态并辅助区分异常或特殊光谱类别，输出直接是恒星光谱分类，因此高度相关。,huangbin,2,high,使用t-SNE技术进行恒星光谱分类
+w4_rq01_007,rq01_stellar_classification,liuzican,0,high,从恒星光谱推断连续恒星参数，核心任务不是光谱分类或类型识别。,jiafucheng,0,high,数据驱动确定恒星标签(参数/丰度)，非光谱型分类
+w4_rq01_008,rq01_stellar_classification,wuziheng,2,high,以多套恒星光谱库为输入，随机森林是核心分类方法并用于恒星光谱分类。,puzhengjie,2,high,以恒星光谱为输入，用随机森林完成恒星光谱分类，核心任务与 RQ01 直接对应。
+w4_rq01_010,rq01_stellar_classification,chenxingyu,0,high,输入为 Kepler 测光光曲线；随机森林检测旋转调制并选择自转周期，输出不是恒星光谱类型，属于数据模态和目标任务均不匹配。,liuzican,0,high,从 Kepler 测光光变提取恒星自转周期，不使用恒星光谱进行类型分类。
+w4_rq01_011,rq01_stellar_classification,huangbin,2,high,使用机器学习识别碳星,wuziheng,2,high,从 LAMOST 光谱用机器学习识别碳星并划分光谱亚型，直接对应恒星类型识别。
+w4_rq01_013,rq01_stellar_classification,liuzican,0,high,从测光光变和颜色估计物理参数，既非光谱输入也非恒星类型分类。,wuziheng,0,high,用测光光变曲线和颜色回归恒星参数，既不以光谱为输入，也不做恒星类型分类。
+w4_rq01_014,rq01_stellar_classification,wuziheng,0,high,研究无线通信调制识别，其中 spectrum 是射频频谱，与恒星光谱无关。,chenxingyu,0,high,输入是无线通信射频信号；机器学习识别调制方式，研究对象、数据和输出都不是恒星光谱分类。
+w4_rq01_015,rq01_stellar_classification,jiafucheng,0,medium,测光目标三分类与温度回归，非恒星光谱型分类,chenxingyu,0,high,输入为宽带多色测光；随机森林输出 star/galaxy/QSO 类别并回归温度，没有从恒星光谱识别光谱型或恒星类型。
+w4_rq01_017,rq01_stellar_classification,huangbin,2,high,标题明确使用机器学习分类光谱,jiafucheng,2,medium,据 Springer 出版页确认核心任务为用机器学习对发射线恒星光谱分类
+w4_rq01_020,rq01_stellar_classification,wuziheng,0,high,研究星系中的 AGN X 射线吸积率分布，不进行恒星光谱分类或恒星类型识别。,liuzican,0,high,研究星系中的 AGN 吸积率，与恒星光谱分类或类型识别无关。
+w4_rq02_002,rq02_stellar_parameters,chenxingyu,0,high,输入是已经测得的恒星化学丰度向量；t-SNE 用于发现丰度空间结构和族群，不是从恒星光谱推断 Teff、log g 或丰度。,puzhengjie,0,high,用 t-SNE 分析已有的恒星化学丰度空间做化学标记，输入是既有丰度而非从光谱估计参数。
+w4_rq02_004,rq02_stellar_parameters,puzhengjie,2,high,从 Gaia RVS 恒星光谱用机器学习（人工神经网络等）估计 Teff/log g/metallicity，核心任务与 RQ02 直接对应。,liuzican,2,high,以 Gaia RVS 恒星光谱为输入，用包含 ANN 的方法估计 Teff、log g 和金属丰度。
+w4_rq02_007,rq02_stellar_parameters,jiafucheng,0,high,核心是径向速度伴星搜寻，非光谱参数估计,wuziheng,0,high,利用 APOGEE 多历元径向速度寻找伴星并拟合轨道参数，不从光谱估计恒星大气参数。
+w4_rq02_008,rq02_stellar_parameters,chenxingyu,2,high,输入为 SDSS/SEGUE 观测恒星光谱；非线性回归模型直接输出 Teff、log g 和 [Fe/H]，与恒星光谱参数估计任务完全对应。,puzhengjie,2,high,用非线性回归模型从 SDSS/SEGUE 恒星光谱估计 Teff/log g/[Fe/H]，核心任务与 RQ02 直接对应。
+w4_rq02_010,rq02_stellar_parameters,puzhengjie,0,high,系外行星凌星透射光谱观测，研究行星大气而非从恒星光谱估计恒星参数。,huangbin,0,high,系外行星透射光谱研究
+w4_rq02_012,rq02_stellar_parameters,wuziheng,2,high,SLAM 以 LAMOST 光谱为输入，用支持向量回归预测 Teff、log g、金属丰度和元素标签。,chenxingyu,2,high,输入为 LAMOST 恒星光谱；SLAM 使用支持向量回归推断 Teff、log g、金属丰度及元素标签，参数估计是核心输出。
+w4_rq02_015,rq02_stellar_parameters,huangbin,0,high,星震学研究，不涉及参数推断,liuzican,0,high,从重力模推断恒星内部混合，不以恒星光谱估计大气参数。
+w4_rq02_016,rq02_stellar_parameters,puzhengjie,1,medium,SDSS 数据发布文档，包含 APOGEE-2 用 The Cannon 机器学习估计恒星参数的说明，但核心任务是数据发布而非参数估计方法。,jiafucheng,1,high,数据发布论文，参数估计仅为其中一部分
+w4_rq02_018,rq02_stellar_parameters,wuziheng,2,high,The Cannon 对 RAVE 光谱进行数据驱动重分析，推断 Teff、log g 和多种化学丰度。,huangbin,2,high,使用The Cannon模型提取参数
+w4_rq02_019,rq02_stellar_parameters,jiafucheng,0,high,引力波瞬变目录，与恒星光谱参数估计无关,wuziheng,0,high,研究 LIGO/Virgo 引力波并合事件及其源属性，不涉及恒星光谱或恒星大气参数估计。
+w4_rq03_001,rq03_spectral_preprocessing,huangbin,0,high,伽马射线图像分析,liuzican,0,high,处理银河中心伽马射线图像，不是恒星光谱预处理。
+w4_rq03_005,rq03_spectral_preprocessing,jiafucheng,1,medium,自监督重建与表示学习，核心非降噪归一化预处理,puzhengjie,1,medium,用自监督重建学习恒星光谱表示并推断参数，重建与降噪/预处理有方法交集，但核心目标是表示学习与参数推断而非光谱质量改进。
+w4_rq03_006,rq03_spectral_preprocessing,chenxingyu,0,high,输入为 Kepler 测光光曲线；贝叶斯模型和去噪步骤去除时间序列系统误差，并非改善恒星光谱质量。,jiafucheng,1,medium,降噪系统误差去除，但对象是光变曲线非恒星光谱
+w4_rq03_008,rq03_spectral_preprocessing,puzhengjie,0,high,JWST 河外深场成像数据发布，与恒星光谱预处理无关。,huangbin,0,high,JWST测光数据发布
+w4_rq03_009,rq03_spectral_preprocessing,liuzican,0,high,从恒星参数生成合成光谱，并非观测光谱预处理或质量改进。,jiafucheng,1,medium,自编码生成恒星光谱，核心是生成非降噪校准
+w4_rq03_010,rq03_spectral_preprocessing,wuziheng,0,high,论文综述天文学中的无监督学习，未将恒星光谱预处理或质量改进作为核心任务。,puzhengjie,0,medium,天文学无监督学习综述，覆盖降维聚类等广泛方法，未聚焦恒星光谱预处理/降噪任务。
+w4_rq03_011,rq03_spectral_preprocessing,jiafucheng,1,high,降噪自编码器，但对象是星系SED非恒星光谱,chenxingyu,0,high,输入为星系多波段 SED；去噪自编码器用于无监督特征表示和星系族群分析，不处理恒星光谱，也不以恢复光谱质量为输出。
+w4_rq03_012,rq03_spectral_preprocessing,chenxingyu,0,high,输入为合成与观测恒星光谱；多任务深度学习输出 Teff、log g 和金属丰度，正则化是模型约束而不是光谱预处理。,huangbin,0,high,恒星大气参数预测，非预处理
+w4_rq03_015,rq03_spectral_preprocessing,liuzican,0,high,对超新星遗迹 X 射线图像去噪反卷积，并非恒星光谱预处理。,chenxingyu,0,high,输入为超新星遗迹 SN1006 的 Chandra X 射线观测；贝叶斯方法重建和去卷积图像，研究对象及数据产品都不是恒星光谱。
+w4_rq03_020,rq03_spectral_preprocessing,puzhengjie,0,high,太阳物理中机器学习的综述，非恒星光谱预处理/降噪/质量改进。,wuziheng,0,high,论文宽泛综述太阳物理中的机器学习，未以恒星光谱预处理或质量改进为核心任务。

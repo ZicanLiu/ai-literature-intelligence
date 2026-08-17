@@ -2,6 +2,11 @@
 
 本目录保存 W4 Pilot v0.1 的待人工判断任务池和均衡双标分配，不是人工 ground truth。
 
+六人原始 annotation 已全部合并并保持只读历史。versioned judgement、adjudication proposal
+和 strict validator 的当前入口见
+[`data/benchmarks/w4_query_relevance/README.md`](../../benchmarks/w4_query_relevance/README.md)
+与 [`W4 Pilot Benchmark 收口协议`](../../../docs/project/W4_PILOT_BENCHMARK_PROTOCOL.md)。
+
 ## 公共文件
 
 - `candidate_pool_v0.1.csv`：三个 research query 各 20 个 query-paper pair；
@@ -68,7 +73,8 @@ label 的成员文件属于损坏输入，会明确失败，不会静默选择�
 - disagreement queue 不包含最终标签，也不会修改任何成员 annotation。
 
 只有 `analysis_status=complete` 且 30 个 expected double pair 全部 comparable 时，才可把
-总体指标解释为完整 W4 Pilot agreement。当前阶段不得补造缺失成员标签。
+总体指标解释为完整 W4 Pilot agreement。当前实际结果为 30/30 comparable、27 一致、3 分歧；
+分歧仍必须独立 adjudication，不得由 analyzer 自动选择最终标签。
 
 ## 完成后验证
 

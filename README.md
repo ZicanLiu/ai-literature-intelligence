@@ -18,7 +18,9 @@
 
 兼容 baseline 为 **v0.2.0**；当前 `main` 已正式包含 W2 五项模块、Unified Pipeline 与
 Batch Runner，并标记为 **v0.3.0**。W4 开始从工程集成转向科研问题、评价基准和 Pilot
-Annotation。运行环境要求 **Python 3.10 或更高版本**。
+Annotation。W4 六人 annotation 和 agreement/audit/evaluator 已完成集成；当前 versioned
+judged set `w4_query_relevance_pilot_v0.1.0` 已 approved 并通过 strict validator。运行环境要求
+**Python 3.10 或更高版本**。
 
 当前验证状态：
 
@@ -175,6 +177,7 @@ acquisition query。
 app/                         命令行入口
 src/                         获取、处理、输出管理、存储与可视化
 data/{samples,manual,analysis}/ 固定样例、人工数据与分析表
+data/benchmarks/             versioned judged set（draft 与 approved 必须区分）
 docs/project/                长期项目说明
 docs/collaboration/          Git 与团队协作规范
 docs/reports/                周报、分析与 live 验证记录
@@ -264,11 +267,14 @@ Pipeline 与批量集成的实际状态、验证记录和限制见第二周成�
 
 - [W4 研究计划](docs/project/W4_RESEARCH_PLAN.md)
 - [W4 Query Relevance 标注指南](docs/project/W4_ANNOTATION_GUIDELINE.md)
+- [W4 Pilot Benchmark 收口协议](docs/project/W4_PILOT_BENCHMARK_PROTOCOL.md)
 - [W4 Pilot Annotation 公共数据与任务命令](data/annotation_tasks/w4/README.md)
+- [W4 versioned judged-set artifact](data/benchmarks/w4_query_relevance/README.md)
 
-第四周公共准备只冻结研究问题、60 个 query-paper pair、双标 assignment、个人任务生成器
-和格式 validator。当前仍是 Pilot Annotation 准备，不是已完成 benchmark、gold standard
-或算法优劣结论。
+第四周六人 annotation 已合并，30 个双标中 27 个一致、3 个分歧。冻结 parent draft 保留 60 个
+record-level pair 和两对高置信 alias；独立 Blind AI Audit 和 6 条人工 review 已完成，approved
+版本保留 60/60 final label、parent draft 和完整 provenance，可用于后续正式算法实验。本项目
+不使用 gold standard 或 ground truth 命名。
 
 ## 14. 后续可扩展方向
 

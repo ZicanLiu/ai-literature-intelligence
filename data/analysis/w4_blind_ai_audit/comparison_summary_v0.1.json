@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0",
+  "comparison_version": "w4_blind_ai_audit_comparison_v0.1",
+  "status": "human_review_completed",
+  "completed_at": "2026-08-17T17:56:06+08:00",
+  "human_review_completed_at": "2026-08-17T18:11:25+08:00",
+  "comparison_scope": "60 frozen W4 query-paper pairs",
+  "blind_audit": {
+    "manifest_path": "data/analysis/w4_blind_ai_audit/manifest_v0.1.json",
+    "manifest_sha256": "c4af19aab26944808f04dea39e820e8043e3cf921eb97a03ee7cf3bc457cb7fc",
+    "artifact_path": "data/analysis/w4_blind_ai_audit/blind_ai_audit_v0.1.csv",
+    "artifact_sha256": "bf4e68759dfa5c860b9f3edf4001423a018973a90bc525cc636fb01bcf2b848e",
+    "frozen_before_human_comparison": true
+  },
+  "human_source": {
+    "draft_manifest_path": "data/benchmarks/w4_query_relevance/v0.1.0-draft.1/manifest.json",
+    "draft_manifest_sha256": "6d71d914c88f1dfd7909fdc2d9705e4b238d51f362d1ce16eeda111044e2bd01",
+    "human_final_available_count": 57,
+    "pending_human_final_count": 3
+  },
+  "results": {
+    "pair_count": 60,
+    "human_final_vs_ai_match_count": 54,
+    "human_final_vs_ai_disagreement_count": 3,
+    "pending_human_final_count": 3,
+    "high_confidence_disagreement_count": 2,
+    "low_confidence_audit_count": 0,
+    "required_review_count": 6,
+    "reviewer_completed_count": 6
+  },
+  "results_by_query": {
+    "rq01_stellar_classification": {
+      "match": 20,
+      "disagreement": 0,
+      "pending_human_final": 0
+    },
+    "rq02_stellar_parameters": {
+      "match": 19,
+      "disagreement": 1,
+      "pending_human_final": 0
+    },
+    "rq03_spectral_preprocessing": {
+      "match": 15,
+      "disagreement": 2,
+      "pending_human_final": 3
+    }
+  },
+  "required_review_pair_ids": [
+    "w4_rq02_013",
+    "w4_rq03_005",
+    "w4_rq03_006",
+    "w4_rq03_007",
+    "w4_rq03_009",
+    "w4_rq03_011"
+  ],
+  "original_pending_adjudications": {
+    "pair_ids": [
+      "w4_rq03_006",
+      "w4_rq03_009",
+      "w4_rq03_011"
+    ],
+    "blind_ai_labels": {
+      "w4_rq03_006": 0,
+      "w4_rq03_009": 0,
+      "w4_rq03_011": 0
+    },
+    "existing_proposal_labels": {
+      "w4_rq03_006": 0,
+      "w4_rq03_009": 0,
+      "w4_rq03_011": 0
+    },
+    "blind_ai_matches_existing_proposal_count": 3,
+    "human_review_still_required": false
+  },
+  "human_review_decisions": {
+    "w4_rq02_013": {"decision": "modify", "final_label": 0, "reviewer": "liuzican"},
+    "w4_rq03_005": {"decision": "modify", "final_label": 0, "reviewer": "liuzican"},
+    "w4_rq03_006": {"decision": "approve", "final_label": 0, "reviewer": "liuzican"},
+    "w4_rq03_007": {"decision": "modify", "final_label": 1, "reviewer": "liuzican"},
+    "w4_rq03_009": {"decision": "approve", "final_label": 0, "reviewer": "huangbin"},
+    "w4_rq03_011": {"decision": "approve", "final_label": 0, "reviewer": "liuzican"}
+  },
+  "artifacts": {
+    "comparison": {
+      "path": "data/analysis/w4_blind_ai_audit/human_ai_comparison_v0.1.csv",
+      "sha256": "fbf56d905227e4ce583a1caa214169baebd97d4ecda3e56d031dbc0674a8ed79"
+    },
+    "review_queue": {
+      "path": "data/analysis/w4_blind_ai_audit/review_queue_v0.1.csv",
+      "sha256": "718a12bc499d7cc65a4014baab6ee22584d3056d721076aa39ac9eb419aaf65e",
+      "reviewer_fields_initially_blank": true,
+      "reviewer_completed_count": 6
+    }
+  },
+  "benchmark_promotion": {
+    "approved_benchmark_generated": true,
+    "approved_version": "w4_query_relevance_pilot_v0.1.0",
+    "approved_manifest_path": "data/benchmarks/w4_query_relevance/v0.1.0/manifest.json",
+    "description": "human annotation + independent blind AI evidence audit + independent human review/adjudication"
+  }
+}

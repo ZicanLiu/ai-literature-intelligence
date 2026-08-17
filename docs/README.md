@@ -45,10 +45,14 @@
 
 - [W4 研究计划：评价基准与实验体系试运行](project/W4_RESEARCH_PLAN.md)
 - [W4 Query Relevance 标注指南](project/W4_ANNOTATION_GUIDELINE.md)
+- [W4 Pilot Benchmark 收口协议](project/W4_PILOT_BENCHMARK_PROTOCOL.md)
 - [W4 Pilot Annotation 公共数据与任务命令](../data/annotation_tasks/w4/README.md)
+- [W4 versioned judged-set artifact](../data/benchmarks/w4_query_relevance/README.md)
 
-当前只完成 benchmark bootstrap 和 Pilot Annotation 准备，不表示 agreement、裁决或算法
-比较已经完成。
+W4 六人 annotation、Agreement Analyzer、entity/provenance/query-boundary audit 和 evaluator
+已进入 `main`。60-pair Blind AI Audit 与独立人工 review 已完成，
+`w4_query_relevance_pilot_v0.1.0` 状态为 `approved` 并通过 strict validator；该集合仍不得称为
+gold ground truth。
 
 ## live 验证
 

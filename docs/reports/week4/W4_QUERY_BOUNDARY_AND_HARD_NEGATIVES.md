@@ -15,11 +15,11 @@ Candidate Pool 中归纳容易被词法检索误判的 Hard Negative 类型。�
 `pair_id`、OpenAlex ID 和标题均直接复制自冻结 Candidate Pool，未新增 live 请求，也未改写
 公共 Query、Candidate Pool 或 assignment。
 
-本轮同时生成了
+本轮最初生成了
 [`chenxingyu.csv`](../../../data/annotation_tasks/w4/annotations/chenxingyu.csv) 的 15 条
-AI-assisted label suggestion。它们尚未经过陈星妤本人逐条确认，不是独立人工标签、gold label
-或 ground truth；最终 label、confidence 和 evidence 仍以本人复核为准。本分析没有查看其他
-标注者答案。
+AI-assisted label suggestion。陈星妤后来已本人实际审核并确认这 15 条；当前 CSV 标签没有因
+本次文档事实修正而改变。它们应准确描述为“本人确认的 AI-assisted human annotation”，仍不
+是 expert gold、gold label 或 ground truth。本分析生成建议时没有查看其他标注者答案。
 
 ## 2. 统一判定框架
 
@@ -180,13 +180,13 @@ RQ03 暴露了最强的词法歧义：`spectral`、`denoising`、`normalization`
 5. **不使用标签反向修改本次 Candidate Pool**：本报告分析错误模式，但不改变 v0.1 选样、排名权重
    或冻结 Query，避免评价数据泄漏到当前 baseline。
 
-## 8. 陈星妤人工复核清单
+## 8. 陈星妤人工复核记录
 
-以下均为 AI label suggestion；15 条都需要本人确认。“重点复核”用于突出旧 PR 判断变化、摘要
-边界或容易混淆的任务。当前没有建议 label=`1`/`?`，也没有 Evidence B/C；这来自本 assignment
-的实际构成，不是人为平衡标签分布。
+以下 15 条最初均为 AI label suggestion，现已由陈星妤本人审核确认。“重点复核”保留为当时
+用于突出旧 PR 判断变化、摘要边界或容易混淆任务的历史审查提示。当前没有 label=`1`/`?`，
+也没有 Evidence B/C；这来自本 assignment 的实际构成，不是人为平衡标签分布。
 
-| pair_id | 论文短标题 | RQ | 建议 label | confidence | 一句话核心依据 | 重点复核 | 与旧 PR 比较 |
+| pair_id | 论文短标题 | RQ | 当前 label | confidence | 一句话核心依据 | 历史重点复核 | 与旧 PR 比较 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `w4_rq01_004` | Galah t-SNE classification | RQ01 | 2 | high | GALAH 恒星光谱经 t-SNE 形成特殊光谱类别，分类是核心输出 | 否 | 2 → 2 |
 | `w4_rq01_010` | ROOSTER rotation periods | RQ01 | 0 | high | 输入是 Kepler 测光光曲线，输出自转周期，不是恒星光谱类型 | **是** | **1 → 0** |
@@ -204,12 +204,9 @@ RQ03 暴露了最强的词法歧义：`spectral`、`denoising`、`normalization`
 | `w4_rq03_015` | SN1006 X-ray imaging | RQ03 | 0 | high | 重建的是超新星遗迹 X 射线图像，不是恒星光谱 | 否 | 旧 PR 未提交 |
 | `w4_rq03_018` | Mine water XGBoost | RQ03 | 0 | high | 矿井水光谱虽做去噪归一化，但对象领域错误 | 否 | 0 → 0 |
 
-## 9. 人工确认建议
+## 9. 人工确认状态
 
-陈星妤复核时应直接对照冻结 CSV 中的 title + abstract，而不是旧 PR 改写过的 metadata。建议：
-
-1. 优先确认表中标记“重点复核”的 8 条；
-2. 若 `w4_rq01_016` 仅凭摘要仍无法确认输入模态，可按指南升级到 Evidence B，或暂改 `?`；
-3. 任何 label、confidence 或 evidence 调整都保留 `ai_assistance=label_suggestion`，因为本轮 AI 已明确
-   给出建议；
-4. 本人逐条确认后，才可把文件描述为“人工确认的 AI-assisted annotation”，仍不能称为 gold。
+陈星妤已完成本人审核确认。`chenxingyu.csv` 继续保留每行
+`ai_assistance=label_suggestion`，如实表示 AI 曾明确给出建议；本次只更新报告状态，不修改她的
+任何 label、confidence、evidence 或 reason。该文件可以描述为“本人确认的 AI-assisted human
+annotation”，仍不能称为 gold 或 ground truth。

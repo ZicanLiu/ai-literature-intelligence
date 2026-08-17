@@ -1,7 +1,8 @@
 # W4 研究计划：评价基准与实验体系试运行
 
-状态：W4 benchmark bootstrap / preparation。本文定义研究问题、Pilot Candidate Pool 和
-独立双标协议，但不表示 benchmark、agreement 或算法比较已经完成。
+状态：W4 计划已执行并进入 W5 前置收口。本文保留研究问题、Pilot Candidate Pool 和独立
+双标的设计基线；当前 judged-set 的真实状态与批准条件见
+[`W4_PILOT_BENCHMARK_PROTOCOL.md`](W4_PILOT_BENCHMARK_PROTOCOL.md)。
 
 ## 1. 本周定位
 
@@ -157,8 +158,8 @@ primary 按稳定 pair 顺序轮转分配；secondary pair 按固定 SHA-256 顺
 
 ## 10. 本次实现边界
 
-公共准备只交付 candidate pool、manifest、assignment、个人任务生成器、格式 validator、
-标注指南和导航。
+本节记录 W4 bootstrap 当时的实现边界：公共准备只交付 candidate pool、manifest、assignment、
+个人任务生成器、格式 validator、标注指南和导航。
 
 本次不实现：
 
@@ -168,10 +169,12 @@ primary 按稳定 pair 顺序轮转分配；secondary pair 按固定 SHA-256 顺
 - 使用新 benchmark 比较 baseline 与 two-stage；
 - BM25、Embedding、LTR 或其他新排序模型。
 
-这些内容应作为成员正式 W4 Issue 或后续公共集成任务，不由 bootstrap 提前完成。
+其中六人 annotation、agreement、entity/provenance/query-boundary audit 和 evaluator 后来已由
+W4 PR #42–#47 合并；分歧的人类 adjudication 和 approved judged set 仍待完成。
 
 ## 11. 形成正式 benchmark 前的条件
 
-只有在全部个人 PR 合并后，经过独立双标、agreement 计算、分歧裁决和必要的领域专家
-复核，才可以讨论把结果提升到 `data/manual/w4_benchmark/`。当前目录名称保持
-`annotation_tasks`，不得使用 `gold` 或 `ground_truth`。
+全部个人 PR 已合并，agreement 已完成；当前剩余条件是 3 个分歧的独立人工裁决、provenance
+复核和 strict validator。版本化结果位于 `data/benchmarks/w4_query_relevance/`，原始个人文件
+继续保留在 `annotation_tasks`。统一使用 Pilot Adjudicated Judged Set，不使用 `gold` 或
+`ground_truth`。

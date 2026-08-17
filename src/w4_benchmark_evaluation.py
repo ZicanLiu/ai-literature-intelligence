@@ -1,8 +1,8 @@
 """W4 Pilot Benchmark 的 Baseline vs Two-stage 统一评价与 Error Case 适配器。
 
-本模块为第四周 Pilot Benchmark 准备评价入口：未来输入是「最终 adjudicated
-benchmark labels + Candidate Pool + 现有 Baseline / Two-stage ranking」，输出统一
-实验结果和 error case 底稿。
+本模块提供第四周 Pilot Benchmark 的排序评价核心。CLI 的 partial/smoke 模式可使用
+局部 labels；正式模式由 versioned package strict validator 保证 60/60 approved judgement，
+并生成实验复现 manifest。
 
 设计原则：
 
@@ -21,11 +21,17 @@ benchmark labels + Candidate Pool + 现有 Baseline / Two-stage ranking」，输
 
 from __future__ import annotations
 
+import importlib.metadata
+import json
+import platform
+import subprocess
+import sys
 from collections import defaultdict
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from src.annotation_tasks import read_csv_rows
+from src.annotation_tasks import read_csv_rows, sha256_file
 from src.evaluation import (
     count_irrelevant_in_top_k,
     filter_grades_to_ranked,
@@ -33,8 +39,15 @@ from src.evaluation import (
     judged_ndcg_at_k,
     judged_precision_at_k,
 )
-from src.processor import add_preliminary_scores, clean_papers
-from src.ranking import apply_two_stage_ranking
+from src.processor import PRELIMINARY_SCORE_WEIGHTS, add_preliminary_scores, clean_papers
+from src.ranking import (
+    STAGE1_HIGH_THRESHOLD,
+    STAGE1_LEVEL_GATE,
+    STAGE1_MEDIUM_THRESHOLD,
+    STAGE2_SCORE_WEIGHTS,
+    apply_two_stage_ranking,
+)
+from src.text_relevance import ABSTRACT_WEIGHT, TITLE_WEIGHT
 
 
 # W4 数字标签到数值等级的映射：高度相关 = 2，部分相关 = 1，不相关 = 0。
@@ -90,6 +103,180 @@ REQUIRED_POOL_FIELDS = {"pair_id", "research_query_id", "openalex_id"}
 # 这些是透明的启发式阈值，只用于标记候选案例，不构成任何结论。
 ERROR_TOP_K = 5
 ERROR_RANK_DELTA_THRESHOLD = 5
+
+REPRODUCIBILITY_DEPENDENCIES = (
+    "requests",
+    "pandas",
+    "matplotlib",
+    "python-dotenv",
+)
+
+
+def capture_experiment_environment(
+    *, project_root: str | Path
+) -> dict[str, Any]:
+    """Capture formal-run Git/Python/dependency state before any output exists."""
+    root = Path(project_root).resolve()
+    git_revision, git_dirty = _git_state(root)
+    requirements_path = root / "requirements.txt"
+    dependencies: dict[str, str | None] = {}
+    for distribution in REPRODUCIBILITY_DEPENDENCIES:
+        try:
+            dependencies[distribution] = importlib.metadata.version(distribution)
+        except importlib.metadata.PackageNotFoundError:
+            dependencies[distribution] = None
+    requirements: dict[str, str | None] = {
+        "path": "requirements.txt",
+        "sha256": (
+            sha256_file(requirements_path) if requirements_path.is_file() else None
+        ),
+    }
+    return {
+        "git_revision": git_revision,
+        "git_dirty": git_dirty,
+        "python": {
+            "version": platform.python_version(),
+            "implementation": platform.python_implementation(),
+            "cache_tag": sys.implementation.cache_tag,
+        },
+        "platform": {
+            "system": platform.system(),
+            "release": platform.release(),
+            "machine": platform.machine(),
+        },
+        "requirements": requirements,
+        "dependencies": dependencies,
+    }
+
+
+def write_experiment_manifest(
+    *,
+    output_path: str | Path,
+    project_root: str | Path,
+    benchmark_package: dict[str, Any],
+    candidate_pool_path: str | Path,
+    research_queries_path: str | Path,
+    source_path: str | Path,
+    reference_year: int,
+    metrics_path: str | Path,
+    error_cases_path: str | Path,
+    environment_snapshot: dict[str, Any],
+) -> dict[str, Any]:
+    """Write the mandatory reproducibility manifest for a strict experiment."""
+    root = Path(project_root).resolve()
+    manifest_path = Path(output_path)
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    benchmark_manifest = Path(benchmark_package["manifest_path"])
+    candidate_pool = Path(candidate_pool_path)
+    research_queries = Path(research_queries_path)
+    source = Path(source_path)
+    metrics = Path(metrics_path)
+    error_cases = Path(error_cases_path)
+    payload = {
+        "schema_version": "1.0",
+        "experiment_type": "w4_query_relevance_strict_benchmark",
+        "created_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "git_revision": environment_snapshot["git_revision"],
+        "git_dirty": environment_snapshot["git_dirty"],
+        "environment": {
+            "python": environment_snapshot["python"],
+            "platform": environment_snapshot["platform"],
+            "requirements": environment_snapshot["requirements"],
+            "dependencies": environment_snapshot["dependencies"],
+        },
+        "benchmark": {
+            "version": benchmark_package["manifest"]["benchmark_version"],
+            "status": benchmark_package["manifest"]["status"],
+            "manifest_path": _safe_project_path(benchmark_manifest, root),
+            "manifest_sha256": benchmark_package["benchmark_hash"],
+            "input_set_identity": benchmark_package["input_set_identity"],
+            "parent_draft_manifest_sha256": benchmark_package["manifest"][
+                "parent_package"
+            ]["sha256"],
+        },
+        "inputs": {
+            "candidate_pool": {
+                "path": _safe_project_path(candidate_pool, root),
+                "sha256": sha256_file(candidate_pool),
+            },
+            "research_query_config": {
+                "path": _safe_project_path(research_queries, root),
+                "sha256": sha256_file(research_queries),
+            },
+            "source_sample": {
+                "path": _safe_project_path(source, root),
+                "sha256": sha256_file(source),
+            },
+        },
+        "reference_year": reference_year,
+        "methods": {
+            "baseline": {
+                "name": METHOD_NAMES["baseline"],
+                "preliminary_score_weights": dict(PRELIMINARY_SCORE_WEIGHTS),
+            },
+            "two_stage": {
+                "name": METHOD_NAMES["two_stage"],
+                "tfidf_title_weight": TITLE_WEIGHT,
+                "tfidf_abstract_weight": ABSTRACT_WEIGHT,
+                "stage1_high_threshold": STAGE1_HIGH_THRESHOLD,
+                "stage1_medium_threshold": STAGE1_MEDIUM_THRESHOLD,
+                "stage1_level_gate": dict(STAGE1_LEVEL_GATE),
+                "stage2_score_weights": dict(STAGE2_SCORE_WEIGHTS),
+            },
+        },
+        "evaluation": {
+            "target": "query_relevance",
+            "label_scheme": [0, 1, 2],
+            "metric_policy": "judged_condensed",
+            "metric_ks": list(METRIC_KS),
+        },
+        "output_files": [
+            {
+                "path": _safe_project_path(metrics, root),
+                "sha256": sha256_file(metrics),
+            },
+            {
+                "path": _safe_project_path(error_cases, root),
+                "sha256": sha256_file(error_cases),
+            },
+        ],
+    }
+    manifest_path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    return payload
+
+
+def _git_state(root: Path) -> tuple[str | None, bool | None]:
+    revision = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    status = subprocess.run(
+        ["git", "-C", str(root), "status", "--porcelain"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    revision_value = revision.stdout.strip() if revision.returncode == 0 else ""
+    dirty_value = bool(status.stdout.strip()) if status.returncode == 0 else None
+    return revision_value or None, dirty_value
+
+
+def _safe_project_path(path: Path, root: Path) -> str:
+    resolved = path.resolve()
+    try:
+        return resolved.relative_to(root).as_posix()
+    except ValueError:
+        return resolved.name
 
 
 def parse_w4_label(label: object) -> int | None:
