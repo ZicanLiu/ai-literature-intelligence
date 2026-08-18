@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.0",
+  "contract_name": "w5_method_ranking",
+  "contract_version": "1.0",
+  "artifact_type": "method_ranking",
+  "method": {
+    "method_id": "preliminary_score_v1",
+    "display_name": "B0 preliminary_score v1",
+    "family": "baseline",
+    "parameters": {
+      "scoring_module": "src.processor.add_preliminary_scores",
+      "preliminary_score_weights": {
+        "relevance_score": 0.4,
+        "impact_score": 0.3,
+        "recency_score": 0.2,
+        "completeness_score": 0.1
+      },
+      "reference_year": 2026
+    },
+    "model": null
+  },
+  "inputs": {
+    "candidate_pool": {
+      "path": "data/annotation_tasks/w4/candidate_pool_v0.1.csv",
+      "sha256": "25f608eb4c94218dfa220ba108b15ec846b2bd418174501420a468c376ed17cc",
+      "version": "w4_pilot_v0.1"
+    },
+    "research_queries": {
+      "path": "configs/w4/research_queries.json",
+      "sha256": "c77ec74ef4567614d3dfb6dab937b85398f95128cdb29e823587715002d99ab1",
+      "version": "w4_pilot_v0.1"
+    }
+  },
+  "ranking": {
+    "path": "ranking.csv",
+    "sha256": "0fdd1679405322ccc623f4f528e153e3c251d2f44aed2aaa661f37b1f1e7b9d5",
+    "row_count": 60,
+    "score_direction": "higher_is_better",
+    "tie_breaking": [
+      "score_desc",
+      "pair_id_asc"
+    ]
+  },
+  "generation": {
+    "generated_at": "2026-08-18T14:29:25+08:00",
+    "duration_seconds": 0.021235,
+    "git_revision": "ecfb23c6e8fb916c7c2ffcd6c33c4b06287d5c62",
+    "git_worktree_clean": true,
+    "python": {
+      "version": "3.14.0",
+      "implementation": "CPython"
+    },
+    "platform": {
+      "system": "Windows",
+      "release": "11",
+      "machine": "AMD64"
+    },
+    "dependencies": {}
+  },
+  "label_access": {
+    "benchmark_labels_read": false,
+    "declaration": "Ranking generation did not read benchmark labels, judgements, annotations, AI audit results or any W5 evaluation metrics."
+  }
+}
