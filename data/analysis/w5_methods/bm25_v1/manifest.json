@@ -31,7 +31,7 @@
   },
   "ranking": {
     "path": "ranking.csv",
-    "sha256": "2e5818163598246de0c79069ac7c88247870b03c1a4bffc0c6d08709c373f74e",
+    "sha256": "4594272eb56ee6463efe31bb270041e01f2ba313a33d98d840162df33a28992c",
     "row_count": 60,
     "score_direction": "higher_is_better",
     "tie_breaking": [
@@ -40,9 +40,9 @@
     ]
   },
   "generation": {
-    "generated_at": "2026-08-17T22:01:49+08:00",
-    "duration_seconds": 0.011863,
-    "git_revision": "ff571e252b7c53aed9fb13f909ea43d237ac7b60",
+    "generated_at": "2026-08-18T14:29:25+08:00",
+    "duration_seconds": 0.009818,
+    "git_revision": "ecfb23c6e8fb916c7c2ffcd6c33c4b06287d5c62",
     "git_worktree_clean": true,
     "python": {
       "version": "3.14.0",
