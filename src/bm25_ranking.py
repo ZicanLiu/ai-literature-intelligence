@@ -126,7 +126,9 @@ def bm25_score(
     doc_length = len(doc_tokens)
     length_norm = 1.0 - b + b * doc_length / average_length
     score = 0.0
-    for token in set(query_tokens):
+    # 累加顺序必须确定：无序 set 遍历顺序受 PYTHONHASHSEED 影响，
+    # 浮点加法顺序不同会让全精度分数出现 ~1e-15 尾差，导致 artifact hash 漂移。
+    for token in sorted(set(query_tokens)):
         frequency = term_frequency.get(token, 0)
         if frequency == 0:
             # 文档不包含该查询词项时不贡献分数。

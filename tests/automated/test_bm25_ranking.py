@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -209,6 +212,70 @@ class BM25FrozenPoolTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "冻结 W4 v0.1 hash"):
             validate_method_output(drift_manifest, project_root=PROJECT_ROOT)
+
+
+# 在独立子进程中生成 ranking CSV 并打印其 SHA-256；PYTHONHASHSEED 由父进程注入。
+_HASH_SEED_SCRIPT = """\
+import sys
+from pathlib import Path
+
+from src.annotation_tasks import sha256_file, write_csv_rows
+from src.bm25_ranking import build_pool_rankings
+from src.w5_baseline_export import format_score, load_frozen_inputs
+from src.w5_method_contract import RANKING_FIELDS
+
+frozen = load_frozen_inputs(Path("."))
+rows = build_pool_rankings(frozen["pool_rows"], frozen["research_queries"])
+output = Path(sys.argv[1]) / "ranking.csv"
+write_csv_rows(
+    output,
+    list(RANKING_FIELDS),
+    [
+        {
+            "pair_id": row["pair_id"],
+            "research_query_id": row["research_query_id"],
+            "method_id": "bm25_v1",
+            "score": format_score(row["score"]),
+            "rank": str(row["rank"]),
+        }
+        for row in rows
+    ],
+)
+print(sha256_file(output))
+"""
+
+
+class BM25CrossProcessDeterminismTests(unittest.TestCase):
+    """同一代码与输入在不同 PYTHONHASHSEED 下必须产出完全一致的 CSV hash。"""
+
+    def _generate_hash_in_subprocess(self, hash_seed: str, output_dir: Path) -> str:
+        env = dict(os.environ)
+        env["PYTHONHASHSEED"] = hash_seed
+        completed = subprocess.run(
+            [sys.executable, "-c", _HASH_SEED_SCRIPT, str(output_dir)],
+            cwd=PROJECT_ROOT,
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(
+            completed.returncode,
+            0,
+            f"子进程生成失败（PYTHONHASHSEED={hash_seed}）：{completed.stderr}",
+        )
+        return completed.stdout.strip()
+
+    def test_ranking_csv_hash_is_stable_across_hash_seeds(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dir_a = Path(temp_dir) / "seed0"
+            dir_b = Path(temp_dir) / "seed12345"
+            dir_a.mkdir()
+            dir_b.mkdir()
+            hash_a = self._generate_hash_in_subprocess("0", dir_a)
+            hash_b = self._generate_hash_in_subprocess("12345", dir_b)
+        self.assertEqual(len(hash_a), 64)
+        self.assertEqual(hash_a, hash_b)
 
 
 if __name__ == "__main__":

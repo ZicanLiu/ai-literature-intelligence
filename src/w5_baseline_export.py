@@ -300,14 +300,15 @@ def export_baseline_packages(
 ) -> dict[str, dict[str, Any]]:
     """导出 B0/B1 两个 W5 package，返回 method_id 到 manifest 的映射。
 
-    ``environment`` 必须在调用前（即任何输出写出前）采集。
+    ``environment`` 必须在调用前（即任何输出写出前）采集。计时起点在排序
+    计算之前，manifest 的 generation timing 覆盖排序计算与写出全程。
     """
+    started = datetime.now(timezone.utc).astimezone()
     rankings = collect_baseline_rankings(
         pool_rows, research_queries, source_index, reference_year
     )
     manifests: dict[str, dict[str, Any]] = {}
     for method_id, rows in rankings.items():
-        started = datetime.now(timezone.utc).astimezone()
         manifest = write_w5_package(
             Path(output_root) / method_id,
             method_id=method_id,
