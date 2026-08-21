@@ -24,6 +24,7 @@ from src.w5_method_contract import RANKING_FIELDS, validate_method_output
 from src.w5_rank_fusion import (
     RRF_K,
     RRF_ORDER_SEMANTIC,
+    _ensure_distinct_float_scores,
     compute_rrf_score,
     fuse_rankings,
     validate_fusion_inputs,
@@ -33,6 +34,28 @@ from src.w5_rank_fusion import (
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_DIR = PROJECT_ROOT / "tests" / "fixtures" / "w5_method_contract"
 BASE_REVISION = "d558a0888e4c71a9d001a67e0640d28394b6ac88"
+
+# 两个 75 项 rank multiset，来自 Z^20 中满足 Σ c_i/(60+i) = -1/L 的整数关系向量
+# (delta_int = -1，l1 = 150)。它们的精确 RRF 分数不同，但 float 后完全相同
+# (1.0880702238359463)，用于 Fraction → float 精度碰撞的 adversarial regression。
+_COLLISION_RANKS_A = (
+    [2] * 15
+    + [3] * 2
+    + [4] * 3
+    + [5] * 4
+    + [6] * 2
+    + [7] * 13
+    + [8] * 6
+    + [10] * 3
+    + [13] * 7
+    + [15] * 1
+    + [17] * 2
+    + [18] * 1
+    + [19] * 16
+)
+_COLLISION_RANKS_B = (
+    [1] * 29 + [9] * 3 + [11] * 16 + [14] * 3 + [16] * 5 + [20] * 19
+)
 
 
 class FusionTestCase(unittest.TestCase):
@@ -140,6 +163,68 @@ class FusionTestCase(unittest.TestCase):
         )
         return validate_method_output(manifest_path, project_root=PROJECT_ROOT)
 
+    def _write_hybrid_package(
+        self,
+        result: dict,
+        inputs: dict,
+        out_dir: Path,
+        *,
+        rrf_k: int,
+    ) -> Path:
+        out_dir.mkdir(exist_ok=True)
+        ranking_path = out_dir / "ranking.csv"
+        _write_rows(ranking_path, result["rows"])
+        manifest = {
+            "schema_version": "1.0",
+            "contract_name": "w5_method_ranking",
+            "contract_version": "1.0",
+            "artifact_type": "method_ranking",
+            "method": {
+                "method_id": "rrf_hybrid_v1",
+                "display_name": "rrf hybrid v1",
+                "family": "hybrid",
+                "parameters": {
+                    "rrf_k": rrf_k,
+                    "input_method_ids": result["input_method_ids"],
+                    "input_manifest_sha256": result["input_manifest_sha256"],
+                    "input_ranking_sha256": result["input_ranking_sha256"],
+                    "input_order_semantic": result["input_order_semantic"],
+                },
+                "model": None,
+            },
+            "inputs": inputs,
+            "ranking": {
+                "path": "ranking.csv",
+                "sha256": sha256_file(ranking_path),
+                "row_count": 60,
+                "score_direction": "higher_is_better",
+                "tie_breaking": ["score_desc", "pair_id_asc"],
+            },
+            "generation": {
+                "generated_at": "2026-08-17T20:00:00+08:00",
+                "duration_seconds": 0.0,
+                "git_revision": BASE_REVISION,
+                "git_worktree_clean": True,
+                "python": {"version": "3.fixture", "implementation": "CPython"},
+                "platform": {
+                    "system": "fixture",
+                    "release": "fixture",
+                    "machine": "fixture",
+                },
+                "dependencies": {},
+            },
+            "label_access": {
+                "benchmark_labels_read": False,
+                "declaration": "RRF fusion without benchmark labels.",
+            },
+        }
+        manifest_path = out_dir / "manifest.json"
+        manifest_path.write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        return manifest_path
+
 
 def _write_rows(path: Path, rows: list[dict]) -> None:
     import csv
@@ -179,6 +264,34 @@ def _fake_package(
     }
 
 
+def _collision_packages() -> list[dict]:
+    """构造 75 个仅含单一 RQ（20 pair）的伪 package，使其中两个 pair 的精确 RRF
+    分数发生 float 精度碰撞。"""
+    assert len(_COLLISION_RANKS_A) == len(_COLLISION_RANKS_B)
+    method_count = len(_COLLISION_RANKS_A)
+    pair_ids = [f"col_pair_{i:02d}" for i in range(1, 21)]
+    packages = []
+    for m in range(method_count):
+        rows = []
+        for index, pair_id in enumerate(pair_ids):
+            if index == 0:
+                rank = _COLLISION_RANKS_A[m]
+            elif index == 1:
+                rank = _COLLISION_RANKS_B[m]
+            else:
+                rank = 1
+            rows.append((pair_id, "col_query", rank))
+        packages.append(
+            _fake_package(
+                method_id=f"col_method_{m:03d}",
+                manifest_hash=f"{m:064d}",
+                ranking_hash=f"{m + 10**6:064d}",
+                pairs=rows,
+            )
+        )
+    return packages
+
+
 class RrfMathTests(unittest.TestCase):
     def test_k_is_fixed_60(self) -> None:
         self.assertEqual(RRF_K, 60)
@@ -195,6 +308,18 @@ class RrfMathTests(unittest.TestCase):
             compute_rrf_score([20, 5, 1], k=60),
         )
 
+    def test_distinct_fractions_colliding_as_float_fail_closed(self) -> None:
+        a = Fraction(1, 3)
+        b = a + Fraction(1, 10**30)
+        self.assertNotEqual(a, b)
+        self.assertEqual(float(a), float(b))
+        with self.assertRaisesRegex(ValueError, "精度碰撞"):
+            _ensure_distinct_float_scores([a, b], "q1")
+
+    def test_identical_fractions_are_not_a_collision(self) -> None:
+        a = Fraction(1, 3)
+        _ensure_distinct_float_scores([a, a], "q1")
+
 
 class FusionPositiveTests(FusionTestCase):
     def test_two_fixtures_fuse_deterministically(self) -> None:
@@ -206,8 +331,11 @@ class FusionPositiveTests(FusionTestCase):
         )
         result_a = fuse_rankings([lexical, dense], output_method_id="rrf_hybrid_v1")
         result_b = fuse_rankings([lexical, dense], output_method_id="rrf_hybrid_v1")
+        result_reversed = fuse_rankings([dense, lexical], output_method_id="rrf_hybrid_v1")
         self.assertEqual(len(result_a["rows"]), 60)
         self.assertEqual(result_a["rows"], result_b["rows"])
+        # RRF 求和可交换：交换输入 manifest 顺序不应改变排名。
+        self.assertEqual(result_a["rows"], result_reversed["rows"])
         self.assertEqual(result_a["rrf_k"], 60)
         self.assertEqual(
             result_a["input_method_ids"],
@@ -284,53 +412,8 @@ class FusionPositiveTests(FusionTestCase):
         result = fuse_rankings([lexical, dense], output_method_id="rrf_hybrid_v1")
 
         out_dir = self.root / "hybrid_out"
-        out_dir.mkdir()
-        ranking_path = out_dir / "ranking.csv"
-        _write_rows(ranking_path, result["rows"])
-        manifest = {
-            "schema_version": "1.0",
-            "contract_name": "w5_method_ranking",
-            "contract_version": "1.0",
-            "artifact_type": "method_ranking",
-            "method": {
-                "method_id": "rrf_hybrid_v1",
-                "display_name": "rrf hybrid v1",
-                "family": "hybrid",
-                "parameters": {
-                    "rrf_k": result["rrf_k"],
-                    "input_method_ids": result["input_method_ids"],
-                    "input_manifest_sha256": result["input_manifest_sha256"],
-                    "input_ranking_sha256": result["input_ranking_sha256"],
-                    "input_order_semantic": result["input_order_semantic"],
-                },
-                "model": None,
-            },
-            "inputs": lexical["manifest"]["inputs"],
-            "ranking": {
-                "path": "ranking.csv",
-                "sha256": sha256_file(ranking_path),
-                "row_count": 60,
-                "score_direction": "higher_is_better",
-                "tie_breaking": ["score_desc", "pair_id_asc"],
-            },
-            "generation": {
-                "generated_at": "2026-08-17T20:00:00+08:00",
-                "duration_seconds": 0.0,
-                "git_revision": BASE_REVISION,
-                "git_worktree_clean": True,
-                "python": {"version": "3.fixture", "implementation": "CPython"},
-                "platform": {"system": "fixture", "release": "fixture", "machine": "fixture"},
-                "dependencies": {},
-            },
-            "label_access": {
-                "benchmark_labels_read": False,
-                "declaration": "RRF fusion without benchmark labels.",
-            },
-        }
-        manifest_path = out_dir / "manifest.json"
-        manifest_path.write_text(
-            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
+        manifest_path = self._write_hybrid_package(
+            result, lexical["manifest"]["inputs"], out_dir, rrf_k=result["rrf_k"]
         )
         validated = validate_method_output(manifest_path, project_root=PROJECT_ROOT)
         self.assertEqual(validated["method_id"], "rrf_hybrid_v1")
@@ -338,6 +421,33 @@ class FusionPositiveTests(FusionTestCase):
         self.assertEqual(
             validated["counts_by_query"]["rq01_stellar_classification"], 20
         )
+
+    def test_hybrid_manifest_rejects_non_60_rrf_k(self) -> None:
+        lexical = self._validated_package(
+            "lexical", "lexical_fixture.csv", "fixture_lexical_v1", "sparse"
+        )
+        dense = self._validated_package(
+            "dense", "dense_fixture.csv", "fixture_dense_v1", "dense"
+        )
+        result = fuse_rankings([lexical, dense], output_method_id="rrf_hybrid_v1")
+
+        out_dir = self.root / "hybrid_bad_k"
+        manifest_path = self._write_hybrid_package(
+            result, lexical["manifest"]["inputs"], out_dir, rrf_k=1
+        )
+        with self.assertRaisesRegex(ValueError, "rrf_k"):
+            validate_method_output(manifest_path, project_root=PROJECT_ROOT)
+
+
+class FusionCollisionTests(FusionTestCase):
+    def test_float_collision_fails_closed(self) -> None:
+        score_a = compute_rrf_score(_COLLISION_RANKS_A)
+        score_b = compute_rrf_score(_COLLISION_RANKS_B)
+        self.assertNotEqual(score_a, score_b)
+        self.assertEqual(float(score_a), float(score_b))
+        packages = _collision_packages()
+        with self.assertRaisesRegex(ValueError, "精度碰撞"):
+            fuse_rankings(packages, output_method_id="rrf_hybrid_v1")
 
 
 class FusionValidationTests(FusionTestCase):
@@ -356,6 +466,13 @@ class FusionValidationTests(FusionTestCase):
         )
         with self.assertRaisesRegex(ValueError, "至少需要两个"):
             fuse_rankings([lexical], output_method_id="rrf_hybrid_v1")
+
+    def test_fuse_rankings_rejects_non_60_k_keyword(self) -> None:
+        lexical, dense = self._two_valid_fixture_packages()
+        with self.assertRaises(TypeError):
+            fuse_rankings(
+                [lexical, dense], output_method_id="rrf_hybrid_v1", k=1
+            )
 
     def test_duplicate_method_id_is_rejected(self) -> None:
         a = _fake_package(
@@ -495,6 +612,83 @@ class FusionCliTests(FusionTestCase):
             )
         self.assertEqual(exit_code, 1)
         self.assertIn("校验失败", output.getvalue())
+
+    def _cli_packages(self) -> tuple[Path, Path]:
+        lexical_manifest, _ = self._create_package(
+            "lexical", "lexical_fixture.csv", "fixture_lexical_v1", "sparse"
+        )
+        dense_manifest, _ = self._create_package(
+            "dense", "dense_fixture.csv", "fixture_dense_v1", "dense"
+        )
+        return lexical_manifest, dense_manifest
+
+    def _run_cli(self, manifests, out_dir, method_id, git_clean=True):
+        output = io.StringIO()
+        with patch(
+            "app.fuse_w5_rankings._git_revision", return_value=BASE_REVISION
+        ), patch(
+            "app.fuse_w5_rankings._git_worktree_clean", return_value=git_clean
+        ):
+            with contextlib.redirect_stdout(output):
+                exit_code = fuse_cli_main(
+                    [
+                        *sum((["--manifest", str(m)] for m in manifests), []),
+                        "--method-id",
+                        method_id,
+                        "--output-dir",
+                        str(out_dir),
+                    ]
+                )
+        return exit_code, output.getvalue()
+
+    def test_cli_rejects_output_dir_overlapping_input(self) -> None:
+        lexical_manifest, dense_manifest = self._cli_packages()
+        lexical_dir = lexical_manifest.parent
+        ranking_before = sha256_file(lexical_dir / "ranking.csv")
+        exit_code, output = self._run_cli(
+            [lexical_manifest, dense_manifest], lexical_dir, "rrf_hybrid_v1"
+        )
+        self.assertEqual(exit_code, 1)
+        self.assertIn("重合", output)
+        # 输入 package 未被覆盖。
+        self.assertEqual(sha256_file(lexical_dir / "ranking.csv"), ranking_before)
+        self.assertTrue(lexical_manifest.is_file())
+
+    def test_cli_rejects_existing_nonempty_output_dir(self) -> None:
+        lexical_manifest, dense_manifest = self._cli_packages()
+        out_dir = self.root / "occupied"
+        out_dir.mkdir()
+        (out_dir / "existing.txt").write_text("keep", encoding="utf-8")
+        exit_code, output = self._run_cli(
+            [lexical_manifest, dense_manifest], out_dir, "rrf_hybrid_v1"
+        )
+        self.assertEqual(exit_code, 1)
+        self.assertIn("非空", output)
+        self.assertEqual((out_dir / "existing.txt").read_text(encoding="utf-8"), "keep")
+        self.assertFalse((out_dir / "ranking.csv").exists())
+        self.assertFalse((out_dir / "manifest.json").exists())
+
+    def test_cli_invalid_method_id_leaves_no_artifact(self) -> None:
+        lexical_manifest, dense_manifest = self._cli_packages()
+        out_dir = self.root / "bad_method_out"
+        exit_code, output = self._run_cli(
+            [lexical_manifest, dense_manifest], out_dir, "Bad_Method_ID!"
+        )
+        self.assertEqual(exit_code, 1)
+        self.assertIn("method-id", output)
+        self.assertFalse((out_dir / "ranking.csv").exists())
+        self.assertFalse((out_dir / "manifest.json").exists())
+
+    def test_cli_dirty_worktree_leaves_no_artifact(self) -> None:
+        lexical_manifest, dense_manifest = self._cli_packages()
+        out_dir = self.root / "dirty_out"
+        exit_code, output = self._run_cli(
+            [lexical_manifest, dense_manifest], out_dir, "rrf_hybrid_v1", git_clean=False
+        )
+        self.assertEqual(exit_code, 1)
+        self.assertIn("clean", output)
+        self.assertFalse((out_dir / "ranking.csv").exists())
+        self.assertFalse((out_dir / "manifest.json").exists())
 
 
 if __name__ == "__main__":

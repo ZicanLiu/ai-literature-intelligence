@@ -9,15 +9,23 @@ from __future__ import annotations
 import argparse
 import json
 import platform
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
 
 from src.annotation_tasks import sha256_file, write_csv_rows
-from src.w5_method_contract import RANKING_FIELDS, validate_method_output
-from src.w5_rank_fusion import HYBRID_FAMILY, RRF_K, fuse_rankings
+from src.w5_method_contract import (
+    GIT_REVISION_PATTERN,
+    METHOD_ID_PATTERN,
+    RANKING_FIELDS,
+    RRF_K,
+    validate_method_output,
+)
+from src.w5_rank_fusion import HYBRID_FAMILY, fuse_rankings
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -83,7 +91,6 @@ def build_manifest(
     display_name: str,
     frozen_inputs: dict,
     ranking_sha256: str,
-    rrf_k: int,
     input_method_ids: list[str],
     input_manifest_sha256: dict[str, str],
     input_ranking_sha256: dict[str, str],
@@ -102,7 +109,7 @@ def build_manifest(
             "display_name": display_name,
             "family": HYBRID_FAMILY,
             "parameters": {
-                "rrf_k": rrf_k,
+                "rrf_k": RRF_K,
                 "input_method_ids": input_method_ids,
                 "input_manifest_sha256": input_manifest_sha256,
                 "input_ranking_sha256": input_ranking_sha256,
@@ -144,15 +151,48 @@ def build_manifest(
     }
 
 
+def _validate_method_id(method_id: str) -> None:
+    if (
+        not isinstance(method_id, str)
+        or method_id != method_id.strip()
+        or not METHOD_ID_PATTERN.fullmatch(method_id)
+    ):
+        raise ValueError(
+            "method-id 必须是稳定的小写机器标识（a-z、0-9、点、下划线或连字符）。"
+        )
+
+
+def _check_output_dir_safe(output_dir: Path, input_package_dirs: list[Path]) -> None:
+    resolved = output_dir.resolve()
+    for package_dir in input_package_dirs:
+        package_resolved = package_dir.resolve()
+        if resolved == package_resolved or resolved.is_relative_to(
+            package_resolved
+        ) or package_resolved.is_relative_to(resolved):
+            raise ValueError(
+                f"输出目录与输入 package 重合，禁止覆盖输入 artifact：{package_resolved}"
+            )
+    if resolved.exists():
+        if any(resolved.iterdir()):
+            raise ValueError(f"输出目录已存在且非空，拒绝覆盖：{resolved}")
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     if len(args.manifest) < 2:
         print("错误：至少需要两个 --manifest 输入。")
         return 1
 
-    git_revision = _git_revision()
-    git_worktree_clean = _git_worktree_clean()
+    started = time.perf_counter()
 
+    # 预检 1：method_id 格式（可提前判断）。
+    try:
+        _validate_method_id(args.method_id)
+    except ValueError as error:
+        print(f"输出参数校验失败：{error}")
+        return 1
+
+    # 输入 method artifact 校验（先于 Git / 输出目录预检，保证错误信息准确）。
     packages = []
     try:
         for manifest_path in args.manifest:
@@ -163,51 +203,72 @@ def main(argv: list[str] | None = None) -> int:
         print(f"输入 method artifact 校验失败：{error}")
         return 1
 
-    started = time.perf_counter()
+    # 预检 2：Git clean 状态与完整 revision（写文件前提前失败）。
+    git_revision = _git_revision()
+    git_worktree_clean = _git_worktree_clean()
+    if not git_worktree_clean:
+        print("错误：正式 method ranking 必须在 clean Git 工作树生成。")
+        return 1
+    if not GIT_REVISION_PATTERN.fullmatch(git_revision):
+        print("错误：无法确认完整 40 位 Git commit SHA。")
+        return 1
+
+    # 预检 3：输出目录安全（不与输入 package 重合、不覆盖非空目标）。
+    input_package_dirs = [p["manifest_path"].parent for p in packages]
     try:
-        fusion = fuse_rankings(
-            packages,
-            output_method_id=args.method_id,
-            k=RRF_K,
-        )
+        _check_output_dir_safe(args.output_dir, input_package_dirs)
+    except (OSError, ValueError) as error:
+        print(f"输出目录校验失败：{error}")
+        return 1
+
+    try:
+        fusion = fuse_rankings(packages, output_method_id=args.method_id)
     except ValueError as error:
         print(f"RRF 融合失败：{error}")
         return 1
-    duration_seconds = time.perf_counter() - started
 
     output_dir = args.output_dir.resolve()
-    output_dir.mkdir(parents=True, exist_ok=True)
-    ranking_path = output_dir / "ranking.csv"
-    write_csv_rows(ranking_path, RANKING_FIELDS, fusion["rows"])
-    ranking_sha256 = sha256_file(ranking_path)
-
     display_name = args.display_name or args.method_id.replace("_", " ")
-    manifest = build_manifest(
-        output_method_id=args.method_id,
-        display_name=display_name,
-        frozen_inputs=packages[0]["manifest"]["inputs"],
-        ranking_sha256=ranking_sha256,
-        rrf_k=fusion["rrf_k"],
-        input_method_ids=fusion["input_method_ids"],
-        input_manifest_sha256=fusion["input_manifest_sha256"],
-        input_ranking_sha256=fusion["input_ranking_sha256"],
-        input_order_semantic=fusion["input_order_semantic"],
-        duration_seconds=round(duration_seconds, 6),
-        git_revision=git_revision,
-        git_worktree_clean=git_worktree_clean,
-    )
-    manifest_path = output_dir / "manifest.json"
-    manifest_path.write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
 
-    # 输出自检：重新用 W5 validator 校验生成的 package。
-    try:
-        result = validate_method_output(manifest_path, project_root=PROJECT_ROOT)
-    except (OSError, UnicodeError, ValueError) as error:
-        print(f"输出自检失败：{error}")
-        return 1
+    # 先在临时目录完整生成并通过 validator 自检，成功后再发布到最终目录；
+    # 任何失败都不会在最终 output directory 留下半成品。
+    with tempfile.TemporaryDirectory(prefix="w5_rrf_") as tmp:
+        tmp_dir = Path(tmp)
+        ranking_path = tmp_dir / "ranking.csv"
+        write_csv_rows(ranking_path, RANKING_FIELDS, fusion["rows"])
+        ranking_sha256 = sha256_file(ranking_path)
+        duration_seconds = round(time.perf_counter() - started, 6)
+
+        manifest = build_manifest(
+            output_method_id=args.method_id,
+            display_name=display_name,
+            frozen_inputs=packages[0]["manifest"]["inputs"],
+            ranking_sha256=ranking_sha256,
+            input_method_ids=fusion["input_method_ids"],
+            input_manifest_sha256=fusion["input_manifest_sha256"],
+            input_ranking_sha256=fusion["input_ranking_sha256"],
+            input_order_semantic=fusion["input_order_semantic"],
+            duration_seconds=duration_seconds,
+            git_revision=git_revision,
+            git_worktree_clean=git_worktree_clean,
+        )
+        manifest_path = tmp_dir / "manifest.json"
+        manifest_path.write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+        # 输出自检：重新用 W5 validator 校验生成的 package。
+        try:
+            result = validate_method_output(manifest_path, project_root=PROJECT_ROOT)
+        except (OSError, UnicodeError, ValueError) as error:
+            print(f"输出自检失败：{error}")
+            return 1
+
+        # 自检通过后再发布到最终 output directory。
+        output_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ranking_path, output_dir / "ranking.csv")
+        shutil.copy2(manifest_path, output_dir / "manifest.json")
 
     print(f"RRF 融合完成：method_id={result['method_id']}，pairs={len(result['ranking_rows'])}")
     print(f"输出目录：{output_dir}")

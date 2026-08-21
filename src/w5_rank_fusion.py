@@ -16,10 +16,9 @@ from collections import defaultdict
 from fractions import Fraction
 from typing import Any
 
-from src.w5_method_contract import RANKING_ROWS_PER_QUERY
+from src.w5_method_contract import RANKING_ROWS_PER_QUERY, RRF_K
 
 
-RRF_K = 60
 HYBRID_FAMILY = "hybrid"
 RRF_ORDER_SEMANTIC = "order_independent"
 
@@ -39,6 +38,9 @@ def compute_rrf_score(ranks: list[int], *, k: int = RRF_K) -> Fraction:
 
     使用精确有理数（fractions.Fraction）累加，避免浮点非结合性导致
     “同一数学结果因输入顺序不同而产生不同浮点值”，从而保证确定性并列。
+
+    ``k`` 仅作为可参数化的数学 helper 保留给单元测试；正式 fusion 路径固定使用
+    ``RRF_K = 60``。
     """
     total = Fraction(0)
     for rank in ranks:
@@ -111,18 +113,38 @@ def validate_fusion_inputs(input_packages: list[dict[str, Any]]) -> None:
         )
 
 
+def _ensure_distinct_float_scores(scores: list[Fraction], query_id: str) -> None:
+    """拒绝“不同精确分数却序列化为同一 float”的精度碰撞。
+
+    W5 Contract 的 tie-breaking 基于写入 CSV 的 float ``score``，而 rank 由精确
+    ``Fraction`` 决定。若两个不同的精确分数在 float 下发生碰撞，序列化后的顺序会与
+    精确数学顺序不一致，当前 Contract 无法无损表达，因此 fail closed，而不是生成
+    一个数学顺序已经失真的正式 artifact。
+    """
+    by_float: dict[float, Fraction] = {}
+    for score in scores:
+        as_float = float(score)
+        previous = by_float.setdefault(as_float, score)
+        if previous != score:
+            raise ValueError(
+                f"{query_id} 存在 RRF 分数精度碰撞：两个不同的精确分数 "
+                f"{previous} 与 {score} 都序列化为 {as_float!r}，无法在 W5 "
+                "Contract 中无损表达排序，已 fail closed。"
+            )
+
+
 def fuse_rankings(
     input_packages: list[dict[str, Any]],
     *,
     output_method_id: str,
-    k: int = RRF_K,
 ) -> dict[str, Any]:
     """把多个已验证的 method package 通过 RRF 融合为一个 hybrid ranking。
 
     参数：
         input_packages：``validate_method_output()`` 返回结果的列表，至少两个。
         output_method_id：输出 hybrid artifact 的 method_id。
-        k：RRF 常量，固定 60，不调参。
+
+    RRF 常量固定使用 ``RRF_K = 60``（Issue #53），不接受外部传值。
 
     返回：
         rows：按 (research_query_id, rank) 排好序的 ranking 行；
@@ -140,7 +162,7 @@ def fuse_rankings(
             query_by_pair[pair_id] = row["research_query_id"]
 
     scores = {
-        pair_id: compute_rrf_score(ranks, k=k)
+        pair_id: compute_rrf_score(ranks)
         for pair_id, ranks in ranks_by_pair.items()
     }
 
@@ -152,7 +174,9 @@ def fuse_rankings(
     for query_id in sorted(by_query):
         pairs = by_query[query_id]
         # tie-breaking 与 W5 contract 一致：score 降序 → pair_id 升序。
-        pairs.sort(key=lambda item: (-float(item[1]), item[0]))
+        # 用精确 Fraction 比较，避免 float 碰撞改变数学顺序。
+        pairs.sort(key=lambda item: (-item[1], item[0]))
+        _ensure_distinct_float_scores([score for _, score in pairs], query_id)
         for rank, (pair_id, score_fraction) in enumerate(pairs, start=1):
             rows.append(
                 {
@@ -166,7 +190,7 @@ def fuse_rankings(
 
     return {
         "rows": rows,
-        "rrf_k": k,
+        "rrf_k": RRF_K,
         "input_method_ids": [p["method_id"] for p in input_packages],
         "input_manifest_sha256": {
             p["method_id"]: p["manifest_sha256"] for p in input_packages
