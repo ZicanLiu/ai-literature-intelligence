@@ -1,6 +1,6 @@
 # W5 SPECTER2 Scientific Dense Ranking
 
-状态：Issue #50 实现与参数冻结完成；正式 60-pair artifact 将在实现提交形成 clean Git tree 后生成。
+状态：Issue #50 实现、参数冻结与正式 60-pair artifact 已完成；W5 method validator PASS。
 
 ## 1. 实验边界
 
@@ -108,5 +108,41 @@ Runner 只报告统一的 NDCG@5/10、Precision@5/10、Coverage@5/10 与 irrelev
 
 ## 6. 正式 artifact 记录
 
-本节将在 clean 实现提交后的唯一正式模型运行完成后写入真实路径、Git revision、ranking hash、
-manifest hash、依赖版本、运行时长与 validator 结果；不会用 fake output 代替。
+正式模型运行在实现提交形成的 clean tree 上启动，未读取 benchmark label，也没有试跑其他
+similarity 后择优。真实记录如下：
+
+| 项目 | 结果 |
+| --- | --- |
+| Generation Git revision | `2e879e5c5c27c342f22e642a5cad00e4cd6dcccc` |
+| Python | CPython 3.12.13（独立 Conda 环境 `w5-specter2`） |
+| Dependencies | `torch 2.13.0+cpu`、`transformers 4.57.6`、`adapters 1.3.0` |
+| Device / batch size | CPU / 8 |
+| Embedding dimension | 768 |
+| Model generation duration | 13.994535 seconds（模型已在本地 cache） |
+| Ranking rows | 60；三个 RQ 各 20 |
+| Ranking SHA-256 | `7bd205cfaa8ecb559e4a90fee0583dceb18a3ef8ef1f1bcbb0a632ea837b575b` |
+| Manifest SHA-256 | `a917bfb3ed545428441bdd9d821f179ae96ddb9abeeb4ca11458c300d641fbee` |
+| Validator | PASS |
+
+Artifact：
+
+- `data/analysis/w5_methods/specter2_adhoc_v1/ranking.csv`；
+- `data/analysis/w5_methods/specter2_adhoc_v1/manifest.json`。
+
+实际验证命令：
+
+```powershell
+python -m app.validate_w5_method `
+  --manifest data/analysis/w5_methods/specter2_adhoc_v1/manifest.json
+```
+
+Validator 重新核对了冻结输入 hash、严格五列表头、60/60 pair identity、3×20、有限 score、
+higher-is-better rank、`pair_id` tie-breaking、clean generation revision、ranking hash 与
+label-access declaration。
+
+Windows 上首次下载 paper adapter 时，Hugging Face Hub 的 symlink 降级路径曾触发一次
+`WinError 1314`；新进程使用已下载的普通 cache 文件后加载成功。正式模型进程随后成功生成并在
+进程内验证 artifact。`conda run` 在转发含 replacement character 的模型日志时又触发 GBK
+`UnicodeEncodeError`，但该错误发生在 Conda 打印已经完成的子进程 stdout 阶段；上述独立
+validator、文件时间、完整 manifest 与 hash 是正式成功状态的判据。该编码问题不影响 ranking
+内容或复现配置，但 Windows 用户可直接激活环境后运行 CLI，以避免 Conda stdout wrapper。
