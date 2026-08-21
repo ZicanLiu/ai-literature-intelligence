@@ -1,0 +1,50 @@
+name: W5 CI and Reproducibility Gate
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    # 注入环境变量，强制隔离 Live API
+    env:
+      DISABLE_LIVE_API: "true"
+      
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取完整历史，确保 git diff 可以正确比对
+
+      - name: Git Diff Check (PR Only)
+        if: github.event_name == 'pull_request'
+        # 严格检查 PR 引入的改动是否存在多余空格或冲突标记
+        run: git diff --check ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: 'pip'
+
+      - name: Install Core Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # 仅安装核心依赖，不包含大模型及可选 GPU 依赖
+          pip install -r requirements.txt
+
+      - name: W4 Approved Benchmark
+        run: python -m app.validate_w4_benchmark
+
+      - name: Offline Unit Tests
+        run: python -m unittest discover -s tests/automated -p "test_*.py" -q
+
+      - name: Basic Quality Gate
+        run: python -m app.quality_gate --level basic
+
+      - name: W5 Artifact Reproducibility Check
+        run: python scripts/check_w5_method_artifacts.py
