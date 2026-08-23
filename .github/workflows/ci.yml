@@ -9,11 +9,11 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    
-    # 注入环境变量，强制隔离 Live API
+
+    # 离线 CI 意图标识；实际隔离来自下方仅运行 fixture/mock 驱动的命令。
     env:
       DISABLE_LIVE_API: "true"
-      
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4

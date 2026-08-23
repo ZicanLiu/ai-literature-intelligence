@@ -1,35 +1,71 @@
+"""Validate every formal W5 method package committed to the promotion directory."""
+
+from __future__ import annotations
+
 import sys
-import subprocess
 from pathlib import Path
 
-def main():
-    """
-    轻量级检查机制：
-    如果不依赖未来算法 PR，当前没有正式 method artifact 时，不报错，直接跳过；
-    如果有 manifest 文件，则调用验证入口。
-    """
-    # 扫描目录下是否包含 W5 method manifest 的 JSON 文件
-    manifest_candidates = list(Path('.').rglob('*w5_method*manifest*.json'))
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-    if not manifest_candidates:
-        print("ℹ️ 当前没有待验证的正式 W5 artifact。检查通过。")
-        sys.exit(0)
+from src.w5_method_contract import validate_method_output
 
-    print(f"✅ 发现待验证的 W5 Method Artifact: {[str(p) for p in manifest_candidates]}")
-    print("🚀 开始执行 W5 可复现检查...")
 
-    try:
-        # 调用已有的 validate_w5_method
-        subprocess.run(
-            [sys.executable, "-m", "app.validate_w5_method"],
-            check=True,
-            text=True
+FORMAL_ARTIFACT_ROOT = PROJECT_ROOT / "data" / "analysis" / "w5_methods"
+
+
+def discover_formal_manifests(artifact_root: str | Path) -> list[Path]:
+    """Discover only ``<method-id>/manifest.json`` below the formal W5 root."""
+    root = Path(artifact_root).resolve()
+    if not root.is_dir():
+        return []
+    return sorted(
+        path.resolve()
+        for path in root.glob("*/manifest.json")
+        if path.is_file()
+    )
+
+
+def check_formal_artifacts(
+    *,
+    project_root: str | Path = PROJECT_ROOT,
+    artifact_root: str | Path = FORMAL_ARTIFACT_ROOT,
+) -> int:
+    """Validate all discovered packages and return a CI-compatible exit code."""
+    root = Path(project_root).resolve()
+    manifests = discover_formal_manifests(artifact_root)
+    if not manifests:
+        print(
+            "No formal W5 artifacts found under "
+            "data/analysis/w5_methods/<method-id>/manifest.json; check passed."
         )
-        print("✅ W5 Method Artifact 验证 PASS！")
-    except subprocess.CalledProcessError as e:
-        print(f"❌ W5 Method Artifact 验证 FAIL，退出码: {e.returncode}")
-        # 如果验证失败，必须将错误传递给 CI，让工作流变红
-        sys.exit(e.returncode)
+        return 0
+
+    failures = 0
+    print(f"Discovered {len(manifests)} formal W5 artifact(s).")
+    for manifest_path in manifests:
+        try:
+            result = validate_method_output(manifest_path, project_root=root)
+        except (OSError, UnicodeError, ValueError) as error:
+            failures += 1
+            print(f"FAIL {manifest_path}: {error}")
+        else:
+            print(
+                f"PASS {manifest_path}: method_id={result['method_id']}, "
+                f"pairs={len(result['ranking_rows'])}"
+            )
+
+    if failures:
+        print(f"W5 formal artifact check failed: {failures}/{len(manifests)} invalid.")
+        return 1
+    print(f"W5 formal artifact check passed: {len(manifests)}/{len(manifests)} valid.")
+    return 0
+
+
+def main() -> int:
+    return check_formal_artifacts()
+
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
