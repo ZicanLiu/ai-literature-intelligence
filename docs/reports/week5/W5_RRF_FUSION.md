@@ -103,9 +103,9 @@ Research Query、existing ranking。
 
 ### 6.2 固定 k=60（正式方法约束）
 
-`RRF_K = 60` 是 W5 Method Ranking Contract 层级的固定常量（Issue #53）。正式 fusion 入口
-`fuse_rankings` 和 manifest 构造 `build_manifest` 均不再接受外部 `k` / `rrf_k` 传值，始终使用
-`RRF_K`。W5 validator 会拒绝 `parameters.rrf_k != 60` 的 hybrid artifact。可参数化的
+`RRF_K = 60` 是 RRF 方法模块自身的预注册参数（Issue #53），不属于算法无关的公共 W5
+Method Ranking Contract。正式 fusion 入口 `fuse_rankings` 和 manifest 构造 `build_manifest` 均不
+接受外部 `k` / `rrf_k` 传值，始终从 RRF 模块读取 `RRF_K` 并写出 `rrf_k=60`。可参数化的
 `compute_rrf_score(..., k=...)` 仅作为数学 helper 保留给单元测试。
 
 ### 6.3 确定性并列
@@ -128,8 +128,9 @@ order_independent` 显式记录这一点，同时仍保留输入 method_id 顺�
 ### 6.5 输出安全与端到端 duration
 
 CLI 在写文件前预检 `method_id` 格式、Git clean/完整 revision 与输出目录安全（禁止与任一输入
-package 重合、默认拒绝覆盖非空目标），并在临时目录完整生成 + 通过 validator 自检后才发布到
-最终 `--output-dir`；任何失败都不会在最终目录留下半成品。`generation.duration_seconds`
+package 重合、默认拒绝覆盖非空目标），并在临时目录完整生成 + 通过 validator 自检，再在目标
+同级 staging 目录准备完整 package 后整体 rename 到最终 `--output-dir`；复制或 rename 失败都不
+会在最终目录留下半成品。`generation.duration_seconds`
 记录从输入处理到 ranking 写出的端到端 generation 时长，而非仅 fusion 核心耗时。
 
 ---
@@ -151,15 +152,22 @@ package 重合、默认拒绝覆盖非空目标），并在临时目录完整生
 | Candidate Pool 不一致拒绝 | ✓ |
 | invalid manifest 拒绝（CLI） | ✓ |
 | 输出通过 W5 validator | ✓ |
-| hybrid manifest 拒绝 `rrf_k != 60` | ✓ |
-| Fraction→float 精度碰撞 fail closed（直接 + 75 方法端到端） | ✓ |
+| CLI manifest 固定写出 `rrf_k=60` | ✓ |
+| Fraction→float 精度碰撞 fail closed（直接 + 75 个构造 package 的 fusion API） | ✓ |
 | CLI output 与输入 package 重合拒绝 | ✓ |
 | CLI 覆盖已有非空 output 目录拒绝 | ✓ |
 | CLI 非法 method_id / dirty worktree 不留半成品 | ✓ |
+| CLI 发布阶段第二次复制失败不留半成品 | ✓ |
 | CLI 融合并自检通过 | ✓ |
 | 不访问 label（label_access=false） | ✓ |
 
 全部 26 个测试离线，无网络请求。
+
+其中 75 输入的精度碰撞用例是为复现极小有理数差异而构造的 fusion API adversarial case；这些
+package 只覆盖 rank 几何和跨输入融合检查，不是逐个通过公共 validator 的完整正式 W5 artifact。
+完整 artifact 路径另由两个带 manifest 的公共 fixture、CLI 输出自检和 W5 validator 回归覆盖。
+CLI 的 dirty-worktree 单元测试通过 mock Git 状态 helper 精确触发失败分支；生产路径仍调用真实
+`git status --porcelain`，该 mock 测试不表述为真实 dirty 仓库端到端运行。
 
 ---
 

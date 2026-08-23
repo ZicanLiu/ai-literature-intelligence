@@ -22,10 +22,9 @@ from src.w5_method_contract import (
     GIT_REVISION_PATTERN,
     METHOD_ID_PATTERN,
     RANKING_FIELDS,
-    RRF_K,
     validate_method_output,
 )
-from src.w5_rank_fusion import HYBRID_FAMILY, fuse_rankings
+from src.w5_rank_fusion import HYBRID_FAMILY, RRF_K, fuse_rankings
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -177,6 +176,22 @@ def _check_output_dir_safe(output_dir: Path, input_package_dirs: list[Path]) -> 
             raise ValueError(f"输出目录已存在且非空，拒绝覆盖：{resolved}")
 
 
+def _publish_package(source_dir: Path, output_dir: Path) -> None:
+    """在目标同级准备完整 package，再整体发布到最终目录。"""
+    output_dir.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(
+        prefix=f".{output_dir.name}.publish_", dir=output_dir.parent
+    ) as publish_tmp:
+        publish_dir = Path(publish_tmp)
+        shutil.copy2(source_dir / "ranking.csv", publish_dir / "ranking.csv")
+        shutil.copy2(source_dir / "manifest.json", publish_dir / "manifest.json")
+
+        # 安全预检只允许目标不存在或为空；在完整 staging package 就绪后再移除空目录。
+        if output_dir.exists():
+            output_dir.rmdir()
+        publish_dir.replace(output_dir)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     if len(args.manifest) < 2:
@@ -265,10 +280,12 @@ def main(argv: list[str] | None = None) -> int:
             print(f"输出自检失败：{error}")
             return 1
 
-        # 自检通过后再发布到最终 output directory。
-        output_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(ranking_path, output_dir / "ranking.csv")
-        shutil.copy2(manifest_path, output_dir / "manifest.json")
+        # 自检通过后在目标同级准备完整 package，再整体 rename 发布。
+        try:
+            _publish_package(tmp_dir, output_dir)
+        except OSError as error:
+            print(f"正式 package 发布失败：{error}")
+            return 1
 
     print(f"RRF 融合完成：method_id={result['method_id']}，pairs={len(result['ranking_rows'])}")
     print(f"输出目录：{output_dir}")

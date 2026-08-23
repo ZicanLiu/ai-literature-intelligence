@@ -168,8 +168,6 @@ class FusionTestCase(unittest.TestCase):
         result: dict,
         inputs: dict,
         out_dir: Path,
-        *,
-        rrf_k: int,
     ) -> Path:
         out_dir.mkdir(exist_ok=True)
         ranking_path = out_dir / "ranking.csv"
@@ -184,7 +182,7 @@ class FusionTestCase(unittest.TestCase):
                 "display_name": "rrf hybrid v1",
                 "family": "hybrid",
                 "parameters": {
-                    "rrf_k": rrf_k,
+                    "rrf_k": result["rrf_k"],
                     "input_method_ids": result["input_method_ids"],
                     "input_manifest_sha256": result["input_manifest_sha256"],
                     "input_ranking_sha256": result["input_ranking_sha256"],
@@ -413,7 +411,7 @@ class FusionPositiveTests(FusionTestCase):
 
         out_dir = self.root / "hybrid_out"
         manifest_path = self._write_hybrid_package(
-            result, lexical["manifest"]["inputs"], out_dir, rrf_k=result["rrf_k"]
+            result, lexical["manifest"]["inputs"], out_dir
         )
         validated = validate_method_output(manifest_path, project_root=PROJECT_ROOT)
         self.assertEqual(validated["method_id"], "rrf_hybrid_v1")
@@ -421,23 +419,6 @@ class FusionPositiveTests(FusionTestCase):
         self.assertEqual(
             validated["counts_by_query"]["rq01_stellar_classification"], 20
         )
-
-    def test_hybrid_manifest_rejects_non_60_rrf_k(self) -> None:
-        lexical = self._validated_package(
-            "lexical", "lexical_fixture.csv", "fixture_lexical_v1", "sparse"
-        )
-        dense = self._validated_package(
-            "dense", "dense_fixture.csv", "fixture_dense_v1", "dense"
-        )
-        result = fuse_rankings([lexical, dense], output_method_id="rrf_hybrid_v1")
-
-        out_dir = self.root / "hybrid_bad_k"
-        manifest_path = self._write_hybrid_package(
-            result, lexical["manifest"]["inputs"], out_dir, rrf_k=1
-        )
-        with self.assertRaisesRegex(ValueError, "rrf_k"):
-            validate_method_output(manifest_path, project_root=PROJECT_ROOT)
-
 
 class FusionCollisionTests(FusionTestCase):
     def test_float_collision_fails_closed(self) -> None:
@@ -586,6 +567,8 @@ class FusionCliTests(FusionTestCase):
         self.assertEqual(exit_code, 0, output.getvalue())
         self.assertTrue((out_dir / "ranking.csv").is_file())
         self.assertTrue((out_dir / "manifest.json").is_file())
+        manifest = json.loads((out_dir / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["method"]["parameters"]["rrf_k"], 60)
         # 输出可通过 validator CLI 验证
         validate_out = io.StringIO()
         with contextlib.redirect_stdout(validate_out):
@@ -687,6 +670,29 @@ class FusionCliTests(FusionTestCase):
         )
         self.assertEqual(exit_code, 1)
         self.assertIn("clean", output)
+        self.assertFalse((out_dir / "ranking.csv").exists())
+        self.assertFalse((out_dir / "manifest.json").exists())
+
+    def test_cli_publish_copy_failure_leaves_no_partial_package(self) -> None:
+        lexical_manifest, dense_manifest = self._cli_packages()
+        out_dir = self.root / "publish_failure_out"
+        real_copy2 = shutil.copy2
+        copy_count = 0
+
+        def fail_second_copy(source, destination):
+            nonlocal copy_count
+            copy_count += 1
+            if copy_count == 2:
+                raise OSError("simulated manifest publish failure")
+            return real_copy2(source, destination)
+
+        with patch("app.fuse_w5_rankings.shutil.copy2", side_effect=fail_second_copy):
+            exit_code, output = self._run_cli(
+                [lexical_manifest, dense_manifest], out_dir, "rrf_hybrid_v1"
+            )
+
+        self.assertEqual(exit_code, 1)
+        self.assertIn("发布失败", output)
         self.assertFalse((out_dir / "ranking.csv").exists())
         self.assertFalse((out_dir / "manifest.json").exists())
 

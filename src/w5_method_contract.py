@@ -35,8 +35,6 @@ RANKING_ROW_COUNT = 60
 RANKING_ROWS_PER_QUERY = 20
 SCORE_DIRECTION = "higher_is_better"
 TIE_BREAKING = ["score_desc", "pair_id_asc"]
-# Issue #53：W5 RRF 的 k 固定为 60，正式 hybrid artifact 不得使用其他 k。
-RRF_K = 60
 METHOD_FAMILIES = frozenset({"baseline", "sparse", "dense", "neural", "hybrid"})
 METHOD_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 GIT_REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
@@ -199,11 +197,6 @@ def _validate_manifest(manifest: dict[str, Any]) -> None:
         raise ValueError("method.family 必须是 baseline/sparse/dense/neural/hybrid。")
     if not isinstance(method["parameters"], dict):
         raise ValueError("method.parameters 必须是 JSON object。")
-    if "rrf_k" in method["parameters"] and method["parameters"]["rrf_k"] != RRF_K:
-        raise ValueError(
-            f"method.parameters.rrf_k 必须固定为 {RRF_K}（Issue #53 RRF k=60），"
-            "正式 hybrid artifact 不允许使用其他 k。"
-        )
     model = method["model"]
     if model is not None:
         if not isinstance(model, dict):

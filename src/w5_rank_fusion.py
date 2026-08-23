@@ -16,10 +16,11 @@ from collections import defaultdict
 from fractions import Fraction
 from typing import Any
 
-from src.w5_method_contract import RANKING_ROWS_PER_QUERY, RRF_K
+from src.w5_method_contract import RANKING_ROWS_PER_QUERY
 
 
 HYBRID_FAMILY = "hybrid"
+RRF_K = 60
 RRF_ORDER_SEMANTIC = "order_independent"
 
 # 每个输入 package 必须提供的融合字段（来自 validate_method_output 的结果）。
