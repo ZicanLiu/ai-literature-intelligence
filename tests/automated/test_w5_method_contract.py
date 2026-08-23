@@ -198,8 +198,53 @@ class MethodContractPositiveTests(MethodContractTestCase):
         result = validate_method_output(self.manifest_path, project_root=PROJECT_ROOT)
         self.assertIn("source_sample", result["input_paths"])
 
+    def test_current_official_method_versions_remain_valid(self) -> None:
+        expected_versions = {
+            "preliminary_score_v1": "1.1",
+            "tfidf_two_stage_v1": "1.1",
+            "bm25_v1": "1.0",
+            "specter2_adhoc_v1": "1.0",
+            "cross_encoder_msmarco_v1": "1.0",
+            "rrf_bm25_specter2_v1": "1.0",
+        }
+        formal_root = PROJECT_ROOT / "data" / "analysis" / "w5_methods"
+        for method_id, expected_version in expected_versions.items():
+            with self.subTest(method_id=method_id):
+                result = validate_method_output(
+                    formal_root / method_id / "manifest.json",
+                    project_root=PROJECT_ROOT,
+                )
+                self.assertEqual(
+                    result["manifest"]["contract_version"], expected_version
+                )
+
 
 class MethodContractNegativeTests(MethodContractTestCase):
+    def test_official_baselines_reject_v10_contract_downgrade(self) -> None:
+        for method_id in ("preliminary_score_v1", "tfidf_two_stage_v1"):
+            with self.subTest(method_id=method_id):
+                manifest_path, ranking_path = self._create_package(
+                    package_name=method_id,
+                    fixture_name="lexical_fixture.csv",
+                    method_id=method_id,
+                    family="baseline",
+                )
+                fields, rows = read_csv_rows(ranking_path)
+                for row in rows:
+                    row["method_id"] = method_id
+                write_csv_rows(ranking_path, fields, rows)
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                manifest["ranking"]["sha256"] = sha256_file(ranking_path)
+                manifest_path.write_text(
+                    json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+                    encoding="utf-8",
+                )
+                with self.assertRaisesRegex(ValueError, "不得降级为 v1.0"):
+                    validate_method_output(
+                        manifest_path,
+                        project_root=PROJECT_ROOT,
+                    )
+
     def test_missing_pair_and_wrong_total_are_rejected(self) -> None:
         rows = self._load_rows()
         rows.pop()

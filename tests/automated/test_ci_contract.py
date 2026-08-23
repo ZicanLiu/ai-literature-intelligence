@@ -14,12 +14,13 @@ from scripts.check_w5_method_artifacts import (
     check_formal_artifacts,
     discover_formal_manifests,
 )
-from src.annotation_tasks import sha256_file
+from src.annotation_tasks import read_csv_rows, sha256_file, write_csv_rows
+from src.w5_formal_policy import FORMAL_METHOD_IDS
+from src.w5_method_contract import RANKING_FIELDS
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-FIXTURE_DIR = PROJECT_ROOT / "tests" / "fixtures" / "w5_method_contract"
-BASE_REVISION = "d558a0888e4c71a9d001a67e0640d28394b6ac88"
+FORMAL_ARTIFACT_SOURCE = PROJECT_ROOT / "data" / "analysis" / "w5_methods"
 
 
 class CIWorkflowContractTests(unittest.TestCase):
@@ -68,83 +69,17 @@ class W5ArtifactCheckerTests(unittest.TestCase):
         self.root = Path(self.temp_dir.name)
         self.artifact_root = self.root / "data" / "analysis" / "w5_methods"
 
-    def _create_package(
-        self,
-        *,
-        method_id: str,
-        fixture_name: str = "lexical_fixture.csv",
-        family: str = "sparse",
+    def _copy_formal_package(
+        self, method_id: str, *, as_name: str | None = None
     ) -> Path:
-        package_dir = self.artifact_root / method_id
-        package_dir.mkdir(parents=True)
-        ranking_path = package_dir / "ranking.csv"
-        shutil.copyfile(FIXTURE_DIR / fixture_name, ranking_path)
-        model = None
-        if family in {"dense", "neural"}:
-            model = {
-                "name": "fixture-encoder",
-                "revision": "fixture-v1",
-                "adapter": None,
-            }
-        manifest = {
-            "schema_version": "1.0",
-            "contract_name": "w5_method_ranking",
-            "contract_version": "1.0",
-            "artifact_type": "method_ranking",
-            "method": {
-                "method_id": method_id,
-                "display_name": method_id.replace("_", " "),
-                "family": family,
-                "parameters": {"fixture_only": True},
-                "model": model,
-            },
-            "inputs": {
-                "candidate_pool": {
-                    "path": "data/annotation_tasks/w4/candidate_pool_v0.1.csv",
-                    "sha256": (
-                        "25f608eb4c94218dfa220ba108b15ec846b2bd418174501420a468c376ed17cc"
-                    ),
-                    "version": "w4_pilot_v0.1",
-                },
-                "research_queries": {
-                    "path": "configs/w4/research_queries.json",
-                    "sha256": (
-                        "c77ec74ef4567614d3dfb6dab937b85398f95128cdb29e823587715002d99ab1"
-                    ),
-                    "version": "w4_pilot_v0.1",
-                },
-            },
-            "ranking": {
-                "path": "ranking.csv",
-                "sha256": sha256_file(ranking_path),
-                "row_count": 60,
-                "score_direction": "higher_is_better",
-                "tie_breaking": ["score_desc", "pair_id_asc"],
-            },
-            "generation": {
-                "generated_at": "2026-08-17T20:00:00+08:00",
-                "duration_seconds": 0.0,
-                "git_revision": BASE_REVISION,
-                "git_worktree_clean": True,
-                "python": {"version": "3.fixture", "implementation": "CPython"},
-                "platform": {
-                    "system": "fixture",
-                    "release": "fixture",
-                    "machine": "fixture",
-                },
-                "dependencies": {"fixture-generator": "1.0"},
-            },
-            "label_access": {
-                "benchmark_labels_read": False,
-                "declaration": "Synthetic ranking created without benchmark judgements.",
-            },
-        }
-        manifest_path = package_dir / "manifest.json"
-        manifest_path.write_text(
-            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )
-        return manifest_path
+        self.artifact_root.mkdir(parents=True, exist_ok=True)
+        target = self.artifact_root / (as_name or method_id)
+        shutil.copytree(FORMAL_ARTIFACT_SOURCE / method_id, target)
+        return target
+
+    def _copy_full_roster(self) -> None:
+        for method_id in sorted(FORMAL_METHOD_IDS):
+            self._copy_formal_package(method_id)
 
     def _run_checker(self) -> tuple[int, str]:
         output = io.StringIO()
@@ -155,73 +90,98 @@ class W5ArtifactCheckerTests(unittest.TestCase):
             )
         return code, output.getvalue()
 
-    def test_no_artifact_is_a_clear_pass(self) -> None:
+    def test_missing_artifact_root_fails(self) -> None:
         code, output = self._run_checker()
-        self.assertEqual(code, 0)
-        self.assertIn("No formal W5 artifacts", output)
+        self.assertEqual(code, 1)
+        self.assertIn("不存在或不是目录", output)
 
-    def test_normal_method_directory_manifest_is_discovered(self) -> None:
-        manifest_path = self._create_package(method_id="fixture_lexical_v1")
+    def test_empty_artifact_root_fails(self) -> None:
+        self.artifact_root.mkdir(parents=True)
+        code, output = self._run_checker()
+        self.assertEqual(code, 1)
+        self.assertIn("root 为空", output)
+
+    def test_complete_six_method_roster_passes(self) -> None:
+        self._copy_full_roster()
+        code, output = self._run_checker()
+        self.assertEqual(code, 0, output)
+        self.assertIn("6/6 formal packages valid", output)
         self.assertEqual(
             discover_formal_manifests(self.artifact_root),
-            [manifest_path.resolve()],
+            sorted(
+                (self.artifact_root / method_id / "manifest.json").resolve()
+                for method_id in FORMAL_METHOD_IDS
+            ),
         )
 
-    def test_one_valid_artifact_passes_real_validator(self) -> None:
-        self._create_package(method_id="fixture_lexical_v1")
+    def test_missing_one_formal_method_fails(self) -> None:
+        self._copy_full_roster()
+        shutil.rmtree(self.artifact_root / "rrf_bm25_specter2_v1")
         code, output = self._run_checker()
-        self.assertEqual(code, 0, output)
-        self.assertIn("method_id=fixture_lexical_v1", output)
-        self.assertIn("1/1 valid", output)
+        self.assertEqual(code, 1)
+        self.assertIn("缺少正式方法目录：rrf_bm25_specter2_v1", output)
 
-    def test_multiple_valid_artifacts_are_all_validated(self) -> None:
-        self._create_package(method_id="fixture_lexical_v1")
-        self._create_package(
-            method_id="fixture_dense_v1",
-            fixture_name="dense_fixture.csv",
-            family="dense",
+    def test_unknown_formal_method_directory_fails(self) -> None:
+        self._copy_full_roster()
+        self._copy_formal_package(
+            "bm25_v1",
+            as_name="unknown_method_v1",
         )
         code, output = self._run_checker()
-        self.assertEqual(code, 0, output)
-        self.assertIn("method_id=fixture_lexical_v1", output)
-        self.assertIn("method_id=fixture_dense_v1", output)
-        self.assertIn("2/2 valid", output)
+        self.assertEqual(code, 1)
+        self.assertIn("存在未知正式方法目录：unknown_method_v1", output)
 
-    def test_one_invalid_artifact_fails_after_checking_all(self) -> None:
-        self._create_package(method_id="fixture_lexical_v1")
-        invalid_manifest = self._create_package(
-            method_id="fixture_dense_v1",
-            fixture_name="dense_fixture.csv",
-            family="dense",
-        )
-        payload = json.loads(invalid_manifest.read_text(encoding="utf-8"))
-        payload["ranking"]["sha256"] = "0" * 64
-        invalid_manifest.write_text(
+    def test_directory_and_manifest_method_identity_mismatch_fails(self) -> None:
+        self._copy_full_roster()
+        package_dir = self.artifact_root / "specter2_adhoc_v1"
+        manifest_path = package_dir / "manifest.json"
+        ranking_path = package_dir / "ranking.csv"
+        _fields, rows = read_csv_rows(ranking_path)
+        for row in rows:
+            row["method_id"] = "impostor_specter2_v1"
+        write_csv_rows(ranking_path, RANKING_FIELDS, rows)
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+        payload["method"]["method_id"] = "impostor_specter2_v1"
+        payload["ranking"]["sha256"] = sha256_file(ranking_path)
+        manifest_path.write_text(
             json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
-
         code, output = self._run_checker()
         self.assertEqual(code, 1)
-        self.assertIn("method_id=fixture_lexical_v1", output)
-        self.assertIn("FAIL", output)
-        self.assertIn("1/2 invalid", output)
+        self.assertIn("目录 specter2_adhoc_v1", output)
+        self.assertIn("method_id 'impostor_specter2_v1' 不一致", output)
 
-    def test_fixture_and_unrelated_json_are_not_scanned(self) -> None:
-        self.artifact_root.mkdir(parents=True)
-        (self.artifact_root / "manifest.json").write_text("{}\n", encoding="utf-8")
-        (self.artifact_root / "notes.json").write_text("{}\n", encoding="utf-8")
-        nested = self.artifact_root / "not-a-package" / "nested"
-        nested.mkdir(parents=True)
-        (nested / "manifest.json").write_text("{}\n", encoding="utf-8")
-        external_fixture = self.root / "tests" / "fixtures" / "w5_method_contract"
-        external_fixture.mkdir(parents=True)
-        (external_fixture / "manifest.json").write_text("{}\n", encoding="utf-8")
-
-        self.assertEqual(discover_formal_manifests(self.artifact_root), [])
+    def test_duplicate_manifest_method_id_fails(self) -> None:
+        self._copy_full_roster()
+        specter_dir = self.artifact_root / "specter2_adhoc_v1"
+        shutil.rmtree(specter_dir)
+        shutil.copytree(self.artifact_root / "bm25_v1", specter_dir)
         code, output = self._run_checker()
-        self.assertEqual(code, 0)
-        self.assertIn("No formal W5 artifacts", output)
+        self.assertEqual(code, 1)
+        self.assertIn("method_id 重复：bm25_v1", output)
+
+    def test_package_directory_without_manifest_fails(self) -> None:
+        self._copy_full_roster()
+        (self.artifact_root / "cross_encoder_msmarco_v1" / "manifest.json").unlink()
+        code, output = self._run_checker()
+        self.assertEqual(code, 1)
+        self.assertIn("缺少顶层 manifest.json", output)
+
+    def test_downgraded_official_baseline_fails(self) -> None:
+        self._copy_full_roster()
+        manifest_path = self.artifact_root / "preliminary_score_v1" / "manifest.json"
+        payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+        payload["schema_version"] = "1.0"
+        payload["contract_version"] = "1.0"
+        payload["inputs"].pop("source_sample")
+        manifest_path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        code, output = self._run_checker()
+        self.assertEqual(code, 1)
+        self.assertIn("不得降级为 v1.0", output)
 
 
 if __name__ == "__main__":

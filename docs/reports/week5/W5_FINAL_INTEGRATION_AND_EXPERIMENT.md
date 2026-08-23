@@ -85,6 +85,8 @@ PR #57 有完整通用 RRF 实现、固定 `k=60` 和 fixture 测试，但按设
   Cross-Encoder、RRF 无需迁移；
 - v1.1 精确要求第三个 `source_sample`，并对 path、SHA-256 和版本
   `w2_live_query_sample_v1` 使用现有 W4 trust anchor 校验；
+- 独立最终审查后，官方 B0/B1 method ID 已强制绑定 v1.1；旧 v1.0 manifest 不能通过版本降级
+  省略 `source_sample`，也不能进入 multi-method formal experiment；
 - multi-method runner 只比较所有方法共同的 Candidate Pool / Research Query identity，不再要求
   无关方法伪造相同辅助输入；
 - RRF 输出只继承两个公共输入，辅助输入不会被错误传播到 hybrid package。
@@ -253,12 +255,12 @@ P@5=0.8、I@5=1；NDCG@5=0.8573 也高于两个输入。它还把 overall irrele
 ## 10. Reproducibility / CI / Validator 状态
 
 - W4 strict validator：approved，60/60，20 × 3；
-- W5 formal artifact checker：6/6 PASS；
-- Contract v1.1 / baseline / runner / RRF 定向测试：68/68 PASS；
-- CI workflow/checker 定向测试：10/10 PASS；
-- 全量离线 unittest：440/440 PASS，0 failure / 0 error；
-- Basic Quality Gate：扫描 296 个文件，0 error / 0 warning，PASSED；
-- Full Quality Gate：扫描 296 个文件，0 error / 3 个既有历史 warning，PASSED；
+- W5 formal artifact checker：精确六方法 roster 6/6 PASS；
+- Contract v1.1 / baseline / runner / RRF 定向测试：71/71 PASS；
+- CI workflow/checker 定向测试：13/13 PASS；
+- 全量离线 unittest：446/446 PASS，0 failure / 0 error；
+- Basic Quality Gate：扫描 297 个文件，0 error / 0 warning，PASSED；
+- Full Quality Gate：扫描 297 个文件，0 error / 3 个既有历史 warning，PASSED；
 - `git diff --check`：PASS；
 - experiment metrics hash 与 manifest 声明一致，六个 method manifest hash 均复核一致；
 - generation revisions：完整 40 位 SHA、clean 声明，且都在当前 Git 历史中；

@@ -57,6 +57,8 @@ Backward compatibility：
   公共输入；BM25、SPECTER2、Cross-Encoder、RRF 等只使用公共输入的已冻结包无需迁移；
 - v1.1 package 的版本对为 `1.1/1.1`，`inputs` 精确增加上述冻结 `source_sample`；当前仅
   B0/B1 使用；
+- 稳定官方 ID `preliminary_score_v1`、`tfidf_two_stage_v1` 已与 v1.1 绑定；把旧 manifest
+  自报为 v1.0、删除 `source_sample` 的 package 会被公共 validator 拒绝，不能进入正式实验；
 - multi-method runner 比较所有方法共同的 Candidate Pool / Research Query identity，同时保留
   各方法经 validator 核验的辅助输入，不要求无关方法伪造同一辅助输入。
 
@@ -197,6 +199,7 @@ Validator 不读取 benchmark judgement。它会拒绝：
 - ranking 文件 hash 与 manifest 不一致；
 - ranking CSV 包含 benchmark label/judgement 等禁止字段或任何额外列；
 - schema/contract/artifact version 不匹配；
+- 官方 B0/B1 method ID 自报 v1.0，以版本降级方式省略 `source_sample`；
 - 参数/model、Git/Python/platform/dependency、时间或 label-access provenance 不完整；
 - 正式输出声明在 dirty/未知工作树生成，或声明曾读取 benchmark labels。
 
@@ -210,8 +213,10 @@ Validator 只能验证 artifact 与声明，不能从技术上证明算法进程
 并复用现有 judged Precision/NDCG 等指标函数。adapter 不判断算法类型，因此后续新增方法不需要
 在 evaluator 中复制一套特殊分支。
 
-现有 W4 B0/B1 CLI 行为保持不变。本 Bootstrap 只定义公共 adapter；正式 W5 多方法 CLI/报告
-编排应在全部 method artifact 可用后另行实现，并继续由 strict approved benchmark 驱动。
+现有 W4 B0/B1 CLI 行为保持不变。正式 W5 多方法编排位于 `src.w5_experiment`，CLI 为
+`app.evaluate_w5_methods`；它先验证所有 method package，再打开 strict approved benchmark 并
+连接 label。`scripts/check_w5_method_artifacts.py` 另行执行 W5 final closure 的六方法 roster
+policy，拒绝缺失、未知、重复、目录/manifest identity 不一致或版本错误的正式封存集合。
 
 ## 7. 公共 fixture 与完全并行开发
 

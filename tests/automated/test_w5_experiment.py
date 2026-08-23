@@ -223,6 +223,24 @@ class W5ExperimentTests(unittest.TestCase):
         result = self._run([legacy, baseline])
         self.assertEqual(result["method_ids"], ["legacy_v1", "baseline_v11"])
 
+    def test_downgraded_official_baselines_are_rejected_before_labels(self) -> None:
+        for method_id in ("preliminary_score_v1", "tfidf_two_stage_v1"):
+            with self.subTest(method_id=method_id):
+                manifest = self._create_package(
+                    package_name=method_id,
+                    fixture_name="lexical_fixture.csv",
+                    method_id=method_id,
+                    family="baseline",
+                )
+                with mock.patch(
+                    "src.w5_experiment.validate_benchmark_package"
+                ) as benchmark_validator:
+                    with self.assertRaisesRegex(
+                        ValueError, "不得降级为 v1.0"
+                    ):
+                        self._run([manifest], name=f"reject_{method_id}")
+                benchmark_validator.assert_not_called()
+
     def test_duplicate_method_id_is_rejected_before_benchmark_labels(self) -> None:
         first = self._create_package(
             package_name="first",

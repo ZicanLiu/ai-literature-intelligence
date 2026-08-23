@@ -1,7 +1,7 @@
 """W5 method-ranking artifact contract and strict validator.
 
-The contract is deliberately algorithm-neutral.  Ranking generation consumes only
-the frozen W4 candidate pool and research-query configuration; approved benchmark
+The contract is deliberately algorithm-neutral.  Ranking generation consumes the
+frozen, versioned inputs declared by the method package; approved benchmark
 judgements are read later by the evaluation stage.
 """
 
@@ -40,6 +40,14 @@ TIE_BREAKING = ["score_desc", "pair_id_asc"]
 METHOD_FAMILIES = frozenset({"baseline", "sparse", "dense", "neural", "hybrid"})
 METHOD_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 GIT_REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+
+# 这两个稳定 method_id 对应复用 W2 source sample 的项目既有基线。它们的
+# generation input closure 从 Contract v1.1 起才完整，因此不能通过自报 v1.0
+# 继续省略 source_sample。其他只读取两个公共输入的 v1.0 方法保持兼容。
+METHOD_REQUIRED_CONTRACT_VERSIONS = {
+    "preliminary_score_v1": CONTRACT_VERSION_V11,
+    "tfidf_two_stage_v1": CONTRACT_VERSION_V11,
+}
 
 FORBIDDEN_RANKING_FIELDS = frozenset(
     {
@@ -205,6 +213,16 @@ def _validate_manifest(manifest: dict[str, Any]) -> None:
     ):
         raise ValueError(
             "method.method_id 必须是稳定的小写机器标识（a-z、0-9、点、下划线或连字符）。"
+        )
+    required_contract_version = METHOD_REQUIRED_CONTRACT_VERSIONS.get(method_id)
+    if (
+        required_contract_version is not None
+        and manifest["contract_version"] != required_contract_version
+    ):
+        raise ValueError(
+            f"正式方法 {method_id} 必须使用 Contract "
+            f"v{required_contract_version} 并完整声明 source_sample，"
+            "不得降级为 v1.0。"
         )
     if not _is_nonempty_string(method["display_name"]):
         raise ValueError("method.display_name 不能为空。")

@@ -126,7 +126,8 @@ ranking hash、Git clean revision、Python/平台/依赖、运行时间和 label
 
 Post-merge 审计确认 B0/B1 还真实依赖冻结 W2 source sample 中的引用量等字段。Contract v1.1
 增加严格受 trust anchor 校验的 `source_sample` 输入；B0/B1 ranking hash 未改变，只重冻
-manifest。其他方法保持 v1.0 backward compatibility。
+manifest。官方 B0/B1 method ID 已强制绑定 v1.1，不能通过自报 v1.0 省略该输入；其他方法保持
+v1.0 backward compatibility。
 
 当前正式目录有 6 个通过 validator 的 package：
 
@@ -166,12 +167,12 @@ RRF 的互补收益集中于 RQ02/Top5；macro NDCG@10 仍低于 SPECTER2，不�
 ## 当前验证
 
 - approved benchmark strict validator：60/60、20 × 3，通过；
-- 正式 W5 artifact checker：6/6，通过；
-- Contract v1.1 / baseline / runner / RRF 定向测试：68 项通过；
-- 全量离线测试：440 项通过，0 failure / 0 error；
-- CI workflow/checker 定向测试：10 项通过；
-- Basic Quality Gate：扫描 296 个文件，0 error / 0 warning，PASSED；
-- Full Quality Gate：扫描 296 个文件，0 error / 3 个既有历史 warning，PASSED；
+- 正式 W5 artifact checker：精确六方法 roster 6/6，通过；
+- Contract v1.1 / baseline / runner / RRF 定向测试：71 项通过；
+- 全量离线测试：446 项通过，0 failure / 0 error；
+- CI workflow/checker 定向测试：13 项通过；
+- Basic Quality Gate：扫描 297 个文件，0 error / 0 warning，PASSED；
+- Full Quality Gate：扫描 297 个文件，0 error / 3 个既有历史 warning，PASSED；
 - experiment metrics 与六个 method manifest hash 复核一致；`git diff --check` 通过；
 - 所有测试使用本地 fixture 或已提交样例，没有新增 OpenAlex live 请求或神经模型推理。
 
