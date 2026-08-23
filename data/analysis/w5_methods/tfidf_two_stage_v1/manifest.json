@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "contract_name": "w5_method_ranking",
-  "contract_version": "1.0",
+  "contract_version": "1.1",
   "artifact_type": "method_ranking",
   "method": {
     "method_id": "tfidf_two_stage_v1",
@@ -38,6 +38,11 @@
       "path": "configs/w4/research_queries.json",
       "sha256": "c77ec74ef4567614d3dfb6dab937b85398f95128cdb29e823587715002d99ab1",
       "version": "w4_pilot_v0.1"
+    },
+    "source_sample": {
+      "path": "data/samples/w2/domain_query/live_query_sample.csv",
+      "sha256": "d9179396b22b223e58a730fc41a97f6c7f6a5c976042a97a881e51bc956eda34",
+      "version": "w2_live_query_sample_v1"
     }
   },
   "ranking": {
@@ -51,12 +56,12 @@
     ]
   },
   "generation": {
-    "generated_at": "2026-08-18T14:29:25+08:00",
-    "duration_seconds": 0.028528,
-    "git_revision": "ecfb23c6e8fb916c7c2ffcd6c33c4b06287d5c62",
+    "generated_at": "2026-08-24T00:33:51+08:00",
+    "duration_seconds": 0.016683,
+    "git_revision": "11dd37379301cdb6f599954cc8b31cebf77a9da1",
     "git_worktree_clean": true,
     "python": {
-      "version": "3.14.0",
+      "version": "3.13.9",
       "implementation": "CPython"
     },
     "platform": {

@@ -4,24 +4,26 @@
 **任务来源:** Issue #51（[W5-蒲正杰] 实现 BM25 稀疏排序并导出 B0/B1 统一基线 Artifact）
 **实验性质:** 固定 60-pair Candidate Pool 上的 Query-Relevance ranking/reranking，
 不是端到端 retrieval recall benchmark
-**协议:** [`W5_METHOD_RANKING_CONTRACT.md`](../../project/W5_METHOD_RANKING_CONTRACT.md) v1.0
+**协议:** [`W5_METHOD_RANKING_CONTRACT.md`](../../project/W5_METHOD_RANKING_CONTRACT.md)
+（BM25 v1.0；B0/B1 post-merge 重冻为 v1.1）
 
 ---
 
 ## 1. 交付物
 
-三个符合 W5 Method Ranking Contract v1.0 的 method ranking package，全部通过
+三个符合 W5 Method Ranking Contract 的 method ranking package，全部通过
 `python -m app.validate_w5_method` 严格校验（60/60 pair、每 RQ 20/20）：
 
-| method_id | family | ranking.csv SHA-256 | manifest.json SHA-256 |
-| --- | --- | --- | --- |
-| `bm25_v1` | sparse | `4594272eb56ee6463efe31bb270041e01f2ba313a33d98d840162df33a28992c` | `3730a6486bf69995772d809d8ec9e9816fc6759d8c500fb0a11394830ec34195` |
-| `preliminary_score_v1` | baseline | `0fdd1679405322ccc623f4f528e153e3c251d2f44aed2aaa661f37b1f1e7b9d5` | `5c12491c8859ecede1bd76edaadd9cf29577fe313f519cc48303fed6cfabc9f8` |
-| `tfidf_two_stage_v1` | baseline | `29188a495e9e05cdb8853fb5bd3bf3b22972e5cba8b84b4a6724575e74c84df5` | `383ec9d70c13f0e0d7c854477e0dc212293fd107512cbb32fe1245fb5052e24d` |
+| method_id | Contract | family | ranking.csv SHA-256 | manifest.json SHA-256 |
+| --- | --- | --- | --- | --- |
+| `bm25_v1` | v1.0 | sparse | `4594272eb56ee6463efe31bb270041e01f2ba313a33d98d840162df33a28992c` | `3730a6486bf69995772d809d8ec9e9816fc6759d8c500fb0a11394830ec34195` |
+| `preliminary_score_v1` | v1.1 | baseline | `0fdd1679405322ccc623f4f528e153e3c251d2f44aed2aaa661f37b1f1e7b9d5` | `b22c8a197add530957336d51388b993cc98dfad63113ae544b5b19b79596779b` |
+| `tfidf_two_stage_v1` | v1.1 | baseline | `29188a495e9e05cdb8853fb5bd3bf3b22972e5cba8b84b4a6724575e74c84df5` | `7190b20fad0692995fbbe665d9aa6f9de66e2f8ab8f6c3f4d1b652e1a8bc4f4c` |
 
 输出目录：`data/analysis/w5_methods/<method_id>/`（各含 `ranking.csv` 与
-`manifest.json`）。三个 package 均在 clean Git 工作树（代码提交 `ecfb23c`）上
-生成，manifest 记录完整 provenance。
+`manifest.json`）。BM25 在 clean revision `ecfb23c` 生成；B0/B1 在包含 v1.1
+输入闭包修复的 clean revision `11dd373` 重新生成。两个 baseline ranking hash 与原 v1.0
+版本完全相同，变化仅限 manifest 的 Contract/provenance/environment。
 
 ## 2. BM25 方法说明
 
