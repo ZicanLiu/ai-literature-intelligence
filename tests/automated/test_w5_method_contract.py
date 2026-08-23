@@ -183,6 +183,21 @@ class MethodContractPositiveTests(MethodContractTestCase):
         self.assertIn("fixture_lexical_v1", output.getvalue())
         self.assertIn("pairs=60", output.getvalue())
 
+    def test_v11_accepts_frozen_source_sample_as_complete_baseline_input(self) -> None:
+        manifest = self._load_manifest()
+        manifest["schema_version"] = "1.1"
+        manifest["contract_version"] = "1.1"
+        manifest["inputs"]["source_sample"] = {
+            "path": "data/samples/w2/domain_query/live_query_sample.csv",
+            "sha256": (
+                "d9179396b22b223e58a730fc41a97f6c7f6a5c976042a97a881e51bc956eda34"
+            ),
+            "version": "w2_live_query_sample_v1",
+        }
+        self._save_manifest(manifest)
+        result = validate_method_output(self.manifest_path, project_root=PROJECT_ROOT)
+        self.assertIn("source_sample", result["input_paths"])
+
 
 class MethodContractNegativeTests(MethodContractTestCase):
     def test_missing_pair_and_wrong_total_are_rejected(self) -> None:
@@ -260,6 +275,27 @@ class MethodContractNegativeTests(MethodContractTestCase):
         manifest["inputs"]["candidate_pool"]["sha256"] = "0" * 64
         self._save_manifest(manifest)
         with self.assertRaisesRegex(ValueError, "冻结 W4 v0.1 hash"):
+            validate_method_output(self.manifest_path, project_root=PROJECT_ROOT)
+
+    def test_v11_requires_source_sample_input(self) -> None:
+        manifest = self._load_manifest()
+        manifest["schema_version"] = "1.1"
+        manifest["contract_version"] = "1.1"
+        self._save_manifest(manifest)
+        with self.assertRaisesRegex(ValueError, "source_sample"):
+            validate_method_output(self.manifest_path, project_root=PROJECT_ROOT)
+
+    def test_v10_rejects_undeclared_extra_source_sample_input(self) -> None:
+        manifest = self._load_manifest()
+        manifest["inputs"]["source_sample"] = {
+            "path": "data/samples/w2/domain_query/live_query_sample.csv",
+            "sha256": (
+                "d9179396b22b223e58a730fc41a97f6c7f6a5c976042a97a881e51bc956eda34"
+            ),
+            "version": "w2_live_query_sample_v1",
+        }
+        self._save_manifest(manifest)
+        with self.assertRaisesRegex(ValueError, "未知 source_sample"):
             validate_method_output(self.manifest_path, project_root=PROJECT_ROOT)
 
     def test_ranking_hash_mismatch_is_rejected(self) -> None:

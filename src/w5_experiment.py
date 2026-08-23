@@ -129,9 +129,17 @@ def _validate_method_set(method_packages: list[dict[str, Any]]) -> None:
     )
     if duplicates:
         raise ValueError("duplicate method_id：" + ", ".join(duplicates) + "。")
-    expected_inputs = method_packages[0]["manifest"]["inputs"]
+    core_input_names = ("candidate_pool", "research_queries")
+    expected_inputs = {
+        name: method_packages[0]["manifest"]["inputs"][name]
+        for name in core_input_names
+    }
     for package in method_packages[1:]:
-        if package["manifest"]["inputs"] != expected_inputs:
+        package_inputs = {
+            name: package["manifest"]["inputs"][name]
+            for name in core_input_names
+        }
+        if package_inputs != expected_inputs:
             raise ValueError("所有 W5 methods 必须使用同一 Candidate Pool / Research Query。")
 
 

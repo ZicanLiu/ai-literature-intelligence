@@ -193,6 +193,36 @@ class W5ExperimentTests(unittest.TestCase):
             ]
         )
 
+    def test_v10_and_v11_methods_may_share_core_frozen_inputs(self) -> None:
+        legacy = self._create_package(
+            package_name="legacy",
+            fixture_name="lexical_fixture.csv",
+            method_id="legacy_v1",
+            family="sparse",
+        )
+        baseline = self._create_package(
+            package_name="baseline",
+            fixture_name="dense_fixture.csv",
+            method_id="baseline_v11",
+            family="baseline",
+        )
+        payload = json.loads(baseline.read_text(encoding="utf-8"))
+        payload["schema_version"] = "1.1"
+        payload["contract_version"] = "1.1"
+        payload["inputs"]["source_sample"] = {
+            "path": "data/samples/w2/domain_query/live_query_sample.csv",
+            "sha256": (
+                "d9179396b22b223e58a730fc41a97f6c7f6a5c976042a97a881e51bc956eda34"
+            ),
+            "version": "w2_live_query_sample_v1",
+        }
+        baseline.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        result = self._run([legacy, baseline])
+        self.assertEqual(result["method_ids"], ["legacy_v1", "baseline_v11"])
+
     def test_duplicate_method_id_is_rejected_before_benchmark_labels(self) -> None:
         first = self._create_package(
             package_name="first",

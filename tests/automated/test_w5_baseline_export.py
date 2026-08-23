@@ -165,6 +165,20 @@ class BaselinePackageContractTests(BaselineExportTestCase):
                     inputs[name]["sha256"], TRUSTED_W4_V01_INPUTS[name]["sha256"]
                 )
                 self.assertEqual(inputs[name]["version"], "w4_pilot_v0.1")
+            self.assertEqual(
+                inputs["source_sample"]["sha256"],
+                TRUSTED_W4_V01_INPUTS["source_sample"]["sha256"],
+            )
+            self.assertEqual(
+                inputs["source_sample"]["version"],
+                "w2_live_query_sample_v1",
+            )
+
+    def test_baselines_use_contract_v11_for_complete_input_closure(self) -> None:
+        for method_id in BASELINE_METHODS:
+            manifest = self.manifests[method_id]
+            self.assertEqual(manifest["schema_version"], "1.1")
+            self.assertEqual(manifest["contract_version"], "1.1")
 
     def test_label_access_is_declared_false(self) -> None:
         for method_id in BASELINE_METHODS:

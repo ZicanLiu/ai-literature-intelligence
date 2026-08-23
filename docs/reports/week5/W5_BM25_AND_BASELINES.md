@@ -69,7 +69,7 @@
 - 测试中用同一输入直接重算原算法，逐 pair 断言 artifact 分数与原算法输出完全
   一致（`tests/automated/test_w5_baseline_export.py`）。
 
-## 5. 已知冲突：B0/B1 的 source sample 输入与 Contract v1.0
+## 5. Post-merge 已解决：B0/B1 source sample 输入闭包
 
 B0/B1 的现有算法除了 Candidate Pool 和 Research Query 之外，还会从
 
@@ -83,18 +83,17 @@ score/rank 会发生变化。因此 source sample 是 B0/B1 的**真实评分输
 W5 Contract v1.0 的 manifest `inputs` schema 是精确字段集
 `{candidate_pool, research_queries}`，没有声明它的槽位。
 
-处理原则（遵循审查意见，不擅自修改公共 Contract 或冻结数据）：
+Post-merge integration 采用的处理原则：
 
 - B0/B1 继续原样复用现有算法，不删除 `cited_by_count` 等输入、不改评分公式；
 - 该 source sample 已锚定在 `src.w4_benchmark_validation.TRUSTED_W4_V01_INPUTS`
   的 `source_sample` 与冻结 `pool_manifest_v0.1.json` 中，hash 可验证；本项目
   生成路径（`export_w5_baselines`）读取时即使用该锚定路径；
-- **建议的最小 Contract 扩展（v1.1）**：在 `inputs` 中增加可选的
-  `source_sample` 槽位（同样含 path/sha256/version，并与
-  `TRUSTED_W4_V01_INPUTS["source_sample"]` 对齐），供 B0/B1 这类依赖派生评分
-  特征的 baseline 声明真实输入闭包；BM25 等只读 pool+query 的方法不受影响；
-- 在公共 Contract 更新前，当前 B0/B1 artifact 的输入闭包以本节为准；待 owner
-  统一更新 Contract 后，将基于最新 main 重新冻结 B0/B1 artifact。
+- Contract v1.1 在 `inputs` 中增加受 trust anchor 严格校验的 `source_sample` 槽位；
+- v1.1 精确用于 B0/B1，既有 v1.0 validator compatibility 保留，BM25 等只读
+  pool+query 的方法无需迁移；
+- B0/B1 已在包含该修复的 clean Git revision 上重新冻结；ranking 未改变，manifest
+  现在完整声明三个 generation inputs。最终 hash 见 W5 Final Integration Report。
 
 ## 6. Label-free 声明
 

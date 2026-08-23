@@ -50,8 +50,10 @@ from src.w5_method_contract import (
     ARTIFACT_TYPE,
     CONTRACT_NAME,
     CONTRACT_VERSION,
+    CONTRACT_VERSION_V11,
     RANKING_FIELDS,
     SCHEMA_VERSION,
+    SCHEMA_VERSION_V11,
     SCORE_DIRECTION,
     TIE_BREAKING,
 )
@@ -73,6 +75,11 @@ LABEL_ACCESS_DECLARATION = (
     "Ranking generation did not read benchmark labels, judgements, annotations, "
     "AI audit results or any W5 evaluation metrics."
 )
+INPUT_VERSIONS = {
+    "candidate_pool": "w4_pilot_v0.1",
+    "research_queries": "w4_pilot_v0.1",
+    "source_sample": "w2_live_query_sample_v1",
+}
 
 
 def capture_generation_environment(project_root: str | Path) -> dict[str, Any]:
@@ -214,6 +221,9 @@ def write_w5_package(
     rows: list[dict[str, Any]],
     environment: dict[str, Any],
     started_at: datetime,
+    schema_version: str = SCHEMA_VERSION,
+    contract_version: str = CONTRACT_VERSION,
+    input_names: tuple[str, ...] = ("candidate_pool", "research_queries"),
 ) -> dict[str, Any]:
     """写出一个完整的 W5 method ranking package（ranking.csv + manifest.json）。
 
@@ -242,9 +252,9 @@ def write_w5_package(
 
     finished_at = datetime.now(timezone.utc).astimezone()
     manifest = {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": schema_version,
         "contract_name": CONTRACT_NAME,
-        "contract_version": CONTRACT_VERSION,
+        "contract_version": contract_version,
         "artifact_type": ARTIFACT_TYPE,
         "method": {
             "method_id": method_id,
@@ -257,9 +267,9 @@ def write_w5_package(
             name: {
                 "path": TRUSTED_W4_V01_INPUTS[name]["path"],
                 "sha256": TRUSTED_W4_V01_INPUTS[name]["sha256"],
-                "version": "w4_pilot_v0.1",
+                "version": INPUT_VERSIONS[name],
             }
-            for name in ("candidate_pool", "research_queries")
+            for name in input_names
         },
         "ranking": {
             "path": "ranking.csv",
@@ -319,6 +329,9 @@ def export_baseline_packages(
             rows=rows,
             environment=environment,
             started_at=started,
+            schema_version=SCHEMA_VERSION_V11,
+            contract_version=CONTRACT_VERSION_V11,
+            input_names=("candidate_pool", "research_queries", "source_sample"),
         )
         manifests[method_id] = manifest
     return manifests
