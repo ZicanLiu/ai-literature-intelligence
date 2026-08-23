@@ -1,0 +1,13 @@
+﻿pair_id,research_query_id,research_question_zh,title,openalex_id,label,note,error_type
+w4_rq01_010,rq01_stellar_classification,机器学习如何用于恒星光谱分类或恒星类型识别？,ROOSTER: a machine‑learning analysis tool for <i>Kepler</i> stellar rotation periods,https://openalex.org/W3121170300,0,,topic_drift
+w4_rq01_014,rq01_stellar_classification,机器学习如何用于恒星光谱分类或恒星类型识别？,Machine Learning Based Automatic Modulation Recognition for Wireless Communications: A Comprehensive Survey,https://openalex.org/W3155899199,0,,hard_negative
+w4_rq01_015,rq01_stellar_classification,机器学习如何用于恒星光谱分类或恒星类型识别？,Machine Learning Applied to Star–Galaxy–QSO Classification and Stellar Effective Temperature Regression,https://openalex.org/W2899864468,0,,topic_drift
+w4_rq01_016,rq01_stellar_classification,机器学习如何用于恒星光谱分类或恒星类型识别？,Experimental Analysis of Stellar Classification by using Different Machine Learning Algorithms,https://openalex.org/W4312712330,0,,topic_drift
+w4_rq02_002,rq02_stellar_parameters,机器学习如何从恒星光谱估计有效温度、表面重力、金属丰度等恒星物理或大气参数？,Dissecting stellar chemical abundance space with t‑SNE,https://openalex.org/W3106471209,0,,term_ambiguity
+w4_rq02_014,rq02_stellar_parameters,机器学习如何从恒星光谱估计有效温度、表面重力、金属丰度等恒星物理或大气参数？,Carbon Stars Identified from LAMOST DR4 Using Machine Learning,https://openalex.org/W2777402735,0,,topic_drift
+w4_rq02_020,rq02_stellar_parameters,机器学习如何从恒星光谱估计有效温度、表面重力、金属丰度等恒星物理或大气参数？,Probing the interior physics of stars through asteroseismology,https://openalex.org/W3122729254,0,,hard_negative
+w4_rq03_006,rq03_spectral_preprocessing,机器学习如何用于恒星光谱的预处理、降噪、归一化、校准或质量改进？,Astrophysically robust systematics removal using variational inference: application to the first month of Kepler data,https://openalex.org/W2065532082,0,,term_ambiguity
+w4_rq03_011,rq03_spectral_preprocessing,机器学习如何用于恒星光谱的预处理、降噪、归一化、校准或质量改进？,Unsupervised feature‑learning for galaxy SEDs with denoising autoencoders,https://openalex.org/W2607233176,0,,hard_negative
+w4_rq03_012,rq03_spectral_preprocessing,机器学习如何用于恒星光谱的预处理、降噪、归一化、校准或质量改进？,deep‑REMAP: Parameterization of Stellar Spectra Using Regularized Multi‑Task Learning,https://openalex.org/W4388514441,0,,topic_drift
+w4_rq03_015,rq03_spectral_preprocessing,机器学习如何用于恒星光谱的预处理、降噪、归一化、校准或质量改进？,The first spatio‑spectral Bayesian imaging of SN1006 in X‑rays,https://openalex.org/W4391229918,0,,hard_negative
+w4_rq03_018,rq03_spectral_preprocessing,机器学习如何用于恒星光谱的预处理、降噪、归一化、校准或质量改进？,Identification of Mine Mixed Water Inrush Source Based on Genetic Algorithm and XGBoost Algorithm: A Case Study of Huangyuchuan Mine,https://openalex.org/W4284680505,0,,hard_negative
