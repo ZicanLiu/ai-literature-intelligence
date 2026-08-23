@@ -1,0 +1,115 @@
+{
+  "schema_version": "1.0",
+  "experiment_type": "w5_multi_method_query_relevance",
+  "created_at": "2026-08-24T00:36:58+08:00",
+  "git_revision": "c11f0f4fbd2c7ed8057d124eefe1193764227948",
+  "git_dirty": false,
+  "environment": {
+    "python": {
+      "version": "3.13.9",
+      "implementation": "CPython",
+      "cache_tag": "cpython-313"
+    },
+    "platform": {
+      "system": "Windows",
+      "release": "11",
+      "machine": "AMD64"
+    },
+    "requirements": {
+      "path": "requirements.txt",
+      "sha256": "2b728b84c305568201523b267ac67f9aaac1bdd66cdda4d6b929decc20b2e1fa"
+    },
+    "dependencies": {
+      "requests": "2.32.5",
+      "pandas": "2.3.3",
+      "matplotlib": "3.10.6",
+      "python-dotenv": "1.1.0"
+    }
+  },
+  "benchmark": {
+    "version": "w4_query_relevance_pilot_v0.1.0",
+    "status": "approved",
+    "manifest_path": "data/benchmarks/w4_query_relevance/v0.1.0/manifest.json",
+    "manifest_sha256": "d503f5c2448409a9433bf3ffeada3890c7ddb31237bc7c95c529014b5fb8d094",
+    "input_set_identity": "sha256:dff3f396c6ae5ac1614bfdedcdaacec845e65e8522f5967ca668d2dd9e2ecc88",
+    "parent_draft_manifest_sha256": "6d71d914c88f1dfd7909fdc2d9705e4b238d51f362d1ce16eeda111044e2bd01"
+  },
+  "methods": [
+    {
+      "method_id": "preliminary_score_v1",
+      "family": "baseline",
+      "manifest_path": "data/analysis/w5_methods/preliminary_score_v1/manifest.json",
+      "manifest_sha256": "b22c8a197add530957336d51388b993cc98dfad63113ae544b5b19b79596779b",
+      "ranking_path": "data/analysis/w5_methods/preliminary_score_v1/ranking.csv",
+      "ranking_sha256": "0fdd1679405322ccc623f4f528e153e3c251d2f44aed2aaa661f37b1f1e7b9d5"
+    },
+    {
+      "method_id": "tfidf_two_stage_v1",
+      "family": "baseline",
+      "manifest_path": "data/analysis/w5_methods/tfidf_two_stage_v1/manifest.json",
+      "manifest_sha256": "7190b20fad0692995fbbe665d9aa6f9de66e2f8ab8f6c3f4d1b652e1a8bc4f4c",
+      "ranking_path": "data/analysis/w5_methods/tfidf_two_stage_v1/ranking.csv",
+      "ranking_sha256": "29188a495e9e05cdb8853fb5bd3bf3b22972e5cba8b84b4a6724575e74c84df5"
+    },
+    {
+      "method_id": "bm25_v1",
+      "family": "sparse",
+      "manifest_path": "data/analysis/w5_methods/bm25_v1/manifest.json",
+      "manifest_sha256": "3730a6486bf69995772d809d8ec9e9816fc6759d8c500fb0a11394830ec34195",
+      "ranking_path": "data/analysis/w5_methods/bm25_v1/ranking.csv",
+      "ranking_sha256": "4594272eb56ee6463efe31bb270041e01f2ba313a33d98d840162df33a28992c"
+    },
+    {
+      "method_id": "specter2_adhoc_v1",
+      "family": "dense",
+      "manifest_path": "data/analysis/w5_methods/specter2_adhoc_v1/manifest.json",
+      "manifest_sha256": "a917bfb3ed545428441bdd9d821f179ae96ddb9abeeb4ca11458c300d641fbee",
+      "ranking_path": "data/analysis/w5_methods/specter2_adhoc_v1/ranking.csv",
+      "ranking_sha256": "7bd205cfaa8ecb559e4a90fee0583dceb18a3ef8ef1f1bcbb0a632ea837b575b"
+    },
+    {
+      "method_id": "cross_encoder_msmarco_v1",
+      "family": "neural",
+      "manifest_path": "data/analysis/w5_methods/cross_encoder_msmarco_v1/manifest.json",
+      "manifest_sha256": "4a7b34a2b5689df1e4d5b3d8ae5c13a6925a589432ae7fc070e3a34d9e5694fb",
+      "ranking_path": "data/analysis/w5_methods/cross_encoder_msmarco_v1/ranking.csv",
+      "ranking_sha256": "2562de52955ecfba552fe6a465c5cd0996c0018c75ae5b75f4a1092f2976b241"
+    },
+    {
+      "method_id": "rrf_bm25_specter2_v1",
+      "family": "hybrid",
+      "manifest_path": "data/analysis/w5_methods/rrf_bm25_specter2_v1/manifest.json",
+      "manifest_sha256": "1ce0ef37c06083ab5499bb722f61083b7175db683345e35eb54259aa0299d9c8",
+      "ranking_path": "data/analysis/w5_methods/rrf_bm25_specter2_v1/ranking.csv",
+      "ranking_sha256": "70cbbf1436f9b92aa39f9b325c77eddfb4ba94a9f33196dce692d7b40b32b5a5"
+    }
+  ],
+  "evaluation": {
+    "target": "query_relevance",
+    "candidate_scope": "fixed_60_pair_candidate_pool_reranking",
+    "label_scheme": [
+      0,
+      1,
+      2
+    ],
+    "metric_policy": "judged_condensed",
+    "metric_keys": [
+      "ndcg_at_5",
+      "ndcg_at_10",
+      "precision_at_5",
+      "precision_at_10",
+      "coverage_at_5",
+      "coverage_at_10",
+      "irrelevant_top_5",
+      "irrelevant_top_10"
+    ],
+    "method_selection_or_best_claim": false
+  },
+  "outputs": [
+    {
+      "path": "data/analysis/w5_formal_experiment_v1/metrics.csv",
+      "sha256": "0d63c530a4291350338b129e515bf14653e6f266297553a90ddd96fec21bd713",
+      "row_count": 24
+    }
+  ]
+}

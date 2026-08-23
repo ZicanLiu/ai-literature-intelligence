@@ -1,6 +1,7 @@
-# W5 Method Ranking Contract 与公共实验协议
+# W5 Method Ranking Contract v1.1 与公共实验协议
 
-状态：`v1.0` 公共 Bootstrap。适用于 W5 固定 Candidate Pool 上的正式方法比较。
+状态：`v1.1` 已用于 W5 正式基线输入闭包；validator 继续兼容已冻结的 `v1.0`
+方法包。适用于 W5 固定 Candidate Pool 上的正式方法比较。
 
 ## 1. 实验问题与边界
 
@@ -16,9 +17,9 @@ Benchmark 上，某方法的 ranking 指标更高/更低”等表述，不能声
 真正的 retrieval benchmark 需要另行建立 multi-retriever pooling、盲标与未检出相关文献评估，
 不属于本协议。
 
-## 2. 冻结公共输入
+## 2. 冻结 generation 输入
 
-所有正式方法只读取以下两个 generation 输入：
+所有正式方法都读取以下两个公共 generation 输入：
 
 | 输入 | 版本 | SHA-256 |
 | --- | --- | --- |
@@ -35,6 +36,31 @@ Method ranking generation 不得读取：
 - 已经用正式 label 计算出的 W5 指标来回调参数。
 
 Approved benchmark 只在 ranking artifact 已经生成、hash 冻结之后，由 evaluation 阶段读取。
+
+### 2.1 B0/B1 的冻结辅助输入与 v1.1
+
+B0 `preliminary_score` 与 B1 TF-IDF two-stage 复用既有项目算法。Candidate Pool 只保留展示
+字段，这两个算法还必须从以下冻结 source sample 补回 `cited_by_count`、`authors`、
+`source_name` 等真实评分输入：
+
+| 输入 | 版本 | SHA-256 |
+| --- | --- | --- |
+| `data/samples/w2/domain_query/live_query_sample.csv` | `w2_live_query_sample_v1` | `d9179396b22b223e58a730fc41a97f6c7f6a5c976042a97a881e51bc956eda34` |
+
+因此 Contract v1.1 要求 B0/B1 manifest 的 `inputs` 精确包含
+`candidate_pool`、`research_queries`、`source_sample`。该扩展只修复 provenance 与复现输入
+闭包，不改变 baseline 公式、权重、阈值或 ranking。
+
+Backward compatibility：
+
+- v1.0 package 的 `schema_version/contract_version` 仍为 `1.0/1.0`，`inputs` 精确包含两个
+  公共输入；BM25、SPECTER2、Cross-Encoder、RRF 等只使用公共输入的已冻结包无需迁移；
+- v1.1 package 的版本对为 `1.1/1.1`，`inputs` 精确增加上述冻结 `source_sample`；当前仅
+  B0/B1 使用；
+- 稳定官方 ID `preliminary_score_v1`、`tfidf_two_stage_v1` 已与 v1.1 绑定；把旧 manifest
+  自报为 v1.0、删除 `source_sample` 的 package 会被公共 validator 拒绝，不能进入正式实验；
+- multi-method runner 比较所有方法共同的 Candidate Pool / Research Query identity，同时保留
+  各方法经 validator 核验的辅助输入，不要求无关方法伪造同一辅助输入。
 
 ## 3. Ranking CSV v1.0
 
@@ -71,10 +97,11 @@ CSV 不允许额外列，尤其不得包含 `label`、`final_label`、`human_lab
 `review_decision`、annotator 或 adjudication 字段。算法解释、参数和环境信息属于 manifest，
 不应复制到每一行。
 
-## 4. Method Manifest v1.0
+## 4. Method Manifest v1.0 / v1.1
 
 每个正式 ranking CSV 必须在同一 output package 中配套一个 JSON manifest。`ranking.path` 相对
-manifest 所在目录解析，且不得离开 package。顶层 schema 固定为：
+manifest 所在目录解析，且不得离开 package。以下是只读取两个公共输入的 v1.0 schema；v1.1
+只把版本对改为 `1.1/1.1` 并按 2.1 节增加 `inputs.source_sample`：
 
 ```json
 {
@@ -168,9 +195,11 @@ Validator 不读取 benchmark judgement。它会拒绝：
 - 非有限 score；rank 缺失、越界、重复或不完整；
 - score/rank 不符合 higher-is-better 和固定 tie-breaking；
 - Candidate Pool / Research Query 路径、版本或 hash 漂移；
+- v1.1 `source_sample` 缺失，或其路径、版本、hash 与冻结 trust anchor 不一致；
 - ranking 文件 hash 与 manifest 不一致；
 - ranking CSV 包含 benchmark label/judgement 等禁止字段或任何额外列；
 - schema/contract/artifact version 不匹配；
+- 官方 B0/B1 method ID 自报 v1.0，以版本降级方式省略 `source_sample`；
 - 参数/model、Git/Python/platform/dependency、时间或 label-access provenance 不完整；
 - 正式输出声明在 dirty/未知工作树生成，或声明曾读取 benchmark labels。
 
@@ -184,8 +213,10 @@ Validator 只能验证 artifact 与声明，不能从技术上证明算法进程
 并复用现有 judged Precision/NDCG 等指标函数。adapter 不判断算法类型，因此后续新增方法不需要
 在 evaluator 中复制一套特殊分支。
 
-现有 W4 B0/B1 CLI 行为保持不变。本 Bootstrap 只定义公共 adapter；正式 W5 多方法 CLI/报告
-编排应在全部 method artifact 可用后另行实现，并继续由 strict approved benchmark 驱动。
+现有 W4 B0/B1 CLI 行为保持不变。正式 W5 多方法编排位于 `src.w5_experiment`，CLI 为
+`app.evaluate_w5_methods`；它先验证所有 method package，再打开 strict approved benchmark 并
+连接 label。`scripts/check_w5_method_artifacts.py` 另行执行 W5 final closure 的六方法 roster
+policy，拒绝缺失、未知、重复、目录/manifest identity 不一致或版本错误的正式封存集合。
 
 ## 7. 公共 fixture 与完全并行开发
 
@@ -211,7 +242,7 @@ contract 构造明确标为 fixture 的 manifest。它们不得改名后冒充 B
 
 所有 W5 方法必须：
 
-1. 使用完全相同的 Candidate Pool 和 Research Query；
+1. 使用完全相同的 Candidate Pool 和 Research Query，并完整声明方法实际读取的冻结辅助输入；
 2. 在不知道 approved Query-Relevance label 的情况下生成 ranking；
 3. 在看正式评价结果前固定参数、模型 revision、adapter 和随机种子（如适用）；
 4. 不为提高 W5 指标回调参数或挑选有利 run；

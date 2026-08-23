@@ -1,7 +1,7 @@
 """W5 method-ranking artifact contract and strict validator.
 
-The contract is deliberately algorithm-neutral.  Ranking generation consumes only
-the frozen W4 candidate pool and research-query configuration; approved benchmark
+The contract is deliberately algorithm-neutral.  Ranking generation consumes the
+frozen, versioned inputs declared by the method package; approved benchmark
 judgements are read later by the evaluation stage.
 """
 
@@ -22,6 +22,8 @@ from src.w4_benchmark_validation import TRUSTED_W4_V01_INPUTS
 SCHEMA_VERSION = "1.0"
 CONTRACT_NAME = "w5_method_ranking"
 CONTRACT_VERSION = "1.0"
+SCHEMA_VERSION_V11 = "1.1"
+CONTRACT_VERSION_V11 = "1.1"
 ARTIFACT_TYPE = "method_ranking"
 
 RANKING_FIELDS = [
@@ -38,6 +40,14 @@ TIE_BREAKING = ["score_desc", "pair_id_asc"]
 METHOD_FAMILIES = frozenset({"baseline", "sparse", "dense", "neural", "hybrid"})
 METHOD_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 GIT_REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+
+# 这两个稳定 method_id 对应复用 W2 source sample 的项目既有基线。它们的
+# generation input closure 从 Contract v1.1 起才完整，因此不能通过自报 v1.0
+# 继续省略 source_sample。其他只读取两个公共输入的 v1.0 方法保持兼容。
+METHOD_REQUIRED_CONTRACT_VERSIONS = {
+    "preliminary_score_v1": CONTRACT_VERSION_V11,
+    "tfidf_two_stage_v1": CONTRACT_VERSION_V11,
+}
 
 FORBIDDEN_RANKING_FIELDS = frozenset(
     {
@@ -67,7 +77,11 @@ _TOP_LEVEL_FIELDS = {
     "label_access",
 }
 _METHOD_FIELDS = {"method_id", "display_name", "family", "parameters", "model"}
-_INPUT_FIELDS = {"candidate_pool", "research_queries"}
+CORE_INPUT_FIELDS = {"candidate_pool", "research_queries"}
+_INPUT_FIELDS_BY_VERSION = {
+    CONTRACT_VERSION: CORE_INPUT_FIELDS,
+    CONTRACT_VERSION_V11: CORE_INPUT_FIELDS | {"source_sample"},
+}
 _INPUT_REFERENCE_FIELDS = {"path", "sha256", "version"}
 _RANKING_REFERENCE_FIELDS = {
     "path",
@@ -114,9 +128,11 @@ def validate_method_output(
         raise ValueError("method manifest 顶层必须是 JSON object。")
 
     _validate_manifest(manifest)
-    candidate_pool_path, research_queries_path = _validate_frozen_inputs(
+    resolved_inputs = _validate_frozen_inputs(
         manifest["inputs"], root=root
     )
+    candidate_pool_path = resolved_inputs["candidate_pool"]
+    research_queries_path = resolved_inputs["research_queries"]
     ranking_path = _resolve_ranking_path(
         manifest["ranking"]["path"], manifest_file=manifest_file
     )
@@ -166,17 +182,24 @@ def validate_method_output(
         "counts_by_query": dict(counts),
         "candidate_pool_path": candidate_pool_path,
         "research_queries_path": research_queries_path,
+        "input_paths": resolved_inputs,
     }
 
 
 def _validate_manifest(manifest: dict[str, Any]) -> None:
     _require_exact_fields(manifest, _TOP_LEVEL_FIELDS, "method manifest")
-    if manifest["schema_version"] != SCHEMA_VERSION:
-        raise ValueError(f"method manifest schema_version 必须是 {SCHEMA_VERSION}。")
+    version_pair = (manifest["schema_version"], manifest["contract_version"])
+    supported_version_pairs = {
+        (SCHEMA_VERSION, CONTRACT_VERSION),
+        (SCHEMA_VERSION_V11, CONTRACT_VERSION_V11),
+    }
+    if version_pair not in supported_version_pairs:
+        raise ValueError(
+            "method manifest schema_version/contract_version 必须是 "
+            "1.0/1.0 或 1.1/1.1。"
+        )
     if manifest["contract_name"] != CONTRACT_NAME:
         raise ValueError(f"contract_name 必须是 {CONTRACT_NAME}。")
-    if manifest["contract_version"] != CONTRACT_VERSION:
-        raise ValueError(f"contract_version 必须是 {CONTRACT_VERSION}。")
     if manifest["artifact_type"] != ARTIFACT_TYPE:
         raise ValueError(f"artifact_type 必须是 {ARTIFACT_TYPE}。")
 
@@ -190,6 +213,16 @@ def _validate_manifest(manifest: dict[str, Any]) -> None:
     ):
         raise ValueError(
             "method.method_id 必须是稳定的小写机器标识（a-z、0-9、点、下划线或连字符）。"
+        )
+    required_contract_version = METHOD_REQUIRED_CONTRACT_VERSIONS.get(method_id)
+    if (
+        required_contract_version is not None
+        and manifest["contract_version"] != required_contract_version
+    ):
+        raise ValueError(
+            f"正式方法 {method_id} 必须使用 Contract "
+            f"v{required_contract_version} 并完整声明 source_sample，"
+            "不得降级为 v1.0。"
         )
     if not _is_nonempty_string(method["display_name"]):
         raise ValueError("method.display_name 不能为空。")
@@ -213,8 +246,9 @@ def _validate_manifest(manifest: dict[str, Any]) -> None:
         raise ValueError("dense/neural method 必须记录预训练 model name/revision/adapter。")
 
     inputs = _require_mapping(manifest, "inputs")
-    _require_exact_fields(inputs, _INPUT_FIELDS, "inputs")
-    for name in sorted(_INPUT_FIELDS):
+    input_fields = _INPUT_FIELDS_BY_VERSION[manifest["contract_version"]]
+    _require_exact_fields(inputs, input_fields, "inputs")
+    for name in sorted(input_fields):
         reference = _require_mapping(inputs, name)
         _require_exact_fields(reference, _INPUT_REFERENCE_FIELDS, f"inputs.{name}")
 
@@ -272,25 +306,30 @@ def _validate_manifest(manifest: dict[str, Any]) -> None:
 
 def _validate_frozen_inputs(
     inputs: dict[str, Any], *, root: Path
-) -> tuple[Path, Path]:
+) -> dict[str, Path]:
     resolved: dict[str, Path] = {}
-    for manifest_name, trusted_name in (
-        ("candidate_pool", "candidate_pool"),
-        ("research_queries", "research_queries"),
-    ):
+    expected_versions = {
+        "candidate_pool": "w4_pilot_v0.1",
+        "research_queries": "w4_pilot_v0.1",
+        "source_sample": "w2_live_query_sample_v1",
+    }
+    for manifest_name in sorted(inputs):
         reference = inputs[manifest_name]
-        trusted = TRUSTED_W4_V01_INPUTS[trusted_name]
+        trusted = TRUSTED_W4_V01_INPUTS[manifest_name]
         if reference["path"] != trusted["path"]:
             raise ValueError(f"inputs.{manifest_name}.path 偏离冻结 W4 v0.1 输入。")
         if reference["sha256"] != trusted["sha256"]:
             raise ValueError(f"inputs.{manifest_name}.sha256 偏离冻结 W4 v0.1 hash。")
-        if reference["version"] != "w4_pilot_v0.1":
-            raise ValueError(f"inputs.{manifest_name}.version 必须是 w4_pilot_v0.1。")
+        expected_version = expected_versions[manifest_name]
+        if reference["version"] != expected_version:
+            raise ValueError(
+                f"inputs.{manifest_name}.version 必须是 {expected_version}。"
+            )
         path = _resolve_project_path(reference["path"], root=root)
         if sha256_file(path) != trusted["sha256"]:
             raise ValueError(f"inputs.{manifest_name} 文件已发生 hash 漂移。")
         resolved[manifest_name] = path
-    return resolved["candidate_pool"], resolved["research_queries"]
+    return resolved
 
 
 def _validate_ranking_rows(

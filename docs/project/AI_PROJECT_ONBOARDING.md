@@ -4,9 +4,10 @@
 
 本文帮助只熟悉 v0.2.0、只参与过某个 W2 模块，或第一次进入仓库的成员和 AI Agent 建立完整上下文。它不是永远正确的状态数据库。
 
-- 快照更新时间：2026-08-17
+- 快照更新时间：2026-08-24
 - W5 Contract 前置基线：`d558a088`（PR #48 已合并；仅作历史锚点）
-- 当前公共能力：W5 Method Ranking Contract v1.0 已建立，供六名成员并行开发
+- 当前公共能力：W5 Contract v1.1（向后兼容 v1.0）、六方法正式 artifact、统一评价与
+  Error Analysis 已完成 post-merge 收口
 - 当前状态：W1–W4 工程、六人 Pilot Annotation、独立 Blind AI Audit 与人工复核已完成；
   `w4_query_relevance_pilot_v0.1.0` 已批准并通过 strict validator。公共 `main` 的准确 HEAD
   必须在接手任务时用当前 Git/GitHub 重新核对，不在本文预写未来 merge SHA
@@ -576,8 +577,9 @@ git diff --check，并报告实际 Git 状态、验证结果、限制和未完�
 
 - 扩大、分层并版本化人工 benchmark；
 - 比较不同 Stage 1 阈值、权重和缺失摘要条件；
-- 缓解 TF-IDF 无法识别同义改写、领域缩写和语义相关的问题；
-- BM25、Embedding、hybrid ranking、learning-to-rank 等候选方法。
+- 扩大 Research Query 与独立盲 test split，降低当前 Pilot benchmark overfitting；
+- multi-retriever pooling 与真正的 retrieval recall benchmark；
+- expert calibration、task/modality boundary 改进与新 benchmark 上的预注册 fusion 比较。
 
 这些项目都应单独建 Issue、定义数据和验收标准，不能直接修改当前算法后宣布“更优”。
 
@@ -594,19 +596,23 @@ git diff --check，并报告实际 Git 状态、验证结果、限制和未完�
 
 是否加入 PDF、RAG、知识图谱、多 Agent 或前端，必须经过新的需求和安全评审，不能当作当前架构的自然默认步骤。
 
-## 21. 与未来排序研究的关系
+## 21. W5 排序研究当前状态
 
-当前可比较基线是：
+当前已冻结并正式比较的方法是：
 
 ```text
 v0.2 preliminary_score
 + W2 TF-IDF two-stage ranking
++ BM25
++ SPECTER2
++ Cross-Encoder
++ RRF（BM25 + SPECTER2，k=60）
 ```
 
-未来可将 BM25、semantic embedding、hybrid ranking、learning-to-rank 作为候选实验，但它们目前都 **NOT IMPLEMENTED**，项目也没有采用 RankNet。
-
-W5 公共 ranking/manifest contract、validator、无标签 fixture 和 evaluator adapter 已建立；这只
-表示不同算法具备统一集成接口，不表示任何候选算法或正式比较结果已经实现。
+W5 Post-Merge 已完成 Contract v1.1 输入闭包修复、6 个正式 artifact、统一实验和 Error
+Analysis。结果与边界见
+[`W5_FINAL_INTEGRATION_AND_EXPERIMENT.md`](../reports/week5/W5_FINAL_INTEGRATION_AND_EXPERIMENT.md)。
+当前仍未实现 learning-to-rank，也没有采用 RankNet。
 
 公平比较应保持：
 

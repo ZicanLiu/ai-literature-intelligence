@@ -1,21 +1,27 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.0",
   "contract_name": "w5_method_ranking",
-  "contract_version": "1.1",
+  "contract_version": "1.0",
   "artifact_type": "method_ranking",
   "method": {
-    "method_id": "preliminary_score_v1",
-    "display_name": "B0 preliminary_score v1",
-    "family": "baseline",
+    "method_id": "rrf_bm25_specter2_v1",
+    "display_name": "RRF BM25 + SPECTER2 v1",
+    "family": "hybrid",
     "parameters": {
-      "scoring_module": "src.processor.add_preliminary_scores",
-      "preliminary_score_weights": {
-        "relevance_score": 0.4,
-        "impact_score": 0.3,
-        "recency_score": 0.2,
-        "completeness_score": 0.1
+      "rrf_k": 60,
+      "input_method_ids": [
+        "bm25_v1",
+        "specter2_adhoc_v1"
+      ],
+      "input_manifest_sha256": {
+        "bm25_v1": "3730a6486bf69995772d809d8ec9e9816fc6759d8c500fb0a11394830ec34195",
+        "specter2_adhoc_v1": "a917bfb3ed545428441bdd9d821f179ae96ddb9abeeb4ca11458c300d641fbee"
       },
-      "reference_year": 2026
+      "input_ranking_sha256": {
+        "bm25_v1": "4594272eb56ee6463efe31bb270041e01f2ba313a33d98d840162df33a28992c",
+        "specter2_adhoc_v1": "7bd205cfaa8ecb559e4a90fee0583dceb18a3ef8ef1f1bcbb0a632ea837b575b"
+      },
+      "input_order_semantic": "order_independent"
     },
     "model": null
   },
@@ -29,16 +35,11 @@
       "path": "configs/w4/research_queries.json",
       "sha256": "c77ec74ef4567614d3dfb6dab937b85398f95128cdb29e823587715002d99ab1",
       "version": "w4_pilot_v0.1"
-    },
-    "source_sample": {
-      "path": "data/samples/w2/domain_query/live_query_sample.csv",
-      "sha256": "d9179396b22b223e58a730fc41a97f6c7f6a5c976042a97a881e51bc956eda34",
-      "version": "w2_live_query_sample_v1"
     }
   },
   "ranking": {
     "path": "ranking.csv",
-    "sha256": "0fdd1679405322ccc623f4f528e153e3c251d2f44aed2aaa661f37b1f1e7b9d5",
+    "sha256": "70cbbf1436f9b92aa39f9b325c77eddfb4ba94a9f33196dce692d7b40b32b5a5",
     "row_count": 60,
     "score_direction": "higher_is_better",
     "tie_breaking": [
@@ -47,8 +48,8 @@
     ]
   },
   "generation": {
-    "generated_at": "2026-08-24T00:33:51+08:00",
-    "duration_seconds": 0.013926,
+    "generated_at": "2026-08-24T00:33:52.112716+08:00",
+    "duration_seconds": 0.091665,
     "git_revision": "11dd37379301cdb6f599954cc8b31cebf77a9da1",
     "git_worktree_clean": true,
     "python": {
@@ -64,6 +65,6 @@
   },
   "label_access": {
     "benchmark_labels_read": false,
-    "declaration": "Ranking generation did not read benchmark labels, judgements, annotations, AI audit results or any W5 evaluation metrics."
+    "declaration": "RRF fusion generated from ranking artifacts only; no benchmark labels or judgements were read."
   }
 }

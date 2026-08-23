@@ -1,0 +1,67 @@
+{
+  "analysis_type": "w5_error_analysis",
+  "benchmark": {
+    "benchmark_version": "w4_query_relevance_pilot_v0.1.0",
+    "counts_by_query": {
+      "rq01_stellar_classification": 20,
+      "rq02_stellar_parameters": 20,
+      "rq03_spectral_preprocessing": 20
+    },
+    "manifest_sha256": "d503f5c2448409a9433bf3ffeada3890c7ddb31237bc7c95c529014b5fb8d094",
+    "pair_count": 60
+  },
+  "methods": [
+    {
+      "manifest_sha256": "3730a6486bf69995772d809d8ec9e9816fc6759d8c500fb0a11394830ec34195",
+      "method_id": "bm25_v1",
+      "ranking_sha256": "4594272eb56ee6463efe31bb270041e01f2ba313a33d98d840162df33a28992c"
+    },
+    {
+      "manifest_sha256": "4a7b34a2b5689df1e4d5b3d8ae5c13a6925a589432ae7fc070e3a34d9e5694fb",
+      "method_id": "cross_encoder_msmarco_v1",
+      "ranking_sha256": "2562de52955ecfba552fe6a465c5cd0996c0018c75ae5b75f4a1092f2976b241"
+    },
+    {
+      "manifest_sha256": "b22c8a197add530957336d51388b993cc98dfad63113ae544b5b19b79596779b",
+      "method_id": "preliminary_score_v1",
+      "ranking_sha256": "0fdd1679405322ccc623f4f528e153e3c251d2f44aed2aaa661f37b1f1e7b9d5"
+    },
+    {
+      "manifest_sha256": "1ce0ef37c06083ab5499bb722f61083b7175db683345e35eb54259aa0299d9c8",
+      "method_id": "rrf_bm25_specter2_v1",
+      "ranking_sha256": "70cbbf1436f9b92aa39f9b325c77eddfb4ba94a9f33196dce692d7b40b32b5a5"
+    },
+    {
+      "manifest_sha256": "a917bfb3ed545428441bdd9d821f179ae96ddb9abeeb4ca11458c300d641fbee",
+      "method_id": "specter2_adhoc_v1",
+      "ranking_sha256": "7bd205cfaa8ecb559e4a90fee0583dceb18a3ef8ef1f1bcbb0a632ea837b575b"
+    },
+    {
+      "manifest_sha256": "7190b20fad0692995fbbe665d9aa6f9de66e2f8ab8f6c3f4d1b652e1a8bc4f4c",
+      "method_id": "tfidf_two_stage_v1",
+      "ranking_sha256": "29188a495e9e05cdb8853fb5bd3bf3b22972e5cba8b84b4a6724575e74c84df5"
+    }
+  ],
+  "output_row_counts": {
+    "coverage": 7,
+    "error_cases": 185,
+    "method_error_type_matrix": 78,
+    "pair_analysis": 360,
+    "rank_shifts": 31
+  },
+  "schema_version": "1.0",
+  "taxonomy": {
+    "evidence_pair_count": 20,
+    "mapping_sha256": "3b62af594d5c1582d0402495f5cf92dbb54c52e174a748ccd1800b569045226b",
+    "source_sha256": "2d435f4e7f3d16a383f398232f7d1b0d22c47b6583dcd702b90c5f25428dec70",
+    "unclassified_pair_count": 40
+  },
+  "thresholds": {
+    "rank_shift_min_delta": 10,
+    "relevant_buried_min_rank": 11,
+    "top_k": [
+      5,
+      10
+    ]
+  }
+}

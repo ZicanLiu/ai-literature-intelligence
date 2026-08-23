@@ -1,11 +1,12 @@
 # 当前项目状态
 
-更新时间：2026-08-17
+更新时间：2026-08-24
 
-W5 Contract 的已核对前置基线：`d558a088`（PR #48 已合并）。
+W5 Post-Merge 收口的公共 `main` 起点：`d71132f`（PR #56–#61 已合并）。
 
-W5 Method Ranking Contract v1.0 已建立，作为六名成员并行开发的公共接口。当前公共 `main`
-的准确 HEAD 不在文档中预写；接手任务时必须以当前 `git log`、`origin/main` 和 GitHub 为准。
+W5 Method Ranking Contract v1.1 已建立并向后兼容 v1.0。v1.1 只用于完整声明 B0/B1 的冻结
+source sample 输入；BM25、SPECTER2、Cross-Encoder 与 RRF 的 v1.0 package 继续有效。
+当前公共 `main` 的准确 HEAD 仍必须在接手任务时用 `git log`、`origin/main` 和 GitHub 核对。
 
 v0.3.0 tag 仍指向较早的 W2 发布基线 `899f745`；不能用旧 tag、`d558a088` 前置基线或旧文档
 快照替代当前 Git/源码/测试事实。
@@ -112,7 +113,7 @@ reference year 强制继承 approved benchmark。成功运行必须生成 `exper
 Git revision/clean state、Python/依赖/平台、benchmark version/hash/input identity/parent draft、
 输入 hash、reference year、实际方法配置、时间和输出文件 hash。
 
-## W5 Method Ranking Contract v1.0
+## W5 Method Ranking Contract v1.1 与正式 artifact
 
 W5 的公共实验边界是固定 60-pair Candidate Pool 内的 Query-Relevance ranking/reranking，
 不是端到端 retrieval recall benchmark。公共 contract v1.0 规定每个方法输出严格五列：
@@ -123,32 +124,68 @@ higher-is-better，并以 `score desc → pair_id asc` 确定性排序。
 ranking hash、Git clean revision、Python/平台/依赖、运行时间和 label-access 声明。算法生成阶段
 不得读取 approved benchmark label/judgement；参数和 artifact 必须先冻结再进入评价。
 
+Post-merge 审计确认 B0/B1 还真实依赖冻结 W2 source sample 中的引用量等字段。Contract v1.1
+增加严格受 trust anchor 校验的 `source_sample` 输入；B0/B1 ranking hash 未改变，只重冻
+manifest。官方 B0/B1 method ID 已强制绑定 v1.1，不能通过自报 v1.0 省略该输入；其他方法保持
+v1.0 backward compatibility。
+
+当前正式目录有 6 个通过 validator 的 package：
+
+- `preliminary_score_v1`；
+- `tfidf_two_stage_v1`；
+- `bm25_v1`；
+- `specter2_adhoc_v1`；
+- `cross_encoder_msmarco_v1`；
+- `rrf_bm25_specter2_v1`（固定 BM25 + SPECTER2，`k=60`）。
+
 `src.w5_method_contract` 和 `app.validate_w5_method` 提供公共 validator；
 `evaluate_contract_ranking()` 是现有 W4 evaluator 的最小算法无关 adapter。两个无标签 fixture
 位于 `tests/fixtures/w5_method_contract/`，使 RRF、Error Analysis 和 CI 不必等待真实排序器。
 完整协议见 [`W5_METHOD_RANKING_CONTRACT.md`](project/W5_METHOD_RANKING_CONTRACT.md)。
 
+## W5 正式统一实验
+
+正式评价在所有 6 个 artifact 冻结后，于 clean revision `c11f0f4` 执行。Benchmark 为 approved
+`w4_query_relevance_pilot_v0.1.0`，manifest SHA-256 为
+`d503f5c2448409a9433bf3ffeada3890c7ddb31237bc7c95c529014b5fb8d094`。
+
+Macro 结果：
+
+| method | NDCG@5 | NDCG@10 | P@5 | P@10 |
+| --- | ---: | ---: | ---: | ---: |
+| B0 | 0.1293 | 0.2647 | 0.1333 | 0.2333 |
+| TF-IDF two-stage | 0.3727 | 0.4559 | 0.2667 | 0.2667 |
+| BM25 | 0.5400 | 0.6095 | 0.4000 | 0.3000 |
+| SPECTER2 | 0.5776 | 0.6958 | 0.4000 | 0.4000 |
+| Cross-Encoder | 0.4570 | 0.5298 | 0.4000 | 0.3333 |
+| RRF | 0.6115 | 0.6859 | 0.4667 | 0.3667 |
+
+RRF 的互补收益集中于 RQ02/Top5；macro NDCG@10 仍低于 SPECTER2，不能表述为全面最优。
+正式 metrics、manifest、Error Analysis 与完整科研边界见
+[`W5_FINAL_INTEGRATION_AND_EXPERIMENT.md`](reports/week5/W5_FINAL_INTEGRATION_AND_EXPERIMENT.md)。
+
 ## 当前验证
 
-- 六个 annotation validator：全部通过；
-- Agreement Analyzer：`complete`，30/30 comparable，3 个 disagreement；
-- approved benchmark strict validator：60/60，通过；
-- W4 validator 默认 approved / 显式 draft strict / draft review 入口：4 项回归测试通过；
-- W5 method contract / validator / evaluator adapter 定向测试：21 项通过；
-- agreement/evaluator/strict validator/W5 contract 相关定向测试：111 项通过；
-- 全量离线自动测试：327 项通过，0 failure / 0 error / 0 skipped；
-- Basic Quality Gate：扫描 242 个文件，0 error / 0 warning，PASSED；
-- Full Quality Gate：扫描 242 个文件，0 error / 3 个既有历史 warning，PASSED；
-- 所有测试使用本地 fixture 或已提交样例，没有新增 live 请求。
+- approved benchmark strict validator：60/60、20 × 3，通过；
+- 正式 W5 artifact checker：精确六方法 roster 6/6，通过；
+- Contract v1.1 / baseline / runner / RRF 定向测试：71 项通过；
+- 全量离线测试：446 项通过，0 failure / 0 error；
+- CI workflow/checker 定向测试：13 项通过；
+- Basic Quality Gate：扫描 297 个文件，0 error / 0 warning，PASSED；
+- Full Quality Gate：扫描 297 个文件，0 error / 3 个既有历史 warning，PASSED；
+- experiment metrics 与六个 method manifest hash 复核一致；`git diff --check` 通过；
+- 所有测试使用本地 fixture 或已提交样例，没有新增 OpenAlex live 请求或神经模型推理。
 
 Full Gate 的三个 warning 与此前公共基线一致：W1 一处历史 CSV 结构问题、
 `data/manual/relevance_labels_w1.csv` 的 19 个旧 ID 未对齐当前统一样例、一个历史已跟踪
 experiment `openalex_stellar_spectra_60`。本次没有修改这些历史 evidence，也没有新增 warning。
 
-## 下一步
+## 下一阶段待团队决策
 
-1. 六个 W5 Issue 从包含 Contract v1.0 的最新 `main` 独立开分支；
-2. 正式方法先生成并冻结通过 validator 的 artifact，再使用 approved benchmark 评价；
-3. W5 比较固定同一 candidate/query/benchmark，不查看当前 label 调参数或挑选 run；
-4. 继续把该集合准确表述为 **human annotation + independent blind AI evidence audit + human
-   review/adjudication**，不称为 gold standard、expert ground truth 或 pure human ground truth。
+1. 是否先扩大 Research Query/benchmark，并建立独立盲 test split；
+2. 是否使用 multi-retriever pooling 建立真正的 retrieval recall benchmark；
+3. 是否进行天文专家 calibration，优先复核 query-boundary 与 unclassified 高位错误；
+4. 是否在新 benchmark 上预注册 normalized-score fusion 或 task-boundary 改进；
+5. 是否单独定义 evidence-grounded literature synthesis 的来源与人工核验协议。
+
+不得根据当前正式指标回调参数后仍冒充同一次冻结实验；不得自行创建 W6 Issue。

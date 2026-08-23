@@ -257,7 +257,10 @@ def main(argv: list[str] | None = None) -> int:
         manifest = build_manifest(
             output_method_id=args.method_id,
             display_name=display_name,
-            frozen_inputs=packages[0]["manifest"]["inputs"],
+            frozen_inputs={
+                name: packages[0]["manifest"]["inputs"][name]
+                for name in ("candidate_pool", "research_queries")
+            },
             ranking_sha256=ranking_sha256,
             input_method_ids=fusion["input_method_ids"],
             input_manifest_sha256=fusion["input_manifest_sha256"],

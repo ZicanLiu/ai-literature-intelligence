@@ -1,0 +1,8 @@
+coverage_scope,category,count,denominator,ratio
+benchmark_coverage,scope_in,6,60,0.1
+benchmark_coverage,hard_negative,12,60,0.2
+benchmark_coverage,boundary,2,60,0.033333
+benchmark_coverage,unclassified,40,60,0.666667
+taxonomy_evidence_distribution,scope_in,6,20,0.3
+taxonomy_evidence_distribution,hard_negative,12,20,0.6
+taxonomy_evidence_distribution,boundary,2,20,0.1

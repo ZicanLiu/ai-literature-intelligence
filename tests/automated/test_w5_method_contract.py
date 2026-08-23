@@ -183,8 +183,68 @@ class MethodContractPositiveTests(MethodContractTestCase):
         self.assertIn("fixture_lexical_v1", output.getvalue())
         self.assertIn("pairs=60", output.getvalue())
 
+    def test_v11_accepts_frozen_source_sample_as_complete_baseline_input(self) -> None:
+        manifest = self._load_manifest()
+        manifest["schema_version"] = "1.1"
+        manifest["contract_version"] = "1.1"
+        manifest["inputs"]["source_sample"] = {
+            "path": "data/samples/w2/domain_query/live_query_sample.csv",
+            "sha256": (
+                "d9179396b22b223e58a730fc41a97f6c7f6a5c976042a97a881e51bc956eda34"
+            ),
+            "version": "w2_live_query_sample_v1",
+        }
+        self._save_manifest(manifest)
+        result = validate_method_output(self.manifest_path, project_root=PROJECT_ROOT)
+        self.assertIn("source_sample", result["input_paths"])
+
+    def test_current_official_method_versions_remain_valid(self) -> None:
+        expected_versions = {
+            "preliminary_score_v1": "1.1",
+            "tfidf_two_stage_v1": "1.1",
+            "bm25_v1": "1.0",
+            "specter2_adhoc_v1": "1.0",
+            "cross_encoder_msmarco_v1": "1.0",
+            "rrf_bm25_specter2_v1": "1.0",
+        }
+        formal_root = PROJECT_ROOT / "data" / "analysis" / "w5_methods"
+        for method_id, expected_version in expected_versions.items():
+            with self.subTest(method_id=method_id):
+                result = validate_method_output(
+                    formal_root / method_id / "manifest.json",
+                    project_root=PROJECT_ROOT,
+                )
+                self.assertEqual(
+                    result["manifest"]["contract_version"], expected_version
+                )
+
 
 class MethodContractNegativeTests(MethodContractTestCase):
+    def test_official_baselines_reject_v10_contract_downgrade(self) -> None:
+        for method_id in ("preliminary_score_v1", "tfidf_two_stage_v1"):
+            with self.subTest(method_id=method_id):
+                manifest_path, ranking_path = self._create_package(
+                    package_name=method_id,
+                    fixture_name="lexical_fixture.csv",
+                    method_id=method_id,
+                    family="baseline",
+                )
+                fields, rows = read_csv_rows(ranking_path)
+                for row in rows:
+                    row["method_id"] = method_id
+                write_csv_rows(ranking_path, fields, rows)
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                manifest["ranking"]["sha256"] = sha256_file(ranking_path)
+                manifest_path.write_text(
+                    json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+                    encoding="utf-8",
+                )
+                with self.assertRaisesRegex(ValueError, "不得降级为 v1.0"):
+                    validate_method_output(
+                        manifest_path,
+                        project_root=PROJECT_ROOT,
+                    )
+
     def test_missing_pair_and_wrong_total_are_rejected(self) -> None:
         rows = self._load_rows()
         rows.pop()
@@ -260,6 +320,27 @@ class MethodContractNegativeTests(MethodContractTestCase):
         manifest["inputs"]["candidate_pool"]["sha256"] = "0" * 64
         self._save_manifest(manifest)
         with self.assertRaisesRegex(ValueError, "冻结 W4 v0.1 hash"):
+            validate_method_output(self.manifest_path, project_root=PROJECT_ROOT)
+
+    def test_v11_requires_source_sample_input(self) -> None:
+        manifest = self._load_manifest()
+        manifest["schema_version"] = "1.1"
+        manifest["contract_version"] = "1.1"
+        self._save_manifest(manifest)
+        with self.assertRaisesRegex(ValueError, "source_sample"):
+            validate_method_output(self.manifest_path, project_root=PROJECT_ROOT)
+
+    def test_v10_rejects_undeclared_extra_source_sample_input(self) -> None:
+        manifest = self._load_manifest()
+        manifest["inputs"]["source_sample"] = {
+            "path": "data/samples/w2/domain_query/live_query_sample.csv",
+            "sha256": (
+                "d9179396b22b223e58a730fc41a97f6c7f6a5c976042a97a881e51bc956eda34"
+            ),
+            "version": "w2_live_query_sample_v1",
+        }
+        self._save_manifest(manifest)
+        with self.assertRaisesRegex(ValueError, "未知 source_sample"):
             validate_method_output(self.manifest_path, project_root=PROJECT_ROOT)
 
     def test_ranking_hash_mismatch_is_rejected(self) -> None:

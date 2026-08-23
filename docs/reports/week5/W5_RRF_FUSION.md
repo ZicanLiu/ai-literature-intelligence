@@ -2,7 +2,8 @@
 
 **日期:** 2026-08-17
 **分支:** `feature/w5-rrf-hybrid-fusion`
-**目标:** 实现算法无关的 Reciprocal Rank Fusion（RRF）混合排序模块，并用公共 fixture 完成开发与验证。
+**目标:** 实现算法无关的 Reciprocal Rank Fusion（RRF）混合排序模块，并在 post-merge
+阶段冻结 BM25 + SPECTER2 正式 artifact。
 
 ---
 
@@ -14,9 +15,10 @@ W5 计划比较 sparse（BM25）与 dense（SPECTER2）的互补性，最终形�
 BM25 + SPECTER2 → Reciprocal Rank Fusion → Hybrid Ranking
 ```
 
-本任务**不依赖 BM25 / SPECTER2 PR**。W5 Bootstrap 已提供 `lexical_fixture.csv`、
+RRF 实现阶段**不依赖 BM25 / SPECTER2 PR**。W5 Bootstrap 已提供 `lexical_fixture.csv`、
 `dense_fixture.csv`、W5 Ranking Contract 和 validator。本模块只实现通用 RRF，等所有相关
-PR 合并后，组长只需把真实 BM25 / SPECTER2 manifest 传入即可生成正式 Hybrid artifact。
+PR 合并后，再把真实 BM25 / SPECTER2 manifest 传入生成正式 Hybrid artifact。该 post-merge
+步骤现已完成，记录见第 8 节。
 
 ---
 
@@ -171,7 +173,26 @@ CLI 的 dirty-worktree 单元测试通过 mock Git 状态 helper 精确触发失
 
 ---
 
-## 8. 复现命令
+## 8. Post-merge 正式 artifact
+
+正式融合固定使用 `bm25_v1 + specter2_adhoc_v1`，未加入第三个方法、未调权、未修改
+`k=60`，也未读取 benchmark label 或既有 metrics：
+
+| 项目 | 值 |
+| --- | --- |
+| method_id | `rrf_bm25_specter2_v1` |
+| generation Git revision | `11dd37379301cdb6f599954cc8b31cebf77a9da1`（clean） |
+| input manifest hashes | BM25 `3730a648...34195`；SPECTER2 `a917bfb3...fbee` |
+| input ranking hashes | BM25 `4594272e...892c`；SPECTER2 `7bd205cf...575b` |
+| ranking SHA-256 | `70cbbf1436f9b92aa39f9b325c77eddfb4ba94a9f33196dce692d7b40b32b5a5` |
+| manifest SHA-256 | `1ce0ef37c06083ab5499bb722f61083b7175db683345e35eb54259aa0299d9c8` |
+| rows / RQ | 60；20 × 3 |
+| validator | PASS |
+
+正式 package 位于 `data/analysis/w5_methods/rrf_bm25_specter2_v1/`。它是预注册的
+sparse+dense rank-only fusion，不是根据正式指标选择的组合。
+
+## 9. 复现命令
 
 ```powershell
 # 测试（项目标准 unittest 方式）
@@ -191,12 +212,12 @@ python -m app.fuse_w5_rankings `
 python -m app.validate_w5_method --manifest <dir>/manifest.json
 ```
 
-正式 hybrid artifact 在所有 BM25 / SPECTER2 PR 合并后由组长统一生成，本 PR 不伪造正式
-实验结果。
+实现 PR 当时只交付 fixture 验证；上表正式 artifact 由 post-merge 收口阶段在所有输入 package
+通过 validator 后生成。
 
 ---
 
-## 9. Label Leakage 说明
+## 10. Label Leakage 说明
 
 RRF generation 完全不需要 benchmark labels。代码只读取 ranking CSV 的 `pair_id`、
 `research_query_id`、`rank` 与 manifest 身份，不读取 `judgements.csv`、annotation、
