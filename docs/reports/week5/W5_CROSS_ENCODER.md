@@ -1,6 +1,6 @@
 # W5 Cross-Encoder 神经重排
 
-状态：实现与实验定义已冻结；正式 artifact 待在 clean Git commit 和独立模型环境中生成。
+状态：实现、实验定义与正式 ranking artifact 已冻结，公共 W5 validator 已通过。
 
 ## 1. 实验边界
 
@@ -60,17 +60,40 @@ python -m app.validate_w5_method \
 
 ## 5. 正式运行记录
 
-待首次实现提交并确认工作树 clean 后填写：
+正式 CLI 在第一次实现提交后、artifact 尚不存在且 Git 工作树 clean 时启动。程序在写输出前
+记录环境，随后 artifact 自身使工作树变为 dirty；manifest 中的状态是生成开始前的快照。
 
-- 生成 commit：待生成；
-- 开始时间 / 耗时：待生成；
-- Python / 平台：待生成；
-- 实际依赖版本：待生成；
-- pair：待生成（目标 60/60、20×3、title-only 3）；
-- ranking SHA-256：待生成；
-- W5 validator：待生成。
+- 生成 commit：`c8be0550be8b180f51356987d44d70ff9f40c8ce`；
+- 开始时间：`2026-08-23T15:58:27+08:00`；
+- 耗时：`17.794164` 秒（包含固定 revision 加载、60-pair 推理和 ranking 写入）；
+- Python：CPython `3.13.7`；
+- 平台：Linux `6.17.0-41-generic`，`x86_64`；
+- 依赖：Sentence Transformers `5.2.3`、PyTorch `2.9.1+cpu`、Transformers `4.57.6`、
+  Hugging Face Hub `0.36.2`、NumPy `2.3.5`；
+- pair：60/60，三个 RQ 各 20/20，3 条缺摘要使用 title-only；
+- ranking SHA-256：
+  `2562de52955ecfba552fe6a465c5cd0996c0018c75ae5b75f4a1092f2976b241`；
+- manifest SHA-256：
+  `4a7b34a2b5689df1e4d5b3d8ae5c13a6925a589432ae7fc070e3a34d9e5694fb`；
+- 公共 W5 validator：PASS。
 
-## 6. 解释限制
+正式产物位于 `data/analysis/w5_methods/cross_encoder_msmarco_v1/`，ranking CSV 只有 Contract
+规定的五列。模型缓存和独立虚拟环境不提交仓库。
+
+## 6. 验收结果
+
+- W4 approved benchmark strict validator：PASS，60/60；
+- W5 method-output validator：PASS，60/60、20×3；
+- 新增 Cross-Encoder 定向测试：15/15 PASS；
+- 全量离线自动测试：342/342 PASS；
+- Basic Quality Gate：249 个文件，0 error、0 warning，PASS；
+- Full Quality Gate：249 个文件，0 error、3 个既有 W1/历史 experiment warning，PASS。
+
+Full Gate 的三个 warning 与任务开始前的公共基线一致：W1 历史 CSV 结构问题、19 个历史标注 ID
+未对齐当前统一样例、已跟踪历史 experiment。本任务没有修改这些历史 evidence，也没有引入新
+warning。
+
+## 7. 解释限制
 
 该模型在通用 MS MARCO Passage Ranking 数据上训练，是一个通用 neural reranker baseline，
 不是天文学或科研文献专用模型，不代表 astronomy/scientific-domain optimum。模型输入上限固定为

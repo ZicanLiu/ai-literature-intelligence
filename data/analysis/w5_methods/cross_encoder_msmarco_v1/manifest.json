@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0",
+  "contract_name": "w5_method_ranking",
+  "contract_version": "1.0",
+  "artifact_type": "method_ranking",
+  "method": {
+    "method_id": "cross_encoder_msmarco_v1",
+    "display_name": "Cross-Encoder MS MARCO MiniLM-L6 v1",
+    "family": "neural",
+    "parameters": {
+      "query_field": "question_en",
+      "paper_text": "title + two newlines + abstract; title only when abstract is missing",
+      "tokenizer_name": "cross-encoder/ms-marco-MiniLM-L6-v2",
+      "tokenizer_revision": "233902d25c440f23af6f7d6e94d2946bac0bee0a",
+      "max_length": 512,
+      "truncation": true,
+      "score_definition": "raw sequence-classification relevance logit",
+      "activation": "identity",
+      "apply_softmax": false,
+      "batch_size": 16,
+      "device": "cpu"
+    },
+    "model": {
+      "name": "cross-encoder/ms-marco-MiniLM-L6-v2",
+      "revision": "233902d25c440f23af6f7d6e94d2946bac0bee0a",
+      "adapter": null
+    }
+  },
+  "inputs": {
+    "candidate_pool": {
+      "path": "data/annotation_tasks/w4/candidate_pool_v0.1.csv",
+      "sha256": "25f608eb4c94218dfa220ba108b15ec846b2bd418174501420a468c376ed17cc",
+      "version": "w4_pilot_v0.1"
+    },
+    "research_queries": {
+      "path": "configs/w4/research_queries.json",
+      "sha256": "c77ec74ef4567614d3dfb6dab937b85398f95128cdb29e823587715002d99ab1",
+      "version": "w4_pilot_v0.1"
+    }
+  },
+  "ranking": {
+    "path": "ranking.csv",
+    "sha256": "2562de52955ecfba552fe6a465c5cd0996c0018c75ae5b75f4a1092f2976b241",
+    "row_count": 60,
+    "score_direction": "higher_is_better",
+    "tie_breaking": [
+      "score_desc",
+      "pair_id_asc"
+    ]
+  },
+  "generation": {
+    "generated_at": "2026-08-23T15:58:27+08:00",
+    "duration_seconds": 17.794164,
+    "git_revision": "c8be0550be8b180f51356987d44d70ff9f40c8ce",
+    "git_worktree_clean": true,
+    "python": {
+      "version": "3.13.7",
+      "implementation": "CPython"
+    },
+    "platform": {
+      "system": "Linux",
+      "release": "6.17.0-41-generic",
+      "machine": "x86_64"
+    },
+    "dependencies": {
+      "sentence-transformers": "5.2.3",
+      "torch": "2.9.1+cpu",
+      "transformers": "4.57.6",
+      "huggingface-hub": "0.36.2",
+      "numpy": "2.3.5"
+    }
+  },
+  "label_access": {
+    "benchmark_labels_read": false,
+    "declaration": "Ranking generation read only the frozen Candidate Pool and Research Query configuration; it did not read benchmark labels or judgements."
+  }
+}
