@@ -1,11 +1,11 @@
 {
   "schema_version": "0.2-alpha",
   "artifact_type": "w6_annotation_protocol",
-  "artifact_id": "w6_annotation_protocol_v1",
+  "artifact_id": "w6_fixture_annotation_protocol_v1",
   "status": "frozen",
-  "is_fixture": false,
-  "version": "1.0",
-  "frozen_at": "2026-08-24T14:19:30+08:00",
+  "is_fixture": true,
+  "version": "1.0-fixture",
+  "frozen_at": "2026-08-24T08:43:00+08:00",
   "frozen_before_annotations": true,
   "label_scheme": {
     "type": "graded_query_relevance",
@@ -82,7 +82,7 @@
     "actor_types": ["ai_assistant", "human", "ai_assisted_human"],
     "round": "independent_primary",
     "independence_rule": "Each judgement is produced from the blind task only; no retriever, ranking, metric, other label, or label distribution is visible.",
-    "prompt_version": "w6_query_relevance_annotation_v1"
+    "prompt_version": "w6_annotation_fixture_v1"
   },
   "review_policy": {
     "policy_id": "w6_blind_review_policy_v1",
@@ -119,9 +119,9 @@
     ]
   },
   "provenance": {
-    "kind": "issue64_preregistered_annotation_protocol",
-    "created_by": "issue64_leader",
-    "created_at": "2026-08-24T14:19:30+08:00",
-    "git_revision": "90811052194801263708627c1eda39a2765e9037"
+    "kind": "synthetic_preregistered_annotation_protocol_fixture",
+    "created_by": "w6_bootstrap",
+    "created_at": "2026-08-24T08:43:00+08:00",
+    "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
   }
 }

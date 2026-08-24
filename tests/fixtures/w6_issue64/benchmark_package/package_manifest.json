@@ -6,7 +6,7 @@
   "package_id": "w6_query_relevance_v0.2_alpha_package_v1",
   "is_fixture": true,
   "status": "bootstrap_fixture",
-  "created_at": "2026-08-24T14:51:20+08:00",
+  "created_at": "2026-08-24T16:21:51+08:00",
   "artifacts": {
     "topic_set": {
       "artifact_id": "w6_fixture_topics_v1",
@@ -64,25 +64,30 @@
       "sha256": "f9abbcf146f724f70f099a82dfc6c4c279bb9ea0f4bf4ed661129b0ba1ac7cfb"
     },
     "annotation_protocol": {
-      "artifact_id": "w6_annotation_protocol_v1",
+      "artifact_id": "w6_fixture_annotation_protocol_v1",
       "path": "annotation_protocol.json",
-      "sha256": "5f654dc8493a5bcf584a69442c3b1dfd770b0f1c89fc918800143d01820cfaef"
+      "sha256": "b8622ca820def223579a9133bf6b9223a39a6614cb3e53d3a3a5b5c8722cd220"
+    },
+    "second_annotation_results": {
+      "artifact_id": "w6_second_annotations_v1",
+      "path": "second_annotation_results.json",
+      "sha256": "b9ce9926cad71db84c3b1cd30e9e7ac02ed3c678ad8b984334ef7af70cb7c6ba"
     },
     "review_plan": {
       "artifact_id": "w6_annotation_review_plan_v1",
       "path": "review_plan.json",
-      "sha256": "a2a8e2ab965fc9ded1f72cee5483c1bb22e32051cc528e6b00ebaac5ce43586b"
+      "sha256": "74dfdd11b71baef895ccee6f5486e17da55b354175b331302eaf464e959c8594"
     },
     "benchmark_manifest": {
       "artifact_id": "w6_query_relevance_v0.2_alpha_manifest_v1",
       "path": "benchmark_manifest.json",
-      "sha256": "77e05b9744b5bd8033db10f8fe1078d338f8a418abc0df4bdaedd188573bfb4f"
+      "sha256": "aa7b32bdcb1f690e43019d1dc8bee202743ff325fbba01cda9415f47f4129515"
     }
   },
   "generation": {
-    "git_revision": "74d5956b48ed67082a1b475900e8694bf6f4deff",
+    "git_revision": "4f9d636cc4cae5986f91a21c27a535db1b4e04c6",
     "git_worktree_clean": true,
     "labels_used_for_generation": false
   },
-  "package_identity": "w6-benchmark-package:sha256:aceb77d85cb54a6d8f8d55dc2d7961a8a86a0c4cc8d32e247f91a1d9762272dc"
+  "package_identity": "w6-benchmark-package:sha256:cccb0c0058afaf93f9f93f6333993ef3408da9927d4f1bf84cba4eb2172a63a6"
 }

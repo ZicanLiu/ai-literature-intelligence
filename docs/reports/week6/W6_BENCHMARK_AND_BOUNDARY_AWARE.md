@@ -197,9 +197,9 @@ hash、blindness 和 workflow 兼容，不证明真实 Benchmark coverage 或 la
 Multi-Retriever candidates 和 annotation 没有被伪造。
 
 提交的 [`w6_issue64`](../../../tests/fixtures/w6_issue64/README.md) fixture 从 clean revision
-`74d5956b48ed67082a1b475900e8694bf6f4deff` 生成。Benchmark package 状态为
+`4f9d636cc4cae5986f91a21c27a535db1b4e04c6` 生成。Benchmark package 状态为
 `bootstrap_fixture`，含 2 fake Topics、13 pool items、4 synthetic annotations；package identity 为
-`w6-benchmark-package:sha256:aceb77d85cb54a6d8f8d55dc2d7961a8a86a0c4cc8d32e247f91a1d9762272dc`。
+`w6-benchmark-package:sha256:cccb0c0058afaf93f9f93f6333993ef3408da9927d4f1bf84cba4eb2172a63a6`。
 
 ## 7. Boundary-Aware research
 
@@ -254,7 +254,7 @@ Benchmark/Hidden anchor、method rankings、metrics、synthesis 与 W5 diagnosti
 
 提交的 Boundary fixture 对 13 个 Bootstrap pool items 生成完整 ranking；ranking SHA-256 为
 `8b4c33c7eb30af9d4586ed24641d1ed87f47b5d038b99ff08133611cd1c03b58`，configuration SHA-256
-为 `b4e3f18570cfd2588e8ba1c43a5eccf4b04128dd8f68d7f3e8965f7d6fb95c31`。Manifest 显式绑定
+为 `f802ba122d71e9ceb44cb247910eddbbe63e06c4845ab288078f3209662c8ab1`。Manifest 显式绑定
 `source_records`、`retrieval_provenance`、`canonical_entities` auxiliary inputs 和独立 source-config
 artifact identity，并声明 Dev/Hidden relevance labels 均未读取。
 
@@ -275,15 +275,16 @@ source-config binding/chronology、method freeze chronology、两个 builder 的
 
 - `python -m app.validate_w6_topics`：9 Topics、Dev 5 / Hidden 4、split identity 匹配；
 - `python -m app.validate_w6_bootstrap`：2 fake Topics、10 records、13 pool items、3 methods，PASS；
-- W6 contract + Issue #64 tests：73/73 PASS；其中新增定向 tests 为 25/25；
+- W6 contract + Issue #64 tests：Ran 91，OK（89 PASS / 2 个 Windows symlink privilege 条件性
+  skip）；其中 Issue #64 定向 tests 为 Ran 43，OK（41 PASS / 2 skip，resolved-path coverage 已 PASS）；
 - committed Benchmark package validator：`bootstrap_fixture`、2 Topics、13 pool items、4 annotations，
-  PASS；committed Boundary package 也通过公共 W6 method validator；
+  PASS；committed Boundary package 同时通过公共 W6 method validator 和 Issue #64 strict validator；
 - W4 strict approved validator：60/60、每 RQ 20/20，manifest hash 保持
   `d503f5c2448409a9433bf3ffeada3890c7ddb31237bc7c95c529014b5fb8d094`；
 - W5 formal artifact checker：既有六方法 6/6 PASS；
-- 全量 offline unittest：519/519 PASS；
-- Basic Quality Gate：扫描 360 个文件，0 error / 0 warning，PASSED；
-- Full Quality Gate：扫描 360 个文件，0 error / 3 个既有历史 warning，PASSED；
+- 全量 offline unittest：Ran 537，OK（535 PASS / 2 个条件性 skip）；
+- Basic Quality Gate：扫描 364 个文件，0 error / 0 warning，PASSED；
+- Full Quality Gate：扫描 364 个文件，0 error / 3 个既有历史 warning，PASSED；
 - `git diff --check` 与 protected frozen-evidence path audit：PASS。
 
 Full Gate 的三个 warning 与 base 一致：历史 W1 CSV 结构、W1 旧 label IDs、已跟踪历史 experiment。

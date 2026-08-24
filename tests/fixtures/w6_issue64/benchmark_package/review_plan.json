@@ -5,18 +5,22 @@
   "status": "in_review",
   "is_fixture": true,
   "protocol": {
-    "artifact_id": "w6_annotation_protocol_v1",
-    "sha256": "5f654dc8493a5bcf584a69442c3b1dfd770b0f1c89fc918800143d01820cfaef"
+    "artifact_id": "w6_fixture_annotation_protocol_v1",
+    "sha256": "b8622ca820def223579a9133bf6b9223a39a6614cb3e53d3a3a5b5c8722cd220"
   },
   "annotations": {
     "artifact_id": "w6_fixture_annotations_v1",
     "sha256": "a429ba5eae44f5418fffb757ca2047075784a045f7f56d6f6ec6a9fda6069c15"
   },
+  "second_annotations": {
+    "artifact_id": "w6_second_annotations_v1",
+    "sha256": "b9ce9926cad71db84c3b1cd30e9e7ac02ed3c678ad8b984334ef7af70cb7c6ba"
+  },
   "reviews": {
     "artifact_id": "w6_fixture_annotation_reviews_v1",
     "sha256": "3f26a99478b4df2c06086a255736ee67fbedf5bca72d3ac7e222cb63a7399bbf"
   },
-  "created_at": "2026-08-24T14:51:20+08:00",
+  "created_at": "2026-08-24T16:21:51+08:00",
   "evidence_lookup_statuses": [
     {
       "annotation_id": "annotation_denoise_001",
@@ -73,6 +77,13 @@
   "coverage": {
     "public_annotation_count": 4,
     "selected_second_annotation_task_count": 2,
+    "completed_second_annotation_task_count": 0,
+    "missing_second_annotation_task_ids": [
+      "annot:blind_571b00ab87d8aae04318dafd",
+      "annot:blind_7af2342ecf5ba5b13d3efdc5"
+    ],
+    "conflict_annotation_ids": [],
+    "missing_conflict_adjudication_annotation_ids": [],
     "required_review_count": 3,
     "completed_review_count": 2,
     "missing_review_annotation_ids": [
@@ -82,7 +93,7 @@
   "provenance": {
     "kind": "deterministic_blind_review_selection",
     "created_by": "w6_benchmark_workflow",
-    "created_at": "2026-08-24T14:51:20+08:00",
-    "git_revision": "74d5956b48ed67082a1b475900e8694bf6f4deff"
+    "created_at": "2026-08-24T16:21:51+08:00",
+    "git_revision": "4f9d636cc4cae5986f91a21c27a535db1b4e04c6"
   }
 }

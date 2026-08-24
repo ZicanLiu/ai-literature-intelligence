@@ -60,8 +60,8 @@
   "generation_provenance": {
     "kind": "w6_benchmark_workflow_builder",
     "created_by": "w6_benchmark_workflow",
-    "created_at": "2026-08-24T14:51:20+08:00",
-    "git_revision": "74d5956b48ed67082a1b475900e8694bf6f4deff"
+    "created_at": "2026-08-24T16:21:51+08:00",
+    "git_revision": "4f9d636cc4cae5986f91a21c27a535db1b4e04c6"
   },
   "review_provenance": {
     "status": "in_review",

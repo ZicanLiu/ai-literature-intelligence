@@ -47,6 +47,10 @@
         "bm25_b": 0.75,
         "missing_abstract_policy": "retain_with_title_only_no_missingness_penalty"
       },
+      "source_config": {
+        "artifact_id": "boundary_aware_structured_lexical_v1_config",
+        "sha256": "7cf8b5c562f176465e7490a8ec8acbf249b7e5b834477f562f982080cd2267c6"
+      },
       "backend": {
         "name": "deterministic_structured_lexical_boundary",
         "version": "1.0"
@@ -72,6 +76,14 @@
     "source_records": {
       "artifact_id": "w6_fixture_source_records_v1",
       "sha256": "1ee6864488e80b2d8a6b11bcd5166dbba7ca2beb993c0063c45bf3770d26ebce"
+    },
+    "retrieval_provenance": {
+      "artifact_id": "w6_fixture_retrieval_v1",
+      "sha256": "acbcf34aae59c1d5eadc8f2c50bf06604dad7ee27b68566c851a0fab6b2c707c"
+    },
+    "canonical_entities": {
+      "artifact_id": "w6_fixture_canonical_entities_v1",
+      "sha256": "31a3dfa3a5bff8e244a0225d9f5223ad29b7c6e907c30c23f44745bf15e74ba8"
     }
   },
   "method_inputs": [],
@@ -90,13 +102,13 @@
     ]
   },
   "freeze": {
-    "frozen_at": "2026-08-24T14:51:22+08:00",
-    "configuration_sha256": "b4e3f18570cfd2588e8ba1c43a5eccf4b04128dd8f68d7f3e8965f7d6fb95c31",
+    "frozen_at": "2026-08-24T16:21:52+08:00",
+    "configuration_sha256": "f802ba122d71e9ceb44cb247910eddbbe63e06c4845ab288078f3209662c8ab1",
     "evaluation_started_at": null
   },
   "generation": {
-    "generated_at": "2026-08-24T14:51:21+08:00",
-    "git_revision": "74d5956b48ed67082a1b475900e8694bf6f4deff",
+    "generated_at": "2026-08-24T16:21:51+08:00",
+    "git_revision": "4f9d636cc4cae5986f91a21c27a535db1b4e04c6",
     "git_worktree_clean": true,
     "dependencies": {},
     "deterministic_seed": null
@@ -104,6 +116,6 @@
   "label_access": {
     "relevance_labels_read": false,
     "hidden_test_labels_read": false,
-    "declaration": "Boundary-Aware generation read only frozen Topic, Candidate Pool, and source-record text; it did not read Dev or Hidden relevance labels, judgements, metrics, or error-analysis artifacts."
+    "declaration": "Boundary-Aware generation read only the task-scoped frozen Topic, retrieval provenance, source records, canonical mapping, Candidate Pool, and preregistered source config; it did not read Dev or Hidden relevance labels, judgements, metrics, or error-analysis artifacts."
   }
 }

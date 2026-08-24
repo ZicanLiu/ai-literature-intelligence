@@ -4,14 +4,16 @@
 Benchmark，也不含真实 annotation、Hidden Test label 或评价结果。
 
 - `benchmark_package/`：`bootstrap_fixture` 状态的 hash-pinned Benchmark workflow package，覆盖
-  blind annotation protocol、deterministic review plan、Benchmark manifest 和完整 input graph；
+  blind annotation protocol、second-annotation extension、deterministic review plan、Benchmark
+  manifest 和完整 input graph；
 - `boundary_method/`：13-row dynamic-pool Boundary-Aware ranking package，使用公共 fake Topic/Pool/
   source records，严格保持 W5 五列语义并由 W6 method validator 校验。
 
-两包均从 clean revision `74d5956b48ed67082a1b475900e8694bf6f4deff` 生成。Boundary package
-声明 `source_records` auxiliary input，且 `relevance_labels_read=false`、
-`hidden_test_labels_read=false`。Fixture PASS 只证明结构、hash、determinism 和 no-label contract
-兼容，不是方法效果或 Benchmark quality 的科研结论。
+两包均从 clean revision `4f9d636cc4cae5986f91a21c27a535db1b4e04c6` 生成。Boundary package
+声明 label-free Topic/retrieval/source/canonical/pool closure、source config identity，且
+`relevance_labels_read=false`、`hidden_test_labels_read=false`。Fixture PASS 只证明结构、hash、
+determinism、process-level no-label closure 和 workflow contract 兼容，不是方法效果或 Benchmark
+quality 的科研结论。
 
 复核命令：
 
