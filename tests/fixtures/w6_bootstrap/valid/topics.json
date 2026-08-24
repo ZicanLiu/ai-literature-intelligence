@@ -1,0 +1,103 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_topic_set",
+  "artifact_id": "w6_fixture_topics_v1",
+  "status": "frozen",
+  "is_fixture": true,
+  "version": "fixture-v1",
+  "created_at": "2026-08-24T08:00:00+08:00",
+  "provenance": {
+    "kind": "synthetic_fixture",
+    "created_by": "w6_bootstrap",
+    "created_at": "2026-08-24T08:00:00+08:00",
+    "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+  },
+  "topics": [
+    {
+      "topic_id": "w6_fixture_topic_denoising",
+      "research_question": "How can data-driven methods reduce synthetic detector noise in stellar spectra without changing absorption-line measurements?",
+      "scientific_object": "synthetic stellar spectra",
+      "data_modality": "one-dimensional optical spectra",
+      "target_task": "noise removal and quality restoration",
+      "method_role": "data-driven method is the primary denoising component",
+      "scientific_role": "preserve downstream line measurements",
+      "scope_in": [
+        "stellar spectra are the direct input",
+        "noise removal or quality restoration is a primary task"
+      ],
+      "scope_out": [
+        "parameter estimation without denoising",
+        "non-astronomical spectra"
+      ],
+      "boundary_cases": [
+        "denoising used only as an unanalysed preprocessing step",
+        "spectral reconstruction whose primary goal is parameter inference"
+      ],
+      "acquisition_query_variants": [
+        {
+          "query_variant_id": "denoise_qv1",
+          "query_text": "machine learning stellar spectrum denoising",
+          "version": "fixture-v1",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "denoise_qv2",
+          "query_text": "data driven noise removal astronomical spectra",
+          "version": "fixture-v1",
+          "status": "frozen"
+        }
+      ],
+      "version": "fixture-v1",
+      "lifecycle_status": "frozen",
+      "provenance": {
+        "kind": "synthetic_fixture",
+        "created_by": "w6_bootstrap",
+        "created_at": "2026-08-24T08:00:00+08:00",
+        "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+      }
+    },
+    {
+      "topic_id": "w6_fixture_topic_transients",
+      "research_question": "How can machine learning classify synthetic transient spectra while respecting object and modality boundaries?",
+      "scientific_object": "synthetic astronomical transients",
+      "data_modality": "time-resolved optical spectra",
+      "target_task": "transient spectral classification",
+      "method_role": "machine learning produces the class prediction",
+      "scientific_role": "support early transient identification",
+      "scope_in": [
+        "transient spectra are direct model inputs",
+        "classification is a primary output"
+      ],
+      "scope_out": [
+        "photometry-only transient classification",
+        "static stellar-type classification"
+      ],
+      "boundary_cases": [
+        "multimodal systems where spectra are optional",
+        "spectral feature extraction without a classification output"
+      ],
+      "acquisition_query_variants": [
+        {
+          "query_variant_id": "transient_qv1",
+          "query_text": "machine learning transient spectra classification",
+          "version": "fixture-v1",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "transient_qv2",
+          "query_text": "data driven supernova spectral typing",
+          "version": "fixture-v1",
+          "status": "frozen"
+        }
+      ],
+      "version": "fixture-v1",
+      "lifecycle_status": "frozen",
+      "provenance": {
+        "kind": "synthetic_fixture",
+        "created_by": "w6_bootstrap",
+        "created_at": "2026-08-24T08:00:00+08:00",
+        "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+      }
+    }
+  ]
+}

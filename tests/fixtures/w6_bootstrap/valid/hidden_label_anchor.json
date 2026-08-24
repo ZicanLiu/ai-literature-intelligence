@@ -1,0 +1,25 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_hidden_label_anchor",
+  "artifact_id": "w6_fixture_hidden_anchor_v1",
+  "is_fixture": true,
+  "seal_id": "w6_fixture_hidden_seal_v1",
+  "split": {"artifact_id": "w6_fixture_split_v1", "sha256": "e0c4bf7122d1a9728e753423a1790e4e8b99d39d4f8f3f51c1652824653a1f58"},
+  "hidden_topic_ids": ["w6_fixture_topic_transients"],
+  "label_artifact": {"artifact_id": "w6_fixture_hidden_labels_v1", "sha256": "80939d1b9e52482d5b1384379a95bf102085089828ae55a4c48990ca907da70d"},
+  "storage": {"location": "external", "repository_path": null},
+  "sealed_at": "2026-08-24T08:56:00+08:00",
+  "reveal_policy": {
+    "method_freeze_required": true,
+    "one_time_evaluation": true,
+    "reveal_count": 0,
+    "revealed_at": null
+  },
+  "access_policy": {"generation_can_read": false, "allowed_consumer": "sealed_evaluator"},
+  "provenance": {
+    "kind": "synthetic_seal_fixture",
+    "created_by": "w6_bootstrap",
+    "created_at": "2026-08-24T08:56:00+08:00",
+    "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+  }
+}

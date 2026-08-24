@@ -1,4 +1,4 @@
-name: W5 CI and Reproducibility Gate
+name: Research CI and Reproducibility Gate
 
 on:
   push:
@@ -39,6 +39,9 @@ jobs:
 
       - name: W4 Approved Benchmark
         run: python -m app.validate_w4_benchmark
+
+      - name: W6 Bootstrap Contracts and Fixtures
+        run: python -m app.validate_w6_bootstrap
 
       - name: Offline Unit Tests
         run: python -m unittest discover -s tests/automated -p "test_*.py" -q

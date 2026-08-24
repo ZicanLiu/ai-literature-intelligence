@@ -1,0 +1,14 @@
+pair_id,research_query_id,method_id,score,rank
+pool_denoise_001,w6_fixture_topic_denoising,w6_fixture_sparse_v1,9.0,1
+pool_denoise_003,w6_fixture_topic_denoising,w6_fixture_sparse_v1,8.5,2
+pool_denoise_008,w6_fixture_topic_denoising,w6_fixture_sparse_v1,8.5,3
+pool_denoise_005,w6_fixture_topic_denoising,w6_fixture_sparse_v1,6.0,4
+pool_denoise_002,w6_fixture_topic_denoising,w6_fixture_sparse_v1,5.0,5
+pool_denoise_006,w6_fixture_topic_denoising,w6_fixture_sparse_v1,4.0,6
+pool_denoise_004,w6_fixture_topic_denoising,w6_fixture_sparse_v1,1.0,7
+pool_transient_007,w6_fixture_topic_transients,w6_fixture_sparse_v1,9.0,1
+pool_transient_002,w6_fixture_topic_transients,w6_fixture_sparse_v1,7.0,2
+pool_transient_010,w6_fixture_topic_transients,w6_fixture_sparse_v1,6.0,3
+pool_transient_006,w6_fixture_topic_transients,w6_fixture_sparse_v1,5.0,4
+pool_transient_009,w6_fixture_topic_transients,w6_fixture_sparse_v1,4.0,5
+pool_transient_004,w6_fixture_topic_transients,w6_fixture_sparse_v1,1.0,6

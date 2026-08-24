@@ -1,0 +1,48 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_structured_synthesis",
+  "artifact_id": "w6_fixture_structured_synthesis_v1",
+  "is_fixture": true,
+  "synthesis_id": "synthesis_denoise_fixture_v1",
+  "synthesis_input_id": "synthesis_input_denoise_v1",
+  "claims": [
+    {
+      "claim_id": "claim_001",
+      "claim_text": "The fixture evidence directly supports preservation of a spectral line measurement during restoration.",
+      "supporting_canonical_entity_ids": ["entity_003"],
+      "evidence_refs": ["evidence_003"],
+      "confidence": "high",
+      "support_status": "supported",
+      "citation_status": "verified"
+    },
+    {
+      "claim_id": "claim_002",
+      "claim_text": "A second fixture paper reports detector-noise removal with absorption-line preservation, but the fixture does not establish generalization.",
+      "supporting_canonical_entity_ids": ["entity_001"],
+      "evidence_refs": ["evidence_001"],
+      "confidence": "medium",
+      "support_status": "partially_supported",
+      "citation_status": "incomplete"
+    },
+    {
+      "claim_id": "claim_003",
+      "claim_text": "No fixture evidence supports a claim that the method is universally best.",
+      "supporting_canonical_entity_ids": [],
+      "evidence_refs": [],
+      "confidence": "high",
+      "support_status": "unsupported",
+      "citation_status": "missing"
+    }
+  ],
+  "rendered_review": {
+    "format": "markdown",
+    "text": "The synthetic evidence reports line preservation during restoration [claim_001]. A second paper is directionally consistent, while generalization remains unverified [claim_002]. The fixture does not support universal superiority [claim_003].",
+    "generated_from_claim_ids": ["claim_001", "claim_002", "claim_003"]
+  },
+  "generation_provenance": {
+    "kind": "deterministic_structured_fixture",
+    "created_by": "w6_bootstrap",
+    "created_at": "2026-08-24T09:12:00+08:00",
+    "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+  }
+}

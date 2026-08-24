@@ -1,0 +1,16 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_hidden_labels_fixture",
+  "artifact_id": "w6_fixture_hidden_labels_v1",
+  "is_fixture": true,
+  "seal_id": "w6_fixture_hidden_seal_v1",
+  "split_identity": "w6-topic-split:sha256:37dace4d957c3c8ebc729ee3c177a453e84786cd653412cd092b9c2580113e1f",
+  "labels": [
+    {"pool_item_id": "pool_transient_002", "topic_id": "w6_fixture_topic_transients", "relevance_label": 1},
+    {"pool_item_id": "pool_transient_004", "topic_id": "w6_fixture_topic_transients", "relevance_label": 0},
+    {"pool_item_id": "pool_transient_006", "topic_id": "w6_fixture_topic_transients", "relevance_label": 1},
+    {"pool_item_id": "pool_transient_007", "topic_id": "w6_fixture_topic_transients", "relevance_label": 2},
+    {"pool_item_id": "pool_transient_009", "topic_id": "w6_fixture_topic_transients", "relevance_label": 2},
+    {"pool_item_id": "pool_transient_010", "topic_id": "w6_fixture_topic_transients", "relevance_label": 0}
+  ]
+}
