@@ -25,6 +25,9 @@ from src.w6_method_contract import validate_w6_method_package
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 BOOTSTRAP = PROJECT_ROOT / "tests" / "fixtures" / "w6_bootstrap" / "valid" / "bundle_manifest.json"
 CONFIG = PROJECT_ROOT / "configs" / "w6" / "boundary_aware_structured_lexical_v1.json"
+COMMITTED_METHOD_FIXTURE = (
+    PROJECT_ROOT / "tests" / "fixtures" / "w6_issue64" / "boundary_method" / "manifest.json"
+)
 BASE_REVISION = "90811052194801263708627c1eda39a2765e9037"
 
 
@@ -54,6 +57,16 @@ class W6BoundaryRankingTests(unittest.TestCase):
             config_path.write_text(json.dumps(payload), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "no-label policy"):
                 load_boundary_ranking_config(config_path)
+
+    def test_committed_boundary_method_fixture_validates(self) -> None:
+        result = validate_w6_method_package(
+            COMMITTED_METHOD_FIXTURE,
+            artifact_registry=self.bundle["registry"],
+            pool_members=self.bundle["pool_members"],
+            known_method_packages={},
+        )
+        self.assertEqual(result["method_id"], "boundary_aware_structured_lexical_v1")
+        self.assertEqual(len(result["ranking_rows"]), len(self.bundle["pool_members"]))
 
     def test_fake_backend_generation_is_deterministic_and_dynamic(self) -> None:
         assessments = {

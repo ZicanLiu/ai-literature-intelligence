@@ -33,6 +33,14 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 BOOTSTRAP = PROJECT_ROOT / "tests" / "fixtures" / "w6_bootstrap" / "valid" / "bundle_manifest.json"
 PROTOCOL = PROJECT_ROOT / "configs" / "w6" / "annotation_protocol_v1.json"
 RESEARCH_ROOT = PROJECT_ROOT / "data" / "research" / "w6" / "v0.2-alpha"
+COMMITTED_BENCHMARK_FIXTURE = (
+    PROJECT_ROOT
+    / "tests"
+    / "fixtures"
+    / "w6_issue64"
+    / "benchmark_package"
+    / "package_manifest.json"
+)
 BASE_REVISION = "90811052194801263708627c1eda39a2765e9037"
 
 
@@ -171,6 +179,11 @@ class W6AnnotationProtocolTests(unittest.TestCase):
 
 
 class W6BenchmarkPackageTests(unittest.TestCase):
+    def test_committed_bootstrap_fixture_package_validates(self) -> None:
+        result = validate_w6_benchmark_package(COMMITTED_BENCHMARK_FIXTURE)
+        self.assertEqual(result["package"]["status"], "bootstrap_fixture")
+        self.assertTrue(result["package"]["is_fixture"])
+
     def _build(self, root: Path) -> Path:
         return build_w6_benchmark_package(
             artifact_paths=artifact_paths_from_bootstrap_bundle(BOOTSTRAP),

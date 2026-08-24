@@ -183,6 +183,11 @@ Dev/Hidden 无交集并完整覆盖 9 个 Topic。真实 Hidden labels 必须由
 可跑，所以 fixture PASS 只证明 contract、hash、blindness 和 workflow 兼容，不证明真实 Benchmark
 coverage 或 label validity。真实 Multi-Retriever candidates 和 annotation 没有被伪造。
 
+提交的 [`w6_issue64`](../../../tests/fixtures/w6_issue64/README.md) fixture 从 clean revision
+`74d5956b48ed67082a1b475900e8694bf6f4deff` 生成。Benchmark package 状态为
+`bootstrap_fixture`，含 2 fake Topics、13 pool items、4 synthetic annotations；package identity 为
+`w6-benchmark-package:sha256:aceb77d85cb54a6d8f8d55dc2d7961a8a86a0c4cc8d32e247f91a1d9762272dc`。
+
 ## 7. Boundary-Aware research
 
 ### 7.1 历史诊断与问题定义
@@ -224,6 +229,11 @@ fixed-assessment fake backend。
 `score desc -> pair_id asc`。method manifest 固定 Topic/Pool/source-record hashes、parameters、backend、
 Git clean revision、configuration hash 和 no-label declaration，并由公共 W6 method validator 自校验。
 
+提交的 Boundary fixture 对 13 个 Bootstrap pool items 生成完整 ranking；ranking SHA-256 为
+`8b4c33c7eb30af9d4586ed24641d1ed87f47b5d038b99ff08133611cd1c03b58`，configuration SHA-256
+为 `b4e3f18570cfd2588e8ba1c43a5eccf4b04128dd8f68d7f3e8965f7d6fb95c31`。Manifest 显式绑定
+`source_records` auxiliary input，并声明 Dev/Hidden relevance labels 均未读取。
+
 已知限制是 lexical/synonym brittleness、短文本对 overlap 的敏感性和 per-topic min-max 在很小 pool
 上的不稳定性。因此它是最小研究原型，不是经过 Hidden Test 证明的新最优方法。任何参数变更都应
 产生新 version/configuration hash，不能根据 W6 Hidden metrics 回调当前 v1。
@@ -236,8 +246,23 @@ incomplete review、benchmark hash drift、invalid promotion、Boundary ranking 
 mismatch penalty、missing abstract、invalid backend assessment、auxiliary input drift、no-label API 和
 公共 W6 method package validation。测试不联网、不读取 `.env`、不调用 LLM 或下载模型。
 
-最终命令和准确 test/gate 数量在全部实现冻结后补入本节；在此之前不得把局部 fixture smoke
-表述为完成全量验收。
+最终验收结果：
+
+- `python -m app.validate_w6_topics`：9 Topics、Dev 5 / Hidden 4、split identity 匹配；
+- `python -m app.validate_w6_bootstrap`：2 fake Topics、10 records、13 pool items、3 methods，PASS；
+- W6 contract + Issue #64 tests：73/73 PASS；其中新增定向 tests 为 25/25；
+- committed Benchmark package validator：`bootstrap_fixture`、2 Topics、13 pool items、4 annotations，
+  PASS；committed Boundary package 也通过公共 W6 method validator；
+- W4 strict approved validator：60/60、每 RQ 20/20，manifest hash 保持
+  `d503f5c2448409a9433bf3ffeada3890c7ddb31237bc7c95c529014b5fb8d094`；
+- W5 formal artifact checker：既有六方法 6/6 PASS；
+- 全量 offline unittest：519/519 PASS；
+- Basic Quality Gate：扫描 360 个文件，0 error / 0 warning，PASSED；
+- Full Quality Gate：扫描 360 个文件，0 error / 3 个既有历史 warning，PASSED；
+- `git diff --check` 与 protected frozen-evidence path audit：PASS。
+
+Full Gate 的三个 warning 与 base 一致：历史 W1 CSV 结构、W1 旧 label IDs、已跟踪历史 experiment。
+没有通过删除断言、放宽 validator 或降级 error 取得 PASS。
 
 ## 9. 留给 Integration PR 的真实工作
 

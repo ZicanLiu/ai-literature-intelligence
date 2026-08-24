@@ -1,0 +1,73 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_benchmark_manifest",
+  "artifact_id": "w6_query_relevance_v0.2_alpha_manifest_v1",
+  "is_fixture": true,
+  "benchmark_name": "W6 Query-Relevance Benchmark v0.2-alpha",
+  "benchmark_version": "w6_query_relevance_v0.2-alpha.bootstrap-fixture",
+  "status": "bootstrap_fixture",
+  "evaluation_target": "query_relevance",
+  "label_scheme": {
+    "type": "graded_relevance",
+    "allowed_values": [
+      0,
+      1,
+      2
+    ],
+    "version": "query_relevance_0_1_2_v1"
+  },
+  "record_unit": "topic_id + pool_item_id",
+  "entity_policy": "source records remain auditable; confirmed aliases map to canonical entities without silent deletion; suspected duplicates remain separate pending review",
+  "reference_year": 2026,
+  "topic_set": {
+    "artifact_id": "w6_fixture_topics_v1",
+    "sha256": "d262e66d64769a6e0fb30487d050b925b0e2bbd1c3099a818e80429490756d3a"
+  },
+  "split": {
+    "artifact_id": "w6_fixture_split_v1",
+    "sha256": "60a9e6bca37762fe4c20d150ff94df4d2e855fb9f2fb21062475204317acb0e7"
+  },
+  "candidate_pool": {
+    "artifact_id": "w6_fixture_candidate_pool_v1",
+    "sha256": "5fbd8acc3304b835e01332b4e57cafe5da5c196ea7d33c81c620a3e340c829ae"
+  },
+  "canonical_entities": {
+    "artifact_id": "w6_fixture_canonical_entities_v1",
+    "sha256": "31a3dfa3a5bff8e244a0225d9f5223ad29b7c6e907c30c23f44745bf15e74ba8"
+  },
+  "annotations": {
+    "artifact_id": "w6_fixture_annotations_v1",
+    "sha256": "a429ba5eae44f5418fffb757ca2047075784a045f7f56d6f6ec6a9fda6069c15"
+  },
+  "reviews": {
+    "artifact_id": "w6_fixture_annotation_reviews_v1",
+    "sha256": "3f26a99478b4df2c06086a255736ee67fbedf5bca72d3ac7e222cb63a7399bbf"
+  },
+  "hidden_label_anchor": {
+    "artifact_id": "w6_fixture_hidden_anchor_v1",
+    "sha256": "f9abbcf146f724f70f099a82dfc6c4c279bb9ea0f4bf4ed661129b0ba1ac7cfb"
+  },
+  "counts": {
+    "topic_count": 2,
+    "dev_topic_count": 1,
+    "hidden_test_topic_count": 1,
+    "pool_item_count": 13,
+    "canonical_entity_count": 9,
+    "public_annotation_count": 4,
+    "public_review_count": 2
+  },
+  "benchmark_identity": "w6-benchmark:sha256:6e3eff6c8286d093c31088d69f311fa5d2d4adfefe8e92ca25fe4168e4fad101",
+  "generation_provenance": {
+    "kind": "w6_benchmark_workflow_builder",
+    "created_by": "w6_benchmark_workflow",
+    "created_at": "2026-08-24T14:51:20+08:00",
+    "git_revision": "74d5956b48ed67082a1b475900e8694bf6f4deff"
+  },
+  "review_provenance": {
+    "status": "in_review",
+    "reviewers": [
+      "fixture_second_reviewer"
+    ],
+    "note": "Fixture-driven workflow validation only; formal approved promotion is not implemented."
+  }
+}

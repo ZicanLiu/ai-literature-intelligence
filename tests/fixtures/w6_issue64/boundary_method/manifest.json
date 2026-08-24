@@ -1,0 +1,109 @@
+{
+  "schema_version": "0.2-alpha",
+  "contract_name": "w6_method_ranking_extension",
+  "contract_version": "0.2-alpha",
+  "artifact_type": "method_ranking",
+  "artifact_id": "w6_boundary_aware_structured_lexical_v1",
+  "is_fixture": true,
+  "status": "frozen",
+  "compatibility": {
+    "base_contract": "w5_method_ranking",
+    "base_ranking_schema_version": "1.0",
+    "ranking_fields": [
+      "pair_id",
+      "research_query_id",
+      "method_id",
+      "score",
+      "rank"
+    ],
+    "identity_mapping": {
+      "pair_id": "pool_item_id",
+      "research_query_id": "topic_id"
+    },
+    "ranking_unit": "source_record"
+  },
+  "method": {
+    "method_id": "boundary_aware_structured_lexical_v1",
+    "display_name": "Boundary-Aware Structured Lexical Ranking v1",
+    "family": "sparse",
+    "parameters": {
+      "prototype_version": "1.0",
+      "problem_dimensions": [
+        "scientific_object",
+        "data_modality",
+        "target_task",
+        "method_role"
+      ],
+      "formulation": "0.6 * per-topic min-max BM25 relevance + 0.4 * structured compatibility - 0.5 * max(scope-out overlap, boundary overlap)",
+      "configuration": {
+        "relevance_weight": 0.6,
+        "compatibility_weight": 0.4,
+        "boundary_penalty": 0.5,
+        "scientific_object_weight": 0.25,
+        "data_modality_weight": 0.25,
+        "target_task_weight": 0.25,
+        "method_role_weight": 0.25,
+        "bm25_k1": 1.5,
+        "bm25_b": 0.75,
+        "missing_abstract_policy": "retain_with_title_only_no_missingness_penalty"
+      },
+      "backend": {
+        "name": "deterministic_structured_lexical_boundary",
+        "version": "1.0"
+      },
+      "tokenizer": "src.text_relevance.tokenize_text",
+      "corpus_scope": "complete frozen W6 candidate pool",
+      "query_source": "frozen structured Topic fields and scope-in statements",
+      "missing_abstract_policy": "retain_with_title_only_no_missingness_penalty"
+    },
+    "model": null
+  },
+  "inputs": {
+    "topic_set": {
+      "artifact_id": "w6_fixture_topics_v1",
+      "sha256": "d262e66d64769a6e0fb30487d050b925b0e2bbd1c3099a818e80429490756d3a"
+    },
+    "candidate_pool": {
+      "artifact_id": "w6_fixture_candidate_pool_v1",
+      "sha256": "5fbd8acc3304b835e01332b4e57cafe5da5c196ea7d33c81c620a3e340c829ae"
+    }
+  },
+  "auxiliary_inputs": {
+    "source_records": {
+      "artifact_id": "w6_fixture_source_records_v1",
+      "sha256": "1ee6864488e80b2d8a6b11bcd5166dbba7ca2beb993c0063c45bf3770d26ebce"
+    }
+  },
+  "method_inputs": [],
+  "score_processing": {
+    "output_score_semantics": "higher_is_better",
+    "normalization": null
+  },
+  "ranking": {
+    "path": "ranking.csv",
+    "sha256": "8b4c33c7eb30af9d4586ed24641d1ed87f47b5d038b99ff08133611cd1c03b58",
+    "row_count": 13,
+    "score_direction": "higher_is_better",
+    "tie_breaking": [
+      "score_desc",
+      "pair_id_asc"
+    ]
+  },
+  "freeze": {
+    "frozen_at": "2026-08-24T14:51:22+08:00",
+    "configuration_sha256": "b4e3f18570cfd2588e8ba1c43a5eccf4b04128dd8f68d7f3e8965f7d6fb95c31",
+    "evaluation_started_at": null
+  },
+  "generation": {
+    "generated_at": "2026-08-24T14:51:21+08:00",
+    "git_revision": "74d5956b48ed67082a1b475900e8694bf6f4deff",
+    "git_worktree_clean": true,
+    "dependencies": {},
+    "deterministic_seed": null
+  },
+  "label_access": {
+    "relevance_labels_read": false,
+    "hidden_test_labels_read": false,
+    "declaration": "Boundary-Aware generation read only frozen Topic, Candidate Pool, and source-record text; it did not read Dev or Hidden relevance labels, judgements, metrics, or error-analysis artifacts."
+  }
+}

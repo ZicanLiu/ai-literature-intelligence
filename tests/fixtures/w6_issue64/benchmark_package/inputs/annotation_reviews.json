@@ -1,0 +1,51 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_annotation_reviews",
+  "artifact_id": "w6_fixture_annotation_reviews_v1",
+  "is_fixture": true,
+  "created_at": "2026-08-24T08:55:00+08:00",
+  "provenance": {
+    "kind": "synthetic_human_review_fixture",
+    "created_by": "w6_bootstrap",
+    "created_at": "2026-08-24T08:55:00+08:00",
+    "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+  },
+  "reviews": [
+    {
+      "review_id": "review_denoise_002",
+      "annotation_id": "annotation_denoise_002",
+      "topic_id": "w6_fixture_topic_denoising",
+      "pool_item_id": "pool_denoise_002",
+      "reviewer_type": "human",
+      "reviewer_id": "fixture_second_reviewer",
+      "decision": "approve",
+      "final_label": 1,
+      "reviewed_at": "2026-08-24T08:48:00+08:00",
+      "review_note": "The scope boundary supports partial rather than direct relevance.",
+      "provenance": {
+        "kind": "synthetic_human_review_fixture",
+        "created_by": "fixture_second_reviewer",
+        "created_at": "2026-08-24T08:48:00+08:00",
+        "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+      }
+    },
+    {
+      "review_id": "review_denoise_004",
+      "annotation_id": "annotation_denoise_004",
+      "topic_id": "w6_fixture_topic_denoising",
+      "pool_item_id": "pool_denoise_004",
+      "reviewer_type": "human",
+      "reviewer_id": "fixture_second_reviewer",
+      "decision": "approve",
+      "final_label": 0,
+      "reviewed_at": "2026-08-24T08:49:00+08:00",
+      "review_note": "The object boundary is explicit in the title and abstract.",
+      "provenance": {
+        "kind": "synthetic_human_review_fixture",
+        "created_by": "fixture_second_reviewer",
+        "created_at": "2026-08-24T08:49:00+08:00",
+        "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+      }
+    }
+  ]
+}
