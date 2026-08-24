@@ -80,7 +80,7 @@
       "operation": "set_many",
       "changes": [
         {"path": ["annotations", 0, "annotation_id"], "value": "annotation_hidden_public"},
-        {"path": ["annotations", 0, "annotation_task_id"], "value": "annot:pool_transient_007"},
+        {"path": ["annotations", 0, "annotation_task_id"], "value": "annot:blind_6ea9af5649e26665921ef7e2"},
         {"path": ["annotations", 0, "topic_id"], "value": "w6_fixture_topic_transients"},
         {"path": ["annotations", 0, "pool_item_id"], "value": "pool_transient_007"},
         {"path": ["annotations", 0, "record_id"], "value": "rec_007"}

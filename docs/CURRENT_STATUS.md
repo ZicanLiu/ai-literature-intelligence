@@ -173,16 +173,20 @@ W6 Bootstrap 只建立六人独立开发所需的公共接口，不选择真实 
 annotation、hidden labels、ranking、synthesis 或 Benchmark v0.2-alpha。当前新增：
 
 - 任意 topic 数量的 Research Topic、retrieval run/hit provenance、source record、canonical
-  entity/alias、Candidate Pool 和 deterministic identity contracts；
-- full candidate → blind annotation view、AI-assisted annotation/review provenance；
-- topic-level Dev/Hidden split、external sealed-label hash anchor 和显式 fake reveal validator；
+  entity/alias、pre/post canonicalization Candidate Pool 和 deterministic identity contracts；
+- 与 pool/retriever/rank identity 解耦的 opaque annotation item/mapping、blind view，以及
+  AI-assisted annotation/review provenance；
+- 在 annotation start 前实际冻结并以 hash 绑定的 topic-level Dev/Hidden split，以及只接受
+  sealed 状态的 external hidden-label hash anchor；Bootstrap 不提供 reveal API/仓内 label 文件；
 - 保持 W5 五列/排序语义、不修改 W5 frozen artifact 的 dynamic-pool method extension；
-- 多冻结 method input 的 raw score/rank/hash/normalization extension point；
-- frozen ranking + short evidence unit + structured claim + rendered review synthesis contract；
-- 2 fake topics、10 fake source records、13 pool items、3 fake rankings 及 valid/invalid offline
-  fixtures；
-- 六个 future task 全部固定为只依赖 `Bootstrap + current main + fixtures`，真实跨模块运行留给
-  六个 PR 合并后的独立 Integration PR。
+- 共同 topic/pool 输入加受限 method-specific auxiliary inputs，以及多冻结 method input 的 raw
+  score/rank/hash/normalization/weights extension point；正式 fusion 至少需要两个输入；
+- frozen ranking selection + short evidence unit + input-hash-bound structured claim/render contract；
+- 2 fake topics、10 fake source records、13 pool items 的 pre/post 两个视图、3 fake rankings 及
+  valid/invalid offline fixtures；
+- 六个 future task 全部只依赖 `Bootstrap + current main + 对应 fixtures`；测试会对每个任务仅复制
+  声明 artifacts 做独立 load/validate/smoke，并验证缺文件 fail closed。真实跨模块运行留给独立
+  Integration PR。
 
 公共 validator：
 
@@ -199,10 +203,11 @@ Benchmark v0.2-alpha。
 - approved benchmark strict validator：60/60、20 × 3，通过；
 - 正式 W5 artifact checker：精确六方法 roster 6/6，通过；
 - W6 public bundle validator：2 topics、10 source records、13 pool items、3 method packages，通过；
-- W6 contract/fixture 定向测试：29 项通过；W4/W5/W6/CI 相关回归：206 项通过；
-- 全量离线测试：475 项通过，0 failure / 0 error；
-- Basic Quality Gate：扫描 327 个文件，0 error / 0 warning，PASSED；
-- Full Quality Gate：扫描 327 个文件，0 error / 3 个既有历史 warning，PASSED；
+- W6 contract/fixture 定向测试：48 项通过（含六任务隔离 dependency-closure smoke 与审查绕过
+  regressions）；W4/W5/W6 相关回归：212 项通过；
+- 全量离线测试：494 项通过，0 failure / 0 error；
+- Basic Quality Gate：扫描 328 个文件，0 error / 0 warning，PASSED；
+- Full Quality Gate：扫描 328 个文件，0 error / 3 个既有历史 warning，PASSED；
 - experiment metrics 与六个 method manifest hash 复核一致；`git diff --check` 通过；
 - 所有测试使用本地 fixture 或已提交样例，没有新增 OpenAlex live 请求或神经模型推理。
 

@@ -4,6 +4,8 @@
   "artifact_id": "w6_fixture_annotations_v1",
   "is_fixture": true,
   "label_scheme_version": "query_relevance_0_1_2_v1",
+  "split": {"artifact_id": "w6_fixture_split_v1", "sha256": "60a9e6bca37762fe4c20d150ff94df4d2e855fb9f2fb21062475204317acb0e7"},
+  "annotation_started_at": "2026-08-24T08:44:00+08:00",
   "created_at": "2026-08-24T08:50:00+08:00",
   "provenance": {
     "kind": "synthetic_ai_assisted_fixture",
@@ -14,7 +16,7 @@
   "annotations": [
     {
       "annotation_id": "annotation_denoise_001",
-      "annotation_task_id": "annot:pool_denoise_001",
+      "annotation_task_id": "annot:blind_e589c6c3221434b8c5d1e0db",
       "topic_id": "w6_fixture_topic_denoising",
       "pool_item_id": "pool_denoise_001",
       "record_id": "rec_001",
@@ -37,7 +39,7 @@
     },
     {
       "annotation_id": "annotation_denoise_002",
-      "annotation_task_id": "annot:pool_denoise_002",
+      "annotation_task_id": "annot:blind_c0d8699dfc5bfd3c24f56928",
       "topic_id": "w6_fixture_topic_denoising",
       "pool_item_id": "pool_denoise_002",
       "record_id": "rec_002",
@@ -60,7 +62,7 @@
     },
     {
       "annotation_id": "annotation_denoise_004",
-      "annotation_task_id": "annot:pool_denoise_004",
+      "annotation_task_id": "annot:blind_e185b7c428feee4172fd24ea",
       "topic_id": "w6_fixture_topic_denoising",
       "pool_item_id": "pool_denoise_004",
       "record_id": "rec_004",
@@ -84,7 +86,7 @@
     },
     {
       "annotation_id": "annotation_denoise_005",
-      "annotation_task_id": "annot:pool_denoise_005",
+      "annotation_task_id": "annot:blind_571b00ab87d8aae04318dafd",
       "topic_id": "w6_fixture_topic_denoising",
       "pool_item_id": "pool_denoise_005",
       "record_id": "rec_005",

@@ -27,6 +27,8 @@ SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 GIT_REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._:-]*$")
 ALLOWED_RELEVANCE_LABELS = frozenset({0, 1, 2})
+BLIND_VIEW_POLICY = "blind_to_retrieval_and_ranking_v2"
+BLIND_ID_POLICY = "sha256(topic_id|public_identity|view_policy)"
 
 BLIND_TASK_FORBIDDEN_KEYS = frozenset(
     {
@@ -47,6 +49,9 @@ BLIND_TASK_FORBIDDEN_KEYS = frozenset(
         "relevance_label",
         "final_label",
         "other_annotator_label",
+        "pool_item_id",
+        "record_id",
+        "canonical_entity_id",
     }
 )
 PRIVATE_REASONING_KEYS = frozenset(
@@ -56,7 +61,11 @@ PRIVATE_REASONING_KEYS = frozenset(
 PARALLEL_MODULE_FIXTURE_REQUIREMENTS = {
     "leader": {
         "topic_set",
+        "retrieval_provenance",
+        "source_records",
+        "canonical_entities",
         "candidate_pool",
+        "annotation_task_map",
         "annotation_tasks",
         "annotation_results",
         "annotation_reviews",
@@ -67,6 +76,9 @@ PARALLEL_MODULE_FIXTURE_REQUIREMENTS = {
     },
     "synthesis_and_fusion": {
         "topic_set",
+        "retrieval_provenance",
+        "source_records",
+        "canonical_entities",
         "candidate_pool",
         "method_sparse_manifest",
         "method_dense_manifest",
@@ -79,12 +91,13 @@ PARALLEL_MODULE_FIXTURE_REQUIREMENTS = {
         "topic_set",
         "retrieval_provenance",
         "source_records",
-        "canonical_entities",
-        "candidate_pool",
+        "precanonical_candidate_pool",
     },
     "canonicalization_audit": {
+        "topic_set",
         "retrieval_provenance",
         "source_records",
+        "precanonical_candidate_pool",
         "canonical_entities",
         "candidate_pool",
     },
@@ -92,21 +105,26 @@ PARALLEL_MODULE_FIXTURE_REQUIREMENTS = {
         "topic_set",
         "retrieval_provenance",
         "source_records",
-        "candidate_pool",
+        "precanonical_candidate_pool",
     },
     "quality_gate": {
         "topic_set",
         "retrieval_provenance",
         "source_records",
         "canonical_entities",
+        "precanonical_candidate_pool",
         "candidate_pool",
+        "annotation_task_map",
         "annotation_tasks",
         "annotation_results",
         "annotation_reviews",
         "split_manifest",
         "hidden_label_anchor",
         "benchmark_manifest",
+        "method_sparse_manifest",
+        "method_dense_manifest",
         "method_fusion_manifest",
+        "synthesis_input",
         "evidence_units",
         "structured_synthesis",
     },
@@ -411,6 +429,7 @@ def validate_source_records(
     hits = retrieval["hits"]
     runs = retrieval["runs"]
     referenced_hits: set[str] = set()
+    source_identities: set[tuple[str, str]] = set()
     for raw_record in _require_nonempty_list(payload["records"], "source records"):
         record = _require_mapping_value(raw_record, "source record")
         _require_exact_fields(
@@ -443,8 +462,12 @@ def validate_source_records(
             _require_nonempty_string(record["abstract"], f"{record_id}.abstract")
         if record["openalex_id"] is not None:
             _require_nonempty_string(record["openalex_id"], f"{record_id}.openalex_id")
+            if not re.fullmatch(r"W[0-9]+", normalize_openalex_id(record["openalex_id"])):
+                raise ValueError(f"{record_id}.openalex_id 不是合法 OpenAlex work identity。")
         if record["doi"] is not None:
             _require_nonempty_string(record["doi"], f"{record_id}.doi")
+            if not re.fullmatch(r"10\.[0-9]{4,9}/\S+", normalize_doi(record["doi"])):
+                raise ValueError(f"{record_id}.doi 不是合法 DOI identity。")
         year = record["publication_year"]
         if isinstance(year, bool) or not isinstance(year, int) or not 1800 <= year <= 2200:
             raise ValueError(f"{record_id}.publication_year 非法。")
@@ -471,11 +494,23 @@ def validate_source_records(
             or not 0 <= float(score) <= 1
         ):
             raise ValueError(f"{record_id}.completeness_score 必须在 0..1。")
-        abstract_missing = record["abstract"] is None
-        if abstract_missing != ("abstract" in missing):
-            raise ValueError(f"{record_id} missing abstract 与 completeness 声明不一致。")
+        expected_missing = {
+            field
+            for field in ("abstract", "openalex_id", "doi")
+            if record[field] is None
+        }
+        if len(missing) != len(set(missing)) or set(missing) != expected_missing:
+            raise ValueError(
+                f"{record_id} metadata missing_fields 与 abstract/OpenAlex/DOI 实值不一致。"
+            )
         if bool(missing) != (completeness["status"] == "partial"):
             raise ValueError(f"{record_id} completeness status 与 missing_fields 不一致。")
+        if (
+            completeness["status"] == "complete" and float(score) != 1.0
+        ) or (
+            completeness["status"] == "partial" and float(score) >= 1.0
+        ):
+            raise ValueError(f"{record_id} completeness_score 与 complete/partial 状态不一致。")
         hit_ids = _require_string_list(
             record["acquisition_provenance_refs"],
             f"{record_id}.acquisition_provenance_refs",
@@ -502,6 +537,15 @@ def validate_source_records(
         )
         _require_nonempty_string(provenance["provider"], "record provider")
         _require_nonempty_string(provenance["source_record_id"], "source_record_id")
+        source_identity = (
+            provenance["provider"].casefold(),
+            provenance["source_record_id"].casefold(),
+        )
+        if source_identity in source_identities:
+            raise ValueError(
+                f"duplicate provider/source_record_id identity：{source_identity}。"
+            )
+        source_identities.add(source_identity)
         _require_datetime(provenance["retrieved_at"], "record retrieved_at")
         records[record_id] = record
     if referenced_hits != set(hits):
@@ -698,7 +742,8 @@ def validate_candidate_pool(
     topics: Mapping[str, Any],
     records: Mapping[str, Any],
     retrieval: Mapping[str, Any],
-    canonical: Mapping[str, Any],
+    registry: Mapping[str, dict[str, str]],
+    canonical: Mapping[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
     _require_exact_fields(
         payload,
@@ -728,18 +773,36 @@ def validate_candidate_pool(
     }:
         raise ValueError("candidate pool identity_stage 非法。")
     policy = _require_mapping_value(payload["policy"], "pool policy")
-    _require_exact_fields(policy, {"name", "version", "parameters"}, "pool policy")
+    _require_exact_fields(
+        policy,
+        {"name", "version", "parameters", "included_retrieval_run_ids"},
+        "pool policy",
+    )
     _require_nonempty_string(policy["name"], "pool policy name")
     _require_nonempty_string(policy["version"], "pool policy version")
     _require_mapping_value(policy["parameters"], "pool policy parameters")
-    inputs = _require_mapping_value(payload["inputs"], "pool inputs")
-    _require_exact_fields(
-        inputs,
-        {"topic_set", "retrieval_provenance", "source_records", "canonical_entities"},
-        "pool inputs",
+    included_run_ids = _require_string_list(
+        policy["included_retrieval_run_ids"],
+        "pool policy included_retrieval_run_ids",
+        nonempty=True,
     )
+    if len(included_run_ids) != len(set(included_run_ids)):
+        raise ValueError("pool policy included_retrieval_run_ids 重复。")
+    included_run_id_set = set(included_run_ids)
+    unknown_runs = sorted(included_run_id_set.difference(retrieval["runs"]))
+    if unknown_runs:
+        raise ValueError("pool policy 引用 unknown retrieval run：" + ", ".join(unknown_runs) + "。")
+    inputs = _require_mapping_value(payload["inputs"], "pool inputs")
+    expected_inputs = {"topic_set", "retrieval_provenance", "source_records"}
+    if payload["identity_stage"] == "post_canonicalization":
+        expected_inputs.add("canonical_entities")
+        if canonical is None:
+            raise ValueError("post-canonicalization pool 必须提供 canonical mapping。")
+    elif canonical is not None:
+        raise ValueError("pre-canonicalization pool validator 不得依赖 canonical mapping。")
+    _require_exact_fields(inputs, expected_inputs, "pool inputs")
     for name, reference in inputs.items():
-        validate_artifact_identity_reference(reference, f"pool inputs.{name}")
+        _validate_registry_reference(reference, registry, f"pool inputs.{name}")
     members: dict[str, dict[str, Any]] = {}
     seen_topic_records: set[tuple[str, str]] = set()
     counts: Counter[str] = Counter()
@@ -772,7 +835,9 @@ def validate_candidate_pool(
             raise ValueError(f"candidate pool duplicate topic-record：{topic_record}。")
         seen_topic_records.add(topic_record)
         entity_id = member["canonical_entity_id"]
-        expected_entity = canonical["entity_by_record"].get(record_id)
+        expected_entity = (
+            canonical["entity_by_record"].get(record_id) if canonical is not None else None
+        )
         if payload["identity_stage"] == "post_canonicalization":
             if entity_id != expected_entity:
                 raise ValueError(f"pool item {item_id} canonical identity mismatch。")
@@ -783,6 +848,17 @@ def validate_candidate_pool(
         )
         if len(hit_ids) != len(set(hit_ids)):
             raise ValueError(f"pool item {item_id} retrieval_hit_ids 重复。")
+        expected_hit_ids = {
+            hit_id
+            for hit_id, hit in retrieval["hits"].items()
+            if hit["record_id"] == record_id
+            and hit["retrieval_run_id"] in included_run_id_set
+            and retrieval["runs"][hit["retrieval_run_id"]]["topic_id"] == topic_id
+        }
+        if set(hit_ids) != expected_hit_ids:
+            raise ValueError(
+                f"pool item {item_id} retrieval provenance union 与冻结 included runs 不一致。"
+            )
         expected_systems = set()
         for hit_id in hit_ids:
             hit = retrieval["hits"].get(hit_id)
@@ -818,21 +894,103 @@ def validate_candidate_pool(
     return members
 
 
+def compute_blind_annotation_item_id(
+    *, topic_id: str, record: Mapping[str, Any]
+) -> str:
+    """Return an opaque annotation ID independent of pool/retriever/rank identity."""
+    identity = {
+        "topic_id": topic_id,
+        "public_identity": {
+            "openalex_id": record["openalex_id"],
+            "doi": record["doi"],
+            "landing_page_url": record["landing_page_url"],
+        },
+        "view_policy": BLIND_VIEW_POLICY,
+    }
+    return "blind_" + canonical_json_sha256(identity)[:24]
+
+
+def build_annotation_task_map(
+    *, records: Mapping[str, dict[str, Any]], pool_members: Mapping[str, dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Build the private mapping kept outside the annotation-safe projection."""
+    mappings: list[dict[str, Any]] = []
+    seen_items: set[str] = set()
+    for pool_item_id in sorted(pool_members):
+        member = pool_members[pool_item_id]
+        item_id = compute_blind_annotation_item_id(
+            topic_id=member["topic_id"], record=records[member["record_id"]]
+        )
+        if item_id in seen_items:
+            raise ValueError("opaque annotation_item_id collision。")
+        seen_items.add(item_id)
+        mappings.append(
+            {
+                "annotation_item_id": item_id,
+                "annotation_task_id": f"annot:{item_id}",
+                "topic_id": member["topic_id"],
+                "pool_item_id": pool_item_id,
+                "record_id": member["record_id"],
+                "canonical_entity_id": member["canonical_entity_id"],
+            }
+        )
+    return mappings
+
+
+def validate_annotation_task_map(
+    payload: dict[str, Any],
+    *,
+    records: Mapping[str, dict[str, Any]],
+    pool_members: Mapping[str, dict[str, Any]],
+    registry: Mapping[str, dict[str, str]],
+) -> dict[str, dict[str, Any]]:
+    _require_exact_fields(
+        payload,
+        {
+            "schema_version",
+            "artifact_type",
+            "artifact_id",
+            "is_fixture",
+            "view_policy",
+            "id_policy",
+            "candidate_pool",
+            "created_at",
+            "provenance",
+            "mappings",
+        },
+        "annotation task map",
+    )
+    _require_w6_header(payload, "w6_annotation_task_map")
+    if payload["view_policy"] != BLIND_VIEW_POLICY or payload["id_policy"] != BLIND_ID_POLICY:
+        raise ValueError("annotation task map policy 非法。")
+    _validate_registry_reference(
+        payload["candidate_pool"], registry, "task map candidate_pool"
+    )
+    expected = build_annotation_task_map(records=records, pool_members=pool_members)
+    mappings = _require_list(payload["mappings"], "annotation task mappings")
+    if mappings != expected:
+        raise ValueError("annotation task map 未精确绑定 opaque ID 与冻结 pool identity。")
+    _require_datetime(payload["created_at"], "annotation task map created_at")
+    _validate_provenance(payload["provenance"], "annotation task map provenance")
+    return {row["annotation_task_id"]: row for row in mappings}
+
+
 def build_blind_annotation_tasks(
     *,
     topics: Mapping[str, dict[str, Any]],
     records: Mapping[str, dict[str, Any]],
-    pool_members: Mapping[str, dict[str, Any]],
+    task_mappings: Mapping[str, dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    """Project full pool records onto the strict annotation-safe view."""
+    """Project mapped pool records onto the strict annotation-safe view."""
     tasks: list[dict[str, Any]] = []
-    for pool_item_id in sorted(pool_members):
-        member = pool_members[pool_item_id]
-        topic = topics[member["topic_id"]]
-        record = records[member["record_id"]]
+    for mapping in sorted(task_mappings.values(), key=lambda row: row["pool_item_id"]):
+        task_id = mapping["annotation_task_id"]
+        topic = topics[mapping["topic_id"]]
+        record = records[mapping["record_id"]]
         tasks.append(
             {
-                "annotation_task_id": f"annot:{pool_item_id}",
+                "annotation_task_id": task_id,
+                "annotation_item_id": mapping["annotation_item_id"],
                 "annotation_round": "independent_primary",
                 "topic": {
                     "topic_id": topic["topic_id"],
@@ -846,9 +1004,6 @@ def build_blind_annotation_tasks(
                     "boundary_cases": topic["boundary_cases"],
                 },
                 "candidate": {
-                    "pool_item_id": pool_item_id,
-                    "record_id": record["record_id"],
-                    "canonical_entity_id": member["canonical_entity_id"],
                     "title": record["title"],
                     "abstract": record["abstract"],
                     "publication_year": record["publication_year"],
@@ -870,7 +1025,8 @@ def validate_blind_annotation_tasks(
     *,
     topics: Mapping[str, dict[str, Any]],
     records: Mapping[str, dict[str, Any]],
-    pool_members: Mapping[str, dict[str, Any]],
+    task_mappings: Mapping[str, dict[str, Any]],
+    registry: Mapping[str, dict[str, str]],
 ) -> dict[str, dict[str, Any]]:
     _require_exact_fields(
         payload,
@@ -880,6 +1036,7 @@ def validate_blind_annotation_tasks(
             "artifact_id",
             "is_fixture",
             "view_policy",
+            "task_map",
             "created_at",
             "provenance",
             "tasks",
@@ -887,13 +1044,14 @@ def validate_blind_annotation_tasks(
         "blind annotation tasks",
     )
     _require_w6_header(payload, "w6_blind_annotation_tasks")
-    if payload["view_policy"] != "blind_to_retrieval_and_ranking_v1":
+    if payload["view_policy"] != BLIND_VIEW_POLICY:
         raise ValueError("blind annotation view_policy 非法。")
+    _validate_registry_reference(payload["task_map"], registry, "blind tasks task_map")
     leaked = sorted(_find_forbidden_keys(payload["tasks"], BLIND_TASK_FORBIDDEN_KEYS))
     if leaked:
         raise ValueError("blind annotation task 泄漏 retrieval/ranking 字段：" + ", ".join(leaked) + "。")
     expected = build_blind_annotation_tasks(
-        topics=topics, records=records, pool_members=pool_members
+        topics=topics, records=records, task_mappings=task_mappings
     )
     tasks = _require_list(payload["tasks"], "annotation tasks")
     if tasks != expected:
@@ -904,7 +1062,13 @@ def validate_blind_annotation_tasks(
 
 
 def validate_annotation_results(
-    payload: dict[str, Any], *, tasks: Mapping[str, dict[str, Any]]
+    payload: dict[str, Any],
+    *,
+    tasks: Mapping[str, dict[str, Any]],
+    task_mappings: Mapping[str, dict[str, Any]],
+    split: Mapping[str, Any],
+    split_sets: Mapping[str, set[str]],
+    registry: Mapping[str, dict[str, str]],
 ) -> dict[str, dict[str, Any]]:
     _require_exact_fields(
         payload,
@@ -914,6 +1078,8 @@ def validate_annotation_results(
             "artifact_id",
             "is_fixture",
             "label_scheme_version",
+            "split",
+            "annotation_started_at",
             "created_at",
             "provenance",
             "annotations",
@@ -923,6 +1089,14 @@ def validate_annotation_results(
     _require_w6_header(payload, "w6_ai_assisted_annotations")
     if payload["label_scheme_version"] != "query_relevance_0_1_2_v1":
         raise ValueError("annotation label scheme version 非法。")
+    split_ref = _validate_registry_reference(payload["split"], registry, "annotations.split")
+    if split_ref["artifact_id"] != split["artifact_id"] or split["reveal_state"] != "sealed":
+        raise ValueError("annotations 必须绑定仍处于 sealed 状态的实际 split artifact。")
+    _require_datetime(payload["annotation_started_at"], "annotation_started_at")
+    split_frozen_at = datetime.fromisoformat(str(split["frozen_at"]))
+    annotation_started_at = datetime.fromisoformat(str(payload["annotation_started_at"]))
+    if annotation_started_at <= split_frozen_at:
+        raise ValueError("annotation_started_at 必须晚于实际 split frozen_at。")
     private_keys = sorted(_find_forbidden_keys(payload, PRIVATE_REASONING_KEYS))
     if private_keys:
         raise ValueError("annotation artifact 不得存储 private chain-of-thought：" + ", ".join(private_keys) + "。")
@@ -953,15 +1127,16 @@ def validate_annotation_results(
             raise ValueError(f"duplicate annotation_id：{annotation_id}。")
         task_id = annotation["annotation_task_id"]
         task = tasks.get(task_id)
-        if task is None:
+        mapping = task_mappings.get(task_id)
+        if task is None or mapping is None:
             raise ValueError(f"annotation {annotation_id} 引用不存在 candidate/task。")
         if task_id in seen_tasks:
             raise ValueError(f"独立 annotation artifact duplicate task：{task_id}。")
         seen_tasks.add(task_id)
         expected = (
-            task["topic"]["topic_id"],
-            task["candidate"]["pool_item_id"],
-            task["candidate"]["record_id"],
+            mapping["topic_id"],
+            mapping["pool_item_id"],
+            mapping["record_id"],
         )
         actual = (
             annotation["topic_id"],
@@ -970,6 +1145,8 @@ def validate_annotation_results(
         )
         if actual != expected:
             raise ValueError(f"annotation {annotation_id} candidate identity mismatch。")
+        if annotation["topic_id"] not in split_sets["dev"]:
+            raise ValueError(f"annotation {annotation_id} 不得公开 hidden-test topic label。")
         if type(annotation["relevance_label"]) is not int or annotation["relevance_label"] not in ALLOWED_RELEVANCE_LABELS:
             raise ValueError(f"annotation {annotation_id} illegal relevance label。")
         if annotation["confidence"] not in {"high", "medium", "low"}:
@@ -1000,6 +1177,10 @@ def validate_annotation_results(
         provenance = _validate_annotation_provenance(
             annotation["annotation_provenance"], annotation_id
         )
+        if datetime.fromisoformat(str(provenance["created_at"])) < annotation_started_at:
+            raise ValueError(
+                f"annotation {annotation_id} provenance 时间早于 split-bound annotation start。"
+            )
         if provenance["actor_type"] == "ai_assistant" and annotation["review_status"] in {
             "human_reviewed",
             "adjudicated",
@@ -1007,6 +1188,8 @@ def validate_annotation_results(
             raise ValueError(f"AI annotation {annotation_id} 不得伪装为 pure-human final judgement。")
         annotations[annotation_id] = annotation
     _require_datetime(payload["created_at"], "annotation results created_at")
+    if datetime.fromisoformat(str(payload["created_at"])) < annotation_started_at:
+        raise ValueError("annotation results created_at 早于 annotation_started_at。")
     _validate_provenance(payload["provenance"], "annotation results provenance")
     return annotations
 
@@ -1135,8 +1318,8 @@ def validate_topic_split(
         raise ValueError("topic dev/test overlap。")
     if dev | hidden != set(topics):
         raise ValueError("topic split 必须恰好覆盖冻结 topic set。")
-    if payload["reveal_state"] not in {"sealed", "revealed"}:
-        raise ValueError("split reveal_state 非法。")
+    if payload["reveal_state"] != "sealed":
+        raise ValueError("Bootstrap split 只允许 sealed；reveal 属于独立 evaluator 边界。")
     if payload["split_identity"] != compute_split_identity(payload):
         raise ValueError("topic split identity/hash mismatch。")
     _validate_provenance(payload["provenance"], "split provenance")
@@ -1144,7 +1327,11 @@ def validate_topic_split(
 
 
 def validate_hidden_label_anchor(
-    payload: dict[str, Any], *, split: Mapping[str, Any], split_sets: Mapping[str, set[str]]
+    payload: dict[str, Any],
+    *,
+    split: Mapping[str, Any],
+    split_sets: Mapping[str, set[str]],
+    registry: Mapping[str, dict[str, str]],
 ) -> None:
     _require_exact_fields(
         payload,
@@ -1167,7 +1354,7 @@ def validate_hidden_label_anchor(
     )
     _require_w6_header(payload, "w6_hidden_label_anchor")
     _require_id(payload["seal_id"], "seal_id")
-    split_ref = validate_artifact_identity_reference(payload["split"], "hidden anchor split")
+    split_ref = _validate_registry_reference(payload["split"], registry, "hidden anchor split")
     if split_ref["artifact_id"] != split["artifact_id"]:
         raise ValueError("hidden label anchor split identity mismatch。")
     hidden = set(
@@ -1184,6 +1371,10 @@ def validate_hidden_label_anchor(
     if storage != {"location": "external", "repository_path": None}:
         raise ValueError("真实 hidden labels 必须在普通仓库之外，公开 anchor 不得含路径。")
     _require_datetime(payload["sealed_at"], "hidden labels sealed_at")
+    if datetime.fromisoformat(str(payload["sealed_at"])) < datetime.fromisoformat(
+        str(split["frozen_at"])
+    ):
+        raise ValueError("hidden label seal 不得早于实际 topic split freeze。")
     reveal = _require_mapping_value(payload["reveal_policy"], "hidden reveal policy")
     _require_exact_fields(
         reveal,
@@ -1211,68 +1402,6 @@ def validate_hidden_label_anchor(
     if access != {"generation_can_read": False, "allowed_consumer": "sealed_evaluator"}:
         raise ValueError("hidden labels 不得进入 method generation。")
     _validate_provenance(payload["provenance"], "hidden anchor provenance")
-
-
-def validate_hidden_label_reveal(
-    *,
-    anchor_path: str | Path,
-    hidden_labels_path: str | Path,
-    split_payload: dict[str, Any],
-    topics: Mapping[str, Any],
-    pool_members: Mapping[str, Any],
-) -> dict[str, int]:
-    """Verify a sealed fixture only at the explicit reveal boundary."""
-    anchor = load_json_object(anchor_path, label="hidden label anchor")
-    split_sets = validate_topic_split(split_payload, topics=topics)
-    validate_hidden_label_anchor(anchor, split=split_payload, split_sets=split_sets)
-    labels_path = Path(hidden_labels_path)
-    if sha256_file(labels_path) != anchor["label_artifact"]["sha256"]:
-        raise ValueError("hidden label reveal hash 与公开 anchor 不一致。")
-    labels = load_json_object(labels_path, label="hidden labels")
-    _require_exact_fields(
-        labels,
-        {
-            "schema_version",
-            "artifact_type",
-            "artifact_id",
-            "is_fixture",
-            "seal_id",
-            "split_identity",
-            "labels",
-        },
-        "hidden labels",
-    )
-    _require_w6_header(labels, "w6_hidden_labels_fixture")
-    if labels["is_fixture"] is not True:
-        raise ValueError("仓库内 hidden label reveal 只允许显式 synthetic fixture。")
-    if labels["artifact_id"] != anchor["label_artifact"]["artifact_id"]:
-        raise ValueError("hidden label artifact identity mismatch。")
-    if labels["seal_id"] != anchor["seal_id"] or labels["split_identity"] != split_payload["split_identity"]:
-        raise ValueError("hidden label seal/split identity mismatch。")
-    expected_items = {
-        item_id
-        for item_id, member in pool_members.items()
-        if member["topic_id"] in split_sets["hidden"]
-    }
-    result: dict[str, int] = {}
-    for raw_label in _require_nonempty_list(labels["labels"], "hidden labels"):
-        row = _require_mapping_value(raw_label, "hidden label row")
-        _require_exact_fields(
-            row, {"pool_item_id", "topic_id", "relevance_label"}, "hidden label row"
-        )
-        item_id = row["pool_item_id"]
-        if item_id in result or item_id not in expected_items:
-            raise ValueError(f"hidden label duplicate/unknown pool item：{item_id}。")
-        if pool_members[item_id]["topic_id"] != row["topic_id"]:
-            raise ValueError(f"hidden label {item_id} topic identity mismatch。")
-        if type(row["relevance_label"]) is not int or row["relevance_label"] not in ALLOWED_RELEVANCE_LABELS:
-            raise ValueError(f"hidden label {item_id} illegal relevance label。")
-        result[item_id] = row["relevance_label"]
-    if set(result) != expected_items:
-        raise ValueError("hidden label reveal 必须完整覆盖 hidden-topic pool。")
-    return result
-
-
 def validate_benchmark_manifest(
     payload: dict[str, Any],
     *,
@@ -1314,12 +1443,20 @@ def validate_benchmark_manifest(
         "benchmark manifest",
     )
     _require_w6_header(payload, "w6_benchmark_manifest")
-    if payload["status"] not in {"bootstrap_fixture", "draft", "proposed", "approved"}:
+    if payload["status"] == "approved":
+        raise ValueError(
+            "W6 formal approval/promotion gate 尚未由 Bootstrap 实现；approved 必须留给具备完整"
+            " coverage/review/adjudication/roster/hash provenance 的后续 Benchmark contract。"
+        )
+    if payload["status"] not in {
+        "bootstrap_fixture",
+        "draft",
+        "proposed",
+        "sealed_candidate",
+    }:
         raise ValueError("benchmark status 非法。")
     if payload["status"] == "bootstrap_fixture" and payload["is_fixture"] is not True:
         raise ValueError("bootstrap_fixture benchmark 必须显式 is_fixture=true。")
-    if payload["benchmark_version"] == "w6_query_relevance_v0.2-alpha" and payload["status"] == "approved":
-        raise ValueError("v0.2-alpha 不得伪装为 approved benchmark。")
     _require_nonempty_string(payload["benchmark_name"], "benchmark_name")
     _require_nonempty_string(payload["benchmark_version"], "benchmark_version")
     if payload["evaluation_target"] != "query_relevance":
@@ -1378,6 +1515,8 @@ def validate_benchmark_manifest(
     _require_exact_fields(review, {"status", "reviewers", "note"}, "benchmark review provenance")
     if review["status"] not in {"not_started", "in_review", "approved"}:
         raise ValueError("benchmark review status 非法。")
+    if review["status"] == "approved":
+        raise ValueError("Bootstrap review provenance 不得自报 formal approved status。")
     _require_string_list(review["reviewers"], "benchmark reviewers", nonempty=False)
     if not isinstance(review["note"], str):
         raise ValueError("benchmark review note 必须是 string。")
@@ -1421,12 +1560,7 @@ def validate_w6_bootstrap_bundle(
         raise ValueError("Bootstrap bundle 必须明确标记 synthetic fixture。")
     _require_datetime(manifest["created_at"], "bundle created_at")
     artifact_refs = _require_mapping_value(manifest["artifacts"], "bundle artifacts")
-    required_artifacts = set().union(*PARALLEL_MODULE_FIXTURE_REQUIREMENTS.values()) | {
-        "retrieval_provenance",
-        "source_records",
-        "canonical_entities",
-        "candidate_pool",
-    }
+    required_artifacts = set().union(*PARALLEL_MODULE_FIXTURE_REQUIREMENTS.values())
     if set(artifact_refs) != required_artifacts:
         missing = sorted(required_artifacts.difference(artifact_refs))
         extra = sorted(set(artifact_refs).difference(required_artifacts))
@@ -1479,33 +1613,52 @@ def validate_w6_bootstrap_bundle(
     canonical = validate_canonical_entities(
         payloads["canonical_entities"], records=records, retrieval=retrieval
     )
+    precanonical_pool_members = validate_candidate_pool(
+        payloads["precanonical_candidate_pool"],
+        topics=topics,
+        records=records,
+        retrieval=retrieval,
+        registry=registry,
+    )
     pool_members = validate_candidate_pool(
         payloads["candidate_pool"],
         topics=topics,
         records=records,
         retrieval=retrieval,
+        registry=registry,
         canonical=canonical,
     )
-    _validate_internal_input_refs(payloads["candidate_pool"]["inputs"], registry)
+    task_mappings = validate_annotation_task_map(
+        payloads["annotation_task_map"],
+        records=records,
+        pool_members=pool_members,
+        registry=registry,
+    )
     tasks = validate_blind_annotation_tasks(
         payloads["annotation_tasks"],
         topics=topics,
         records=records,
-        pool_members=pool_members,
-    )
-    annotations = validate_annotation_results(payloads["annotation_results"], tasks=tasks)
-    reviews = validate_annotation_reviews(
-        payloads["annotation_reviews"], annotations=annotations
+        task_mappings=task_mappings,
+        registry=registry,
     )
     split_sets = validate_topic_split(payloads["split_manifest"], topics=topics)
     _validate_registry_reference(payloads["split_manifest"]["topic_set"], registry, "split.topic_set")
+    annotations = validate_annotation_results(
+        payloads["annotation_results"],
+        tasks=tasks,
+        task_mappings=task_mappings,
+        split=payloads["split_manifest"],
+        split_sets=split_sets,
+        registry=registry,
+    )
+    reviews = validate_annotation_reviews(
+        payloads["annotation_reviews"], annotations=annotations
+    )
     validate_hidden_label_anchor(
         payloads["hidden_label_anchor"],
         split=payloads["split_manifest"],
         split_sets=split_sets,
-    )
-    _validate_registry_reference(
-        payloads["hidden_label_anchor"]["split"], registry, "hidden anchor split"
+        registry=registry,
     )
 
     # Local imports avoid a circular dependency: method/synthesis validators reuse
@@ -1542,6 +1695,15 @@ def validate_w6_bootstrap_bundle(
         topics=topics,
         pool_members=pool_members,
         method_packages=method_packages,
+        records=records,
+        canonical=canonical,
+        evidence=evidence,
+        expected_artifact_ids={
+            "topic_set": payloads["topic_set"]["artifact_id"],
+            "source_records": payloads["source_records"]["artifact_id"],
+            "retrieval_provenance": payloads["retrieval_provenance"]["artifact_id"],
+            "evidence_units": payloads["evidence_units"]["artifact_id"],
+        },
     )
     validate_structured_synthesis(
         payloads["structured_synthesis"],
@@ -1568,7 +1730,9 @@ def validate_w6_bootstrap_bundle(
         "retrieval": retrieval,
         "records": records,
         "canonical": canonical,
+        "precanonical_pool_members": precanonical_pool_members,
         "pool_members": pool_members,
+        "annotation_task_mappings": task_mappings,
         "annotation_tasks": tasks,
         "annotations": annotations,
         "reviews": reviews,
@@ -1595,13 +1759,6 @@ def normalize_openalex_id(value: Any) -> str:
 
 def normalize_title(value: Any) -> str:
     return " ".join(re.findall(r"[a-z0-9]+", str(value or "").lower()))
-
-
-def _validate_internal_input_refs(
-    references: Mapping[str, Any], registry: Mapping[str, dict[str, str]]
-) -> None:
-    for name, reference in references.items():
-        _validate_registry_reference(reference, registry, f"inputs.{name}")
 
 
 def _validate_registry_reference(

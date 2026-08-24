@@ -3,7 +3,8 @@
   "artifact_type": "w6_blind_annotation_tasks",
   "artifact_id": "w6_fixture_blind_tasks_v1",
   "is_fixture": true,
-  "view_policy": "blind_to_retrieval_and_ranking_v1",
+  "view_policy": "blind_to_retrieval_and_ranking_v2",
+  "task_map": {"artifact_id": "w6_fixture_annotation_task_map_v1", "sha256": "2aa7d1012b772a8f2df1ea8d84659debe4be04065b35023795431fe717038e71"},
   "created_at": "2026-08-24T08:40:00+08:00",
   "provenance": {
     "kind": "deterministic_projection_fixture",
@@ -13,7 +14,8 @@
   },
   "tasks": [
     {
-      "annotation_task_id": "annot:pool_denoise_001",
+      "annotation_task_id": "annot:blind_e589c6c3221434b8c5d1e0db",
+      "annotation_item_id": "blind_e589c6c3221434b8c5d1e0db",
       "annotation_round": "independent_primary",
       "topic": {
         "topic_id": "w6_fixture_topic_denoising",
@@ -36,9 +38,6 @@
         ]
       },
       "candidate": {
-        "pool_item_id": "pool_denoise_001",
-        "record_id": "rec_001",
-        "canonical_entity_id": "entity_001",
         "title": "Synthetic Autoencoder Denoising of Stellar Spectra",
         "abstract": "A synthetic autoencoder removes detector noise from one-dimensional stellar spectra while preserving measured absorption-line depths.",
         "publication_year": 2024,
@@ -55,7 +54,8 @@
       }
     },
     {
-      "annotation_task_id": "annot:pool_denoise_002",
+      "annotation_task_id": "annot:blind_c0d8699dfc5bfd3c24f56928",
+      "annotation_item_id": "blind_c0d8699dfc5bfd3c24f56928",
       "annotation_round": "independent_primary",
       "topic": {
         "topic_id": "w6_fixture_topic_denoising",
@@ -78,9 +78,6 @@
         ]
       },
       "candidate": {
-        "pool_item_id": "pool_denoise_002",
-        "record_id": "rec_002",
-        "canonical_entity_id": "entity_002",
         "title": "A General Pipeline for Cleaning and Classifying Astronomical Spectra",
         "abstract": "The fixture pipeline includes denoising and transient classification, but neither component is evaluated as the sole contribution.",
         "publication_year": 2023,
@@ -96,7 +93,8 @@
       }
     },
     {
-      "annotation_task_id": "annot:pool_denoise_003",
+      "annotation_task_id": "annot:blind_294f5a7c4b64674cddb757c9",
+      "annotation_item_id": "blind_294f5a7c4b64674cddb757c9",
       "annotation_round": "independent_primary",
       "topic": {
         "topic_id": "w6_fixture_topic_denoising",
@@ -119,9 +117,6 @@
         ]
       },
       "candidate": {
-        "pool_item_id": "pool_denoise_003",
-        "record_id": "rec_003",
-        "canonical_entity_id": "entity_003",
         "title": "Line-Preserving Neural Restoration for Synthetic Stellar Spectra",
         "abstract": "A neural restoration model is trained on synthetic noisy stellar spectra and reports line-equivalent-width preservation.",
         "publication_year": 2025,
@@ -138,7 +133,8 @@
       }
     },
     {
-      "annotation_task_id": "annot:pool_denoise_004",
+      "annotation_task_id": "annot:blind_e185b7c428feee4172fd24ea",
+      "annotation_item_id": "blind_e185b7c428feee4172fd24ea",
       "annotation_round": "independent_primary",
       "topic": {
         "topic_id": "w6_fixture_topic_denoising",
@@ -161,9 +157,6 @@
         ]
       },
       "candidate": {
-        "pool_item_id": "pool_denoise_004",
-        "record_id": "rec_004",
-        "canonical_entity_id": "entity_004",
         "title": "Deep Classification and Denoising of Clinical Infrared Spectra",
         "abstract": "A neural network denoises clinical infrared measurements and classifies tissue samples; the data are not astronomical.",
         "publication_year": 2022,
@@ -179,7 +172,8 @@
       }
     },
     {
-      "annotation_task_id": "annot:pool_denoise_005",
+      "annotation_task_id": "annot:blind_571b00ab87d8aae04318dafd",
+      "annotation_item_id": "blind_571b00ab87d8aae04318dafd",
       "annotation_round": "independent_primary",
       "topic": {
         "topic_id": "w6_fixture_topic_denoising",
@@ -202,9 +196,6 @@
         ]
       },
       "candidate": {
-        "pool_item_id": "pool_denoise_005",
-        "record_id": "rec_005",
-        "canonical_entity_id": "entity_005",
         "title": "Reconstructing Stellar Spectra for Atmospheric Parameter Inference",
         "abstract": "The model reconstructs spectra only to estimate stellar atmospheric parameters; denoising quality is not an evaluated target.",
         "publication_year": 2021,
@@ -220,7 +211,8 @@
       }
     },
     {
-      "annotation_task_id": "annot:pool_denoise_006",
+      "annotation_task_id": "annot:blind_d4155b7eedb460e74021bcf3",
+      "annotation_item_id": "blind_d4155b7eedb460e74021bcf3",
       "annotation_round": "independent_primary",
       "topic": {
         "topic_id": "w6_fixture_topic_denoising",
@@ -243,9 +235,6 @@
         ]
       },
       "candidate": {
-        "pool_item_id": "pool_denoise_006",
-        "record_id": "rec_006",
-        "canonical_entity_id": "entity_006",
         "title": "Machine Learning for Noisy Astronomical Spectra",
         "abstract": null,
         "publication_year": 2020,
@@ -261,7 +250,8 @@
       }
     },
     {
-      "annotation_task_id": "annot:pool_denoise_008",
+      "annotation_task_id": "annot:blind_7af2342ecf5ba5b13d3efdc5",
+      "annotation_item_id": "blind_7af2342ecf5ba5b13d3efdc5",
       "annotation_round": "independent_primary",
       "topic": {
         "topic_id": "w6_fixture_topic_denoising",
@@ -284,9 +274,6 @@
         ]
       },
       "candidate": {
-        "pool_item_id": "pool_denoise_008",
-        "record_id": "rec_008",
-        "canonical_entity_id": "entity_003",
         "title": "Line Preserving Neural Restoration for Synthetic Stellar Spectra",
         "abstract": "This provider record is a deliberate high-confidence alias of the line-preserving restoration paper.",
         "publication_year": 2025,
@@ -303,7 +290,8 @@
       }
     },
     {
-      "annotation_task_id": "annot:pool_transient_002",
+      "annotation_task_id": "annot:blind_f16c79ba59adca6c9b385460",
+      "annotation_item_id": "blind_f16c79ba59adca6c9b385460",
       "annotation_round": "independent_primary",
       "topic": {
         "topic_id": "w6_fixture_topic_transients",
@@ -326,9 +314,6 @@
         ]
       },
       "candidate": {
-        "pool_item_id": "pool_transient_002",
-        "record_id": "rec_002",
-        "canonical_entity_id": "entity_002",
         "title": "A General Pipeline for Cleaning and Classifying Astronomical Spectra",
         "abstract": "The fixture pipeline includes denoising and transient classification, but neither component is evaluated as the sole contribution.",
         "publication_year": 2023,
@@ -344,7 +329,8 @@
       }
     },
     {
-      "annotation_task_id": "annot:pool_transient_004",
+      "annotation_task_id": "annot:blind_bf3b5ae6d059b6dab9d61e09",
+      "annotation_item_id": "blind_bf3b5ae6d059b6dab9d61e09",
       "annotation_round": "independent_primary",
       "topic": {
         "topic_id": "w6_fixture_topic_transients",
@@ -367,9 +353,6 @@
         ]
       },
       "candidate": {
-        "pool_item_id": "pool_transient_004",
-        "record_id": "rec_004",
-        "canonical_entity_id": "entity_004",
         "title": "Deep Classification and Denoising of Clinical Infrared Spectra",
         "abstract": "A neural network denoises clinical infrared measurements and classifies tissue samples; the data are not astronomical.",
         "publication_year": 2022,
@@ -385,7 +368,8 @@
       }
     },
     {
-      "annotation_task_id": "annot:pool_transient_006",
+      "annotation_task_id": "annot:blind_2d99a4185a0d6802fe6a52bc",
+      "annotation_item_id": "blind_2d99a4185a0d6802fe6a52bc",
       "annotation_round": "independent_primary",
       "topic": {
         "topic_id": "w6_fixture_topic_transients",
@@ -408,9 +392,6 @@
         ]
       },
       "candidate": {
-        "pool_item_id": "pool_transient_006",
-        "record_id": "rec_006",
-        "canonical_entity_id": "entity_006",
         "title": "Machine Learning for Noisy Astronomical Spectra",
         "abstract": null,
         "publication_year": 2020,
@@ -426,7 +407,8 @@
       }
     },
     {
-      "annotation_task_id": "annot:pool_transient_007",
+      "annotation_task_id": "annot:blind_6ea9af5649e26665921ef7e2",
+      "annotation_item_id": "blind_6ea9af5649e26665921ef7e2",
       "annotation_round": "independent_primary",
       "topic": {
         "topic_id": "w6_fixture_topic_transients",
@@ -449,9 +431,6 @@
         ]
       },
       "candidate": {
-        "pool_item_id": "pool_transient_007",
-        "record_id": "rec_007",
-        "canonical_entity_id": "entity_007",
         "title": "Early Typing of Synthetic Transients from Optical Spectra",
         "abstract": "A supervised classifier assigns transient types from time-resolved optical spectra and evaluates early classifications.",
         "publication_year": 2025,
@@ -468,7 +447,8 @@
       }
     },
     {
-      "annotation_task_id": "annot:pool_transient_009",
+      "annotation_task_id": "annot:blind_069abf80c1be9ac2fc8c7802",
+      "annotation_item_id": "blind_069abf80c1be9ac2fc8c7802",
       "annotation_round": "independent_primary",
       "topic": {
         "topic_id": "w6_fixture_topic_transients",
@@ -491,9 +471,6 @@
         ]
       },
       "candidate": {
-        "pool_item_id": "pool_transient_009",
-        "record_id": "rec_009",
-        "canonical_entity_id": "entity_009",
         "title": "Low-Lexical-Overlap Transient Spectral Typing",
         "abstract": "A representation learner identifies explosive-event categories from spectral sequences; it is found only by the synthetic dense retriever.",
         "publication_year": 2024,
@@ -509,7 +486,8 @@
       }
     },
     {
-      "annotation_task_id": "annot:pool_transient_010",
+      "annotation_task_id": "annot:blind_6ece54a8033ee0424e868e56",
+      "annotation_item_id": "blind_6ece54a8033ee0424e868e56",
       "annotation_round": "independent_primary",
       "topic": {
         "topic_id": "w6_fixture_topic_transients",
@@ -532,9 +510,6 @@
         ]
       },
       "candidate": {
-        "pool_item_id": "pool_transient_010",
-        "record_id": "rec_010",
-        "canonical_entity_id": "entity_010",
         "title": "Reconstructing Stellar Spectra for Transient Parameter Inference",
         "abstract": "A related-looking but distinct record predicts transient parameters and does not output a transient class.",
         "publication_year": 2021,

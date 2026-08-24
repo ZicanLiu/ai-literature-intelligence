@@ -661,9 +661,9 @@ python -m unittest tests.automated.test_w6_contracts -v
 
 公共实现分为三层：
 
-- `src.w6_contracts`：Topic、retrieval provenance、source record、canonical entity、Candidate Pool、
-  blind annotation、AI-assisted result、独立 review/adjudication、topic split、hidden seal/reveal 和
-  Benchmark manifest；
+- `src.w6_contracts`：Topic、retrieval provenance、source record、canonical entity、pre/post
+  canonicalization Candidate Pool、opaque blind-task mapping、AI-assisted result、独立
+  review/adjudication、topic split、public hidden-label seal anchor 和 Benchmark manifest；
 - `src.w6_method_contract`：保持 W5 五列和确定性排序语义的任意 topic/pool extension，以及
   multi-method raw score/rank/hash/normalization 接口；
 - `src.w6_synthesis_contract`：frozen ranked-list input、短 evidence unit、structured claim 和
@@ -671,15 +671,16 @@ python -m unittest tests.automated.test_w6_contracts -v
 
 默认 deterministic bundle 位于
 `tests/fixtures/w6_bootstrap/valid/bundle_manifest.json`，包含 2 个 fake topics、10 个 fake source
-records、13 个 topic-record pool items、confirmed alias、suspected duplicate、missing abstract、
-multi/single retriever、blind tasks、AI-assisted annotations、独立 review artifact、fake Dev/Hidden split、public hidden
-hash anchor、3 个 fake method packages、evidence/claim fixtures。`invalid/` 保存故意错误的
+records、13 个 topic-record pool items 的 pre/post canonicalization 两个视图、confirmed alias、
+suspected duplicate、missing abstract、multi/single retriever、opaque blind-task mapping、
+AI-assisted annotations、独立 review artifact、fake Dev/Hidden split、public hidden hash anchor、
+3 个 fake method packages、evidence/claim fixtures。`invalid/` 保存故意错误的
 overlap、identity、leakage、label、hash 和 dangling-reference cases。
 
 这组 fixture 只证明接口和 validator 可离线组合，不代表真实 Topic、Pool、label、hidden test、
-ranking、synthesis 或 Benchmark v0.2-alpha 已存在。仓库内的 fake hidden-label reveal artifact 只
-服务 validator regression；公开 bundle 和 method generation input 不引用其路径，真实 hidden
-labels 必须放在普通仓库之外。
+ranking、synthesis 或 Benchmark v0.2-alpha 已存在。Bootstrap 只接受 sealed anchor，不提供 reveal
+API，也不保存 fake/真实 hidden-label 文件；真实 hidden labels 必须放在普通仓库之外，由后续独立
+evaluator/custodian 流程处理。
 
 六个 future Issue 的依赖原则是：
 
@@ -689,15 +690,17 @@ Bootstrap + 当前 main + 对应 fixture
 
 Leader、Synthesis/Fusion、Pool Builder、Canonicalization Audit、Metadata Diagnostics 和 QA Gate
 均不得导入另一成员尚未合并的模块或读取其真实 artifact。Bundle manifest 为六个任务分别列出
-可用 artifact，并统一声明 `depends_on=["w6_bootstrap"]`；自动测试会锁定这一矩阵。真实数据流只
-能在六个成员 PR 都合并后的独立 Integration PR 中连接和运行。
+可用 artifact，并统一声明 `depends_on=["w6_bootstrap"]`；自动测试会将每个任务的声明 artifact
+单独复制到临时目录，完成 load/validate/smoke，并验证缺任一声明输入时 fail closed。真实数据流
+只在对应生产模块都进入公共基线后由独立 Integration PR 连接和运行。
 
 W6 method CSV 继续使用
 `pair_id,research_query_id,method_id,score,rank`，其中 `pair_id → pool_item_id`、
 `research_query_id → topic_id`。不要改动 W5 validator 的 60/3×20 trust anchors；W6 动态 cardinality
-由扩展 validator 从冻结 Candidate Pool 读取。Fusion 必须绑定每个输入 manifest/ranking hash，
-记录 raw score/rank usage 与 normalization config，并在 generation 中声明没有读取 Dev/Hidden
-labels。
+由扩展 validator 从冻结 Candidate Pool 读取。共同输入固定为 topic/pool，文本方法通过受限
+`auxiliary_inputs` 显式绑定 source records 等实际输入。Fusion 至少绑定两个输入
+manifest/ranking hash，记录 raw score/rank usage、精确覆盖输入方法的 weights 与 normalization
+config，并在 generation 中声明没有读取 Dev/Hidden labels。
 
 W6 no-leakage 必须同时满足：Dev/Hidden 按 topic、split 在 labels/method selection 前冻结、
 hidden labels 不进普通 generation path、blind task 不含 retriever/method/rank/score、正式 method

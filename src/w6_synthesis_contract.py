@@ -123,7 +123,18 @@ def validate_synthesis_input(
     topics: Mapping[str, dict[str, Any]],
     pool_members: Mapping[str, dict[str, Any]],
     method_packages: Mapping[str, dict[str, Any]],
+    records: Mapping[str, dict[str, Any]],
+    canonical: Mapping[str, Any],
+    evidence: Mapping[str, dict[str, Any]],
+    expected_artifact_ids: Mapping[str, str],
 ) -> dict[str, Any]:
+    if set(expected_artifact_ids) != {
+        "topic_set",
+        "source_records",
+        "retrieval_provenance",
+        "evidence_units",
+    }:
+        raise ValueError("synthesis expected artifact roster 不完整。")
     _require_exact_fields(
         payload,
         {
@@ -152,7 +163,11 @@ def validate_synthesis_input(
     topic_id = topic["topic_id"]
     if topic_id not in topics or topic["research_question"] != topics[topic_id]["research_question"]:
         raise ValueError("synthesis topic identity/question mismatch。")
-    _validate_registry_reference(topic["topic_artifact"], registry, "synthesis topic artifact")
+    topic_ref = _validate_registry_reference(
+        topic["topic_artifact"], registry, "synthesis topic artifact"
+    )
+    if topic_ref["artifact_id"] != expected_artifact_ids["topic_set"]:
+        raise ValueError("synthesis topic_artifact 必须绑定冻结 topic_set。")
     ranked = _require_mapping(payload["ranked_papers"], "ranked_papers")
     _require_exact_fields(
         ranked,
@@ -189,17 +204,49 @@ def validate_synthesis_input(
             raise ValueError(f"synthesis ranked list 缺少 selected item：{item_id}。")
     if selected != sorted(selected, key=lambda item_id: ranks_by_item[item_id]["rank"]):
         raise ValueError("synthesis selected_pool_item_ids 必须保持冻结 ranking 顺序。")
-    _validate_registry_reference(payload["paper_metadata"], registry, "synthesis paper_metadata")
-    _validate_registry_reference(
+    metadata_ref = _validate_registry_reference(
+        payload["paper_metadata"], registry, "synthesis paper_metadata"
+    )
+    provenance_ref = _validate_registry_reference(
         payload["source_provenance"], registry, "synthesis source_provenance"
     )
-    _validate_registry_reference(payload["evidence_units"], registry, "synthesis evidence_units")
+    evidence_ref = _validate_registry_reference(
+        payload["evidence_units"], registry, "synthesis evidence_units"
+    )
+    expected_refs = {
+        "paper_metadata": expected_artifact_ids["source_records"],
+        "source_provenance": expected_artifact_ids["retrieval_provenance"],
+        "evidence_units": expected_artifact_ids["evidence_units"],
+    }
+    actual_refs = {
+        "paper_metadata": metadata_ref["artifact_id"],
+        "source_provenance": provenance_ref["artifact_id"],
+        "evidence_units": evidence_ref["artifact_id"],
+    }
+    if actual_refs != expected_refs:
+        raise ValueError("synthesis metadata/provenance/evidence artifact type binding 漂移。")
+    if not evidence:
+        raise ValueError("synthesis evidence artifact 不能为空。")
+    selected_record_ids = {pool_members[item_id]["record_id"] for item_id in selected}
+    if not selected_record_ids <= set(records):
+        raise ValueError("synthesis selected pool 含 unknown source record。")
+    selected_entity_ids = {
+        canonical["entity_by_record"][record_id] for record_id in selected_record_ids
+    }
+    synthesis_artifact_id = payload["artifact_id"]
+    trusted_input = registry.get(synthesis_artifact_id)
+    if trusted_input is None:
+        raise ValueError("synthesis input 自身必须注册在 artifact registry。")
     _require_datetime(payload["created_at"], "synthesis input created_at")
     _validate_provenance(payload["provenance"], "synthesis input provenance")
     return {
         "payload": payload,
         "topic_id": topic_id,
         "selected_pool_item_ids": selected,
+        "selected_record_ids": selected_record_ids,
+        "selected_entity_ids": selected_entity_ids,
+        "artifact_id": synthesis_artifact_id,
+        "artifact_sha256": trusted_input["sha256"],
         "method_package": package,
     }
 
@@ -220,6 +267,7 @@ def validate_structured_synthesis(
             "is_fixture",
             "synthesis_id",
             "synthesis_input_id",
+            "synthesis_input",
             "claims",
             "rendered_review",
             "generation_provenance",
@@ -230,6 +278,14 @@ def validate_structured_synthesis(
     _require_id(payload["synthesis_id"], "synthesis_id")
     if payload["synthesis_input_id"] != synthesis_input["payload"]["synthesis_input_id"]:
         raise ValueError("structured synthesis input identity mismatch。")
+    input_ref = validate_artifact_identity_reference(
+        payload["synthesis_input"], "structured synthesis input"
+    )
+    if input_ref != {
+        "artifact_id": synthesis_input["artifact_id"],
+        "sha256": synthesis_input["artifact_sha256"],
+    }:
+        raise ValueError("structured synthesis 未绑定实际 synthesis input hash。")
     claims: dict[str, dict[str, Any]] = {}
     for raw_claim in _require_nonempty_list(payload["claims"], "synthesis claims"):
         claim = _require_mapping(raw_claim, "synthesis claim")
@@ -262,6 +318,8 @@ def validate_structured_synthesis(
             raise ValueError(f"claim {claim_id} entity/evidence refs 不得重复。")
         if not set(entity_ids) <= set(canonical["entities"]):
             raise ValueError(f"claim {claim_id} dangling paper reference。")
+        if not set(entity_ids) <= synthesis_input["selected_entity_ids"]:
+            raise ValueError(f"claim {claim_id} 引用 ranked selection 之外的 paper。")
         dangling = sorted(set(evidence_refs).difference(evidence))
         if dangling:
             raise ValueError(f"claim {claim_id} dangling evidence ref：{dangling}。")
@@ -269,8 +327,14 @@ def validate_structured_synthesis(
             evidence[evidence_id]["paper_identity"]["canonical_entity_id"]
             for evidence_id in evidence_refs
         }
-        if not evidence_entities <= set(entity_ids):
+        evidence_records = {
+            evidence[evidence_id]["paper_identity"]["record_id"]
+            for evidence_id in evidence_refs
+        }
+        if evidence_refs and evidence_entities != set(entity_ids):
             raise ValueError(f"claim {claim_id} evidence 与 supporting paper identity 不一致。")
+        if not evidence_records <= synthesis_input["selected_record_ids"]:
+            raise ValueError(f"claim {claim_id} evidence 引用 ranked selection 外 source record。")
         if claim["confidence"] not in CONFIDENCE_VALUES:
             raise ValueError(f"claim {claim_id} confidence 非法。")
         if claim["support_status"] not in SUPPORT_STATUSES:
@@ -285,6 +349,17 @@ def validate_structured_synthesis(
             )
             if claim["citation_status"] != expected_citation:
                 raise ValueError(f"claim {claim_id} citation status 与 support status 不一致。")
+            extraction_statuses = {
+                evidence[evidence_id]["extraction_status"] for evidence_id in evidence_refs
+            }
+            if "rejected" in extraction_statuses:
+                raise ValueError(f"claim {claim_id} 不得使用 rejected evidence 声明支持。")
+            if claim["support_status"] == "supported" and extraction_statuses != {
+                "human_verified"
+            }:
+                raise ValueError(
+                    f"claim {claim_id} verified citation 只能由 human_verified evidence 支撑。"
+                )
         else:
             if entity_ids or evidence_refs or claim["citation_status"] != "missing":
                 raise ValueError(f"unsupported claim {claim_id} 必须显式无 citation/evidence。")
@@ -322,11 +397,12 @@ def load_and_validate_evidence_units(
 
 def _validate_registry_reference(
     value: Any, registry: Mapping[str, dict[str, str]], label: str
-) -> None:
+) -> dict[str, str]:
     reference = validate_artifact_identity_reference(value, label)
     trusted = registry.get(reference["artifact_id"])
     if trusted is None or trusted["sha256"] != reference["sha256"]:
         raise ValueError(f"{label} identity/hash drift。")
+    return reference
 
 
 def _validate_extraction_provenance(value: Any, evidence_id: str) -> None:

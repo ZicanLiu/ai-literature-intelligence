@@ -5,7 +5,7 @@
   "is_fixture": true,
   "status": "frozen",
   "identity_stage": "post_canonicalization",
-  "pool_identity": "w6-pool:sha256:172e4563a35ef90477f6f2222c08f5ea437dc06ba6fa8bde7b23ea910c0f118d",
+  "pool_identity": "w6-pool:sha256:46988e7cc6ce7f423896792989fe7b8d29eae50e26942736485aedb5024a9ba9",
   "policy": {
     "name": "synthetic_union_with_tail",
     "version": "fixture-v1",
@@ -14,7 +14,15 @@
       "minimum_size_per_topic": 4,
       "retain_confirmed_alias_records": true,
       "auto_remove_suspected_duplicates": false
-    }
+    },
+    "included_retrieval_run_ids": [
+      "run_denoise_openalex",
+      "run_denoise_bm25",
+      "run_denoise_tail",
+      "run_transient_openalex",
+      "run_transient_dense",
+      "run_transient_tail"
+    ]
   },
   "inputs": {
     "topic_set": {"artifact_id": "w6_fixture_topics_v1", "sha256": "d262e66d64769a6e0fb30487d050b925b0e2bbd1c3099a818e80429490756d3a"},

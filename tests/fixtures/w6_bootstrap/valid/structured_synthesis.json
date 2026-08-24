@@ -5,6 +5,7 @@
   "is_fixture": true,
   "synthesis_id": "synthesis_denoise_fixture_v1",
   "synthesis_input_id": "synthesis_input_denoise_v1",
+  "synthesis_input": {"artifact_id": "w6_fixture_synthesis_input_v1", "sha256": "d2ffcc3a494bb18e32350500566cd50aff7519a2e376febdadc284952f8c8bd2"},
   "claims": [
     {
       "claim_id": "claim_001",

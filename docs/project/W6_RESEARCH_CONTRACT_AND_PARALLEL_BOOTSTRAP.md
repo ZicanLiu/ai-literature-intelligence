@@ -63,7 +63,8 @@ Topic Set
 ├─ Retrieval Runs/Hits → Source Records ─┬→ Canonical Entity Mapping
 │                                        └→ record-level provenance retained
 ├─ Topic Split → Dev / Hidden Test → public seal anchor
-└─ Candidate Pool ← retrieval union + canonical mapping
+└─ Pre-canonical Pool ← exact frozen retrieval-run union
+   └─ Canonical Entity Mapping → Post-canonical Pool
    ├─ Blind Annotation Tasks → AI-assisted Results → separate Review/Adjudication artifact
    ├─ Frozen W5-compatible Rankings → future evaluation/fusion
    └─ Frozen Ranked List + Evidence Units → Structured Claims → rendered review
@@ -117,7 +118,9 @@ Issue 决定。
 - metadata completeness status、missing fields、score；
 - 完整 acquisition hit references。
 
-Missing abstract 是合法但必须显式记录的状态，不得删除 candidate 或补造摘要。
+`missing_fields` 必须与 abstract/OpenAlex ID/DOI 的实际空值精确一致；OpenAlex/DOI 格式和
+`provider + source_record_id` 唯一性也会校验。Missing abstract 是合法但必须显式记录的状态，
+不得删除 candidate 或补造摘要。
 
 ### 4.4 Canonical entity / alias
 
@@ -137,28 +140,35 @@ Validator 只允许 `high + confirmed` 的多-record alias group。低/中置信
 
 - 每个 member 有 stable pool item ID、topic/record/canonical identity、全部 hit IDs、source-system
   membership union 和 selection reasons；
-- pool policy 的 target/minimum/depth 等值属于 `parameters`，schema 不硬编码；
+- pool policy 的 target/minimum/depth 等值属于 `parameters`，schema 不硬编码；实际参与 union 的
+  retrieval run IDs 必须单独冻结；
 - `topic_counts` 由 members 校验；
 - `identity_stage` 明确 pre/post canonicalization；
+- 每个 member 的 hit/system union 必须精确等于其 topic/record 在冻结 run roster 中的全部命中，
+  不能通过删 hit 后重算 `pool_identity` 自报绕过；
 - input artifact IDs/hashes、policy、counts、排序后的 members 共同形成 deterministic pool identity。
 
-为保持 Bootstrap 小而可用，单个 Candidate Pool JSON 同时承担 pool manifest 和 member table 的
-职责；公开 bundle 另行固定其完整文件 hash，不再创建一个内容重复的空壳 manifest。
+为证明 Pool Builder 不依赖未来 Canonicalization PR，fixture 同时提供 pre-canonical pool（只绑定
+topic/retrieval/source）和 post-canonical pool（额外绑定 canonical mapping）。两个 JSON 都同时承担
+pool manifest 和 member table 的职责；公开 bundle 固定其完整文件 hash。
 
 Confirmed aliases可以作为不同 source-record pool items 保留并指向同一 canonical entity；
 suspected duplicates 必须保持不同 entity/items。
 
 ### 4.6 Blind annotation view
 
-`build_blind_annotation_tasks()` 是明确的 full record → blind view 转换边界。输出只含：
+`w6_annotation_task_map` 在内部将 opaque `annotation_item_id` 绑定到冻结的
+topic/pool/record/canonical identity；该 mapping 不交给 annotator。`build_blind_annotation_tasks()`
+只从 mapping 投影 annotation-safe view，输出只含：
 
 - topic question/object/modality/task/method role/scope/boundary；
-- pool/record/canonical public identity；
+- 与 pool/retriever/method/rank 命名无关的 opaque annotation item/task ID；
 - title、abstract、year、authors、venue、OpenAlex/DOI/landing page。
 
-输出精确白名单不含 acquisition system、retrieval run/hit、source rank/score、method ID、ranking、
-RRF、selection reason 或任何 label。Validator 既扫描禁止 key，又逐项重算投影，额外字段和内容
-漂移都会 fail closed。
+输出精确白名单不含内部 pool/record/canonical ID、acquisition system、retrieval run/hit、source
+rank/score、method ID、ranking、RRF、selection reason 或任何 label。Opaque ID 只由
+topic + paper public identity + view policy 计算，不编码 pool item 名称。Validator 既扫描禁止 key，
+又逐项重算 mapping 与投影，额外字段和内容漂移都会 fail closed。
 
 ### 4.7 AI-assisted annotation result
 
@@ -166,6 +176,7 @@ RRF、selection reason 或任何 label。Validator 既扫描禁止 key，又逐�
 primary annotation 层：
 
 - task/topic/pool item/record identity；
+- 实际 split artifact identity/hash 与 annotation start time；
 - label、confidence、evidence source/reference/check time；
 - 人类可审查的简短 justification summary 和 uncertainty；
 - review status；
@@ -186,24 +197,25 @@ type/identity、approve-or-modify、final label、time、note 和 provenance。�
 
 - split unit 精确为 `topic`；
 - Dev/Hidden topic IDs 无交集且恰好覆盖冻结 topic set；
+- `annotation_started_at` 必须晚于实际绑定 split 的 `frozen_at`；
 - 在 labels 产生和 label-aware method selection 前冻结；
-- 记录 split ID/identity、时间、负责人、Git provenance 和 reveal state。
+- 记录 split ID/identity、时间、负责人、Git provenance；Bootstrap 只接受 `sealed` state。
 
 禁止随机拆同一个 topic 的 papers 到 Dev/Test 两侧。
 
-### 4.9 Hidden label seal / reveal
+### 4.9 Hidden label seal
 
 公开 `w6_hidden_label_anchor` 只保存 hidden artifact identity/hash，不保存仓库路径；真实 storage
-必须为 external。它固定 hidden topic set，并要求：
+必须为 external。它以 registry trust anchor 绑定实际 split hash、固定 hidden topic set，并要求：
 
 - method freeze 后才可 reveal；
 - one-time sealed evaluation；
 - generation 不能读取；
-- reveal 前实际文件 SHA-256 必须与 anchor 一致。
+- anchor 只声明 external label artifact identity/hash，不暴露或要求 repository path。
 
-`validate_hidden_label_reveal()` 是显式 reveal 边界。仓库内只允许
-`is_fixture=true` 的 fake hidden-label artifact，用于验证 hash/topic/pool/label 完整性；真实 hidden
-labels 不得提交。
+Bootstrap 有意不提供 reveal API，也不提交 fake/真实 hidden-label 文件，从而不产生“无 method
+freeze 也可 reveal”的可达状态。真实 reveal/hash/topic/pool/label 完整性检查属于后续独立
+sealed evaluator/custodian contract；真实 hidden labels 可始终留在普通仓库之外。
 
 ### 4.10 Benchmark v0.2-alpha future manifest
 
@@ -212,8 +224,9 @@ labels 不得提交。
 identity。它使用 `topic_id + pool_item_id` 作为 judgement unit，同时保留 canonical mapping。
 
 Bootstrap fixture 的 status 是 `bootstrap_fixture`，version 是
-`w6_query_relevance_v0.2-alpha.bootstrap-fixture`。它不是 proposed/approved Benchmark v0.2-alpha；
-真实 status promotion、review roster 和 hidden evaluation 由后续 Issue 定义并执行。
+`w6_query_relevance_v0.2-alpha.bootstrap-fixture`。Bootstrap validator 不接受 artifact/review 自报
+`approved`；真实 status promotion、完整 coverage/adjudication checklist、review roster 和 hidden
+evaluation 由后续 Issue 的独立正式 contract 定义并执行。
 
 ## 5. Ranking 与 score-fusion extension
 
@@ -232,8 +245,10 @@ ranking unit       → source_record
 ```
 
 不同之处只有：topic 数与每 topic 行数来自冻结 Candidate Pool，而不是 W4 的固定 3 × 20。Manifest
-继续要求 method family/model/parameters、topic/pool/canonical input hashes、clean Git generation、
-seed/dependencies、frozen configuration hash 和 label-access declaration。
+继续要求 method family/model/parameters、共同的 topic/pool input hashes、clean Git generation、
+seed/dependencies、frozen configuration hash 和 label-access declaration。需要论文文本、canonical
+identity 或 retrieval provenance 的方法通过受限 `auxiliary_inputs` 显式声明实际依赖；文本方法必须
+绑定 `source_records`，不再把所有方法硬塞进同一个 canonical-only 输入集合。
 
 W5 的 B0/TF-IDF/BM25/SPECTER2/Cross-Encoder/RRF 实现未来可以在新的冻结 W6 pool 上生成
 W6-extension package 并按同一 evaluator 接口比较；现有六个 W5 frozen packages 自身仍绑定 W4
@@ -246,6 +261,8 @@ Fusion extension 不实现标准化算法，但提供足够边界：
 - 显式记录使用 raw score、rank 或两者；
 - 如果读取 raw scores，必须记录 normalization strategy/parameters/fit scope；
 - normalization 必须声明不读 labels；
+- weights 必须是有限数值并精确覆盖 input method IDs，但 Bootstrap 不规定具体权重、求和约束或
+  z-score 等算法；
 - output 仍是算法无关合法 ranking artifact；
 - configuration hash 在评价前冻结；
 - generation 声明 dev/hidden relevance labels 都未读取。
@@ -259,7 +276,8 @@ Future standardized score fusion 可以复用已有 RRF 的 input-identity 经�
 
 `w6_synthesis_input` 绑定一个 Topic/Question、一个已验证 frozen ranking manifest/ranking hash、按
 rank 顺序选择的 pool items、paper metadata、retrieval/source provenance、evidence artifact hash
-和生成 provenance。开发期直接使用 fake ranking，不等待真实 Pool Builder。
+和生成 provenance。所有 metadata/provenance/evidence 引用都必须绑定正确 artifact type；开发期
+直接使用 Bootstrap fake ranking/pool，不等待未来真实 Pool PR。
 
 ### 6.2 Evidence unit
 
@@ -281,7 +299,10 @@ support status 和 citation status。规则是：
 - `supported` 必须有匹配 paper/evidence，citation 为 `verified`；
 - `partially_supported` 必须有匹配 paper/evidence，citation 为 `incomplete`；
 - `unsupported` 必须明确无 supporting refs 且 citation 为 `missing`；
-- dangling paper/evidence 或 evidence-paper mismatch 直接失败。
+- dangling paper/evidence、evidence-paper mismatch、ranked selection 之外的 paper/record 直接失败；
+- `supported + verified` 只能使用 `human_verified` evidence，`rejected` evidence 不能支撑
+  supported/partial claim；
+- structured output 必须绑定实际 synthesis input artifact ID + file SHA-256，不能只自报 input ID。
 
 Human-readable Markdown 只是结构化 claims 的 render，必须列出全部且仅这些 claim IDs。Relevance
 ranking/label 只决定阅读候选，不证明 factual claim correctness。
@@ -300,9 +321,10 @@ python -m unittest tests.automated.test_w6_contracts -v
 - `validate_w6_bootstrap_bundle()`：验证公开 hash-pinned bundle 及全部 cross-artifact identity；
 - `validate_topic_set()` / `validate_retrieval_provenance()` / `validate_source_records()`；
 - `validate_canonical_entities()` / `validate_candidate_pool()`；
-- `build_blind_annotation_tasks()` / `validate_blind_annotation_tasks()`；
+- `build_annotation_task_map()` / `validate_annotation_task_map()` / `build_blind_annotation_tasks()` /
+  `validate_blind_annotation_tasks()`；
 - `validate_annotation_results()` / `validate_annotation_reviews()` / `validate_topic_split()`；
-- `validate_hidden_label_anchor()` / `validate_hidden_label_reveal()`；
+- `validate_hidden_label_anchor()`；Bootstrap 不暴露 reveal API；
 - `validate_w6_method_package()`；
 - `validate_evidence_units()` / `validate_synthesis_input()` /
   `validate_structured_synthesis()`。
@@ -314,15 +336,17 @@ Validators fail closed，覆盖 duplicate/unknown/mismatch/dangling/hash/leakage
 
 | 后续任务 | 只读 Bootstrap inputs | 本 PR 不实现的 future output | 独立开发证明 |
 | --- | --- | --- | --- |
-| Leader：Topic/Benchmark/annotation/Dev-Hidden/Boundary-Aware | fake topics、pool、blind tasks、AI-assisted results、split、seal、benchmark skeleton、fake ranking | 真实 topic、真实 labels/split、Boundary-Aware ranking | 可完整测试 topic freeze、blind projection、annotation/review、split/seal 和 method output，无需真实 retriever |
-| 蒲正杰：Synthesis + Standardized Fusion | fake topic/pool、两个 base rankings、fusion package、synthesis input、evidence、claims | normalization choice/weights、LLM/backend、真实 synthesis | raw score/rank/hash/normalization 和 evidence/claim 全部已有 fake inputs，无需 Pool Builder |
-| 武子恒：Multi-Retriever Pool Builder | fake topics、runs/hits、source records、canonical map、pool | 真实 retriever execution/pool | 可用既有 runs 验证 union、multi-hit、single-hit、policy、pool identity，无需 Leader topics |
-| 贾馥诚：Canonicalization/Provenance/Bias Audit | fake retrieval、records、confirmed alias、suspected relation、pool | canonicalization algorithm、真实 bias audit | confirmed/suspected 两条路径、provenance union 和 record retention 可离线测试，无需 Pool Builder PR |
-| 陈星妤：Metadata Enrichment/Query Diagnostics | fake topics、runs、records、pool | enrichment backend、真实 diagnostics | complete/missing abstract、multi-topic/query/run provenance 已覆盖，无需 canonicalization PR |
+| Leader：Topic/Benchmark/annotation/Dev-Hidden/Boundary-Aware | fake topics/retrieval/source/canonical/post-pool、opaque mapping/blind tasks、AI-assisted results、split、seal、benchmark skeleton、fake sparse ranking | 真实 topic、真实 labels/split、Boundary-Aware ranking | 可完整测试 topic freeze、blind projection、annotation/review、split/seal 和 method output，不读取未来成员 artifact |
+| 蒲正杰：Synthesis + Standardized Fusion | fake topic/retrieval/source/canonical/post-pool、两个 base rankings、fusion package、synthesis input、evidence、claims | normalization choice/weights、LLM/backend、真实 synthesis | raw score/rank/hash/normalization/weights 和 evidence/claim 全部已有 fake inputs，无需未来 Pool PR |
+| 武子恒：Multi-Retriever Pool Builder | fake topics、runs/hits、source records、pre-canonical pool | 真实 retriever execution/pool | pre-pool 只绑定 topic/retrieval/source，可验证 exact union、multi/single hit、policy/identity，完全不需要未来 Canonicalization PR |
+| 贾馥诚：Canonicalization/Provenance/Bias Audit | fake topic/retrieval/records、pre-pool、confirmed alias、suspected relation、post-pool | canonicalization algorithm、真实 bias audit | confirmed/suspected、provenance union、record retention 与 pre→post 映射可离线测试，无需 Pool Builder PR |
+| 陈星妤：Metadata Enrichment/Query Diagnostics | fake topics、runs、records、pre-canonical pool | enrichment backend、真实 diagnostics | complete/missing abstract/DOI、identity uniqueness、multi-topic/query/run provenance 已覆盖，无需 canonicalization PR |
 | 黄斌：Data Quality/Leakage/Artifact Gate | 全部 valid + deliberate invalid fixtures | 最终全仓 W6 gate policy | 可验证所有错误类别、hash/no-leakage/hidden/synthesis/method drift，无需真实 benchmark |
 
-Bundle manifest 中每个任务都精确声明 `depends_on=["w6_bootstrap"]`。自动测试会验证依赖矩阵和
-fixture availability；不能增加另一 future member output 作为开发期依赖。
+Bundle manifest 中每个任务都精确声明 `depends_on=["w6_bootstrap"]`。自动测试不只比较声明：它会
+将六个任务各自的声明 artifact 单独复制进临时目录，完成 load/validate/minimal deterministic
+smoke，并逐任务删除一个必需文件确认 fail closed。不能增加另一 future member output 作为开发期
+依赖。
 
 ## 9. Integration PR 才允许做的工作
 

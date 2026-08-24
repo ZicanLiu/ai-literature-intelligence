@@ -4,11 +4,11 @@
   "artifact_id": "w6_fixture_hidden_anchor_v1",
   "is_fixture": true,
   "seal_id": "w6_fixture_hidden_seal_v1",
-  "split": {"artifact_id": "w6_fixture_split_v1", "sha256": "e0c4bf7122d1a9728e753423a1790e4e8b99d39d4f8f3f51c1652824653a1f58"},
+  "split": {"artifact_id": "w6_fixture_split_v1", "sha256": "60a9e6bca37762fe4c20d150ff94df4d2e855fb9f2fb21062475204317acb0e7"},
   "hidden_topic_ids": ["w6_fixture_topic_transients"],
   "label_artifact": {"artifact_id": "w6_fixture_hidden_labels_v1", "sha256": "80939d1b9e52482d5b1384379a95bf102085089828ae55a4c48990ca907da70d"},
   "storage": {"location": "external", "repository_path": null},
-  "sealed_at": "2026-08-24T08:56:00+08:00",
+  "sealed_at": "2026-08-24T08:41:00+08:00",
   "reveal_policy": {
     "method_freeze_required": true,
     "one_time_evaluation": true,
@@ -19,7 +19,7 @@
   "provenance": {
     "kind": "synthetic_seal_fixture",
     "created_by": "w6_bootstrap",
-    "created_at": "2026-08-24T08:56:00+08:00",
+    "created_at": "2026-08-24T08:41:00+08:00",
     "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
   }
 }

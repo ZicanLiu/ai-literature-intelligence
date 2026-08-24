@@ -77,8 +77,8 @@ Domain Terms → Domain Query Set → Acquisition Queries → OpenAlex v2
 
 ### W6 公共并行与科研边界
 
-- 六个 W6 成员任务只能依赖 Bootstrap + 当前 `main` + 公共 fixture；禁止依赖另一成员尚未合并
-  的 code 或 artifact。真实跨模块端到端执行只能在六个 PR 合并后的独立 Integration PR 中完成；
+- 并行任务只能依赖当前 `main` 与已冻结的公共 contract/fixture；不得导入尚未合并的 sibling code
+  或 artifact，并应以只复制声明输入的隔离依赖测试证明闭包；
 - Dev / Hidden Test 必须按 topic 隔离，真实 split 在 labels 和 label-aware method selection 前冻结；
   hidden-test labels 不得进入 method development、retrieval/ranking/fusion generation 或普通仓库；
 - blind annotation view 不得暴露 retriever/method、source rank/score、ranking 或 fusion signal；

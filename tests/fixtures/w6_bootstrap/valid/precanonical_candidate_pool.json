@@ -1,0 +1,58 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_candidate_pool",
+  "artifact_id": "w6_fixture_precanonical_candidate_pool_v1",
+  "is_fixture": true,
+  "status": "frozen",
+  "identity_stage": "pre_canonicalization",
+  "pool_identity": "w6-pool:sha256:3735175f6ed19cbc86ece8d945f5b026d02bf212f0c21ea5586fe70b363f92bf",
+  "policy": {
+    "name": "synthetic_union_with_tail",
+    "version": "fixture-v1",
+    "parameters": {
+      "target_size_per_topic": 7,
+      "minimum_size_per_topic": 4,
+      "retain_confirmed_alias_records": true,
+      "auto_remove_suspected_duplicates": false
+    },
+    "included_retrieval_run_ids": [
+      "run_denoise_openalex",
+      "run_denoise_bm25",
+      "run_denoise_tail",
+      "run_transient_openalex",
+      "run_transient_dense",
+      "run_transient_tail"
+    ]
+  },
+  "inputs": {
+    "topic_set": {"artifact_id": "w6_fixture_topics_v1", "sha256": "d262e66d64769a6e0fb30487d050b925b0e2bbd1c3099a818e80429490756d3a"},
+    "retrieval_provenance": {"artifact_id": "w6_fixture_retrieval_v1", "sha256": "acbcf34aae59c1d5eadc8f2c50bf06604dad7ee27b68566c851a0fab6b2c707c"},
+    "source_records": {"artifact_id": "w6_fixture_source_records_v1", "sha256": "1ee6864488e80b2d8a6b11bcd5166dbba7ca2beb993c0063c45bf3770d26ebce"}
+  },
+  "topic_counts": {
+    "w6_fixture_topic_denoising": 7,
+    "w6_fixture_topic_transients": 6
+  },
+  "members": [
+    {"pool_item_id": "pool_denoise_001", "topic_id": "w6_fixture_topic_denoising", "record_id": "rec_001", "canonical_entity_id": null, "retrieval_hit_ids": ["hit_doa_001", "hit_dbm_001"], "source_system_membership": ["openalex_native", "bm25_fixture"], "selection_reasons": ["multi-system union hit"]},
+    {"pool_item_id": "pool_denoise_002", "topic_id": "w6_fixture_topic_denoising", "record_id": "rec_002", "canonical_entity_id": null, "retrieval_hit_ids": ["hit_doa_002"], "source_system_membership": ["openalex_native"], "selection_reasons": ["native retrieval hit", "partial relevance fixture"]},
+    {"pool_item_id": "pool_denoise_003", "topic_id": "w6_fixture_topic_denoising", "record_id": "rec_003", "canonical_entity_id": null, "retrieval_hit_ids": ["hit_doa_003", "hit_dbm_003"], "source_system_membership": ["openalex_native", "bm25_fixture"], "selection_reasons": ["multi-system union hit", "confirmed alias retained"]},
+    {"pool_item_id": "pool_denoise_004", "topic_id": "w6_fixture_topic_denoising", "record_id": "rec_004", "canonical_entity_id": null, "retrieval_hit_ids": ["hit_dta_004"], "source_system_membership": ["deterministic_random_tail"], "selection_reasons": ["deterministic random tail", "hard negative fixture"]},
+    {"pool_item_id": "pool_denoise_005", "topic_id": "w6_fixture_topic_denoising", "record_id": "rec_005", "canonical_entity_id": null, "retrieval_hit_ids": ["hit_dbm_005"], "source_system_membership": ["bm25_fixture"], "selection_reasons": ["sparse-only hit", "task-boundary fixture"]},
+    {"pool_item_id": "pool_denoise_006", "topic_id": "w6_fixture_topic_denoising", "record_id": "rec_006", "canonical_entity_id": null, "retrieval_hit_ids": ["hit_doa_006"], "source_system_membership": ["openalex_native"], "selection_reasons": ["missing-abstract fixture"]},
+    {"pool_item_id": "pool_denoise_008", "topic_id": "w6_fixture_topic_denoising", "record_id": "rec_008", "canonical_entity_id": null, "retrieval_hit_ids": ["hit_doa_008"], "source_system_membership": ["openalex_native"], "selection_reasons": ["confirmed alias record retained"]},
+    {"pool_item_id": "pool_transient_002", "topic_id": "w6_fixture_topic_transients", "record_id": "rec_002", "canonical_entity_id": null, "retrieval_hit_ids": ["hit_toa_002"], "source_system_membership": ["openalex_native"], "selection_reasons": ["multitask boundary fixture"]},
+    {"pool_item_id": "pool_transient_004", "topic_id": "w6_fixture_topic_transients", "record_id": "rec_004", "canonical_entity_id": null, "retrieval_hit_ids": ["hit_tde_004"], "source_system_membership": ["dense_fixture"], "selection_reasons": ["wrong-object hard negative"]},
+    {"pool_item_id": "pool_transient_006", "topic_id": "w6_fixture_topic_transients", "record_id": "rec_006", "canonical_entity_id": null, "retrieval_hit_ids": ["hit_toa_006", "hit_tta_006"], "source_system_membership": ["openalex_native", "deterministic_random_tail"], "selection_reasons": ["multi-system union hit", "missing-abstract fixture"]},
+    {"pool_item_id": "pool_transient_007", "topic_id": "w6_fixture_topic_transients", "record_id": "rec_007", "canonical_entity_id": null, "retrieval_hit_ids": ["hit_toa_007", "hit_tde_007"], "source_system_membership": ["openalex_native", "dense_fixture"], "selection_reasons": ["multi-system union hit"]},
+    {"pool_item_id": "pool_transient_009", "topic_id": "w6_fixture_topic_transients", "record_id": "rec_009", "canonical_entity_id": null, "retrieval_hit_ids": ["hit_tde_009"], "source_system_membership": ["dense_fixture"], "selection_reasons": ["single-retriever unique candidate"]},
+    {"pool_item_id": "pool_transient_010", "topic_id": "w6_fixture_topic_transients", "record_id": "rec_010", "canonical_entity_id": null, "retrieval_hit_ids": ["hit_toa_010"], "source_system_membership": ["openalex_native"], "selection_reasons": ["suspected duplicate retained", "task-boundary fixture"]}
+  ],
+  "created_at": "2026-08-24T08:29:00+08:00",
+  "provenance": {
+    "kind": "synthetic_fixture",
+    "created_by": "w6_bootstrap",
+    "created_at": "2026-08-24T08:29:00+08:00",
+    "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+  }
+}

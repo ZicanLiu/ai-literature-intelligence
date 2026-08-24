@@ -68,6 +68,7 @@ def compute_method_configuration_hash(manifest: Mapping[str, Any]) -> str:
             "compatibility": manifest.get("compatibility"),
             "method": manifest.get("method"),
             "inputs": manifest.get("inputs"),
+            "auxiliary_inputs": manifest.get("auxiliary_inputs"),
             "method_inputs": manifest.get("method_inputs"),
             "score_processing": manifest.get("score_processing"),
             "deterministic_seed": (manifest.get("generation") or {}).get(
@@ -100,6 +101,7 @@ def validate_w6_method_package(
             "compatibility",
             "method",
             "inputs",
+            "auxiliary_inputs",
             "method_inputs",
             "score_processing",
             "ranking",
@@ -160,7 +162,7 @@ def validate_w6_method_package(
         raise ValueError("method.model 必须是 null 或 object。")
 
     inputs = _require_mapping(manifest["inputs"], "inputs")
-    expected_input_names = {"topic_set", "candidate_pool", "canonical_entities"}
+    expected_input_names = {"topic_set", "candidate_pool"}
     if set(inputs) != expected_input_names:
         forbidden = sorted(set(inputs).intersection(FORBIDDEN_GENERATION_INPUT_NAMES))
         if forbidden:
@@ -169,9 +171,38 @@ def validate_w6_method_package(
                 + ", ".join(forbidden)
                 + "。"
             )
-        raise ValueError("W6 method inputs 必须精确绑定 topic/pool/canonical artifacts。")
+        raise ValueError("W6 method common inputs 必须精确绑定 topic/pool artifacts。")
     for name, reference in inputs.items():
         _validate_registry_reference(reference, artifact_registry, f"inputs.{name}")
+
+    auxiliary_inputs = _require_mapping(manifest["auxiliary_inputs"], "auxiliary_inputs")
+    allowed_auxiliary_inputs = {
+        "source_records",
+        "canonical_entities",
+        "retrieval_provenance",
+    }
+    forbidden_auxiliary = sorted(
+        set(auxiliary_inputs).intersection(FORBIDDEN_GENERATION_INPUT_NAMES)
+    )
+    if forbidden_auxiliary:
+        raise ValueError(
+            "method auxiliary_inputs 包含 labels/analysis 禁止输入："
+            + ", ".join(forbidden_auxiliary)
+            + "。"
+        )
+    unknown_auxiliary = sorted(set(auxiliary_inputs).difference(allowed_auxiliary_inputs))
+    if unknown_auxiliary:
+        raise ValueError(
+            "method auxiliary_inputs 含未声明公共 artifact："
+            + ", ".join(unknown_auxiliary)
+            + "。"
+        )
+    for name, reference in auxiliary_inputs.items():
+        _validate_registry_reference(
+            reference, artifact_registry, f"auxiliary_inputs.{name}"
+        )
+    if method["family"] in {"sparse", "dense", "neural"} and "source_records" not in auxiliary_inputs:
+        raise ValueError("文本 ranking method 必须显式绑定 source_records auxiliary input。")
 
     known = known_method_packages or {}
     method_inputs = _require_list(manifest["method_inputs"], "method_inputs")
@@ -214,8 +245,24 @@ def validate_w6_method_package(
             raise ValueError("method input score/rank usage 必须是 boolean。")
         if not input_ref["uses_raw_score"] and not input_ref["uses_rank"]:
             raise ValueError("method input 必须明确读取 raw score 或 rank。")
-    if method_inputs and method["family"] != "hybrid":
-        raise ValueError("包含多个冻结 method inputs 的输出必须声明 hybrid family。")
+    if method_inputs:
+        if method["family"] != "hybrid":
+            raise ValueError("组合 frozen method_inputs 的输出必须声明 hybrid family。")
+        if len(method_inputs) < 2:
+            raise ValueError("正式 fusion/hybrid artifact 至少需要两个独立冻结 method inputs。")
+        parameters = method["parameters"]
+        weights = _require_mapping(parameters.get("weights"), "method.parameters.weights")
+        if set(weights) != seen_input_methods:
+            raise ValueError("fusion weights 必须精确覆盖 method_inputs 中的 method_id。")
+        if any(
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(float(value))
+            for value in weights.values()
+        ):
+            raise ValueError("fusion weights 必须是有限数值。")
+    elif "weights" in method["parameters"]:
+        raise ValueError("fusion weights 不得在没有 method_inputs 时自报。")
 
     score_processing = _require_mapping(manifest["score_processing"], "score_processing")
     _require_exact_fields(
@@ -241,6 +288,8 @@ def validate_w6_method_package(
             raise ValueError("score normalization 不得读取 relevance labels。")
     if any(item["uses_raw_score"] for item in method_inputs) and normalization is None:
         raise ValueError("读取多个 raw scores 时必须记录 normalization configuration。")
+    if method_inputs and normalization is None:
+        raise ValueError("fusion/hybrid artifact 必须显式记录 normalization configuration。")
 
     ranking = _require_mapping(manifest["ranking"], "ranking")
     _require_exact_fields(
@@ -323,6 +372,7 @@ def validate_w6_method_package(
         "method_id": method_id,
         "status": manifest["status"],
         "input_references": inputs,
+        "auxiliary_input_references": auxiliary_inputs,
     }
 
 

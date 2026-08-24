@@ -29,7 +29,7 @@
       "source_location": {"source_type": "public_abstract", "source_reference": "https://example.test/papers/rec-003", "locator": "abstract"},
       "content": {"snippet": "The restoration model reports preservation of line-equivalent-width measurements.", "structured_field": null},
       "provenance": {"extraction_method": "fixture_ai_assisted_excerpt", "model_or_tool": {"name": "synthetic_extractor", "version": "fixture-v1"}, "extracted_at": "2026-08-24T09:09:10+08:00", "source_license_note": "Synthetic fixture text; short abstract snippet only."},
-      "extraction_status": "extracted",
+      "extraction_status": "human_verified",
       "confidence": "high"
     },
     {
