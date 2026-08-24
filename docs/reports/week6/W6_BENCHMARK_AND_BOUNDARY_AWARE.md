@@ -73,8 +73,8 @@ count 也不自动保留；代表性论文是否直接匹配 object/modality/tas
 用户随后授权为 16 个候选各查询两个合理 variants，并收集年份分布和代表论文。执行环境没有暴露
 `OPENALEX_API_KEY` 进程、User 或 Machine 环境变量，因此没有从聊天明文重建、打印或保存密钥。
 匿名公开接口的单 query smoke 成功，但较大补充批次随后收到 HTTP 429。补充 research 会在限流
-窗口恢复后按低频小批次继续；只有实际成功响应才会写入正式 evidence。失败响应不会补造 count、
-年份或论文 identity，也不会改变已经冻结的 Topic roster。
+窗口恢复且 `OPENALEX_API_KEY` 作为环境变量实际暴露后再另行继续；本次不把失败批次写成成功
+evidence。失败响应不会补造 count、年份或论文 identity，也不会改变已经冻结的 Topic roster。
 
 ## 3. 最终 Topic freeze
 
