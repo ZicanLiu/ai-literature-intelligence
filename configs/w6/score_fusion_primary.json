@@ -1,0 +1,20 @@
+{
+  "config_id": "w6_score_fusion_primary_v1",
+  "version": "1.0",
+  "status": "frozen",
+  "frozen_at": "2026-08-24T12:00:00+08:00",
+  "output": {
+    "method_id": "w6_zscore_fusion_fixture_v1",
+    "display_name": "W6 Primary Z-Score Score Fusion (Fixture)"
+  },
+  "input_methods": ["w6_fixture_sparse_v1", "w6_fixture_dense_v1"],
+  "normalization": {
+    "strategy": "z_score",
+    "fit_scope": "per_topic"
+  },
+  "weights": {
+    "w6_fixture_sparse_v1": 0.5,
+    "w6_fixture_dense_v1": 0.5
+  },
+  "configuration_sha256": "81222d2240190bf9eb7530cd9d338a48087843b361abf3f6702e76dc35c69b68"
+}
