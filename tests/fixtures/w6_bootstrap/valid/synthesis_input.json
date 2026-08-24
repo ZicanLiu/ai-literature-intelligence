@@ -1,0 +1,30 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_synthesis_input",
+  "artifact_id": "w6_fixture_synthesis_input_v1",
+  "is_fixture": true,
+  "synthesis_input_id": "synthesis_input_denoise_v1",
+  "topic": {
+    "topic_id": "w6_fixture_topic_denoising",
+    "research_question": "How can data-driven methods reduce synthetic detector noise in stellar spectra without changing absorption-line measurements?",
+    "topic_artifact": {"artifact_id": "w6_fixture_topics_v1", "sha256": "d262e66d64769a6e0fb30487d050b925b0e2bbd1c3099a818e80429490756d3a"}
+  },
+  "ranked_papers": {
+    "method_manifest_artifact_id": "w6_fixture_method_fusion_v1",
+    "manifest_sha256": "85d4b18e1f5be6625c7bc495918c3985a286966bfa744fed05c9879f09359c2f",
+    "ranking_sha256": "7411931594ff6ee7e6f2cc44f9a5903c6864f35b2820389528abeaa692dcd835",
+    "method_id": "w6_fixture_score_fusion_v1",
+    "status": "frozen"
+  },
+  "selected_pool_item_ids": ["pool_denoise_003", "pool_denoise_001", "pool_denoise_008"],
+  "paper_metadata": {"artifact_id": "w6_fixture_source_records_v1", "sha256": "1ee6864488e80b2d8a6b11bcd5166dbba7ca2beb993c0063c45bf3770d26ebce"},
+  "source_provenance": {"artifact_id": "w6_fixture_retrieval_v1", "sha256": "acbcf34aae59c1d5eadc8f2c50bf06604dad7ee27b68566c851a0fab6b2c707c"},
+  "evidence_units": {"artifact_id": "w6_fixture_evidence_units_v1", "sha256": "7527329839991d92de72043a9b71ba5d5b59e5c7f25296252e93326bb1346444"},
+  "created_at": "2026-08-24T09:11:00+08:00",
+  "provenance": {
+    "kind": "synthetic_synthesis_input_fixture",
+    "created_by": "w6_bootstrap",
+    "created_at": "2026-08-24T09:11:00+08:00",
+    "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+  }
+}

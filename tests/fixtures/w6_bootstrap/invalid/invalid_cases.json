@@ -1,0 +1,131 @@
+{
+  "schema_version": "1.0",
+  "fixture_type": "w6_deliberate_invalid_mutations",
+  "description": "Each case deterministically mutates one valid synthetic artifact and must fail closed.",
+  "cases": [
+    {
+      "case_id": "duplicate_topics",
+      "base": "topics.json",
+      "operation": "append_copy",
+      "path": ["topics"],
+      "copy_from": ["topics", 0],
+      "expected_error": "duplicate topic_id"
+    },
+    {
+      "case_id": "retrieval_unknown_topic",
+      "base": "retrieval_runs.json",
+      "operation": "set",
+      "path": ["runs", 0, "topic_id"],
+      "value": "unknown_topic",
+      "expected_error": "unknown topic"
+    },
+    {
+      "case_id": "source_missing_provenance",
+      "base": "source_records.json",
+      "operation": "delete",
+      "path": ["records", 0, "record_provenance"],
+      "expected_error": "字段不符合 contract"
+    },
+    {
+      "case_id": "canonical_dangling_alias",
+      "base": "canonical_entities.json",
+      "operation": "append",
+      "path": ["entities", 0, "alias_record_ids"],
+      "value": "rec_missing",
+      "expected_error": "dangling alias"
+    },
+    {
+      "case_id": "candidate_identity_mismatch",
+      "base": "candidate_pool.json",
+      "operation": "set",
+      "path": ["members", 0, "record_id"],
+      "value": "rec_missing",
+      "expected_error": "candidate identity mismatch"
+    },
+    {
+      "case_id": "blind_task_score_leak",
+      "base": "annotation_tasks.json",
+      "operation": "set",
+      "path": ["tasks", 0, "candidate", "source_score"],
+      "value": 0.99,
+      "expected_error": "泄漏"
+    },
+    {
+      "case_id": "annotation_illegal_label",
+      "base": "annotation_results.json",
+      "operation": "set",
+      "path": ["annotations", 0, "relevance_label"],
+      "value": 7,
+      "expected_error": "illegal relevance label"
+    },
+    {
+      "case_id": "annotation_unknown_candidate",
+      "base": "annotation_results.json",
+      "operation": "set",
+      "path": ["annotations", 0, "annotation_task_id"],
+      "value": "annot:missing_candidate",
+      "expected_error": "不存在 candidate/task"
+    },
+    {
+      "case_id": "review_unknown_annotation",
+      "base": "annotation_reviews.json",
+      "operation": "set",
+      "path": ["reviews", 0, "annotation_id"],
+      "value": "annotation_missing",
+      "expected_error": "unknown/duplicate annotation"
+    },
+    {
+      "case_id": "annotation_hidden_topic_public",
+      "base": "annotation_results.json",
+      "operation": "set_many",
+      "changes": [
+        {"path": ["annotations", 0, "annotation_id"], "value": "annotation_hidden_public"},
+        {"path": ["annotations", 0, "annotation_task_id"], "value": "annot:blind_6ea9af5649e26665921ef7e2"},
+        {"path": ["annotations", 0, "topic_id"], "value": "w6_fixture_topic_transients"},
+        {"path": ["annotations", 0, "pool_item_id"], "value": "pool_transient_007"},
+        {"path": ["annotations", 0, "record_id"], "value": "rec_007"}
+      ],
+      "expected_error": "hidden-test labels"
+    },
+    {
+      "case_id": "split_overlap",
+      "base": "split_manifest.json",
+      "operation": "set",
+      "path": ["hidden_test_topic_ids"],
+      "value": ["w6_fixture_topic_denoising", "w6_fixture_topic_transients"],
+      "expected_error": "overlap"
+    },
+    {
+      "case_id": "method_hidden_generation_input",
+      "base": "method_rankings/fake_sparse/manifest.json",
+      "operation": "set",
+      "path": ["inputs", "hidden_labels"],
+      "value": {"artifact_id": "forbidden_hidden_labels", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"},
+      "expected_error": "禁止输入"
+    },
+    {
+      "case_id": "synthesis_dangling_evidence",
+      "base": "structured_synthesis.json",
+      "operation": "set",
+      "path": ["claims", 0, "evidence_refs"],
+      "value": ["evidence_missing"],
+      "expected_error": "dangling evidence"
+    },
+    {
+      "case_id": "synthesis_supported_without_evidence",
+      "base": "structured_synthesis.json",
+      "operation": "set",
+      "path": ["claims", 0, "evidence_refs"],
+      "value": [],
+      "expected_error": "没有 paper/evidence"
+    },
+    {
+      "case_id": "bundle_hash_mismatch",
+      "base": "bundle_manifest.json",
+      "operation": "set",
+      "path": ["artifacts", "topic_set", "sha256"],
+      "value": "0000000000000000000000000000000000000000000000000000000000000000",
+      "expected_error": "hash mismatch"
+    }
+  ]
+}

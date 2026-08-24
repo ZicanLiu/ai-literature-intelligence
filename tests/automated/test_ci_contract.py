@@ -47,6 +47,7 @@ class CIWorkflowContractTests(unittest.TestCase):
         required_commands = [
             'git diff --check ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}',
             "python -m app.validate_w4_benchmark",
+            "python -m app.validate_w6_bootstrap",
             'python -m unittest discover -s tests/automated -p "test_*.py" -q',
             "python -m app.quality_gate --level basic",
             "python scripts/check_w5_method_artifacts.py",

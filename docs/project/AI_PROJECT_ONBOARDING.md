@@ -7,7 +7,8 @@
 - 快照更新时间：2026-08-24
 - W5 Contract 前置基线：`d558a088`（PR #48 已合并；仅作历史锚点）
 - 当前公共能力：W5 Contract v1.1（向后兼容 v1.0）、六方法正式 artifact、统一评价与
-  Error Analysis 已完成 post-merge 收口
+  Error Analysis 已完成 post-merge 收口；W6 已建立 Research Contract、hash-pinned offline
+  fixtures 和六人独立并行开发边界，但尚未产生真实 W6 research artifact
 - 当前状态：W1–W4 工程、六人 Pilot Annotation、独立 Blind AI Audit 与人工复核已完成；
   `w4_query_relevance_pilot_v0.1.0` 已批准并通过 strict validator。公共 `main` 的准确 HEAD
   必须在接手任务时用当前 Git/GitHub 重新核对，不在本文预写未来 merge SHA
@@ -91,6 +92,7 @@ approved benchmark label；ranking 与参数先冻结，再由评价阶段连接
 | `data/benchmarks/` | versioned judged-set artifact；draft 与 approved 必须由 status/hash 区分 |
 | `tests/automated/` | 标准库 `unittest` 自动测试 |
 | `tests/fixtures/` | 离线、确定、可重复的测试输入 |
+| `tests/fixtures/w6_bootstrap/` | W6 topic/pool/canonical/blind/hidden/method/synthesis 公共正负 fixture；不是真实 benchmark |
 | `docs/project/` | 长期架构、接口和使用说明 |
 | `docs/reports/` | 某一阶段的事实快照与成员分析 |
 | `outputs/experiments/` | 单次 parent run，默认忽略 |
@@ -645,3 +647,66 @@ Analysis。结果与边界见
 - 新增 `src → app` 反向依赖；
 - 把可复用业务逻辑复制到 CLI；
 - 为通过测试删除断言、放宽错误或修改历史 evidence。
+
+## 23. W6 Research Contract 与六人并行开发入口
+
+W6 的公共 Bootstrap 已建立，完整协议见
+[`W6_RESEARCH_CONTRACT_AND_PARALLEL_BOOTSTRAP.md`](W6_RESEARCH_CONTRACT_AND_PARALLEL_BOOTSTRAP.md)。
+接手任一 W6 成员 Issue 时，除本文、`CURRENT_STATUS` 和 W4/W5 协议外，必须先阅读该文档并运行：
+
+```powershell
+python -m app.validate_w6_bootstrap
+python -m unittest tests.automated.test_w6_contracts -v
+```
+
+公共实现分为三层：
+
+- `src.w6_contracts`：Topic、retrieval provenance、source record、canonical entity、pre/post
+  canonicalization Candidate Pool、opaque blind-task mapping、AI-assisted result、独立
+  review/adjudication、topic split、public hidden-label seal anchor 和 Benchmark manifest；
+- `src.w6_method_contract`：保持 W5 五列和确定性排序语义的任意 topic/pool extension，以及
+  multi-method raw score/rank/hash/normalization 接口；
+- `src.w6_synthesis_contract`：frozen ranked-list input、短 evidence unit、structured claim 和
+  rendered-review provenance。
+
+默认 deterministic bundle 位于
+`tests/fixtures/w6_bootstrap/valid/bundle_manifest.json`，包含 2 个 fake topics、10 个 fake source
+records、13 个 topic-record pool items 的 pre/post canonicalization 两个视图、confirmed alias、
+suspected duplicate、missing abstract、multi/single retriever、opaque blind-task mapping、
+AI-assisted annotations、独立 review artifact、fake Dev/Hidden split、public hidden hash anchor、
+3 个 fake method packages、evidence/claim fixtures。`invalid/` 保存故意错误的
+overlap、identity、leakage、label、hash 和 dangling-reference cases。
+
+这组 fixture 只证明接口和 validator 可离线组合，不代表真实 Topic、Pool、label、hidden test、
+ranking、synthesis 或 Benchmark v0.2-alpha 已存在。Bootstrap 只接受 sealed anchor，不提供 reveal
+API，也不保存 fake/真实 hidden-label 文件；真实 hidden labels 必须放在普通仓库之外，由后续独立
+evaluator/custodian 流程处理。
+
+六个 future Issue 的依赖原则是：
+
+```text
+Bootstrap + 当前 main + 对应 fixture
+```
+
+Leader、Synthesis/Fusion、Pool Builder、Canonicalization Audit、Metadata Diagnostics 和 QA Gate
+均不得导入另一成员尚未合并的模块或读取其真实 artifact。Bundle manifest 为六个任务分别列出
+可用 artifact，并统一声明 `depends_on=["w6_bootstrap"]`；自动测试会将每个任务的声明 artifact
+单独复制到临时目录，完成 load/validate/smoke，并验证缺任一声明输入时 fail closed。真实数据流
+只在对应生产模块都进入公共基线后由独立 Integration PR 连接和运行。
+
+W6 method CSV 继续使用
+`pair_id,research_query_id,method_id,score,rank`，其中 `pair_id → pool_item_id`、
+`research_query_id → topic_id`。不要改动 W5 validator 的 60/3×20 trust anchors；W6 动态 cardinality
+由扩展 validator 从冻结 Candidate Pool 读取。共同输入固定为 topic/pool，文本方法通过受限
+`auxiliary_inputs` 显式绑定 source records 等实际输入。Fusion 至少绑定两个输入
+manifest/ranking hash，记录 raw score/rank usage、精确覆盖输入方法的 weights 与 normalization
+config，并在 generation 中声明没有读取 Dev/Hidden labels。
+
+W6 no-leakage 必须同时满足：Dev/Hidden 按 topic、split 在 labels/method selection 前冻结、
+hidden labels 不进普通 generation path、blind task 不含 retriever/method/rank/score、正式 method
+先 freeze 再 hidden evaluation。AI annotation 只能保存可审查结论/证据/简短依据及 provenance，
+不能存储 private chain-of-thought，也不能冒充 pure-human gold。
+
+Synthesis 只能从 frozen ranked list 和显式 evidence units 构造 structured claims。支持或部分支持
+的 claim 必须绑定 canonical paper 与 evidence reference；unsupported claim 必须显式标记。Query
+Relevance label 不能被当作事实正确性标签。

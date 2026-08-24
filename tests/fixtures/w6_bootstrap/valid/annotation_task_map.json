@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_annotation_task_map",
+  "artifact_id": "w6_fixture_annotation_task_map_v1",
+  "is_fixture": true,
+  "view_policy": "blind_to_retrieval_and_ranking_v2",
+  "id_policy": "sha256(topic_id|public_identity|view_policy)",
+  "candidate_pool": {"artifact_id": "w6_fixture_candidate_pool_v1", "sha256": "5fbd8acc3304b835e01332b4e57cafe5da5c196ea7d33c81c620a3e340c829ae"},
+  "created_at": "2026-08-24T08:35:00+08:00",
+  "provenance": {
+    "kind": "synthetic_fixture_private_mapping",
+    "created_by": "w6_bootstrap",
+    "created_at": "2026-08-24T08:35:00+08:00",
+    "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+  },
+  "mappings": [
+    {"annotation_item_id": "blind_e589c6c3221434b8c5d1e0db", "annotation_task_id": "annot:blind_e589c6c3221434b8c5d1e0db", "topic_id": "w6_fixture_topic_denoising", "pool_item_id": "pool_denoise_001", "record_id": "rec_001", "canonical_entity_id": "entity_001"},
+    {"annotation_item_id": "blind_c0d8699dfc5bfd3c24f56928", "annotation_task_id": "annot:blind_c0d8699dfc5bfd3c24f56928", "topic_id": "w6_fixture_topic_denoising", "pool_item_id": "pool_denoise_002", "record_id": "rec_002", "canonical_entity_id": "entity_002"},
+    {"annotation_item_id": "blind_294f5a7c4b64674cddb757c9", "annotation_task_id": "annot:blind_294f5a7c4b64674cddb757c9", "topic_id": "w6_fixture_topic_denoising", "pool_item_id": "pool_denoise_003", "record_id": "rec_003", "canonical_entity_id": "entity_003"},
+    {"annotation_item_id": "blind_e185b7c428feee4172fd24ea", "annotation_task_id": "annot:blind_e185b7c428feee4172fd24ea", "topic_id": "w6_fixture_topic_denoising", "pool_item_id": "pool_denoise_004", "record_id": "rec_004", "canonical_entity_id": "entity_004"},
+    {"annotation_item_id": "blind_571b00ab87d8aae04318dafd", "annotation_task_id": "annot:blind_571b00ab87d8aae04318dafd", "topic_id": "w6_fixture_topic_denoising", "pool_item_id": "pool_denoise_005", "record_id": "rec_005", "canonical_entity_id": "entity_005"},
+    {"annotation_item_id": "blind_d4155b7eedb460e74021bcf3", "annotation_task_id": "annot:blind_d4155b7eedb460e74021bcf3", "topic_id": "w6_fixture_topic_denoising", "pool_item_id": "pool_denoise_006", "record_id": "rec_006", "canonical_entity_id": "entity_006"},
+    {"annotation_item_id": "blind_7af2342ecf5ba5b13d3efdc5", "annotation_task_id": "annot:blind_7af2342ecf5ba5b13d3efdc5", "topic_id": "w6_fixture_topic_denoising", "pool_item_id": "pool_denoise_008", "record_id": "rec_008", "canonical_entity_id": "entity_003"},
+    {"annotation_item_id": "blind_f16c79ba59adca6c9b385460", "annotation_task_id": "annot:blind_f16c79ba59adca6c9b385460", "topic_id": "w6_fixture_topic_transients", "pool_item_id": "pool_transient_002", "record_id": "rec_002", "canonical_entity_id": "entity_002"},
+    {"annotation_item_id": "blind_bf3b5ae6d059b6dab9d61e09", "annotation_task_id": "annot:blind_bf3b5ae6d059b6dab9d61e09", "topic_id": "w6_fixture_topic_transients", "pool_item_id": "pool_transient_004", "record_id": "rec_004", "canonical_entity_id": "entity_004"},
+    {"annotation_item_id": "blind_2d99a4185a0d6802fe6a52bc", "annotation_task_id": "annot:blind_2d99a4185a0d6802fe6a52bc", "topic_id": "w6_fixture_topic_transients", "pool_item_id": "pool_transient_006", "record_id": "rec_006", "canonical_entity_id": "entity_006"},
+    {"annotation_item_id": "blind_6ea9af5649e26665921ef7e2", "annotation_task_id": "annot:blind_6ea9af5649e26665921ef7e2", "topic_id": "w6_fixture_topic_transients", "pool_item_id": "pool_transient_007", "record_id": "rec_007", "canonical_entity_id": "entity_007"},
+    {"annotation_item_id": "blind_069abf80c1be9ac2fc8c7802", "annotation_task_id": "annot:blind_069abf80c1be9ac2fc8c7802", "topic_id": "w6_fixture_topic_transients", "pool_item_id": "pool_transient_009", "record_id": "rec_009", "canonical_entity_id": "entity_009"},
+    {"annotation_item_id": "blind_6ece54a8033ee0424e868e56", "annotation_task_id": "annot:blind_6ece54a8033ee0424e868e56", "topic_id": "w6_fixture_topic_transients", "pool_item_id": "pool_transient_010", "record_id": "rec_010", "canonical_entity_id": "entity_010"}
+  ]
+}

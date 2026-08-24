@@ -2,7 +2,8 @@
 
 更新时间：2026-08-24
 
-W5 Post-Merge 收口的公共 `main` 起点：`d71132f`（PR #56–#61 已合并）。
+W6 Bootstrap 开工时核对的公共 `main` / 缓存 `origin/main` 起点：`6b9eb12`（W5 PR #56–#62
+已合并）。实时远端状态仍须在每次接手任务时重新 fetch/GitHub 核对。
 
 W5 Method Ranking Contract v1.1 已建立并向后兼容 v1.0。v1.1 只用于完整声明 B0/B1 的冻结
 source sample 输入；BM25、SPECTER2、Cross-Encoder 与 RRF 的 v1.0 package 继续有效。
@@ -20,7 +21,9 @@ v0.3.0 tag 仍指向较早的 W2 发布基线 `899f745`；不能用旧 tag、`d5
 3. 本页和当前 Issue；
 4. benchmark/W5 实验任务继续阅读
    [`W4_PILOT_BENCHMARK_PROTOCOL.md`](project/W4_PILOT_BENCHMARK_PROTOCOL.md) 和
-   [`W5_METHOD_RANKING_CONTRACT.md`](project/W5_METHOD_RANKING_CONTRACT.md)。
+   [`W5_METHOD_RANKING_CONTRACT.md`](project/W5_METHOD_RANKING_CONTRACT.md)；
+5. W6 任务继续阅读
+   [`W6_RESEARCH_CONTRACT_AND_PARALLEL_BOOTSTRAP.md`](project/W6_RESEARCH_CONTRACT_AND_PARALLEL_BOOTSTRAP.md)。
 
 所有状态都要重新用当前 Git、源码和实际测试核对。
 
@@ -164,15 +167,47 @@ RRF 的互补收益集中于 RQ02/Top5；macro NDCG@10 仍低于 SPECTER2，不�
 正式 metrics、manifest、Error Analysis 与完整科研边界见
 [`W5_FINAL_INTEGRATION_AND_EXPERIMENT.md`](reports/week5/W5_FINAL_INTEGRATION_AND_EXPERIMENT.md)。
 
+## W6 Research Contract & Parallel Development Bootstrap
+
+W6 Bootstrap 只建立六人独立开发所需的公共接口，不选择真实 Topic、不生成真实 Candidate Pool、
+annotation、hidden labels、ranking、synthesis 或 Benchmark v0.2-alpha。当前新增：
+
+- 任意 topic 数量的 Research Topic、retrieval run/hit provenance、source record、canonical
+  entity/alias、pre/post canonicalization Candidate Pool 和 deterministic identity contracts；
+- 与 pool/retriever/rank identity 解耦的 opaque annotation item/mapping、blind view，以及
+  AI-assisted annotation/review provenance；
+- 在 annotation start 前实际冻结并以 hash 绑定的 topic-level Dev/Hidden split，以及只接受
+  sealed 状态的 external hidden-label hash anchor；Bootstrap 不提供 reveal API/仓内 label 文件；
+- 保持 W5 五列/排序语义、不修改 W5 frozen artifact 的 dynamic-pool method extension；
+- 共同 topic/pool 输入加受限 method-specific auxiliary inputs，以及多冻结 method input 的 raw
+  score/rank/hash/normalization/weights extension point；正式 fusion 至少需要两个输入；
+- frozen ranking selection + short evidence unit + input-hash-bound structured claim/render contract；
+- 2 fake topics、10 fake source records、13 pool items 的 pre/post 两个视图、3 fake rankings 及
+  valid/invalid offline fixtures；
+- 六个 future task 全部只依赖 `Bootstrap + current main + 对应 fixtures`；测试会对每个任务仅复制
+  声明 artifacts 做独立 load/validate/smoke，并验证缺文件 fail closed。真实跨模块运行留给独立
+  Integration PR。
+
+公共 validator：
+
+```powershell
+python -m app.validate_w6_bootstrap
+```
+
+详细字段、no-leakage、目录、fixture 和 Parallel Development Matrix 见 W6 Bootstrap 文档。Fixture
+Benchmark status 为 `bootstrap_fixture`；仓库没有真实 W6 hidden labels，也没有批准的 W6
+Benchmark v0.2-alpha。
+
 ## 当前验证
 
 - approved benchmark strict validator：60/60、20 × 3，通过；
 - 正式 W5 artifact checker：精确六方法 roster 6/6，通过；
-- Contract v1.1 / baseline / runner / RRF 定向测试：71 项通过；
-- 全量离线测试：446 项通过，0 failure / 0 error；
-- CI workflow/checker 定向测试：13 项通过；
-- Basic Quality Gate：扫描 297 个文件，0 error / 0 warning，PASSED；
-- Full Quality Gate：扫描 297 个文件，0 error / 3 个既有历史 warning，PASSED；
+- W6 public bundle validator：2 topics、10 source records、13 pool items、3 method packages，通过；
+- W6 contract/fixture 定向测试：48 项通过（含六任务隔离 dependency-closure smoke 与审查绕过
+  regressions）；W4/W5/W6 相关回归：212 项通过；
+- 全量离线测试：494 项通过，0 failure / 0 error；
+- Basic Quality Gate：扫描 328 个文件，0 error / 0 warning，PASSED；
+- Full Quality Gate：扫描 328 个文件，0 error / 3 个既有历史 warning，PASSED；
 - experiment metrics 与六个 method manifest hash 复核一致；`git diff --check` 通过；
 - 所有测试使用本地 fixture 或已提交样例，没有新增 OpenAlex live 请求或神经模型推理。
 
@@ -180,12 +215,13 @@ Full Gate 的三个 warning 与此前公共基线一致：W1 一处历史 CSV �
 `data/manual/relevance_labels_w1.csv` 的 19 个旧 ID 未对齐当前统一样例、一个历史已跟踪
 experiment `openalex_stellar_spectra_60`。本次没有修改这些历史 evidence，也没有新增 warning。
 
-## 下一阶段待团队决策
+## W6 后续 Issue 保留的研究决策
 
-1. 是否先扩大 Research Query/benchmark，并建立独立盲 test split；
-2. 是否使用 multi-retriever pooling 建立真正的 retrieval recall benchmark；
-3. 是否进行天文专家 calibration，优先复核 query-boundary 与 unclassified 高位错误；
-4. 是否在新 benchmark 上预注册 normalized-score fusion 或 task-boundary 改进；
-5. 是否单独定义 evidence-grounded literature synthesis 的来源与人工核验协议。
+1. 最终 Topic 数量、内容、viability 与 freeze；
+2. 真实 multi-retriever roster、pool depth/target/minimum 和 pooling policy；
+3. 真实 Dev/Hidden topic split、hidden-label custodian 和一次性 reveal 流程；
+4. AI annotation prompt/model/evidence lookup/human review/adjudication policy；
+5. Boundary-Aware method、score normalization/weights 和 preregistration；
+6. synthesis LLM/backend、证据抽取许可与人工事实核验。
 
 不得根据当前正式指标回调参数后仍冒充同一次冻结实验；不得自行创建 W6 Issue。

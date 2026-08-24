@@ -1,0 +1,529 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_blind_annotation_tasks",
+  "artifact_id": "w6_fixture_blind_tasks_v1",
+  "is_fixture": true,
+  "view_policy": "blind_to_retrieval_and_ranking_v2",
+  "task_map": {"artifact_id": "w6_fixture_annotation_task_map_v1", "sha256": "2aa7d1012b772a8f2df1ea8d84659debe4be04065b35023795431fe717038e71"},
+  "created_at": "2026-08-24T08:40:00+08:00",
+  "provenance": {
+    "kind": "deterministic_projection_fixture",
+    "created_by": "w6_bootstrap",
+    "created_at": "2026-08-24T08:40:00+08:00",
+    "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+  },
+  "tasks": [
+    {
+      "annotation_task_id": "annot:blind_e589c6c3221434b8c5d1e0db",
+      "annotation_item_id": "blind_e589c6c3221434b8c5d1e0db",
+      "annotation_round": "independent_primary",
+      "topic": {
+        "topic_id": "w6_fixture_topic_denoising",
+        "research_question": "How can data-driven methods reduce synthetic detector noise in stellar spectra without changing absorption-line measurements?",
+        "scientific_object": "synthetic stellar spectra",
+        "data_modality": "one-dimensional optical spectra",
+        "target_task": "noise removal and quality restoration",
+        "method_role": "data-driven method is the primary denoising component",
+        "scope_in": [
+          "stellar spectra are the direct input",
+          "noise removal or quality restoration is a primary task"
+        ],
+        "scope_out": [
+          "parameter estimation without denoising",
+          "non-astronomical spectra"
+        ],
+        "boundary_cases": [
+          "denoising used only as an unanalysed preprocessing step",
+          "spectral reconstruction whose primary goal is parameter inference"
+        ]
+      },
+      "candidate": {
+        "title": "Synthetic Autoencoder Denoising of Stellar Spectra",
+        "abstract": "A synthetic autoencoder removes detector noise from one-dimensional stellar spectra while preserving measured absorption-line depths.",
+        "publication_year": 2024,
+        "authors": [
+          "Ada Fixture",
+          "Bo Example"
+        ],
+        "venue": "Fixture Astronomy Journal",
+        "public_identity": {
+          "openalex_id": "https://openalex.org/W900000001",
+          "doi": "https://doi.org/10.5555/fixture.001",
+          "landing_page_url": "https://example.test/papers/rec-001"
+        }
+      }
+    },
+    {
+      "annotation_task_id": "annot:blind_c0d8699dfc5bfd3c24f56928",
+      "annotation_item_id": "blind_c0d8699dfc5bfd3c24f56928",
+      "annotation_round": "independent_primary",
+      "topic": {
+        "topic_id": "w6_fixture_topic_denoising",
+        "research_question": "How can data-driven methods reduce synthetic detector noise in stellar spectra without changing absorption-line measurements?",
+        "scientific_object": "synthetic stellar spectra",
+        "data_modality": "one-dimensional optical spectra",
+        "target_task": "noise removal and quality restoration",
+        "method_role": "data-driven method is the primary denoising component",
+        "scope_in": [
+          "stellar spectra are the direct input",
+          "noise removal or quality restoration is a primary task"
+        ],
+        "scope_out": [
+          "parameter estimation without denoising",
+          "non-astronomical spectra"
+        ],
+        "boundary_cases": [
+          "denoising used only as an unanalysed preprocessing step",
+          "spectral reconstruction whose primary goal is parameter inference"
+        ]
+      },
+      "candidate": {
+        "title": "A General Pipeline for Cleaning and Classifying Astronomical Spectra",
+        "abstract": "The fixture pipeline includes denoising and transient classification, but neither component is evaluated as the sole contribution.",
+        "publication_year": 2023,
+        "authors": [
+          "Chen Example"
+        ],
+        "venue": "Synthetic Methods Letters",
+        "public_identity": {
+          "openalex_id": "https://openalex.org/W900000002",
+          "doi": "10.5555/fixture.002",
+          "landing_page_url": "https://example.test/papers/rec-002"
+        }
+      }
+    },
+    {
+      "annotation_task_id": "annot:blind_294f5a7c4b64674cddb757c9",
+      "annotation_item_id": "blind_294f5a7c4b64674cddb757c9",
+      "annotation_round": "independent_primary",
+      "topic": {
+        "topic_id": "w6_fixture_topic_denoising",
+        "research_question": "How can data-driven methods reduce synthetic detector noise in stellar spectra without changing absorption-line measurements?",
+        "scientific_object": "synthetic stellar spectra",
+        "data_modality": "one-dimensional optical spectra",
+        "target_task": "noise removal and quality restoration",
+        "method_role": "data-driven method is the primary denoising component",
+        "scope_in": [
+          "stellar spectra are the direct input",
+          "noise removal or quality restoration is a primary task"
+        ],
+        "scope_out": [
+          "parameter estimation without denoising",
+          "non-astronomical spectra"
+        ],
+        "boundary_cases": [
+          "denoising used only as an unanalysed preprocessing step",
+          "spectral reconstruction whose primary goal is parameter inference"
+        ]
+      },
+      "candidate": {
+        "title": "Line-Preserving Neural Restoration for Synthetic Stellar Spectra",
+        "abstract": "A neural restoration model is trained on synthetic noisy stellar spectra and reports line-equivalent-width preservation.",
+        "publication_year": 2025,
+        "authors": [
+          "Dara Example",
+          "Eli Fixture"
+        ],
+        "venue": "Fixture Spectroscopy",
+        "public_identity": {
+          "openalex_id": "https://openalex.org/W900000003",
+          "doi": "https://doi.org/10.5555/fixture.alias",
+          "landing_page_url": "https://example.test/papers/rec-003"
+        }
+      }
+    },
+    {
+      "annotation_task_id": "annot:blind_e185b7c428feee4172fd24ea",
+      "annotation_item_id": "blind_e185b7c428feee4172fd24ea",
+      "annotation_round": "independent_primary",
+      "topic": {
+        "topic_id": "w6_fixture_topic_denoising",
+        "research_question": "How can data-driven methods reduce synthetic detector noise in stellar spectra without changing absorption-line measurements?",
+        "scientific_object": "synthetic stellar spectra",
+        "data_modality": "one-dimensional optical spectra",
+        "target_task": "noise removal and quality restoration",
+        "method_role": "data-driven method is the primary denoising component",
+        "scope_in": [
+          "stellar spectra are the direct input",
+          "noise removal or quality restoration is a primary task"
+        ],
+        "scope_out": [
+          "parameter estimation without denoising",
+          "non-astronomical spectra"
+        ],
+        "boundary_cases": [
+          "denoising used only as an unanalysed preprocessing step",
+          "spectral reconstruction whose primary goal is parameter inference"
+        ]
+      },
+      "candidate": {
+        "title": "Deep Classification and Denoising of Clinical Infrared Spectra",
+        "abstract": "A neural network denoises clinical infrared measurements and classifies tissue samples; the data are not astronomical.",
+        "publication_year": 2022,
+        "authors": [
+          "Faye Boundary"
+        ],
+        "venue": "Synthetic Medical Spectra",
+        "public_identity": {
+          "openalex_id": "https://openalex.org/W900000004",
+          "doi": "10.5555/fixture.004",
+          "landing_page_url": "https://example.test/papers/rec-004"
+        }
+      }
+    },
+    {
+      "annotation_task_id": "annot:blind_571b00ab87d8aae04318dafd",
+      "annotation_item_id": "blind_571b00ab87d8aae04318dafd",
+      "annotation_round": "independent_primary",
+      "topic": {
+        "topic_id": "w6_fixture_topic_denoising",
+        "research_question": "How can data-driven methods reduce synthetic detector noise in stellar spectra without changing absorption-line measurements?",
+        "scientific_object": "synthetic stellar spectra",
+        "data_modality": "one-dimensional optical spectra",
+        "target_task": "noise removal and quality restoration",
+        "method_role": "data-driven method is the primary denoising component",
+        "scope_in": [
+          "stellar spectra are the direct input",
+          "noise removal or quality restoration is a primary task"
+        ],
+        "scope_out": [
+          "parameter estimation without denoising",
+          "non-astronomical spectra"
+        ],
+        "boundary_cases": [
+          "denoising used only as an unanalysed preprocessing step",
+          "spectral reconstruction whose primary goal is parameter inference"
+        ]
+      },
+      "candidate": {
+        "title": "Reconstructing Stellar Spectra for Atmospheric Parameter Inference",
+        "abstract": "The model reconstructs spectra only to estimate stellar atmospheric parameters; denoising quality is not an evaluated target.",
+        "publication_year": 2021,
+        "authors": [
+          "Gao Boundary"
+        ],
+        "venue": "Fixture Astrophysical Models",
+        "public_identity": {
+          "openalex_id": "https://openalex.org/W900000005",
+          "doi": "10.5555/fixture.005a",
+          "landing_page_url": "https://example.test/papers/rec-005"
+        }
+      }
+    },
+    {
+      "annotation_task_id": "annot:blind_d4155b7eedb460e74021bcf3",
+      "annotation_item_id": "blind_d4155b7eedb460e74021bcf3",
+      "annotation_round": "independent_primary",
+      "topic": {
+        "topic_id": "w6_fixture_topic_denoising",
+        "research_question": "How can data-driven methods reduce synthetic detector noise in stellar spectra without changing absorption-line measurements?",
+        "scientific_object": "synthetic stellar spectra",
+        "data_modality": "one-dimensional optical spectra",
+        "target_task": "noise removal and quality restoration",
+        "method_role": "data-driven method is the primary denoising component",
+        "scope_in": [
+          "stellar spectra are the direct input",
+          "noise removal or quality restoration is a primary task"
+        ],
+        "scope_out": [
+          "parameter estimation without denoising",
+          "non-astronomical spectra"
+        ],
+        "boundary_cases": [
+          "denoising used only as an unanalysed preprocessing step",
+          "spectral reconstruction whose primary goal is parameter inference"
+        ]
+      },
+      "candidate": {
+        "title": "Machine Learning for Noisy Astronomical Spectra",
+        "abstract": null,
+        "publication_year": 2020,
+        "authors": [
+          "Han Missing"
+        ],
+        "venue": "Fixture Conference Proceedings",
+        "public_identity": {
+          "openalex_id": "https://openalex.org/W900000006",
+          "doi": null,
+          "landing_page_url": "https://example.test/papers/rec-006"
+        }
+      }
+    },
+    {
+      "annotation_task_id": "annot:blind_7af2342ecf5ba5b13d3efdc5",
+      "annotation_item_id": "blind_7af2342ecf5ba5b13d3efdc5",
+      "annotation_round": "independent_primary",
+      "topic": {
+        "topic_id": "w6_fixture_topic_denoising",
+        "research_question": "How can data-driven methods reduce synthetic detector noise in stellar spectra without changing absorption-line measurements?",
+        "scientific_object": "synthetic stellar spectra",
+        "data_modality": "one-dimensional optical spectra",
+        "target_task": "noise removal and quality restoration",
+        "method_role": "data-driven method is the primary denoising component",
+        "scope_in": [
+          "stellar spectra are the direct input",
+          "noise removal or quality restoration is a primary task"
+        ],
+        "scope_out": [
+          "parameter estimation without denoising",
+          "non-astronomical spectra"
+        ],
+        "boundary_cases": [
+          "denoising used only as an unanalysed preprocessing step",
+          "spectral reconstruction whose primary goal is parameter inference"
+        ]
+      },
+      "candidate": {
+        "title": "Line Preserving Neural Restoration for Synthetic Stellar Spectra",
+        "abstract": "This provider record is a deliberate high-confidence alias of the line-preserving restoration paper.",
+        "publication_year": 2025,
+        "authors": [
+          "Dara Example",
+          "Eli Fixture"
+        ],
+        "venue": "Fixture Spectroscopy",
+        "public_identity": {
+          "openalex_id": "https://openalex.org/W900000008",
+          "doi": "DOI:10.5555/FIXTURE.ALIAS",
+          "landing_page_url": "https://example.test/papers/rec-008"
+        }
+      }
+    },
+    {
+      "annotation_task_id": "annot:blind_f16c79ba59adca6c9b385460",
+      "annotation_item_id": "blind_f16c79ba59adca6c9b385460",
+      "annotation_round": "independent_primary",
+      "topic": {
+        "topic_id": "w6_fixture_topic_transients",
+        "research_question": "How can machine learning classify synthetic transient spectra while respecting object and modality boundaries?",
+        "scientific_object": "synthetic astronomical transients",
+        "data_modality": "time-resolved optical spectra",
+        "target_task": "transient spectral classification",
+        "method_role": "machine learning produces the class prediction",
+        "scope_in": [
+          "transient spectra are direct model inputs",
+          "classification is a primary output"
+        ],
+        "scope_out": [
+          "photometry-only transient classification",
+          "static stellar-type classification"
+        ],
+        "boundary_cases": [
+          "multimodal systems where spectra are optional",
+          "spectral feature extraction without a classification output"
+        ]
+      },
+      "candidate": {
+        "title": "A General Pipeline for Cleaning and Classifying Astronomical Spectra",
+        "abstract": "The fixture pipeline includes denoising and transient classification, but neither component is evaluated as the sole contribution.",
+        "publication_year": 2023,
+        "authors": [
+          "Chen Example"
+        ],
+        "venue": "Synthetic Methods Letters",
+        "public_identity": {
+          "openalex_id": "https://openalex.org/W900000002",
+          "doi": "10.5555/fixture.002",
+          "landing_page_url": "https://example.test/papers/rec-002"
+        }
+      }
+    },
+    {
+      "annotation_task_id": "annot:blind_bf3b5ae6d059b6dab9d61e09",
+      "annotation_item_id": "blind_bf3b5ae6d059b6dab9d61e09",
+      "annotation_round": "independent_primary",
+      "topic": {
+        "topic_id": "w6_fixture_topic_transients",
+        "research_question": "How can machine learning classify synthetic transient spectra while respecting object and modality boundaries?",
+        "scientific_object": "synthetic astronomical transients",
+        "data_modality": "time-resolved optical spectra",
+        "target_task": "transient spectral classification",
+        "method_role": "machine learning produces the class prediction",
+        "scope_in": [
+          "transient spectra are direct model inputs",
+          "classification is a primary output"
+        ],
+        "scope_out": [
+          "photometry-only transient classification",
+          "static stellar-type classification"
+        ],
+        "boundary_cases": [
+          "multimodal systems where spectra are optional",
+          "spectral feature extraction without a classification output"
+        ]
+      },
+      "candidate": {
+        "title": "Deep Classification and Denoising of Clinical Infrared Spectra",
+        "abstract": "A neural network denoises clinical infrared measurements and classifies tissue samples; the data are not astronomical.",
+        "publication_year": 2022,
+        "authors": [
+          "Faye Boundary"
+        ],
+        "venue": "Synthetic Medical Spectra",
+        "public_identity": {
+          "openalex_id": "https://openalex.org/W900000004",
+          "doi": "10.5555/fixture.004",
+          "landing_page_url": "https://example.test/papers/rec-004"
+        }
+      }
+    },
+    {
+      "annotation_task_id": "annot:blind_2d99a4185a0d6802fe6a52bc",
+      "annotation_item_id": "blind_2d99a4185a0d6802fe6a52bc",
+      "annotation_round": "independent_primary",
+      "topic": {
+        "topic_id": "w6_fixture_topic_transients",
+        "research_question": "How can machine learning classify synthetic transient spectra while respecting object and modality boundaries?",
+        "scientific_object": "synthetic astronomical transients",
+        "data_modality": "time-resolved optical spectra",
+        "target_task": "transient spectral classification",
+        "method_role": "machine learning produces the class prediction",
+        "scope_in": [
+          "transient spectra are direct model inputs",
+          "classification is a primary output"
+        ],
+        "scope_out": [
+          "photometry-only transient classification",
+          "static stellar-type classification"
+        ],
+        "boundary_cases": [
+          "multimodal systems where spectra are optional",
+          "spectral feature extraction without a classification output"
+        ]
+      },
+      "candidate": {
+        "title": "Machine Learning for Noisy Astronomical Spectra",
+        "abstract": null,
+        "publication_year": 2020,
+        "authors": [
+          "Han Missing"
+        ],
+        "venue": "Fixture Conference Proceedings",
+        "public_identity": {
+          "openalex_id": "https://openalex.org/W900000006",
+          "doi": null,
+          "landing_page_url": "https://example.test/papers/rec-006"
+        }
+      }
+    },
+    {
+      "annotation_task_id": "annot:blind_6ea9af5649e26665921ef7e2",
+      "annotation_item_id": "blind_6ea9af5649e26665921ef7e2",
+      "annotation_round": "independent_primary",
+      "topic": {
+        "topic_id": "w6_fixture_topic_transients",
+        "research_question": "How can machine learning classify synthetic transient spectra while respecting object and modality boundaries?",
+        "scientific_object": "synthetic astronomical transients",
+        "data_modality": "time-resolved optical spectra",
+        "target_task": "transient spectral classification",
+        "method_role": "machine learning produces the class prediction",
+        "scope_in": [
+          "transient spectra are direct model inputs",
+          "classification is a primary output"
+        ],
+        "scope_out": [
+          "photometry-only transient classification",
+          "static stellar-type classification"
+        ],
+        "boundary_cases": [
+          "multimodal systems where spectra are optional",
+          "spectral feature extraction without a classification output"
+        ]
+      },
+      "candidate": {
+        "title": "Early Typing of Synthetic Transients from Optical Spectra",
+        "abstract": "A supervised classifier assigns transient types from time-resolved optical spectra and evaluates early classifications.",
+        "publication_year": 2025,
+        "authors": [
+          "Iris Fixture",
+          "Jin Example"
+        ],
+        "venue": "Synthetic Transient Journal",
+        "public_identity": {
+          "openalex_id": "https://openalex.org/W900000007",
+          "doi": "10.5555/fixture.007",
+          "landing_page_url": "https://example.test/papers/rec-007"
+        }
+      }
+    },
+    {
+      "annotation_task_id": "annot:blind_069abf80c1be9ac2fc8c7802",
+      "annotation_item_id": "blind_069abf80c1be9ac2fc8c7802",
+      "annotation_round": "independent_primary",
+      "topic": {
+        "topic_id": "w6_fixture_topic_transients",
+        "research_question": "How can machine learning classify synthetic transient spectra while respecting object and modality boundaries?",
+        "scientific_object": "synthetic astronomical transients",
+        "data_modality": "time-resolved optical spectra",
+        "target_task": "transient spectral classification",
+        "method_role": "machine learning produces the class prediction",
+        "scope_in": [
+          "transient spectra are direct model inputs",
+          "classification is a primary output"
+        ],
+        "scope_out": [
+          "photometry-only transient classification",
+          "static stellar-type classification"
+        ],
+        "boundary_cases": [
+          "multimodal systems where spectra are optional",
+          "spectral feature extraction without a classification output"
+        ]
+      },
+      "candidate": {
+        "title": "Low-Lexical-Overlap Transient Spectral Typing",
+        "abstract": "A representation learner identifies explosive-event categories from spectral sequences; it is found only by the synthetic dense retriever.",
+        "publication_year": 2024,
+        "authors": [
+          "Kai Dense"
+        ],
+        "venue": "Fixture Representation Learning",
+        "public_identity": {
+          "openalex_id": "https://openalex.org/W900000009",
+          "doi": "10.5555/fixture.009",
+          "landing_page_url": "https://example.test/papers/rec-009"
+        }
+      }
+    },
+    {
+      "annotation_task_id": "annot:blind_6ece54a8033ee0424e868e56",
+      "annotation_item_id": "blind_6ece54a8033ee0424e868e56",
+      "annotation_round": "independent_primary",
+      "topic": {
+        "topic_id": "w6_fixture_topic_transients",
+        "research_question": "How can machine learning classify synthetic transient spectra while respecting object and modality boundaries?",
+        "scientific_object": "synthetic astronomical transients",
+        "data_modality": "time-resolved optical spectra",
+        "target_task": "transient spectral classification",
+        "method_role": "machine learning produces the class prediction",
+        "scope_in": [
+          "transient spectra are direct model inputs",
+          "classification is a primary output"
+        ],
+        "scope_out": [
+          "photometry-only transient classification",
+          "static stellar-type classification"
+        ],
+        "boundary_cases": [
+          "multimodal systems where spectra are optional",
+          "spectral feature extraction without a classification output"
+        ]
+      },
+      "candidate": {
+        "title": "Reconstructing Stellar Spectra for Transient Parameter Inference",
+        "abstract": "A related-looking but distinct record predicts transient parameters and does not output a transient class.",
+        "publication_year": 2021,
+        "authors": [
+          "Gao Boundary",
+          "Lin Distinct"
+        ],
+        "venue": "Fixture Astrophysical Models",
+        "public_identity": {
+          "openalex_id": "https://openalex.org/W900000010",
+          "doi": "10.5555/fixture.005b",
+          "landing_page_url": "https://example.test/papers/rec-010"
+        }
+      }
+    }
+  ]
+}

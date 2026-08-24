@@ -1,0 +1,30 @@
+{
+  "schema_version": "0.2-alpha",
+  "contract_name": "w6_method_ranking_extension",
+  "contract_version": "0.2-alpha",
+  "artifact_type": "method_ranking",
+  "artifact_id": "w6_fixture_method_sparse_v1",
+  "is_fixture": true,
+  "status": "frozen",
+  "compatibility": {
+    "base_contract": "w5_method_ranking",
+    "base_ranking_schema_version": "1.0",
+    "ranking_fields": ["pair_id", "research_query_id", "method_id", "score", "rank"],
+    "identity_mapping": {"pair_id": "pool_item_id", "research_query_id": "topic_id"},
+    "ranking_unit": "source_record"
+  },
+  "method": {"method_id": "w6_fixture_sparse_v1", "display_name": "W6 Fixture Sparse Ranking", "family": "sparse", "parameters": {"fixture_only": true}, "model": null},
+  "inputs": {
+    "topic_set": {"artifact_id": "w6_fixture_topics_v1", "sha256": "d262e66d64769a6e0fb30487d050b925b0e2bbd1c3099a818e80429490756d3a"},
+    "candidate_pool": {"artifact_id": "w6_fixture_candidate_pool_v1", "sha256": "5fbd8acc3304b835e01332b4e57cafe5da5c196ea7d33c81c620a3e340c829ae"}
+  },
+  "auxiliary_inputs": {
+    "source_records": {"artifact_id": "w6_fixture_source_records_v1", "sha256": "1ee6864488e80b2d8a6b11bcd5166dbba7ca2beb993c0063c45bf3770d26ebce"}
+  },
+  "method_inputs": [],
+  "score_processing": {"output_score_semantics": "higher_is_better", "normalization": null},
+  "ranking": {"path": "ranking.csv", "sha256": "9e7ce033fc3ccb1f3d2a34b3dc1823899ec198619f87b37459a6f8b66fa88834", "row_count": 13, "score_direction": "higher_is_better", "tie_breaking": ["score_desc", "pair_id_asc"]},
+  "freeze": {"frozen_at": "2026-08-24T09:00:00+08:00", "configuration_sha256": "87c41d03e8bfb9159ca6de1071790c8bed34706d91d82707b3134810466688d5", "evaluation_started_at": null},
+  "generation": {"generated_at": "2026-08-24T08:59:00+08:00", "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b", "git_worktree_clean": true, "dependencies": {}, "deterministic_seed": null},
+  "label_access": {"relevance_labels_read": false, "hidden_test_labels_read": false, "declaration": "Synthetic fixture generation did not read dev or hidden relevance labels."}
+}

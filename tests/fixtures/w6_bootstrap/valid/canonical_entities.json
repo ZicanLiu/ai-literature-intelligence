@@ -1,0 +1,151 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_canonical_entities",
+  "artifact_id": "w6_fixture_canonical_entities_v1",
+  "is_fixture": true,
+  "created_at": "2026-08-24T08:20:00+08:00",
+  "provenance": {
+    "kind": "synthetic_fixture",
+    "created_by": "w6_bootstrap",
+    "created_at": "2026-08-24T08:20:00+08:00",
+    "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+  },
+  "entities": [
+    {
+      "canonical_entity_id": "entity_001",
+      "preferred_record_id": "rec_001",
+      "normalized_openalex_ids": ["W900000001"],
+      "normalized_dois": ["10.5555/fixture.001"],
+      "normalized_title": "synthetic autoencoder denoising of stellar spectra",
+      "alias_record_ids": ["rec_001"],
+      "identity_evidence": [{"evidence_type": "openalex_id", "value": "W900000001", "record_ids": ["rec_001"]}],
+      "identity_confidence": "high",
+      "review_state": "confirmed",
+      "canonicalization_provenance": {"tool": "fixture_identity_mapper", "version": "fixture-v1", "created_at": "2026-08-24T08:20:00+08:00", "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b", "reviewer": "fixture_reviewer"},
+      "source_retrieval_provenance_union": ["hit_dbm_001", "hit_doa_001"]
+    },
+    {
+      "canonical_entity_id": "entity_002",
+      "preferred_record_id": "rec_002",
+      "normalized_openalex_ids": ["W900000002"],
+      "normalized_dois": ["10.5555/fixture.002"],
+      "normalized_title": "a general pipeline for cleaning and classifying astronomical spectra",
+      "alias_record_ids": ["rec_002"],
+      "identity_evidence": [{"evidence_type": "openalex_id", "value": "W900000002", "record_ids": ["rec_002"]}],
+      "identity_confidence": "high",
+      "review_state": "confirmed",
+      "canonicalization_provenance": {"tool": "fixture_identity_mapper", "version": "fixture-v1", "created_at": "2026-08-24T08:20:00+08:00", "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b", "reviewer": "fixture_reviewer"},
+      "source_retrieval_provenance_union": ["hit_doa_002", "hit_toa_002"]
+    },
+    {
+      "canonical_entity_id": "entity_003",
+      "preferred_record_id": "rec_003",
+      "normalized_openalex_ids": ["W900000003", "W900000008"],
+      "normalized_dois": ["10.5555/fixture.alias"],
+      "normalized_title": "line preserving neural restoration for synthetic stellar spectra",
+      "alias_record_ids": ["rec_003", "rec_008"],
+      "identity_evidence": [
+        {"evidence_type": "normalized_doi", "value": "10.5555/fixture.alias", "record_ids": ["rec_003", "rec_008"]},
+        {"evidence_type": "normalized_title", "value": "line preserving neural restoration for synthetic stellar spectra", "record_ids": ["rec_003", "rec_008"]}
+      ],
+      "identity_confidence": "high",
+      "review_state": "confirmed",
+      "canonicalization_provenance": {"tool": "fixture_identity_mapper", "version": "fixture-v1", "created_at": "2026-08-24T08:20:00+08:00", "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b", "reviewer": "fixture_reviewer"},
+      "source_retrieval_provenance_union": ["hit_dbm_003", "hit_doa_003", "hit_doa_008"]
+    },
+    {
+      "canonical_entity_id": "entity_004",
+      "preferred_record_id": "rec_004",
+      "normalized_openalex_ids": ["W900000004"],
+      "normalized_dois": ["10.5555/fixture.004"],
+      "normalized_title": "deep classification and denoising of clinical infrared spectra",
+      "alias_record_ids": ["rec_004"],
+      "identity_evidence": [{"evidence_type": "openalex_id", "value": "W900000004", "record_ids": ["rec_004"]}],
+      "identity_confidence": "high",
+      "review_state": "confirmed",
+      "canonicalization_provenance": {"tool": "fixture_identity_mapper", "version": "fixture-v1", "created_at": "2026-08-24T08:20:00+08:00", "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b", "reviewer": "fixture_reviewer"},
+      "source_retrieval_provenance_union": ["hit_dta_004", "hit_tde_004"]
+    },
+    {
+      "canonical_entity_id": "entity_005",
+      "preferred_record_id": "rec_005",
+      "normalized_openalex_ids": ["W900000005"],
+      "normalized_dois": ["10.5555/fixture.005a"],
+      "normalized_title": "reconstructing stellar spectra for atmospheric parameter inference",
+      "alias_record_ids": ["rec_005"],
+      "identity_evidence": [{"evidence_type": "openalex_id", "value": "W900000005", "record_ids": ["rec_005"]}],
+      "identity_confidence": "high",
+      "review_state": "confirmed",
+      "canonicalization_provenance": {"tool": "fixture_identity_mapper", "version": "fixture-v1", "created_at": "2026-08-24T08:20:00+08:00", "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b", "reviewer": "fixture_reviewer"},
+      "source_retrieval_provenance_union": ["hit_dbm_005"]
+    },
+    {
+      "canonical_entity_id": "entity_006",
+      "preferred_record_id": "rec_006",
+      "normalized_openalex_ids": ["W900000006"],
+      "normalized_dois": [],
+      "normalized_title": "machine learning for noisy astronomical spectra",
+      "alias_record_ids": ["rec_006"],
+      "identity_evidence": [{"evidence_type": "openalex_id", "value": "W900000006", "record_ids": ["rec_006"]}],
+      "identity_confidence": "high",
+      "review_state": "confirmed",
+      "canonicalization_provenance": {"tool": "fixture_identity_mapper", "version": "fixture-v1", "created_at": "2026-08-24T08:20:00+08:00", "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b", "reviewer": "fixture_reviewer"},
+      "source_retrieval_provenance_union": ["hit_doa_006", "hit_toa_006", "hit_tta_006"]
+    },
+    {
+      "canonical_entity_id": "entity_007",
+      "preferred_record_id": "rec_007",
+      "normalized_openalex_ids": ["W900000007"],
+      "normalized_dois": ["10.5555/fixture.007"],
+      "normalized_title": "early typing of synthetic transients from optical spectra",
+      "alias_record_ids": ["rec_007"],
+      "identity_evidence": [{"evidence_type": "openalex_id", "value": "W900000007", "record_ids": ["rec_007"]}],
+      "identity_confidence": "high",
+      "review_state": "confirmed",
+      "canonicalization_provenance": {"tool": "fixture_identity_mapper", "version": "fixture-v1", "created_at": "2026-08-24T08:20:00+08:00", "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b", "reviewer": "fixture_reviewer"},
+      "source_retrieval_provenance_union": ["hit_tde_007", "hit_toa_007"]
+    },
+    {
+      "canonical_entity_id": "entity_009",
+      "preferred_record_id": "rec_009",
+      "normalized_openalex_ids": ["W900000009"],
+      "normalized_dois": ["10.5555/fixture.009"],
+      "normalized_title": "low lexical overlap transient spectral typing",
+      "alias_record_ids": ["rec_009"],
+      "identity_evidence": [{"evidence_type": "openalex_id", "value": "W900000009", "record_ids": ["rec_009"]}],
+      "identity_confidence": "high",
+      "review_state": "confirmed",
+      "canonicalization_provenance": {"tool": "fixture_identity_mapper", "version": "fixture-v1", "created_at": "2026-08-24T08:20:00+08:00", "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b", "reviewer": "fixture_reviewer"},
+      "source_retrieval_provenance_union": ["hit_tde_009"]
+    },
+    {
+      "canonical_entity_id": "entity_010",
+      "preferred_record_id": "rec_010",
+      "normalized_openalex_ids": ["W900000010"],
+      "normalized_dois": ["10.5555/fixture.005b"],
+      "normalized_title": "reconstructing stellar spectra for transient parameter inference",
+      "alias_record_ids": ["rec_010"],
+      "identity_evidence": [{"evidence_type": "openalex_id", "value": "W900000010", "record_ids": ["rec_010"]}],
+      "identity_confidence": "high",
+      "review_state": "confirmed",
+      "canonicalization_provenance": {"tool": "fixture_identity_mapper", "version": "fixture-v1", "created_at": "2026-08-24T08:20:00+08:00", "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b", "reviewer": "fixture_reviewer"},
+      "source_retrieval_provenance_union": ["hit_toa_010"]
+    }
+  ],
+  "suspected_relationships": [
+    {
+      "relationship_id": "suspect_005_010",
+      "entity_ids": ["entity_005", "entity_010"],
+      "relationship_type": "suspected_duplicate",
+      "review_state": "pending_review",
+      "confidence": "medium",
+      "evidence": ["similar normalized titles", "different DOI and target task"],
+      "provenance": {
+        "kind": "synthetic_fixture",
+        "created_by": "w6_bootstrap",
+        "created_at": "2026-08-24T08:20:00+08:00",
+        "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+      }
+    }
+  ]
+}

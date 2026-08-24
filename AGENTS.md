@@ -75,6 +75,20 @@ Domain Terms → Domain Query Set → Acquisition Queries → OpenAlex v2
   Pool 和 Research Query，不得读取 approved benchmark label/judgement。参数、模型和 artifact
   必须先冻结再评价，不得根据正式 label 或指标回调。
 
+### W6 公共并行与科研边界
+
+- 并行任务只能依赖当前 `main` 与已冻结的公共 contract/fixture；不得导入尚未合并的 sibling code
+  或 artifact，并应以只复制声明输入的隔离依赖测试证明闭包；
+- Dev / Hidden Test 必须按 topic 隔离，真实 split 在 labels 和 label-aware method selection 前冻结；
+  hidden-test labels 不得进入 method development、retrieval/ranking/fusion generation 或普通仓库；
+- blind annotation view 不得暴露 retriever/method、source rank/score、ranking 或 fusion signal；
+- AI-assisted annotation 必须保留 actor/model/tool/evidence/review provenance，不得表述为
+  pure-human gold；
+- W6 ranking/fusion 优先复用 W5 Method Ranking Contract 的列、排序和冻结输入语义，不修改或
+  重冻已有 W5 正式 artifact；
+- synthesis relevance 不等于事实正确性；每个 supported/partially-supported claim 必须绑定具体
+  paper identity 和 evidence reference。
+
 ## 6. 开发边界
 
 不要：
@@ -120,4 +134,5 @@ AI 可以读取项目文件、搜索调用关系、运行离线测试与安全 f
 - [W4 研究计划](docs/project/W4_RESEARCH_PLAN.md)
 - [W4 Pilot Benchmark 收口协议](docs/project/W4_PILOT_BENCHMARK_PROTOCOL.md)
 - [W5 Method Ranking Contract 与公共实验协议](docs/project/W5_METHOD_RANKING_CONTRACT.md)
+- [W6 Research Contract 与并行开发 Bootstrap](docs/project/W6_RESEARCH_CONTRACT_AND_PARALLEL_BOOTSTRAP.md)
 - [贡献指南](CONTRIBUTING.md)
