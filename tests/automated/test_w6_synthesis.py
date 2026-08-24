@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import copy
+import csv
 import io
 import json
+import shutil
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -12,8 +14,13 @@ from pathlib import Path
 from unittest import mock
 
 from app import run_w6_synthesis
-from src.annotation_tasks import sha256_file
+from src.annotation_tasks import sha256_file, write_csv_rows
+from src.w5_method_contract import RANKING_FIELDS
 from src.w6_contracts import load_json_object, validate_w6_bootstrap_bundle
+from src.w6_method_contract import (
+    compute_method_configuration_hash,
+    validate_w6_method_package,
+)
 from src.w6_synthesis_contract import (
     MAX_SNIPPET_CHARACTERS,
     load_and_validate_evidence_units,
@@ -27,6 +34,10 @@ from src.w6_synthesis_pipeline import (
     build_evidence_units,
     generate_structured_synthesis,
     render_mini_review,
+)
+from src.w6_task_context import (
+    GENERATION_ARTIFACT_NAMES,
+    LABEL_AWARE_ARTIFACT_NAMES,
 )
 
 
@@ -212,7 +223,16 @@ class PipelineTests(W6SynthesisTestBase):
             },
         }
         text = render_mini_review(claims)
-        self.assertEqual(text, "First finding. [claim_001] Second finding. [claim_002]")
+        header, _, body = text.partition("\n\n")
+        self.assertEqual(
+            body,
+            "First finding. [claim_001; supported/verified] "
+            "Second finding. [claim_002; unsupported/missing]",
+        )
+        # 头部必须显式标注核验状态统计与人工核验提示。
+        self.assertIn("1 supported", header)
+        self.assertIn("1 unsupported", header)
+        self.assertIn("NOT completed human verification", header)
 
     def test_audit_flags_unsupported_claims(self) -> None:
         claims = {
@@ -389,6 +409,162 @@ class SynthesisCliTests(W6SynthesisTestBase):
             (output_dir / "junk.txt").write_text("x", encoding="utf-8")
             rc = self._run_cli([], output_dir)
             self.assertEqual(rc, 1)
+
+    # ---- P1-2 / P1-5 / P1-1 回归 ----
+
+    def test_cli_same_artifact_id_different_content_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tampered_manifest = _make_tampered_fusion_package(Path(tmp))
+            rc = self._run_cli(
+                ["--method-manifest", str(tampered_manifest)], Path(tmp) / "out"
+            )
+            self.assertEqual(rc, 1)
+
+    def test_cli_rejects_output_inside_default_method_package(self) -> None:
+        package_dir = self.paths["method_fusion_manifest"].parent
+        with tempfile.TemporaryDirectory() as tmp:
+            output_dir = package_dir / "generated_default"
+            argv = ["--output-dir", str(output_dir)]
+            with mock.patch.object(
+                run_w6_synthesis, "_git_revision", return_value=FAKE_GIT_REVISION
+            ), redirect_stdout(io.StringIO()):
+                rc = run_w6_synthesis.main(argv)
+            self.assertEqual(rc, 1)
+            # 冻结 package 目录树不得被写入。
+            self.assertFalse(output_dir.exists())
+
+    def test_cli_rejects_output_inside_explicit_method_package(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            package_dir = Path(tmp) / "pkg"
+            shutil.copytree(
+                VALID_ROOT / "method_rankings" / "fake_fusion", package_dir
+            )
+            output_dir = package_dir / "generated_explicit"
+            rc = self._run_cli(
+                ["--method-manifest", str(package_dir / "manifest.json")], output_dir
+            )
+            self.assertEqual(rc, 1)
+            self.assertFalse(output_dir.exists())
+
+    def test_cli_rejects_output_containing_method_package(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            package_dir = Path(tmp) / "pkg"
+            shutil.copytree(
+                VALID_ROOT / "method_rankings" / "fake_fusion", package_dir
+            )
+            rc = self._run_cli(
+                ["--method-manifest", str(package_dir / "manifest.json")],
+                Path(tmp),
+            )
+            self.assertEqual(rc, 1)
+
+    def test_cli_never_opens_label_aware_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            rc, opened = _tracked_open_calls(
+                lambda: self._run_cli([], Path(tmp) / "out")
+            )
+        self.assertEqual(rc, 0)
+        hits = sorted(
+            {
+                path
+                for path in opened
+                for name in LABEL_AWARE_ARTIFACT_NAMES
+                if name in path
+            }
+        )
+        self.assertEqual(hits, [])
+
+    def test_cli_runs_on_declared_closure_subset(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            subset_root = _copy_generation_subset(Path(tmp))
+            argv = [
+                "--bundle",
+                str(subset_root / "bundle_manifest.json"),
+                "--output-dir",
+                str(Path(tmp) / "out"),
+            ]
+            with mock.patch.object(
+                run_w6_synthesis, "_git_revision", return_value=FAKE_GIT_REVISION
+            ), redirect_stdout(io.StringIO()):
+                rc = run_w6_synthesis.main(argv)
+            self.assertEqual(rc, 0)
+
+
+def _make_tampered_fusion_package(root: Path) -> Path:
+    """构造 artifact_id/method_id 不变但内容不同且内部自洽的 fusion package。"""
+    source = VALID_ROOT / "method_rankings" / "fake_fusion"
+    target = root / "fake_fusion_tampered"
+    shutil.copytree(source, target)
+    rows = []
+    with (target / "ranking.csv").open("r", encoding="utf-8-sig", newline="") as handle:
+        for row in csv.DictReader(handle):
+            row["score"] = str(round(float(row["score"]) + 0.25, 6))
+            rows.append(row)
+    by_topic: dict[str, list[dict]] = {}
+    for row in rows:
+        by_topic.setdefault(row["research_query_id"], []).append(row)
+    ordered = []
+    for topic_id in sorted(by_topic):
+        topic_rows = sorted(
+            by_topic[topic_id], key=lambda row: (-float(row["score"]), row["pair_id"])
+        )
+        for rank, row in enumerate(topic_rows, start=1):
+            row["rank"] = str(rank)
+            ordered.append(row)
+    write_csv_rows(target / "ranking.csv", RANKING_FIELDS, ordered)
+    manifest = load_json_object(target / "manifest.json")
+    manifest["ranking"]["sha256"] = sha256_file(target / "ranking.csv")
+    manifest["freeze"]["configuration_sha256"] = compute_method_configuration_hash(manifest)
+    (target / "manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    # 自洽性 sanity check：篡改后的 package 自身必须能通过 contract validator。
+    bundle = validate_w6_bootstrap_bundle(BUNDLE_PATH)
+    validate_w6_method_package(
+        target / "manifest.json",
+        artifact_registry=bundle["registry"],
+        pool_members=bundle["pool_members"],
+        known_method_packages=bundle["method_packages"],
+    )
+    return target / "manifest.json"
+
+
+def _tracked_open_calls(func):
+    """运行 func 并记录所有 Path.open 访问的文件路径。"""
+    opened: list[str] = []
+    real_open = Path.open
+
+    def tracking_open(self, *args, **kwargs):
+        opened.append(str(self))
+        return real_open(self, *args, **kwargs)
+
+    with mock.patch.object(Path, "open", tracking_open):
+        result = func()
+    return result, opened
+
+
+def _copy_generation_subset(destination: Path) -> Path:
+    """只复制 generation 声明依赖的 artifact，构造最小 bundle。"""
+    root = destination / "subset"
+    root.mkdir(parents=True)
+    manifest = load_json_object(BUNDLE_PATH)
+    subset = copy.deepcopy(manifest)
+    subset["artifacts"] = {
+        name: manifest["artifacts"][name] for name in GENERATION_ARTIFACT_NAMES
+    }
+    (root / "bundle_manifest.json").write_text(
+        json.dumps(subset, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    for name in GENERATION_ARTIFACT_NAMES:
+        relative = Path(manifest["artifacts"][name]["path"])
+        source = VALID_ROOT / relative
+        target = root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if relative.name == "manifest.json" and "method_rankings" in relative.parts:
+            shutil.copytree(source.parent, target.parent, dirs_exist_ok=True)
+        else:
+            shutil.copy2(source, target)
+    return root
 
 
 if __name__ == "__main__":

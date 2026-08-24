@@ -72,12 +72,49 @@ def _median(values: list[float]) -> float:
 
 
 def _tukey_hinges(sorted_values: list[float]) -> tuple[float, float]:
-    """Tukey exclusive hinges：奇数长度时中位数元素不进入上下两半。"""
+    """Tukey exclusive hinges：奇数长度时中位数元素不进入上下两半。
+
+    singleton（n=1）明确定义为 ``Q1 = Q3 = median``，从而落入 zero-IQR 规则。
+    """
     count = len(sorted_values)
+    if count == 1:
+        return sorted_values[0], sorted_values[0]
     half = count // 2
     lower = sorted_values[:half]
     upper = sorted_values[count - half :]
     return _median(lower), _median(upper)
+
+
+def _apply_strategy(values: list[float], strategy: str) -> list[float] | None:
+    """在给定向量上应用 normalization；中间量非有限时返回 None（触发缩放重算）。"""
+    if strategy == "z_score":
+        mean = math.fsum(values) / len(values)
+        variance = math.fsum((value - mean) ** 2 for value in values) / len(values)
+        std = math.sqrt(variance)
+        if not math.isfinite(std):
+            return None
+        if std == 0.0:
+            return [0.0] * len(values)
+        return [(value - mean) / std for value in values]
+    if strategy == "min_max":
+        low = min(values)
+        high = max(values)
+        span = high - low
+        if not math.isfinite(span):
+            return None
+        if span == 0.0:
+            return [0.5] * len(values)
+        return [(value - low) / span for value in values]
+    # robust：median / IQR（Tukey exclusive hinges）
+    ordered = sorted(values)
+    median = _median(ordered)
+    q1, q3 = _tukey_hinges(ordered)
+    iqr = q3 - q1
+    if not math.isfinite(iqr):
+        return None
+    if iqr == 0.0:
+        return [0.0] * len(values)
+    return [(value - median) / iqr for value in values]
 
 
 def normalize_scores(scores: Iterable[float], strategy: str) -> list[float]:
@@ -86,9 +123,13 @@ def normalize_scores(scores: Iterable[float], strategy: str) -> list[float]:
     - ``z_score``：``(x - mean) / std``，总体标准差（ddof=0）；zero variance → 全部 0.0；
     - ``min_max``：``(x - min) / (max - min)``；zero variance → 全部 0.5（区间中点）；
     - ``robust``：``(x - median) / IQR``，IQR 为 Tukey exclusive hinges 的 Q3-Q1；
-      IQR 为 0 → 全部 0.0。
+      IQR 为 0 → 全部 0.0；singleton 输入定义为 Q1=Q3=median，落入 zero-IQR 规则。
 
-    非有限输入直接 fail closed（W6 contract 已拒绝非有限 score，这里双保险）。
+    极端但合法的 finite 输入（如 ±1e308）会先尝试直接计算；一旦中间量溢出，
+    改在 ``max(abs(x))`` 缩放后的值上重算——三种策略都是 scale-equivariant，
+    数学结果与未缩放完全一致。非有限输入、以及任何产生非有限结果的情况，
+    一律 fail closed（``ValueError``），不会抛出 ``OverflowError``/
+    ``StatisticsError`` 或返回 ``nan``。
     """
     if strategy not in NORMALIZATION_STRATEGIES:
         raise ValueError(f"未知 normalization 策略：{strategy}。")
@@ -98,30 +139,20 @@ def normalize_scores(scores: Iterable[float], strategy: str) -> list[float]:
     if not values:
         raise ValueError("normalization 输入不能为空。")
 
-    if strategy == "z_score":
-        mean = math.fsum(values) / len(values)
-        variance = math.fsum((value - mean) ** 2 for value in values) / len(values)
-        std = math.sqrt(variance)
-        if std == 0.0:
-            return [0.0] * len(values)
-        return [(value - mean) / std for value in values]
-
-    if strategy == "min_max":
-        low = min(values)
-        high = max(values)
-        span = high - low
-        if span == 0.0:
-            return [0.5] * len(values)
-        return [(value - low) / span for value in values]
-
-    # robust：median / IQR（Tukey exclusive hinges）
-    ordered = sorted(values)
-    median = _median(ordered)
-    q1, q3 = _tukey_hinges(ordered)
-    iqr = q3 - q1
-    if iqr == 0.0:
-        return [0.0] * len(values)
-    return [(value - median) / iqr for value in values]
+    try:
+        result = _apply_strategy(values, strategy)
+    except OverflowError:
+        result = None
+    if result is None or any(not math.isfinite(value) for value in result):
+        # overflow-safe fallback：先缩放到 [-1, 1] 再重算。
+        scale = max(abs(value) for value in values)
+        if scale == 0.0:
+            result = _apply_strategy([0.0] * len(values), strategy)
+        else:
+            result = _apply_strategy([value / scale for value in values], strategy)
+    if result is None or any(not math.isfinite(value) for value in result):
+        raise ValueError(f"normalization（{strategy}）产生非有限结果。")
+    return result
 
 
 def validate_fusion_input_packages(input_packages: list[dict[str, Any]]) -> None:
@@ -256,6 +287,8 @@ def fuse_method_rankings(
         total = 0.0
         for method_id in method_ids:
             total += normalized_weights[method_id] * normalized_by_method[method_id][pair_id]
+        if not math.isfinite(total):
+            raise ValueError(f"融合分数必须有限：{pair_id}。")
         fused_scores[pair_id] = total
 
     by_topic: dict[str, list[str]] = defaultdict(list)

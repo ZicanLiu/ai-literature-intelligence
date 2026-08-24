@@ -26,7 +26,6 @@ from src.w6_contracts import (
     W6_SCHEMA_VERSION,
     canonical_json_sha256,
     load_json_object,
-    validate_w6_bootstrap_bundle,
 )
 from src.w6_method_contract import (
     W6_METHOD_ARTIFACT_TYPE,
@@ -41,6 +40,10 @@ from src.w6_score_fusion import (
     INPUT_ORDER_SEMANTIC,
     NORMALIZATION_STRATEGIES,
     fuse_method_rankings,
+)
+from src.w6_task_context import (
+    check_frozen_method_identity,
+    load_w6_generation_context,
 )
 
 
@@ -174,6 +177,17 @@ def _parse_weights(entries: list[str] | None) -> dict[str, float] | None:
     return weights
 
 
+def _validate_config_frozen_at(value) -> None:
+    """frozen_at 必须是带时区的 ISO-8601 时间（freeze 时间证据由 Git history 提供，
+    这里只保证字段本身良构）。"""
+    try:
+        parsed = datetime.fromisoformat(str(value or "").strip())
+    except ValueError as error:
+        raise ValueError("fusion config frozen_at 必须是 ISO-8601 时间。") from error
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ValueError("fusion config frozen_at 必须包含时区。")
+
+
 def load_fusion_config(config_path: Path) -> dict:
     """加载并校验冻结的 fusion 配置（含 configuration hash 复核）。"""
     config = load_json_object(config_path, label="fusion config")
@@ -204,6 +218,7 @@ def load_fusion_config(config_path: Path) -> dict:
     }
     if config["configuration_sha256"] != canonical_json_sha256(core):
         raise ValueError("fusion config configuration_sha256 mismatch。")
+    _validate_config_frozen_at(config["frozen_at"])
     output = config["output"]
     if set(output) != {"method_id", "display_name"}:
         raise ValueError("fusion config output 必须只含 method_id/display_name。")
@@ -368,17 +383,19 @@ def main(argv: list[str] | None = None) -> int:
         print(f"输出参数校验失败：{error}")
         return 1
 
-    # 预检 2：加载 bundle（公共 registry + 冻结 pool），再逐个校验输入 package。
+    # 预检 2：加载 generation 专用的 label-free 上下文（绝不打开 label-aware artifacts），
+    # 再逐个校验输入 package。
     try:
-        bundle = validate_w6_bootstrap_bundle(args.bundle)
+        bundle = load_w6_generation_context(args.bundle)
     except (OSError, UnicodeError, ValueError) as error:
         print(f"W6 bundle 校验失败：{error}")
         return 1
     registry = bundle["registry"]
     pool_members = bundle["pool_members"]
+    frozen_method_packages = bundle["method_packages"]
 
     packages = []
-    known_method_packages = dict(bundle["method_packages"])
+    known_method_packages = dict(frozen_method_packages)
     try:
         for manifest_path in args.manifest:
             package = validate_w6_method_package(
@@ -387,6 +404,8 @@ def main(argv: list[str] | None = None) -> int:
                 pool_members=pool_members,
                 known_method_packages=known_method_packages,
             )
+            # 同一 artifact_id 不得代表两份不同内容。
+            check_frozen_method_identity(package, frozen_method_packages)
             packages.append(package)
             known_method_packages[package["artifact_id"]] = package
     except (OSError, UnicodeError, ValueError) as error:
@@ -445,6 +464,9 @@ def main(argv: list[str] | None = None) -> int:
         write_csv_rows(ranking_path, RANKING_FIELDS, fusion["rows"])
         ranking_sha256 = sha256_file(ranking_path)
 
+        # method_inputs 采用 canonical 顺序（method_id 升序），与
+        # fuse_method_rankings 的累加顺序一致：CLI --manifest 传入顺序不得影响
+        # semantic configuration identity（freeze.configuration_sha256）。
         method_inputs = [
             {
                 "method_id": package["method_id"],
@@ -454,7 +476,7 @@ def main(argv: list[str] | None = None) -> int:
                 "uses_raw_score": True,
                 "uses_rank": False,
             }
-            for package in packages
+            for package in sorted(packages, key=lambda package: package["method_id"])
         ]
         manifest = build_manifest(
             output_method_id=method_id,

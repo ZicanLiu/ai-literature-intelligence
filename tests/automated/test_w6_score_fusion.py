@@ -6,6 +6,7 @@ import copy
 import csv
 import io
 import json
+import math
 import shutil
 import tempfile
 import unittest
@@ -25,6 +26,11 @@ from src.w6_score_fusion import (
     fuse_method_rankings,
     normalize_scores,
     validate_fusion_input_packages,
+)
+from src.w6_task_context import (
+    GENERATION_ARTIFACT_NAMES,
+    LABEL_AWARE_ARTIFACT_NAMES,
+    load_w6_generation_context,
 )
 
 
@@ -81,6 +87,38 @@ class NormalizeScoresTests(unittest.TestCase):
     def test_empty_input_rejected(self) -> None:
         with self.assertRaisesRegex(ValueError, "不能为空"):
             normalize_scores([], "z_score")
+
+    # ---- 极端但合法的 finite 输入（P1-3 回归） ----
+
+    def test_singleton_all_strategies(self) -> None:
+        # 合法 W6 cardinality 允许单候选 topic；singleton 不得崩溃。
+        self.assertEqual(normalize_scores([5.0], "z_score"), [0.0])
+        self.assertEqual(normalize_scores([5.0], "min_max"), [0.5])
+        self.assertEqual(normalize_scores([5.0], "robust"), [0.0])
+
+    def test_extreme_finite_values(self) -> None:
+        extreme = [1e308, -1e308]
+        self.assertEqual(normalize_scores(extreme, "min_max"), [1.0, 0.0])
+        result = normalize_scores(extreme, "z_score")
+        self.assertAlmostEqual(result[0], 1.0, places=12)
+        self.assertAlmostEqual(result[1], -1.0, places=12)
+        result = normalize_scores(extreme, "robust")
+        self.assertAlmostEqual(result[0], 0.5, places=12)
+        self.assertAlmostEqual(result[1], -0.5, places=12)
+
+    def test_extreme_span(self) -> None:
+        result = normalize_scores([0.0, 1e308], "min_max")
+        self.assertEqual(result, [0.0, 1.0])
+        result = normalize_scores([0.0, 1e308], "robust")
+        self.assertAlmostEqual(result[0], -0.5, places=12)
+        self.assertAlmostEqual(result[1], 0.5, places=12)
+
+    def test_extreme_variance_overflow_fallback(self) -> None:
+        result = normalize_scores([1e307, -1e307, 1e307, -1e307], "z_score")
+        for value in result:
+            self.assertTrue(math.isfinite(value))
+        self.assertAlmostEqual(result[0], 1.0, places=6)
+        self.assertAlmostEqual(result[1], -1.0, places=6)
 
 
 class W6ScoreFusionTests(unittest.TestCase):
@@ -473,12 +511,22 @@ class W6ScoreFusionTests(unittest.TestCase):
 
     # ---- CLI ----
 
-    def _run_cli(self, extra_args, output_dir: Path) -> int:
-        argv = [
-            "--manifest",
+    def _run_cli(self, extra_args, output_dir: Path, *, reverse: bool = False,
+                 bundle: Path | None = None) -> int:
+        manifests = [
             str(self.paths["method_sparse_manifest"]),
-            "--manifest",
             str(self.paths["method_dense_manifest"]),
+        ]
+        if reverse:
+            manifests.reverse()
+        argv = []
+        if bundle is not None:
+            argv += ["--bundle", str(bundle)]
+        argv += [
+            "--manifest",
+            manifests[0],
+            "--manifest",
+            manifests[1],
             "--output-dir",
             str(output_dir),
             *extra_args,
@@ -594,6 +642,254 @@ class W6ScoreFusionTests(unittest.TestCase):
                 Path(tmp) / "out",
             )
             self.assertEqual(rc, 1)
+
+    # ---- P1-3 / P1-4 / P1-2 回归 ----
+
+    def test_singleton_topic_fusion(self) -> None:
+        for strategy in ("z_score", "min_max", "robust"):
+            packages = [
+                _fake_package("method_a", "3" * 64, [("only_item", "topic_x", 2.0)]),
+                _fake_package("method_b", "4" * 64, [("only_item", "topic_x", 0.5)]),
+            ]
+            fusion = fuse_method_rankings(
+                packages,
+                output_method_id="fusion_x",
+                strategy=strategy,
+                fit_scope="per_topic",
+                weights={"method_a": 0.5, "method_b": 0.5},
+            )
+            self.assertEqual(len(fusion["rows"]), 1)
+            self.assertEqual(fusion["rows"][0]["rank"], 1)
+            self.assertTrue(math.isfinite(fusion["rows"][0]["score"]))
+
+    def test_fused_score_overflow_rejected(self) -> None:
+        packages = [
+            _fake_package(
+                "method_a", "3" * 64, [("item_a", "topic_x", 2.0), ("item_b", "topic_x", 1.0)]
+            ),
+            _fake_package(
+                "method_b", "4" * 64, [("item_a", "topic_x", 2.0), ("item_b", "topic_x", 1.0)]
+            ),
+        ]
+        with self.assertRaisesRegex(ValueError, "融合分数必须有限"):
+            fuse_method_rankings(
+                packages,
+                output_method_id="fusion_x",
+                strategy="z_score",
+                fit_scope="per_topic",
+                weights={"method_a": 1e308, "method_b": 1e308},
+            )
+
+    def test_cli_manifest_order_preserves_configuration_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out1 = Path(tmp) / "o1"
+            out2 = Path(tmp) / "o2"
+            self.assertEqual(self._run_cli(["--method-id", "w6_cli_fusion"], out1), 0)
+            self.assertEqual(
+                self._run_cli(["--method-id", "w6_cli_fusion"], out2, reverse=True), 0
+            )
+            m1 = load_json_object(out1 / "manifest.json")
+            m2 = load_json_object(out2 / "manifest.json")
+            # 输入顺序不得影响 semantic configuration identity。
+            self.assertEqual(m1["ranking"]["sha256"], m2["ranking"]["sha256"])
+            self.assertEqual(m1["method_inputs"], m2["method_inputs"])
+            self.assertEqual(
+                m1["freeze"]["configuration_sha256"], m2["freeze"]["configuration_sha256"]
+            )
+            self.assertEqual(
+                [item["method_id"] for item in m1["method_inputs"]],
+                ["w6_fixture_dense_v1", "w6_fixture_sparse_v1"],
+            )
+
+    def test_cli_same_artifact_id_different_content_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tampered_manifest = _make_tampered_same_id_package(Path(tmp))
+            with mock.patch.object(
+                fuse_w6_scores, "_git_revision", return_value=FAKE_GIT_REVISION
+            ), mock.patch.object(
+                fuse_w6_scores, "_git_worktree_clean", return_value=True
+            ), redirect_stdout(io.StringIO()):
+                rc = fuse_w6_scores.main(
+                    [
+                        "--manifest",
+                        str(tampered_manifest),
+                        "--manifest",
+                        str(self.paths["method_dense_manifest"]),
+                        "--method-id",
+                        "w6_cli_fusion",
+                        "--output-dir",
+                        str(Path(tmp) / "out"),
+                    ]
+                )
+            self.assertEqual(rc, 1)
+
+
+def _fake_package(method_id, sha_seed, rows):
+    return {
+        "method_id": method_id,
+        "manifest_sha256": sha_seed,
+        "ranking_sha256": sha_seed[::-1],
+        "input_references": {
+            "topic_set": {"artifact_id": "t", "sha256": "a" * 64},
+            "candidate_pool": {"artifact_id": "p", "sha256": "b" * 64},
+        },
+        "ranking_rows": [
+            {
+                "pair_id": pair_id,
+                "research_query_id": topic_id,
+                "method_id": method_id,
+                "score": score,
+                "rank": rank,
+            }
+            for rank, (pair_id, topic_id, score) in enumerate(rows, start=1)
+        ],
+    }
+
+
+def _make_tampered_same_id_package(root: Path) -> Path:
+    """构造 artifact_id/method_id 不变但内容不同且内部自洽的 sparse package。"""
+    source = VALID_ROOT / "method_rankings" / "fake_sparse"
+    target = root / "fake_sparse_tampered"
+    shutil.copytree(source, target)
+    rows = []
+    with (target / "ranking.csv").open("r", encoding="utf-8-sig", newline="") as handle:
+        for row in csv.DictReader(handle):
+            row["score"] = str(round(float(row["score"]) + 0.5, 6))
+            rows.append(row)
+    by_topic: dict[str, list[dict]] = {}
+    for row in rows:
+        by_topic.setdefault(row["research_query_id"], []).append(row)
+    ordered = []
+    for topic_id in sorted(by_topic):
+        topic_rows = sorted(
+            by_topic[topic_id], key=lambda row: (-float(row["score"]), row["pair_id"])
+        )
+        for rank, row in enumerate(topic_rows, start=1):
+            row["rank"] = str(rank)
+            ordered.append(row)
+    write_csv_rows(target / "ranking.csv", RANKING_FIELDS, ordered)
+    manifest = load_json_object(target / "manifest.json")
+    manifest["ranking"]["sha256"] = sha256_file(target / "ranking.csv")
+    manifest["freeze"]["configuration_sha256"] = compute_method_configuration_hash(manifest)
+    (target / "manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    return target / "manifest.json"
+
+
+def _tracked_open_calls(func):
+    """运行 func 并记录所有 Path.open 访问的文件路径。"""
+    opened: list[str] = []
+    real_open = Path.open
+
+    def tracking_open(self, *args, **kwargs):
+        opened.append(str(self))
+        return real_open(self, *args, **kwargs)
+
+    with mock.patch.object(Path, "open", tracking_open):
+        result = func()
+    return result, opened
+
+
+def _assert_no_label_aware_access(testcase: unittest.TestCase, opened: list[str]) -> None:
+    hits = sorted(
+        {path for path in opened for name in LABEL_AWARE_ARTIFACT_NAMES if name in path}
+    )
+    testcase.assertEqual(hits, [])
+
+
+def _copy_generation_subset(destination: Path) -> Path:
+    """只复制 generation 声明依赖的 artifact，构造最小 bundle。"""
+    root = destination / "subset"
+    root.mkdir(parents=True)
+    manifest = load_json_object(BUNDLE_PATH)
+    subset = copy.deepcopy(manifest)
+    subset["artifacts"] = {
+        name: manifest["artifacts"][name] for name in GENERATION_ARTIFACT_NAMES
+    }
+    (root / "bundle_manifest.json").write_text(
+        json.dumps(subset, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    for name in GENERATION_ARTIFACT_NAMES:
+        relative = Path(manifest["artifacts"][name]["path"])
+        source = VALID_ROOT / relative
+        target = root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if relative.name == "manifest.json" and "method_rankings" in relative.parts:
+            shutil.copytree(source.parent, target.parent, dirs_exist_ok=True)
+        else:
+            shutil.copy2(source, target)
+    return root
+
+
+class TaskContextLeakageTests(unittest.TestCase):
+    """P1-1：generation 进程绝不打开 label-aware artifacts。"""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.bundle = validate_w6_bootstrap_bundle(BUNDLE_PATH)
+
+    def test_loader_matches_bundle_context(self) -> None:
+        ctx = load_w6_generation_context(BUNDLE_PATH)
+        self.assertEqual(len(ctx["topics"]), 2)
+        self.assertEqual(len(ctx["pool_members"]), 13)
+        self.assertEqual(len(ctx["method_packages"]), 3)
+        self.assertEqual(len(ctx["registry"]), len(GENERATION_ARTIFACT_NAMES))
+        self.assertNotIn("annotation_results", ctx["payloads"])
+        self.assertNotIn("split_manifest", ctx["payloads"])
+
+    def test_loader_never_opens_label_aware_artifacts(self) -> None:
+        _, opened = _tracked_open_calls(lambda: load_w6_generation_context(BUNDLE_PATH))
+        _assert_no_label_aware_access(self, opened)
+
+    def test_fusion_cli_never_opens_label_aware_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            def run() -> int:
+                with mock.patch.object(
+                    fuse_w6_scores, "_git_revision", return_value=FAKE_GIT_REVISION
+                ), mock.patch.object(
+                    fuse_w6_scores, "_git_worktree_clean", return_value=True
+                ), redirect_stdout(io.StringIO()):
+                    return fuse_w6_scores.main(
+                        [
+                            "--manifest",
+                            str(self.bundle["paths"]["method_sparse_manifest"]),
+                            "--manifest",
+                            str(self.bundle["paths"]["method_dense_manifest"]),
+                            "--method-id",
+                            "w6_cli_fusion",
+                            "--output-dir",
+                            str(Path(tmp) / "out"),
+                        ]
+                    )
+
+            rc, opened = _tracked_open_calls(run)
+        self.assertEqual(rc, 0)
+        _assert_no_label_aware_access(self, opened)
+
+    def test_fusion_cli_runs_on_declared_closure_subset(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            subset_root = _copy_generation_subset(Path(tmp))
+            with mock.patch.object(
+                fuse_w6_scores, "_git_revision", return_value=FAKE_GIT_REVISION
+            ), mock.patch.object(
+                fuse_w6_scores, "_git_worktree_clean", return_value=True
+            ), redirect_stdout(io.StringIO()):
+                rc = fuse_w6_scores.main(
+                    [
+                        "--bundle",
+                        str(subset_root / "bundle_manifest.json"),
+                        "--manifest",
+                        str(subset_root / "method_rankings/fake_sparse/manifest.json"),
+                        "--manifest",
+                        str(subset_root / "method_rankings/fake_dense/manifest.json"),
+                        "--method-id",
+                        "w6_cli_fusion",
+                        "--output-dir",
+                        str(Path(tmp) / "out"),
+                    ]
+                )
+            self.assertEqual(rc, 0)
 
 
 if __name__ == "__main__":

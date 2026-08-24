@@ -54,6 +54,11 @@ score-level 加权融合，能否形成可信、可复现的 fusion baseline。
 
 该 config 在任何 W6 Dev/Hidden 评价结果可见之前冻结；后续调整必须新建版本。
 
+注意 hash 语义边界：`configuration_sha256` 是 **semantic configuration hash**，只绑定
+`config_id` / `version` / `input_methods` / `normalization` / `weights` 五个核心字段；
+它不绑定 `frozen_at`、`output` 等 provenance 字段，不构成对这些字段的完整防篡改证明——
+freeze 时间证据由 Git history 提供（`frozen_at` 字段本身做严格 ISO-8601 + 时区校验）。
+
 ### 实现与 artifact
 
 - `src/w6_score_fusion.py`：`normalize_scores` / `validate_fusion_input_packages` /
@@ -125,10 +130,11 @@ python -m app.run_w6_synthesis --output-dir <outdir>
 `synthesis_input.json`、`structured_synthesis.json`、`mini_review.md`、
 `unsupported_claim_audit.json`。本次 demo 产出 3 条 claim，全部
 `partially_supported`/`incomplete`——evidence 为机器抽取（`extracted`），未经人工
-核验，因此没有 claim 被伪装成 fully verified。mini review 示例句：
+核验，因此没有 claim 被伪装成 fully verified。mini review 顶部带有固定状态统计与
+“未经人工核验”提示，示例句：
 
 > Paper rec_003 reports: A neural restoration model is trained on synthetic noisy
-> stellar spectra and reports line-equivalent-width preservation. [claim_002]
+> stellar spectra and reports line-equivalent-width preservation. [claim_002; partially_supported/incomplete]
 
 ## 测试
 
@@ -151,3 +157,27 @@ python -m app.run_w6_synthesis --output-dir <outdir>
 - demo 的 evidence 未经人工核验，对应 claim 全部保持 `partially_supported`；
   human verification 流程在后续任务中定义。
 - 真实 LLM backend 未实现（仅 Protocol）；接入前需要独立的凭据与安全审查。
+
+## 审查修复记录（PR #70 第一轮）
+
+针对 owner 审查的 5 个 P1 与 2 个 P2，修复如下（均有回归测试）：
+
+1. **No-Leakage**：新增 `src/w6_task_context.py`（task-scoped、label-free 的
+   generation loader），两个 CLI 不再调用完整 bundle validator；文件访问级测试断言
+   generation 不打开 annotation/review/split/hidden-label/benchmark 文件；只复制
+   声明依赖闭包后 CLI 可独立运行。
+2. **Artifact identity**：显式 manifest 的 artifact_id 若已被冻结记录占用，
+   manifest/ranking hash 与 method identity 必须精确一致，否则两个 CLI 均 fail closed
+   （`check_frozen_method_identity`）。
+3. **极端输入 correctness**：singleton robust 定义为 Q1=Q3=median（落入 zero-IQR
+   规则）；溢出时自动在 `max(abs(x))` 缩放值上重算（三种策略均 scale-equivariant）；
+   normalization 输出与 fused score 均显式检查 finite，杜绝
+   `OverflowError`/`StatisticsError`/`nan`。
+4. **Semantic reproducibility**：`method_inputs` 统一按 method_id 升序构造，
+   `--manifest` 传入顺序不再影响 ranking sha 与 `freeze.configuration_sha256`。
+5. **Frozen-path safety**：synthesis 输出目录对 method package 目录与 bundle 目录做
+   resolve 后的对称重合检查（默认与显式 manifest 同一路径），三个方向均拒绝。
+6. **P2-1**：config hash 语义边界已在本报告与 `configs/w6/README.md` 精确化，
+   `frozen_at` 增加严格 ISO-8601 + 时区校验。
+7. **P2-2**：mini review 顶部标注 support 状态统计与人工核验提示，每条 claim 附带
+   `(support_status/citation_status)`。

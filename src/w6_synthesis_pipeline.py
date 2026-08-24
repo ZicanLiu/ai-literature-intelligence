@@ -290,12 +290,38 @@ def build_synthesis_input(
 
 
 def render_mini_review(claims: Mapping[str, dict[str, Any]]) -> str:
-    """仅从 structured claims 渲染 Markdown 文本（每句绑定 claim_id 引用）。"""
+    """仅从 structured claims 渲染 Markdown 文本（每句绑定 claim_id 引用）。
+
+    顶部显式标注 support/citation 状态统计与人工核验提示，每条 claim 附带
+    ``(support_status/citation_status)``，保证 human-readable artifact 与
+    structured artifact 的科研谨慎程度一致。
+    """
     sentences = []
     for claim_id in sorted(claims):
         claim = claims[claim_id]
-        sentences.append(f"{_claim_sentence(claim['claim_text'])} [{claim_id}]")
-    return " ".join(sentences)
+        sentences.append(
+            f"{_claim_sentence(claim['claim_text'])} "
+            f"[{claim_id}; {claim['support_status']}/{claim['citation_status']}]"
+        )
+    supported = sum(
+        1 for claim in claims.values() if claim["support_status"] == "supported"
+    )
+    partial = sum(
+        1
+        for claim in claims.values()
+        if claim["support_status"] == "partially_supported"
+    )
+    unsupported = sum(
+        1 for claim in claims.values() if claim["support_status"] == "unsupported"
+    )
+    header = (
+        "Evidence-grounded mini review (rendered from structured claims only). "
+        f"Support status: {supported} supported, {partial} partially_supported, "
+        f"{unsupported} unsupported. "
+        "Claims marked partially_supported/unsupported rest on evidence that has "
+        "NOT completed human verification and must not be read as verified facts."
+    )
+    return header + "\n\n" + " ".join(sentences)
 
 
 def audit_unsupported_claims(claims: Mapping[str, dict[str, Any]]) -> dict[str, Any]:
