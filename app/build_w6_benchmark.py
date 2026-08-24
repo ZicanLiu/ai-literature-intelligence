@@ -15,9 +15,20 @@ from src.w6_benchmark import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BUNDLE = (
-    PROJECT_ROOT / "tests" / "fixtures" / "w6_bootstrap" / "valid" / "bundle_manifest.json"
+    PROJECT_ROOT
+    / "tests"
+    / "fixtures"
+    / "w6_bootstrap"
+    / "valid"
+    / "bundle_manifest.json"
 )
-DEFAULT_PROTOCOL = PROJECT_ROOT / "configs" / "w6" / "annotation_protocol_v1.json"
+DEFAULT_PROTOCOL = (
+    PROJECT_ROOT
+    / "tests"
+    / "fixtures"
+    / "w6_issue64"
+    / "annotation_protocol_fixture.json"
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -27,11 +38,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--source-bundle", type=Path, default=DEFAULT_BUNDLE)
     parser.add_argument("--annotation-protocol", type=Path, default=DEFAULT_PROTOCOL)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument(
-        "--status",
-        choices=("bootstrap_fixture", "draft", "proposed", "sealed_candidate"),
-        default="bootstrap_fixture",
-    )
     return parser
 
 
@@ -44,7 +50,7 @@ def main(argv: list[str] | None = None) -> int:
             artifact_paths=artifact_paths_from_bootstrap_bundle(args.source_bundle),
             annotation_protocol_path=args.annotation_protocol,
             output_dir=args.output_dir,
-            status=args.status,
+            status="bootstrap_fixture",
             created_at=created_at,
             git_revision=environment["git_revision"],
             git_worktree_clean=environment["git_worktree_clean"],
@@ -53,7 +59,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"W6 Benchmark package build FAILED: {error}")
         return 1
     print(f"W6 Benchmark workflow package PASSED self-validation: {package}")
-    print("Status is non-approved; real Multi-Retriever/annotation integration remains deferred.")
+    print(
+        "Status is non-approved; real Multi-Retriever/annotation integration remains deferred."
+    )
     return 0
 
 

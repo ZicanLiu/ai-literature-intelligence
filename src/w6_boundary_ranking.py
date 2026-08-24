@@ -17,7 +17,7 @@ from collections import defaultdict
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Mapping, Protocol
+from typing import Any, Iterable, Mapping, Protocol
 
 from src.annotation_tasks import sha256_file, write_csv_rows
 from src.bm25_ranking import (
@@ -30,11 +30,20 @@ from src.bm25_ranking import (
 )
 from src.text_relevance import tokenize_text
 from src.w5_method_contract import RANKING_FIELDS
+from src.w6_artifact_safety import ensure_output_separate_from_inputs
 from src.w6_method_contract import (
     compute_method_configuration_hash,
     validate_w6_method_package,
 )
-from src.w6_contracts import load_json_object
+from src.w6_contracts import (
+    W6_SCHEMA_VERSION,
+    load_json_object,
+    validate_candidate_pool,
+    validate_canonical_entities,
+    validate_retrieval_provenance,
+    validate_source_records,
+    validate_topic_set,
+)
 
 
 BOUNDARY_DIMENSIONS = (
@@ -45,6 +54,14 @@ BOUNDARY_DIMENSIONS = (
 )
 DEFAULT_METHOD_ID = "boundary_aware_structured_lexical_v1"
 DEFAULT_ARTIFACT_ID = "w6_boundary_aware_structured_lexical_v1"
+BOUNDARY_INPUT_ARTIFACT_TYPE = "w6_boundary_generation_inputs"
+BOUNDARY_INPUT_NAMES = (
+    "topic_set",
+    "retrieval_provenance",
+    "source_records",
+    "canonical_entities",
+    "candidate_pool",
+)
 
 _STOPWORDS = frozenset(
     {
@@ -109,7 +126,10 @@ class BoundaryRankingConfig:
         dimension_sum = sum(self.dimension_weights.values())
         if not math.isclose(dimension_sum, 1.0, rel_tol=0, abs_tol=1e-12):
             raise ValueError("四个 boundary dimension weights 必须和为 1。")
-        if self.missing_abstract_policy != "retain_with_title_only_no_missingness_penalty":
+        if (
+            self.missing_abstract_policy
+            != "retain_with_title_only_no_missingness_penalty"
+        ):
             raise ValueError("missing abstract policy 不得删除或凭空惩罚 candidate。")
 
     @property
@@ -120,6 +140,37 @@ class BoundaryRankingConfig:
             "target_task": self.target_task_weight,
             "method_role": self.method_role_weight,
         }
+
+
+@dataclass(frozen=True)
+class BoundaryConfigArtifact:
+    """Validated semantic configuration plus its frozen source identity."""
+
+    configuration: BoundaryRankingConfig
+    artifact_id: str
+    sha256: str
+    frozen_at: str
+    path: Path
+
+    @property
+    def reference(self) -> dict[str, str]:
+        return {"artifact_id": self.artifact_id, "sha256": self.sha256}
+
+
+@dataclass(frozen=True)
+class BoundaryGenerationInputs:
+    """Minimal, explicitly label-free dependency closure for generation."""
+
+    manifest: Mapping[str, Any]
+    manifest_path: Path
+    paths: Mapping[str, Path]
+    payloads: Mapping[str, dict[str, Any]]
+    registry: Mapping[str, dict[str, str]]
+    topics: Mapping[str, dict[str, Any]]
+    retrieval: Mapping[str, dict[str, Any]]
+    records: Mapping[str, dict[str, Any]]
+    canonical: Mapping[str, Any]
+    pool_members: Mapping[str, dict[str, Any]]
 
 
 @dataclass(frozen=True)
@@ -174,9 +225,7 @@ class DeterministicLexicalBoundaryBackend:
             topic["boundary_cases"], candidate_tokens
         )
         matched = [
-            dimension
-            for dimension, score in dimension_scores.items()
-            if score >= 0.5
+            dimension for dimension, score in dimension_scores.items() if score >= 0.5
         ]
         evidence = (
             "Structured lexical compatibility matched dimensions: "
@@ -217,9 +266,10 @@ class DeterministicFakeBoundaryBackend:
             ) from error
 
 
-def load_boundary_ranking_config(path: str | Path) -> BoundaryRankingConfig:
-    """Load the preregistered Issue #64 config without accepting label-aware fields."""
-    payload = load_json_object(path, label="W6 Boundary-Aware config")
+def load_boundary_ranking_config_artifact(path: str | Path) -> BoundaryConfigArtifact:
+    """Load and bind the preregistered config without accepting label fields."""
+    config_path = Path(path).resolve()
+    payload = load_json_object(config_path, label="W6 Boundary-Aware config")
     expected_fields = {
         "schema_version",
         "artifact_type",
@@ -261,9 +311,10 @@ def load_boundary_ranking_config(path: str | Path) -> BoundaryRankingConfig:
         "independent_validation_claimed",
     }:
         raise ValueError("Boundary historical diagnostic declaration 不完整。")
-    if diagnostic["runtime_input"] is not False or diagnostic[
-        "independent_validation_claimed"
-    ] is not False:
+    if (
+        diagnostic["runtime_input"] is not False
+        or diagnostic["independent_validation_claimed"] is not False
+    ):
         raise ValueError("W5 diagnostics 只能用于 hypothesis generation。")
 
     options = payload["options_considered"]
@@ -285,7 +336,10 @@ def load_boundary_ranking_config(path: str | Path) -> BoundaryRankingConfig:
         option_ids.add(option_id)
     if payload["selected_option"] not in option_ids:
         raise ValueError("Boundary selected option 未出现在方案比较中。")
-    if not isinstance(payload["selection_reason"], str) or not payload["selection_reason"]:
+    if (
+        not isinstance(payload["selection_reason"], str)
+        or not payload["selection_reason"]
+    ):
         raise ValueError("Boundary selection reason 不能为空。")
 
     scoring = payload["scoring"]
@@ -324,8 +378,10 @@ def load_boundary_ranking_config(path: str | Path) -> BoundaryRankingConfig:
     ):
         raise ValueError("Boundary config 违反 source-record/no-label policy。")
     limitations = payload["limitations"]
-    if not isinstance(limitations, list) or not limitations or not all(
-        isinstance(item, str) and item for item in limitations
+    if (
+        not isinstance(limitations, list)
+        or not limitations
+        or not all(isinstance(item, str) and item for item in limitations)
     ):
         raise ValueError("Boundary limitations 必须显式记录。")
     provenance = payload["provenance"]
@@ -338,7 +394,145 @@ def load_boundary_ranking_config(path: str | Path) -> BoundaryRankingConfig:
         raise ValueError("Boundary config provenance 不完整。")
     _require_datetime(str(provenance["created_at"]), "Boundary config provenance time")
     _require_git_revision(str(provenance["git_revision"]))
-    return configuration
+    if _parse_datetime(str(provenance["created_at"])) > _parse_datetime(
+        str(payload["frozen_at"])
+    ):
+        raise ValueError("Boundary config provenance created_at 不得晚于 frozen_at。")
+    return BoundaryConfigArtifact(
+        configuration=configuration,
+        artifact_id=str(payload["artifact_id"]),
+        sha256=sha256_file(config_path),
+        frozen_at=str(payload["frozen_at"]),
+        path=config_path,
+    )
+
+
+def load_boundary_ranking_config(path: str | Path) -> BoundaryRankingConfig:
+    """Compatibility wrapper returning only the validated semantic parameters."""
+    return load_boundary_ranking_config_artifact(path).configuration
+
+
+def load_w6_boundary_generation_inputs(
+    manifest_path: str | Path,
+) -> BoundaryGenerationInputs:
+    """Open and validate only the declared label-free Boundary dependency closure."""
+    manifest_file = Path(manifest_path).resolve()
+    root = manifest_file.parent
+    manifest = load_json_object(manifest_file, label="W6 Boundary generation inputs")
+    expected_fields = {
+        "schema_version",
+        "artifact_type",
+        "artifact_id",
+        "is_fixture",
+        "created_at",
+        "artifacts",
+        "provenance",
+    }
+    if set(manifest) != expected_fields:
+        raise ValueError("Boundary generation input manifest fields 非法。")
+    if (
+        manifest["schema_version"] != W6_SCHEMA_VERSION
+        or manifest["artifact_type"] != BOUNDARY_INPUT_ARTIFACT_TYPE
+        or not isinstance(manifest["is_fixture"], bool)
+    ):
+        raise ValueError("Boundary generation input manifest header 非法。")
+    _require_method_id(str(manifest["artifact_id"]))
+    _require_datetime(str(manifest["created_at"]), "Boundary inputs created_at")
+    provenance = manifest["provenance"]
+    if not isinstance(provenance, dict) or set(provenance) != {
+        "kind",
+        "created_by",
+        "created_at",
+        "git_revision",
+    }:
+        raise ValueError("Boundary generation input provenance 不完整。")
+    _require_datetime(str(provenance["created_at"]), "Boundary inputs provenance time")
+    _require_git_revision(str(provenance["git_revision"]))
+
+    entries = manifest["artifacts"]
+    if not isinstance(entries, dict) or set(entries) != set(BOUNDARY_INPUT_NAMES):
+        raise ValueError(
+            "Boundary generation dependency closure 不完整或含额外 artifact。"
+        )
+    paths: dict[str, Path] = {}
+    payloads: dict[str, dict[str, Any]] = {}
+    registry: dict[str, dict[str, str]] = {}
+    fixture_values: set[bool] = set()
+    for name in BOUNDARY_INPUT_NAMES:
+        entry = entries[name]
+        if not isinstance(entry, dict) or set(entry) != {
+            "artifact_id",
+            "path",
+            "sha256",
+        }:
+            raise ValueError(f"Boundary input entry schema 非法：{name}。")
+        _require_method_id(str(entry["artifact_id"]))
+        _require_sha256(str(entry["sha256"]), f"Boundary input {name} sha256")
+        relative = Path(str(entry["path"]))
+        if not str(entry["path"]).strip() or relative.is_absolute():
+            raise ValueError(f"Boundary input path 必须为相对路径：{name}。")
+        path = (root / relative).resolve()
+        try:
+            path.relative_to(root)
+        except ValueError as error:
+            raise ValueError(
+                f"Boundary input path 不得离开 manifest root：{name}。"
+            ) from error
+        if not path.is_file():
+            raise ValueError(f"Boundary required input 不存在：{name}={path}")
+        if sha256_file(path) != entry["sha256"]:
+            raise ValueError(f"Boundary input hash drift：{name}。")
+        payload = load_json_object(path, label=f"Boundary input {name}")
+        if payload.get("artifact_id") != entry["artifact_id"]:
+            raise ValueError(f"Boundary input artifact identity mismatch：{name}。")
+        if not isinstance(payload.get("is_fixture"), bool):
+            raise ValueError(f"Boundary input is_fixture 非法：{name}。")
+        fixture_values.add(payload["is_fixture"])
+        reference = {"artifact_id": entry["artifact_id"], "sha256": entry["sha256"]}
+        if reference["artifact_id"] in registry:
+            raise ValueError("Boundary input artifact_id 不得重复。")
+        paths[name] = path
+        payloads[name] = payload
+        registry[reference["artifact_id"]] = reference
+    if fixture_values != {manifest["is_fixture"]}:
+        raise ValueError(
+            "Boundary input manifest 与 artifacts fixture identity 不一致。"
+        )
+
+    topics = validate_topic_set(payloads["topic_set"])
+    if payloads["topic_set"].get("status") != "frozen" or any(
+        topic.get("lifecycle_status") != "frozen" for topic in topics.values()
+    ):
+        raise ValueError("Boundary generation Topic Set 必须 frozen。")
+    retrieval = validate_retrieval_provenance(
+        payloads["retrieval_provenance"], topics=topics
+    )
+    records = validate_source_records(
+        payloads["source_records"], topics=topics, retrieval=retrieval
+    )
+    canonical = validate_canonical_entities(
+        payloads["canonical_entities"], records=records, retrieval=retrieval
+    )
+    pool_members = validate_candidate_pool(
+        payloads["candidate_pool"],
+        topics=topics,
+        records=records,
+        retrieval=retrieval,
+        registry=registry,
+        canonical=canonical,
+    )
+    return BoundaryGenerationInputs(
+        manifest=manifest,
+        manifest_path=manifest_file,
+        paths=paths,
+        payloads=payloads,
+        registry=registry,
+        topics=topics,
+        retrieval=retrieval,
+        records=records,
+        canonical=canonical,
+        pool_members=pool_members,
+    )
 
 
 def build_boundary_aware_rankings(
@@ -363,7 +557,9 @@ def build_boundary_aware_rankings(
         topic_id = member.get("topic_id")
         record_id = member.get("record_id")
         if topic_id not in topics or record_id not in records:
-            raise ValueError(f"Boundary ranking candidate identity mismatch：{pool_item_id}。")
+            raise ValueError(
+                f"Boundary ranking candidate identity mismatch：{pool_item_id}。"
+            )
         record = records[record_id]
         documents[pool_item_id] = build_document_tokens(
             record.get("title"), record.get("abstract")
@@ -470,6 +666,10 @@ def build_w6_boundary_method_package(
     topic_reference: Mapping[str, str],
     candidate_pool_reference: Mapping[str, str],
     source_records_reference: Mapping[str, str],
+    retrieval_reference: Mapping[str, str],
+    canonical_reference: Mapping[str, str],
+    frozen_input_paths: Iterable[str | Path],
+    config_artifact: BoundaryConfigArtifact,
     output_dir: str | Path,
     is_fixture: bool,
     generated_at: str,
@@ -479,7 +679,6 @@ def build_w6_boundary_method_package(
     backend: BoundaryCompatibilityBackend | None = None,
     method_id: str = DEFAULT_METHOD_ID,
     artifact_id: str = DEFAULT_ARTIFACT_ID,
-    config: BoundaryRankingConfig | None = None,
 ) -> Path:
     """Generate, self-validate, and publish one frozen W6 method package."""
     _require_method_id(method_id)
@@ -488,20 +687,36 @@ def build_w6_boundary_method_package(
     _require_datetime(frozen_at, "boundary frozen_at")
     if _parse_datetime(frozen_at) < _parse_datetime(generated_at):
         raise ValueError("Boundary method frozen_at 不得早于 generated_at。")
+    if _parse_datetime(config_artifact.frozen_at) > _parse_datetime(generated_at):
+        raise ValueError("Boundary source config 必须先 freeze 再 generation。")
     _require_git_revision(git_revision)
     if git_worktree_clean is not True:
-        raise ValueError("Boundary-Aware frozen package 必须从 clean Git snapshot 生成。")
+        raise ValueError(
+            "Boundary-Aware frozen package 必须从 clean Git snapshot 生成。"
+        )
     for label, reference in (
         ("topic_set", topic_reference),
         ("candidate_pool", candidate_pool_reference),
         ("source_records", source_records_reference),
+        ("retrieval_provenance", retrieval_reference),
+        ("canonical_entities", canonical_reference),
     ):
         trusted = artifact_registry.get(reference.get("artifact_id"))
         if trusted != dict(reference):
             raise ValueError(f"Boundary method {label} input identity/hash drift。")
 
+    input_paths = [Path(path).resolve() for path in frozen_input_paths]
+    if not input_paths:
+        raise ValueError("Boundary builder 必须声明 frozen input paths。")
+    output = ensure_output_separate_from_inputs(
+        output_dir,
+        input_paths=[
+            *{path.parent for path in input_paths},
+            config_artifact.path,
+        ],
+    )
     active_backend = backend or DeterministicLexicalBoundaryBackend()
-    configuration = config or BoundaryRankingConfig()
+    configuration = config_artifact.configuration
     generated = build_boundary_aware_rankings(
         topics=topics,
         pool_members=pool_members,
@@ -510,7 +725,6 @@ def build_w6_boundary_method_package(
         method_id=method_id,
         config=configuration,
     )
-    output = Path(output_dir).resolve()
     if output.exists() and (not output.is_dir() or any(output.iterdir())):
         raise ValueError(f"Boundary output 已存在且非空，拒绝覆盖：{output}")
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -553,6 +767,7 @@ def build_w6_boundary_method_package(
                         "max(scope-out overlap, boundary overlap)"
                     ),
                     "configuration": asdict(configuration),
+                    "source_config": config_artifact.reference,
                     "backend": generated["backend"],
                     "tokenizer": "src.text_relevance.tokenize_text",
                     "corpus_scope": "complete frozen W6 candidate pool",
@@ -565,7 +780,11 @@ def build_w6_boundary_method_package(
                 "topic_set": dict(topic_reference),
                 "candidate_pool": dict(candidate_pool_reference),
             },
-            "auxiliary_inputs": {"source_records": dict(source_records_reference)},
+            "auxiliary_inputs": {
+                "source_records": dict(source_records_reference),
+                "retrieval_provenance": dict(retrieval_reference),
+                "canonical_entities": dict(canonical_reference),
+            },
             "method_inputs": [],
             "score_processing": {
                 "output_score_semantics": "higher_is_better",
@@ -594,9 +813,10 @@ def build_w6_boundary_method_package(
                 "relevance_labels_read": False,
                 "hidden_test_labels_read": False,
                 "declaration": (
-                    "Boundary-Aware generation read only frozen Topic, Candidate Pool, and "
-                    "source-record text; it did not read Dev or Hidden relevance labels, "
-                    "judgements, metrics, or error-analysis artifacts."
+                    "Boundary-Aware generation read only the task-scoped frozen Topic, "
+                    "retrieval provenance, source records, canonical mapping, Candidate Pool, "
+                    "and preregistered source config; it did not read Dev or Hidden relevance "
+                    "labels, judgements, metrics, or error-analysis artifacts."
                 ),
             },
         }
@@ -609,16 +829,51 @@ def build_w6_boundary_method_package(
             encoding="utf-8",
             newline="\n",
         )
-        validate_w6_method_package(
+        validate_w6_boundary_method_package(
             manifest_path,
             artifact_registry=artifact_registry,
             pool_members=pool_members,
-            known_method_packages={},
+            source_config_path=config_artifact.path,
         )
         if output.exists():
             output.rmdir()
         staging.replace(output)
     return output / "manifest.json"
+
+
+def validate_w6_boundary_method_package(
+    manifest_path: str | Path,
+    *,
+    artifact_registry: Mapping[str, dict[str, str]],
+    pool_members: Mapping[str, dict[str, Any]],
+    source_config_path: str | Path,
+) -> dict[str, Any]:
+    """Apply Issue #64 config-binding and chronology checks above the public contract."""
+    result = validate_w6_method_package(
+        manifest_path,
+        artifact_registry=artifact_registry,
+        pool_members=pool_members,
+        known_method_packages={},
+    )
+    manifest = result["manifest"]
+    if manifest["method"]["method_id"] != DEFAULT_METHOD_ID:
+        raise ValueError(
+            "Boundary strict validator 只接受 Issue #64 frozen method_id。"
+        )
+    config_artifact = load_boundary_ranking_config_artifact(source_config_path)
+    parameters = manifest["method"]["parameters"]
+    if parameters.get("source_config") != config_artifact.reference:
+        raise ValueError("Boundary method source config identity/hash drift。")
+    if parameters.get("configuration") != asdict(config_artifact.configuration):
+        raise ValueError("Boundary semantic configuration 与 source config 不一致。")
+    config_time = _parse_datetime(config_artifact.frozen_at)
+    generation_time = _parse_datetime(manifest["generation"]["generated_at"])
+    freeze_time = _parse_datetime(manifest["freeze"]["frozen_at"])
+    if config_time > generation_time:
+        raise ValueError("Boundary source config 必须先 freeze 再 generation。")
+    if generation_time > freeze_time:
+        raise ValueError("Boundary method freeze 不得早于 generation。")
+    return result
 
 
 def _structured_query_text(topic: Mapping[str, Any]) -> str:
@@ -647,7 +902,9 @@ def _coverage_score(expected: set[str], observed: set[str]) -> float:
     return min(1.0, len(expected & observed) / math.sqrt(len(expected)))
 
 
-def _maximum_statement_overlap(statements: list[str], candidate_tokens: set[str]) -> float:
+def _maximum_statement_overlap(
+    statements: list[str], candidate_tokens: set[str]
+) -> float:
     maximum = 0.0
     for statement in statements:
         tokens = _content_tokens(statement)
@@ -707,3 +964,10 @@ def _require_git_revision(value: str) -> None:
         character not in "0123456789abcdef" for character in str(value)
     ):
         raise ValueError("git_revision 必须是 40 位小写 Git SHA。")
+
+
+def _require_sha256(value: str, label: str) -> None:
+    if len(value) != 64 or any(
+        character not in "0123456789abcdef" for character in value
+    ):
+        raise ValueError(f"{label} 必须是 64 位小写 SHA-256。")

@@ -155,6 +155,11 @@ Dev/Hidden 无交集并完整覆盖 9 个 Topic。真实 Hidden labels 必须由
 在 labels 可见前冻结如下规则：
 
 - 每个 Dev Topic 用 `issue64-second-annotation-v1` 确定性抽取 20% 做独立第二标注；
+- second judgement 保存在 Issue #64 自己的 versioned extension artifact，显式绑定同一 blind task、
+  `independent_second` round、actor、timestamp、evidence 与 protocol；不放宽公共 Bootstrap 的
+  “一个 task 一份 primary”语义；
+- `second actor != primary actor` 由 validator 检查；primary/second label 不同会自动形成 conflict，
+  caller 不能手工漏传 conflict ID；
 - low confidence、非空 uncertainty、evidence insufficient、boundary case、annotation conflict、
   missing abstract 必须 review；
 - 每个 Topic 的 high-confidence candidates 用 `issue64-high-confidence-qa-v1` 确定性抽取 10%；
@@ -172,16 +177,24 @@ Dev/Hidden 无交集并完整覆盖 9 个 Topic。真实 Hidden labels 必须由
 - 真实 frozen Topic/research/split 校验，包括近重复 Research Question、scope-in/out 矛盾、
   split overlap、hash drift 和 chronology；
 - annotation protocol fail-closed 校验；
-- deterministic second-annotation 和 blind review plan；
+- deterministic second-annotation selection、独立 second judgement extension 和 blind review plan；
 - Bootstrap bundle 到 versioned Benchmark package 的适配、构建、自校验和原子发布；
 - topic/retrieval/source/canonical/pool/task map/blind tasks/split/annotation/review/hidden anchor 的
   hash-pinned graph closure；
-- `bootstrap_fixture`、`draft`、`proposed`、`sealed_candidate` 的状态门禁。
+- `bootstrap_fixture`、`draft`、`proposed`、`sealed_candidate` 的核心 API 状态门禁；当前 standalone
+  CLI 只构建 `bootstrap_fixture`，不暴露没有真实 Integration adapter 的 production choices；
+- Topic viability → Topic research freeze → Topic Set freeze → split freeze，以及
+  split → protocol → annotation start/primary → second → review/adjudication 的实时时间比较；
+- package/Benchmark/全部 package artifacts 的 fixture identity 一致性；real `draft`、`proposed`、
+  `sealed_candidate` 还必须由 caller 提供 package 外的 hash-pinned trusted input registry。
 
 状态门禁拒绝 `approved` 自报。`proposed` 要求 Dev annotation coverage 完整；
-`sealed_candidate` 还要求全部 mandatory review 完成。当前个人分支只有 synthetic Bootstrap fixture
-可跑，所以 fixture PASS 只证明 contract、hash、blindness 和 workflow 兼容，不证明真实 Benchmark
-coverage 或 label validity。真实 Multi-Retriever candidates 和 annotation 没有被伪造。
+`sealed_candidate` 还要求冻结 policy 选中的 second judgements 全部存在、annotator/reviewer 独立、
+自动识别的 conflict 全部 adjudicate、全部 mandatory review 完成且 chronology 合法。package 自己
+提供的一组自洽 SHA 不是 trust root；没有外部 trusted registry 时，任何 fixture→real promotion 都
+fail closed。当前个人分支只有 synthetic Bootstrap fixture 可跑，所以 fixture PASS 只证明 contract、
+hash、blindness 和 workflow 兼容，不证明真实 Benchmark coverage 或 label validity。真实
+Multi-Retriever candidates 和 annotation 没有被伪造。
 
 提交的 [`w6_issue64`](../../../tests/fixtures/w6_issue64/README.md) fixture 从 clean revision
 `74d5956b48ed67082a1b475900e8694bf6f4deff` 生成。Benchmark package 状态为
@@ -227,12 +240,23 @@ fixed-assessment fake backend。
 输出严格复用 W5 五列 `pair_id,research_query_id,method_id,score,rank`，其中 pair 对应动态
 `pool_item_id`、query 对应 `topic_id`；score higher-is-better，tie-break 为
 `score desc -> pair_id asc`。method manifest 固定 Topic/Pool/source-record hashes、parameters、backend、
-Git clean revision、configuration hash 和 no-label declaration，并由公共 W6 method validator 自校验。
+Git clean revision、configuration hash 和 no-label declaration。source config 的 `artifact_id + SHA-256`
+与只影响 numeric ranking 的 semantic configuration 分开记录，但两者都进入 method configuration
+hash。最终 artifact 同时通过公共 W6 method validator 和 Issue #64 strict layer；后者机器检查
+`config freeze <= generation <= method freeze < evaluation（若存在）`。
+
+Boundary generation 不再调用完整 Bootstrap bundle validator。task-scoped safe loader 只打开
+`boundary_generation_inputs.json`、Topic Set、retrieval provenance、source records、canonical mapping、
+Candidate Pool 和 frozen source config。retrieval/canonical 只用于验证 post-canonical pool identity，仍是
+明确且 label-free 的必要闭包。进程级 file-open regression 断言 annotation/task results、reviews、
+Benchmark/Hidden anchor、method rankings、metrics、synthesis 与 W5 diagnostics 的打开数均为 0；只复制
+上述闭包、不复制任何 annotation artifacts 时，CLI 仍可生成 ranking，删除任一必要 input 则 fail closed。
 
 提交的 Boundary fixture 对 13 个 Bootstrap pool items 生成完整 ranking；ranking SHA-256 为
 `8b4c33c7eb30af9d4586ed24641d1ed87f47b5d038b99ff08133611cd1c03b58`，configuration SHA-256
 为 `b4e3f18570cfd2588e8ba1c43a5eccf4b04128dd8f68d7f3e8965f7d6fb95c31`。Manifest 显式绑定
-`source_records` auxiliary input，并声明 Dev/Hidden relevance labels 均未读取。
+`source_records`、`retrieval_provenance`、`canonical_entities` auxiliary inputs 和独立 source-config
+artifact identity，并声明 Dev/Hidden relevance labels 均未读取。
 
 已知限制是 lexical/synonym brittleness、短文本对 overlap 的敏感性和 per-topic min-max 在很小 pool
 上的不稳定性。因此它是最小研究原型，不是经过 Hidden Test 证明的新最优方法。任何参数变更都应
@@ -240,11 +264,12 @@ Git clean revision、configuration hash 和 no-label declaration，并由公共 
 
 ## 8. 测试与 adversarial coverage
 
-新增离线测试覆盖：Topic schema/near-duplicate/scope contradiction、split overlap/hash/chronology、
-blind policy drift、annotation evidence 与 reviewer independence、deterministic review selection、
-incomplete review、benchmark hash drift、invalid promotion、Boundary ranking determinism/dynamic pool、
-mismatch penalty、missing abstract、invalid backend assessment、auxiliary input drift、no-label API 和
-公共 W6 method package validation。测试不联网、不读取 `.env`、不调用 LLM 或下载模型。
+新增离线测试覆盖：Topic schema/near-duplicate/scope contradiction、viability/split chronology、blind
+policy drift、second judgement coverage/independence/chronology、自动 conflict 与 adjudication、reviewer
+independence、fixture 全量自洽重哈希 promotion、Boundary process-level file-open audit/minimal closure、
+source-config binding/chronology、method freeze chronology、两个 builder 的 resolved path overlap，以及
+原有 ranking determinism/dynamic pool、mismatch penalty、missing abstract 和公共 W6 validators。测试不
+联网、不读取 `.env`、不调用 LLM 或下载模型。
 
 最终验收结果：
 
@@ -269,9 +294,11 @@ Full Gate 的三个 warning 与 base 一致：历史 W1 CSV 结构、W1 旧 labe
 1. 使用冻结的 9 Topic 和 5/4 split 执行真实 Multi-Retriever acquisition；
 2. enrichment、canonicalization、bias audit 和真实 post-canonical Candidate Pool；
 3. 生成 blind tasks，执行全量 AI-assisted annotation、独立 second annotation、review/adjudication；
-4. 由独立 custodian 生成/保存真实 Hidden labels，仅提交 external sealed hash anchor；
-5. 从 clean、冻结 inputs 生成真实 W6 methods，包括本 Boundary-Aware prototype；
-6. method/config freeze 后执行一次 sealed Hidden Test evaluation；
-7. 最终 Benchmark promotion、实验比较、Error Analysis、QA gate 和 synthesis。
+4. 由 Integration/custodian 注册真实 frozen inputs 的外部 trusted registry，再使用核心 API 构建
+   `draft/proposed/sealed_candidate`；
+5. 由独立 custodian 生成/保存真实 Hidden labels，仅提交 external sealed hash anchor；
+6. 从 clean、冻结 inputs 生成真实 W6 methods，包括本 Boundary-Aware prototype；
+7. method/config freeze 后执行一次 sealed Hidden Test evaluation；
+8. 最终 Benchmark promotion、实验比较、Error Analysis、QA gate 和 synthesis。
 
 本个人分支没有完成或假装完成上述 Integration 工作，也没有产生任何 Hidden Test result。
