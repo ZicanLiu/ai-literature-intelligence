@@ -1,0 +1,40 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_topic_split",
+  "artifact_id": "w6_topic_split_v0.2_alpha",
+  "is_fixture": false,
+  "split_id": "w6_dev_hidden_topics_v0.2_alpha",
+  "topic_set": {
+    "artifact_id": "w6_research_topics_v0.2_alpha",
+    "sha256": "6e2f6e6b8fea56cef6e245dcf37fa97a46ba5efc6703fb47e9863840e3a06ca4"
+  },
+  "split_identity": "w6-topic-split:sha256:8391d14987a15982b5afa2ae3760f029824909353f51056360d79fe9b85202bc",
+  "status": "frozen",
+  "frozen_at": "2026-08-24T14:19:00+08:00",
+  "frozen_by": "issue64_leader",
+  "freeze_policy": {
+    "unit": "topic",
+    "frozen_before_labels": true,
+    "frozen_before_label_aware_method_selection": true
+  },
+  "dev_topic_ids": [
+    "w6_topic_supernova_spectral_typing",
+    "w6_topic_stellar_radial_velocity",
+    "w6_topic_spectral_anomaly_detection",
+    "w6_topic_stellar_spectral_emulation",
+    "w6_topic_21cm_foreground_removal"
+  ],
+  "hidden_test_topic_ids": [
+    "w6_topic_galaxy_activity_spectra",
+    "w6_topic_exoplanet_atmospheric_retrieval",
+    "w6_topic_stellar_spectral_denoising",
+    "w6_topic_solar_spectropolarimetric_inversion"
+  ],
+  "reveal_state": "sealed",
+  "provenance": {
+    "kind": "issue64_topic_level_split_freeze",
+    "created_by": "issue64_leader",
+    "created_at": "2026-08-24T14:19:00+08:00",
+    "git_revision": "90811052194801263708627c1eda39a2765e9037"
+  }
+}

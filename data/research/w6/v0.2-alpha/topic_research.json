@@ -1,0 +1,649 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_topic_viability_research",
+  "artifact_id": "w6_topic_viability_research_v0.2_alpha",
+  "status": "frozen",
+  "is_fixture": false,
+  "created_at": "2026-08-24T14:18:00+08:00",
+  "selection_frozen_before_labels": true,
+  "criteria": [
+    "scientific_object",
+    "data_modality",
+    "target_task",
+    "method_role",
+    "scope_in_out",
+    "hard_negative_potential",
+    "literature_viability",
+    "query_variant_feasibility",
+    "w4_w5_overlap",
+    "cross_topic_overlap"
+  ],
+  "candidates": [
+    {
+      "candidate_id": "c01_stellar_parameters",
+      "title": "Stellar atmospheric parameter estimation from spectra",
+      "scientific_object": "stars",
+      "data_modality": "optical stellar spectra",
+      "target_task": "atmospheric parameter regression",
+      "method_role": "primary parameter estimator",
+      "scope_summary": "Infer temperature gravity metallicity or abundance parameters from stellar spectra.",
+      "hard_negative_potential": "Classification and spectral synthesis share objects and vocabulary but have different outputs.",
+      "query_variant_feasibility": "Multiple viable stellar-parameter and abundance query formulations exist.",
+      "overlap_risk": "Directly overlaps the W4/W5 stellar-parameter Research Query.",
+      "decision": "excluded",
+      "decision_reason": "Scientifically viable but excluded to avoid reusing the most developed W4/W5 task boundary.",
+      "final_topic_id": null
+    },
+    {
+      "candidate_id": "c02_stellar_classification",
+      "title": "Stellar spectral classification",
+      "scientific_object": "stars",
+      "data_modality": "optical stellar spectra",
+      "target_task": "stellar type classification",
+      "method_role": "primary class predictor",
+      "scope_summary": "Assign stellar types or classes directly from spectra.",
+      "hard_negative_potential": "Parameter regression and generic object classification are close semantic neighbours.",
+      "query_variant_feasibility": "Many stable machine-learning and neural-network query variants exist.",
+      "overlap_risk": "Directly overlaps the W4/W5 spectral-classification Research Query.",
+      "decision": "excluded",
+      "decision_reason": "Strong literature exists, but retaining it would overrepresent an already-used W4/W5 task.",
+      "final_topic_id": null
+    },
+    {
+      "candidate_id": "c03_generic_preprocessing",
+      "title": "Generic astronomical spectral preprocessing",
+      "scientific_object": "mixed astronomical sources",
+      "data_modality": "one-dimensional spectra",
+      "target_task": "normalization preprocessing or cleaning",
+      "method_role": "learned preprocessing component",
+      "scope_summary": "Apply machine learning to broad spectral preprocessing without a narrower restoration objective.",
+      "hard_negative_potential": "Denoising generation and downstream parameterization are frequent boundary neighbours.",
+      "query_variant_feasibility": "The generic preprocessing wording is unstable and returns heterogeneous tasks.",
+      "overlap_risk": "Directly overlaps W4/W5 preprocessing and is broader than a reproducible Topic boundary.",
+      "decision": "excluded",
+      "decision_reason": "Replaced by the narrower denoising Topic; generic preprocessing is both overlapping and poorly retrievable.",
+      "final_topic_id": null
+    },
+    {
+      "candidate_id": "c04_galaxy_redshift",
+      "title": "Spectroscopic galaxy redshift estimation",
+      "scientific_object": "galaxies",
+      "data_modality": "integrated galaxy spectra",
+      "target_task": "redshift regression",
+      "method_role": "primary redshift estimator",
+      "scope_summary": "Predict galaxy redshift from spectroscopy rather than broadband photometry.",
+      "hard_negative_potential": "Photometric-redshift papers are abundant lexical and semantic hard negatives.",
+      "query_variant_feasibility": "Queries are possible but repeatedly dominated by photometric-redshift results.",
+      "overlap_risk": "Shares object and modality with galaxy activity classification and a regression role with existing parameter estimation.",
+      "decision": "excluded",
+      "decision_reason": "Excluded because public queries showed severe photometric contamination and added less diversity than galaxy activity classification.",
+      "final_topic_id": null
+    },
+    {
+      "candidate_id": "c05_galaxy_activity",
+      "title": "Galaxy activity classification from optical spectra",
+      "scientific_object": "galaxies and active galactic nuclei",
+      "data_modality": "integrated optical spectra",
+      "target_task": "activity-regime classification",
+      "method_role": "primary activity classifier",
+      "scope_summary": "Classify star-forming composite AGN and LINER regimes from spectral evidence.",
+      "hard_negative_potential": "Photometric AGN selection redshift estimation and line measurement lack the required output or modality.",
+      "query_variant_feasibility": "Activity-class and AGN/LINER query variants retrieve a small but concrete literature.",
+      "overlap_risk": "Same classification family as transient typing but a different object and physical label space.",
+      "decision": "selected",
+      "decision_reason": "Clear object/modality/output boundary and direct recent public evidence justify inclusion despite a modest corpus.",
+      "final_topic_id": "w6_topic_galaxy_activity_spectra"
+    },
+    {
+      "candidate_id": "c06_quasar_spectra",
+      "title": "Quasar spectral classification and redshift",
+      "scientific_object": "quasars",
+      "data_modality": "optical spectra with optional photometry",
+      "target_task": "mixed classification and redshift estimation",
+      "method_role": "candidate selection or prediction",
+      "scope_summary": "Identify or characterize quasars using spectral information.",
+      "hard_negative_potential": "Photometric quasar selection and galaxy-QSO classification frequently omit direct spectral input.",
+      "query_variant_feasibility": "Broad queries are viable but mix spectroscopy photometry classification and redshift tasks.",
+      "overlap_risk": "The combined task is internally heterogeneous and overlaps galaxy activity classification.",
+      "decision": "excluded",
+      "decision_reason": "Excluded because a single stable target task could not be frozen without narrowing beyond the gathered evidence.",
+      "final_topic_id": null
+    },
+    {
+      "candidate_id": "c07_supernova_typing",
+      "title": "Supernova spectral typing",
+      "scientific_object": "supernovae and explosive transients",
+      "data_modality": "observed optical transient spectra",
+      "target_task": "spectral type classification",
+      "method_role": "primary class predictor",
+      "scope_summary": "Assign transient types from spectra including low-signal and phase-varying cases.",
+      "hard_negative_potential": "Photometric light-curve classification host identification and spectral generation are strong boundaries.",
+      "query_variant_feasibility": "Deep-learning and automated spectral-typing queries return direct methods such as DASH.",
+      "overlap_risk": "Classification repeats a task family but adds a time-dependent transient object and modality.",
+      "decision": "selected",
+      "decision_reason": "Strong direct evidence and unusually clear photometry-versus-spectroscopy boundary support inclusion.",
+      "final_topic_id": "w6_topic_supernova_spectral_typing"
+    },
+    {
+      "candidate_id": "c08_exoplanet_atmosphere",
+      "title": "Exoplanet atmospheric retrieval from spectra",
+      "scientific_object": "exoplanet atmospheres",
+      "data_modality": "transmission or emission spectra",
+      "target_task": "composition and parameter retrieval",
+      "method_role": "inverse model or retrieval surrogate",
+      "scope_summary": "Infer atmospheric composition clouds and physical parameters from exoplanet spectra.",
+      "hard_negative_potential": "Light-curve detection forward spectrum generation and molecule detection without retrieval are close boundaries.",
+      "query_variant_feasibility": "Transmission/emission and neural/Bayesian retrieval variants retrieve direct literature.",
+      "overlap_risk": "A regression/inference role is shared with stellar parameters, but object physics and modality differ substantially.",
+      "decision": "selected",
+      "decision_reason": "Distinct object and modality, strong direct evidence, and explicit forward-versus-inverse boundary justify inclusion.",
+      "final_topic_id": "w6_topic_exoplanet_atmospheric_retrieval"
+    },
+    {
+      "candidate_id": "c09_stellar_radial_velocity",
+      "title": "Data-driven stellar radial velocity estimation",
+      "scientific_object": "stars and exoplanet host stars",
+      "data_modality": "high-resolution or time-series stellar spectra",
+      "target_task": "radial velocity estimation",
+      "method_role": "primary Doppler estimator or variability disentangler",
+      "scope_summary": "Estimate stellar line-of-sight velocity from spectral shifts and variability.",
+      "hard_negative_potential": "Atmospheric parameter estimation classification and activity prediction share spectral vocabulary but not the output.",
+      "query_variant_feasibility": "Data-driven time-series and Doppler queries retrieve direct work including wobble.",
+      "overlap_risk": "Uses stellar spectra like W4, but the physical output and time-series modality are distinct.",
+      "decision": "selected",
+      "decision_reason": "Retained as a distinct measurement problem with strong object/task hard negatives and adequate evidence.",
+      "final_topic_id": "w6_topic_stellar_radial_velocity"
+    },
+    {
+      "candidate_id": "c10_spectral_anomaly",
+      "title": "Anomaly discovery in spectroscopic surveys",
+      "scientific_object": "rare or unmodelled astronomical objects",
+      "data_modality": "large optical or infrared spectral surveys",
+      "target_task": "unsupervised anomaly or outlier discovery",
+      "method_role": "primary novelty representation or anomaly score",
+      "scope_summary": "Rank unusual spectra for scientific inspection beyond fixed known classes.",
+      "hard_negative_potential": "Rare-class supervised classifiers and non-spectral anomaly catalogues provide realistic negatives.",
+      "query_variant_feasibility": "Anomaly outlier and rare-object formulations retrieve complementary evidence.",
+      "overlap_risk": "Broad object scope is intentional but constrained by a single discovery task and direct spectral input.",
+      "decision": "selected",
+      "decision_reason": "Adds unsupervised discovery and survey-scale diversity with a defensible supervised-versus-anomaly boundary.",
+      "final_topic_id": "w6_topic_spectral_anomaly_detection"
+    },
+    {
+      "candidate_id": "c11_spectral_denoising",
+      "title": "Learned stellar spectral denoising",
+      "scientific_object": "low-signal stellar spectra",
+      "data_modality": "one-dimensional optical or infrared spectra",
+      "target_task": "denoising and restoration",
+      "method_role": "primary learned restoration component",
+      "scope_summary": "Restore spectral quality while preserving line profiles and downstream measurements.",
+      "hard_negative_potential": "Normalization parameter inference and synthetic generation are close but scientifically different roles.",
+      "query_variant_feasibility": "A broader query was too strict, while neural-network stellar denoising retrieved direct methods.",
+      "overlap_risk": "Adjacent to W4 preprocessing, but narrower and explicitly evaluated as restoration rather than generic preprocessing.",
+      "decision": "selected",
+      "decision_reason": "The narrower boundary directly addresses W5 preprocessing-versus-parameterization errors without duplicating generic preprocessing.",
+      "final_topic_id": "w6_topic_stellar_spectral_denoising"
+    },
+    {
+      "candidate_id": "c12_emission_lines",
+      "title": "Emission-line detection and deblending",
+      "scientific_object": "emission-line galaxies or stars",
+      "data_modality": "optical spectra",
+      "target_task": "line detection deblending or measurement",
+      "method_role": "learned line-analysis component",
+      "scope_summary": "Detect or separate spectral emission features using deep learning.",
+      "hard_negative_potential": "Strong-lens searches activity classification and anomaly detection can all depend on emission lines.",
+      "query_variant_feasibility": "The strict query returned no hits and a relaxed query mixed several downstream tasks.",
+      "overlap_risk": "Task identity was not stable across retrieved examples and overlaps galaxy activity and anomaly Topics.",
+      "decision": "excluded",
+      "decision_reason": "Excluded because the viability search did not isolate a sufficiently coherent learned deblending literature.",
+      "final_topic_id": null
+    },
+    {
+      "candidate_id": "c13_telluric_correction",
+      "title": "Learned telluric correction",
+      "scientific_object": "ground-based astronomical sources",
+      "data_modality": "high-resolution optical or near-infrared spectra",
+      "target_task": "telluric absorption correction",
+      "method_role": "learned atmospheric correction model",
+      "scope_summary": "Remove terrestrial atmospheric absorption from astronomical spectra.",
+      "hard_negative_potential": "General instrument modelling exoplanet analysis and classical correction methods are close boundaries.",
+      "query_variant_feasibility": "Only four broad hits appeared and direct learned-correction evidence was sparse.",
+      "overlap_risk": "Would add preprocessing diversity but evidence is thinner than the denoising Topic.",
+      "decision": "excluded",
+      "decision_reason": "Excluded on literature viability and query precision rather than to reach a target Topic count.",
+      "final_topic_id": null
+    },
+    {
+      "candidate_id": "c14_stellar_emulation",
+      "title": "Stellar spectral interpolation and emulation",
+      "scientific_object": "stellar atmosphere model grids",
+      "data_modality": "parameter-conditioned synthetic spectra",
+      "target_task": "forward interpolation emulation or generation",
+      "method_role": "primary learned spectral-synthesis surrogate",
+      "scope_summary": "Generate stellar spectra from physical parameters rather than infer parameters from observations.",
+      "hard_negative_potential": "Inverse parameterization denoising and normalization use the same words but reverse the method role.",
+      "query_variant_feasibility": "Interpolation and neural spectral-synthesis formulations retrieve direct work.",
+      "overlap_risk": "Shares stellar vocabulary with several Topics but has a uniquely forward generative role.",
+      "decision": "selected",
+      "decision_reason": "Directly operationalizes the W5 generation-versus-preprocessing boundary and has adequate public evidence.",
+      "final_topic_id": "w6_topic_stellar_spectral_emulation"
+    },
+    {
+      "candidate_id": "c15_solar_inversion",
+      "title": "Solar spectropolarimetric inversion",
+      "scientific_object": "solar photosphere and chromosphere",
+      "data_modality": "spectropolarimetric Stokes profiles",
+      "target_task": "magnetic and atmospheric inversion",
+      "method_role": "primary inversion model or surrogate",
+      "scope_summary": "Infer magnetic fields and atmospheric stratification from Stokes spectra.",
+      "hard_negative_potential": "Solar image classification forward radiative transfer and non-solar parameter estimation are clear negatives.",
+      "query_variant_feasibility": "Spectropolarimetric and Stokes-profile formulations retrieve multiple direct neural inversion papers.",
+      "overlap_risk": "An inverse task resembles parameter estimation, but spectropolarimetry and solar physics add real modality/object diversity.",
+      "decision": "selected",
+      "decision_reason": "Strong direct evidence and a distinctive polarized spectral modality justify inclusion.",
+      "final_topic_id": "w6_topic_solar_spectropolarimetric_inversion"
+    },
+    {
+      "candidate_id": "c16_21cm_foreground",
+      "title": "21-cm foreground removal",
+      "scientific_object": "cosmological 21-cm signal and foreground sky",
+      "data_modality": "radio-frequency spectra or intensity maps",
+      "target_task": "foreground removal and component separation",
+      "method_role": "primary learned separator or restoration model",
+      "scope_summary": "Recover cosmological 21-cm structure from spectrally resolved foreground contamination.",
+      "hard_negative_potential": "RFI classification parameter inference HII-region identification and continuum imaging provide distinct boundaries.",
+      "query_variant_feasibility": "The term 21cm is indexing-sensitive, but alternate formulations retrieve deep21 and related work.",
+      "overlap_risk": "Low overlap with optical Topics; the main risk is mixing spectral cubes with non-spectral radio imaging.",
+      "decision": "selected",
+      "decision_reason": "Retained to add radio/cosmology modality diversity after alternate queries found direct foreground-removal work.",
+      "final_topic_id": "w6_topic_21cm_foreground_removal"
+    }
+  ],
+  "viability_evidence": [
+    {
+      "candidate_id": "c01_stellar_parameters",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:06:08+08:00",
+      "query": "machine learning stellar spectra atmospheric parameters",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 59,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:machine%20learning%20stellar%20spectra%20atmospheric%20parameters,from_publication_date:2000-01-01,has_abstract:true&per-page=3&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W2098458655",
+          "title": "Prediction of stellar atmospheric parameters from spectra, spectral indices and spectral lines using machine learning",
+          "year": 2001,
+          "doi": null
+        }
+      ],
+      "interpretation": "Strong viability, but direct W4/W5 overlap controls the exclusion decision."
+    },
+    {
+      "candidate_id": "c02_stellar_classification",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:06:08+08:00",
+      "query": "machine learning stellar spectra classification",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 100,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:machine%20learning%20stellar%20spectra%20classification,from_publication_date:2000-01-01,has_abstract:true&per-page=3&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W2987499710",
+          "title": "Application of convolutional neural networks for stellar spectral classification",
+          "year": 2019,
+          "doi": "https://doi.org/10.1093/mnras/stz3100"
+        }
+      ],
+      "interpretation": "Large direct corpus, excluded solely to avoid pseudo-diversity and reused W4/W5 scope."
+    },
+    {
+      "candidate_id": "c03_generic_preprocessing",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:06:08+08:00",
+      "query": "machine learning astronomical spectra preprocessing",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 8,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:machine%20learning%20astronomical%20spectra%20preprocessing,from_publication_date:2000-01-01,has_abstract:true&per-page=3&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W2076918964",
+          "title": "Pattern-Recognition Methods in Automatic Techniques for Astronomical Spectral Analysis",
+          "year": 2002,
+          "doi": "https://doi.org/10.1086/341742"
+        }
+      ],
+      "interpretation": "Small heterogeneous result set confirms that generic preprocessing is not a precise freeze boundary."
+    },
+    {
+      "candidate_id": "c04_galaxy_redshift",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:06:08+08:00",
+      "query": "machine learning galaxy spectra redshift estimation",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 21,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:machine%20learning%20galaxy%20spectra%20redshift%20estimation,from_publication_date:2000-01-01,has_abstract:true&per-page=3&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W4404914259",
+          "title": "Inferring redshift and galaxy properties via a multi-task neural net with probabilistic outputs",
+          "year": 2024,
+          "doi": "https://doi.org/10.1051/0004-6361/202452799"
+        }
+      ],
+      "interpretation": "A real topic exists, but ranked results repeatedly include photometric-only redshift work."
+    },
+    {
+      "candidate_id": "c05_galaxy_activity",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:07:02+08:00",
+      "query": "automated activity classification optical galaxy spectra",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 4,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:automated%20activity%20classification%20optical%20galaxy%20spectra,from_publication_date:2000-01-01,has_abstract:true&per-page=5&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W7133197428",
+          "title": "An automated activity classification tool for optical galaxy spectra",
+          "year": 2026,
+          "doi": "https://doi.org/10.1051/0004-6361/202556354"
+        },
+        {
+          "openalex_id": "https://openalex.org/W4394868277",
+          "title": "From VIPERS to SDSS: Unveiling galaxy spectra evolution over 9 Gyr through unsupervised machine learning",
+          "year": 2024,
+          "doi": "https://doi.org/10.1051/0004-6361/202349026"
+        }
+      ],
+      "interpretation": "The exact corpus is modest but contains direct current methods and useful modality/task boundaries."
+    },
+    {
+      "candidate_id": "c06_quasar_spectra",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:06:32+08:00",
+      "query": "machine learning quasar spectral classification",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 48,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:machine%20learning%20quasar%20spectral%20classification,from_publication_date:2000-01-01,has_abstract:true&per-page=3&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W2148636657",
+          "title": "Automated physical classification in the SDSS DR10. A catalogue of candidate quasars",
+          "year": 2015,
+          "doi": "https://doi.org/10.1093/mnras/stv854"
+        }
+      ],
+      "interpretation": "Viable but heterogeneous across photometric selection spectral classification and redshift."
+    },
+    {
+      "candidate_id": "c07_supernova_typing",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:06:32+08:00",
+      "query": "deep learning supernova spectral classification",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 14,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:deep%20learning%20supernova%20spectral%20classification,from_publication_date:2000-01-01,has_abstract:true&per-page=3&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W2921352493",
+          "title": "DASH: Deep Learning for the Automated Spectral Classification of Supernovae and Their Hosts",
+          "year": 2019,
+          "doi": "https://doi.org/10.3847/1538-4357/ab48f4"
+        }
+      ],
+      "interpretation": "Direct spectral typing evidence and strong photometry/host hard negatives support viability."
+    },
+    {
+      "candidate_id": "c08_exoplanet_atmosphere",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:06:08+08:00",
+      "query": "machine learning exoplanet transmission spectra atmospheric retrieval",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 20,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:machine%20learning%20exoplanet%20transmission%20spectra%20atmospheric%20retrieval,from_publication_date:2000-01-01,has_abstract:true&per-page=3&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W4221060328",
+          "title": "Convolutional neural networks as an alternative to Bayesian retrievals for interpreting exoplanet transmission spectra",
+          "year": 2022,
+          "doi": "https://doi.org/10.1051/0004-6361/202142976"
+        },
+        {
+          "openalex_id": "https://openalex.org/W3099654532",
+          "title": "An Ensemble of Bayesian Neural Networks for Exoplanetary Atmospheric Retrieval",
+          "year": 2019,
+          "doi": null
+        }
+      ],
+      "interpretation": "Multiple direct retrieval approaches establish a viable inverse-spectroscopy Topic."
+    },
+    {
+      "candidate_id": "c09_stellar_radial_velocity",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:07:02+08:00",
+      "query": "data driven time series stellar spectra radial velocity",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 8,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:data%20driven%20time%20series%20stellar%20spectra%20radial%20velocity,from_publication_date:2000-01-01,has_abstract:true&per-page=5&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W2975390540",
+          "title": "WOBBLE: A Data-driven Analysis Technique for Time-series Stellar Spectra",
+          "year": 2019,
+          "doi": "https://doi.org/10.3847/1538-3881/ab40a7"
+        }
+      ],
+      "interpretation": "The exact query is narrow but yields a canonical direct method and clear alternative variants."
+    },
+    {
+      "candidate_id": "c10_spectral_anomaly",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:06:32+08:00",
+      "query": "anomaly detection stellar spectra",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 48,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:anomaly%20detection%20stellar%20spectra,from_publication_date:2000-01-01,has_abstract:true&per-page=3&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W4386841874",
+          "title": "Fast and efficient identification of anomalous galaxy spectra with neural density estimation",
+          "year": 2023,
+          "doi": "https://doi.org/10.1093/mnras/stad2773"
+        },
+        {
+          "openalex_id": "https://openalex.org/W2766639095",
+          "title": "Detecting outliers and learning complex structures with large spectroscopic surveys - a case study with APOGEE stars",
+          "year": 2018,
+          "doi": "https://doi.org/10.1093/mnras/sty348"
+        }
+      ],
+      "interpretation": "Broad counts are noisy, while the representative works establish direct spectral anomaly discovery."
+    },
+    {
+      "candidate_id": "c11_spectral_denoising",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:06:32+08:00",
+      "query": "neural network stellar spectra denoising",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 12,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:neural%20network%20stellar%20spectra%20denoising,from_publication_date:2000-01-01,has_abstract:true&per-page=3&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W3033299805",
+          "title": "Spectra-GANs: A New Automated Denoising Method for Low-S/N Stellar Spectra",
+          "year": 2020,
+          "doi": "https://doi.org/10.1109/access.2020.3000174"
+        }
+      ],
+      "interpretation": "A narrow query produces direct denoising work; the zero-count broader query exposed indexing sensitivity."
+    },
+    {
+      "candidate_id": "c12_emission_lines",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:06:32+08:00",
+      "query": "deep learning emission line detection spectra",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 11,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:deep%20learning%20emission%20line%20detection%20spectra,from_publication_date:2000-01-01,has_abstract:true&per-page=3&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W4221149657",
+          "title": "Galaxy Spectra Neural Networks (GaSNets). I. Searching for Strong Lens Candidates in eBOSS Spectra Using Deep Learning",
+          "year": 2022,
+          "doi": "https://doi.org/10.1088/1674-4527/ac68c4"
+        }
+      ],
+      "interpretation": "Relaxing the query retrieves downstream lens/anomaly tasks rather than a coherent deblending corpus."
+    },
+    {
+      "candidate_id": "c13_telluric_correction",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:06:32+08:00",
+      "query": "machine learning telluric correction",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 4,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:machine%20learning%20telluric%20correction,from_publication_date:2000-01-01,has_abstract:true&per-page=3&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W4312170662",
+          "title": "An Interpretable Machine-learning Framework for Modeling High-resolution Spectroscopic Data",
+          "year": 2022,
+          "doi": "https://doi.org/10.3847/1538-4357/aca0a2"
+        }
+      ],
+      "interpretation": "Only four broad matches and limited direct learned-correction evidence make freeze premature."
+    },
+    {
+      "candidate_id": "c14_stellar_emulation",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:07:02+08:00",
+      "query": "stellar spectra neural network interpolation",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 13,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:stellar%20spectra%20neural%20network%20interpolation,from_publication_date:2000-01-01,has_abstract:true&per-page=5&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W3036313178",
+          "title": "Stellar spectral interpolation using machine learning",
+          "year": 2020,
+          "doi": "https://doi.org/10.1093/mnras/staa1809"
+        }
+      ],
+      "interpretation": "Direct interpolation evidence supports a narrowly forward generative role."
+    },
+    {
+      "candidate_id": "c15_solar_inversion",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:06:08+08:00",
+      "query": "machine learning solar spectropolarimetric inversion",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 10,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:machine%20learning%20solar%20spectropolarimetric%20inversion,from_publication_date:2000-01-01,has_abstract:true&per-page=3&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W3033124288",
+          "title": "Mimicking spectropolarimetric inversions using convolutional neural networks",
+          "year": 2020,
+          "doi": "https://doi.org/10.1051/0004-6361/201936537"
+        },
+        {
+          "openalex_id": "https://openalex.org/W4417227315",
+          "title": "Spectropolarimetric Inversion in Four Dimensions with Deep Learning (SPIn4D). II. A Physics-informed Machine Learning Method for 3D Solar Photosphere Reconstruction",
+          "year": 2025,
+          "doi": "https://doi.org/10.3847/1538-4357/ae12ef"
+        }
+      ],
+      "interpretation": "Multiple direct works establish both viability and a distinctive spectropolarimetric modality."
+    },
+    {
+      "candidate_id": "c16_21cm_foreground",
+      "provider": "OpenAlex public API",
+      "checked_at": "2026-08-24T14:07:20+08:00",
+      "query": "neural network foreground removal 21 cm signal",
+      "filters": "title_and_abstract.search; from_publication_date=2000-01-01; has_abstract=true",
+      "hit_count": 6,
+      "query_url": "https://api.openalex.org/works?filter=title_and_abstract.search:neural%20network%20foreground%20removal%2021%20cm%20signal,from_publication_date:2000-01-01,has_abstract:true&per-page=5&select=id,display_name,publication_year,doi",
+      "representative_works": [
+        {
+          "openalex_id": "https://openalex.org/W3099201768",
+          "title": "deep21: a deep learning method for 21 cm foreground removal",
+          "year": 2021,
+          "doi": "https://doi.org/10.1088/1475-7516/2021/04/081"
+        },
+        {
+          "openalex_id": "https://openalex.org/W4391294472",
+          "title": "Deep learning approach for identification of H ii regions during reionization in 21-cm observations - II. Foreground contamination",
+          "year": 2024,
+          "doi": "https://doi.org/10.1093/mnras/stae257"
+        }
+      ],
+      "interpretation": "A small but direct corpus supports inclusion and adds genuine radio-spectral diversity."
+    }
+  ],
+  "freeze_decision": {
+    "selected_candidate_ids": [
+      "c05_galaxy_activity",
+      "c07_supernova_typing",
+      "c08_exoplanet_atmosphere",
+      "c09_stellar_radial_velocity",
+      "c10_spectral_anomaly",
+      "c11_spectral_denoising",
+      "c14_stellar_emulation",
+      "c15_solar_inversion",
+      "c16_21cm_foreground"
+    ],
+    "excluded_candidate_ids": [
+      "c01_stellar_parameters",
+      "c02_stellar_classification",
+      "c03_generic_preprocessing",
+      "c04_galaxy_redshift",
+      "c06_quasar_spectra",
+      "c12_emission_lines",
+      "c13_telluric_correction"
+    ],
+    "final_topic_ids": [
+      "w6_topic_galaxy_activity_spectra",
+      "w6_topic_supernova_spectral_typing",
+      "w6_topic_exoplanet_atmospheric_retrieval",
+      "w6_topic_stellar_radial_velocity",
+      "w6_topic_spectral_anomaly_detection",
+      "w6_topic_stellar_spectral_denoising",
+      "w6_topic_stellar_spectral_emulation",
+      "w6_topic_solar_spectropolarimetric_inversion",
+      "w6_topic_21cm_foreground_removal"
+    ],
+    "frozen_at": "2026-08-24T14:18:00+08:00",
+    "decision_rule": "Select only candidates with a coherent scientific object/modality/task/method-role boundary, at least one reproducible public viability query with direct evidence, useful hard negatives, and non-redundant coverage relative to W4/W5 and the new roster; no target count is enforced."
+  },
+  "split_decision": {
+    "strategy": "constrained_balanced_topic_split_v1",
+    "alternatives_considered": [
+      "deterministic seeded random topic split: reproducible but can cluster objects or tasks on one side",
+      "manual object-only stratification: balances objects but can leave target-task families unbalanced",
+      "constrained balanced topic split: selected because it balances object modality task and method role without labels"
+    ],
+    "decision_rule": "Allocate whole Topics only; keep approximately half hidden; balance scientific objects, optical/non-optical modalities, and classification/inference/preprocessing/generation task roles using frozen Topic metadata only, then resolve equally valid assignments by the recorded seed.",
+    "seed": "issue64-topic-split-v1",
+    "frozen_before_labels": true,
+    "dev_topic_ids": [
+      "w6_topic_supernova_spectral_typing",
+      "w6_topic_stellar_radial_velocity",
+      "w6_topic_spectral_anomaly_detection",
+      "w6_topic_stellar_spectral_emulation",
+      "w6_topic_21cm_foreground_removal"
+    ],
+    "hidden_test_topic_ids": [
+      "w6_topic_galaxy_activity_spectra",
+      "w6_topic_exoplanet_atmospheric_retrieval",
+      "w6_topic_stellar_spectral_denoising",
+      "w6_topic_solar_spectropolarimetric_inversion"
+    ],
+    "custodian_policy": "Hidden labels remain outside the ordinary repository under an independent custodian; the public repository may contain only a sealed external hash anchor and no reveal path."
+  },
+  "provenance": {
+    "kind": "public_metadata_topic_viability_and_freeze",
+    "created_by": "issue64_leader",
+    "created_at": "2026-08-24T14:18:00+08:00",
+    "git_revision": "90811052194801263708627c1eda39a2765e9037"
+  }
+}

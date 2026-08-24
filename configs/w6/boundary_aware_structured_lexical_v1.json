@@ -1,0 +1,84 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_boundary_aware_ranking_config",
+  "artifact_id": "boundary_aware_structured_lexical_v1_config",
+  "status": "frozen",
+  "is_fixture": false,
+  "method_id": "boundary_aware_structured_lexical_v1",
+  "frozen_at": "2026-08-24T14:20:00+08:00",
+  "frozen_before_w6_evaluation": true,
+  "historical_diagnostic_use": {
+    "source": "W5 Error Analysis and representative W4/W5 Query Relevance cases",
+    "purpose": "problem definition and hypothesis generation only",
+    "runtime_input": false,
+    "independent_validation_claimed": false
+  },
+  "options_considered": [
+    {
+      "option_id": "deterministic_compatibility_rule",
+      "deterministic": true,
+      "external_model": false,
+      "decision": "not_selected",
+      "tradeoff": "Highly interpretable but discards the strength of ordinary query-paper relevance."
+    },
+    {
+      "option_id": "structured_relevance_with_boundary_penalty",
+      "deterministic": true,
+      "external_model": false,
+      "decision": "selected",
+      "tradeoff": "Retains lexical relevance while exposing object modality task role and mismatch diagnostics."
+    },
+    {
+      "option_id": "lightweight_boundary_classifier",
+      "deterministic": false,
+      "external_model": true,
+      "decision": "deferred",
+      "tradeoff": "Potentially more semantic but requires training data and risks memorizing the small W5 diagnostic set."
+    },
+    {
+      "option_id": "llm_boundary_judgement",
+      "deterministic": false,
+      "external_model": true,
+      "decision": "deferred",
+      "tradeoff": "Flexible decomposition but adds model prompt cost and reproducibility governance."
+    }
+  ],
+  "selected_option": "structured_relevance_with_boundary_penalty",
+  "selection_reason": "This is the smallest label-free prototype that directly tests the W5 boundary-mismatch hypothesis while remaining deterministic auditable and W6-contract compatible.",
+  "scoring": {
+    "relevance_weight": 0.6,
+    "compatibility_weight": 0.4,
+    "boundary_penalty": 0.5,
+    "scientific_object_weight": 0.25,
+    "data_modality_weight": 0.25,
+    "target_task_weight": 0.25,
+    "method_role_weight": 0.25,
+    "bm25_k1": 1.5,
+    "bm25_b": 0.75,
+    "missing_abstract_policy": "retain_with_title_only_no_missingness_penalty"
+  },
+  "backend": {
+    "name": "deterministic_structured_lexical_boundary",
+    "version": "1.0",
+    "external_model": false,
+    "network_access": false
+  },
+  "input_policy": {
+    "required_inputs": ["topic_set", "candidate_pool", "source_records"],
+    "source_records_auxiliary_input_required": true,
+    "relevance_labels_read": false,
+    "hidden_test_labels_read": false,
+    "metrics_read": false
+  },
+  "limitations": [
+    "Lexical matching is brittle to synonyms and implicit task descriptions.",
+    "Per-topic min-max normalization can be sensitive in very small candidate pools.",
+    "Fixture validation demonstrates contract compatibility rather than independent retrieval effectiveness."
+  ],
+  "provenance": {
+    "kind": "issue64_preregistered_boundary_aware_config",
+    "created_by": "issue64_leader",
+    "created_at": "2026-08-24T14:20:00+08:00",
+    "git_revision": "90811052194801263708627c1eda39a2765e9037"
+  }
+}

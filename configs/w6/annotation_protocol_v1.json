@@ -1,0 +1,127 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_annotation_protocol",
+  "artifact_id": "w6_annotation_protocol_v1",
+  "status": "frozen",
+  "is_fixture": false,
+  "version": "1.0",
+  "frozen_at": "2026-08-24T14:19:30+08:00",
+  "frozen_before_annotations": true,
+  "label_scheme": {
+    "type": "graded_query_relevance",
+    "allowed_values": [0, 1, 2],
+    "version": "query_relevance_0_1_2_v1"
+  },
+  "blind_view": {
+    "view_policy": "blind_to_retrieval_and_ranking_v2",
+    "visible_fields": [
+      "research_question",
+      "scientific_object",
+      "data_modality",
+      "target_task",
+      "method_role",
+      "scope_in",
+      "scope_out",
+      "boundary_cases",
+      "title",
+      "abstract",
+      "publication_year",
+      "authors",
+      "venue",
+      "public_paper_identity"
+    ],
+    "forbidden_signals": [
+      "acquisition_provenance_refs",
+      "acquisition_system",
+      "retrieval_hit_ids",
+      "retrieval_run_id",
+      "retriever",
+      "source_rank",
+      "source_score",
+      "source_system_membership",
+      "method_id",
+      "score",
+      "rank",
+      "rrf",
+      "selection_bucket",
+      "selection_reasons",
+      "relevance_label",
+      "final_label",
+      "other_annotator_label",
+      "pool_item_id",
+      "record_id",
+      "canonical_entity_id"
+    ]
+  },
+  "evidence_policy": {
+    "lookup_status_values": ["not_needed", "completed", "insufficient", "failed"],
+    "source_priority": [
+      "provided title and abstract",
+      "OpenAlex public metadata",
+      "DOI or publisher abstract page",
+      "ADS or arXiv public record",
+      "legally public full text only when necessary"
+    ],
+    "required_result_fields": [
+      "label",
+      "confidence",
+      "uncertainty",
+      "evidence_source",
+      "evidence_reference",
+      "lookup_status",
+      "justification_summary",
+      "actor_type",
+      "model_or_tool",
+      "protocol_version",
+      "timestamp",
+      "review_status"
+    ],
+    "private_reasoning_storage": "forbidden"
+  },
+  "primary_annotation": {
+    "actor_types": ["ai_assistant", "human", "ai_assisted_human"],
+    "round": "independent_primary",
+    "independence_rule": "Each judgement is produced from the blind task only; no retriever, ranking, metric, other label, or label distribution is visible.",
+    "prompt_version": "w6_query_relevance_annotation_v1"
+  },
+  "review_policy": {
+    "policy_id": "w6_blind_review_policy_v1",
+    "selection_frozen_before_labels": true,
+    "mandatory_triggers": [
+      "low_confidence",
+      "nonempty_uncertainty",
+      "evidence_insufficient",
+      "boundary_case",
+      "annotation_conflict",
+      "missing_abstract",
+      "random_high_confidence_qa"
+    ],
+    "second_annotation_fraction_per_topic": 0.2,
+    "second_annotation_seed": "issue64-second-annotation-v1",
+    "random_high_confidence_qa_fraction": 0.1,
+    "random_qa_seed": "issue64-high-confidence-qa-v1",
+    "reviewer_independence_required": true,
+    "ranking_signals_allowed": false
+  },
+  "adjudication_policy": {
+    "required_for_conflicts": true,
+    "reviewer_types": ["human", "ai_assisted_human"],
+    "allowed_decisions": ["approve", "modify"],
+    "preserve_primary_history": true,
+    "required_fields": [
+      "reviewer_id",
+      "reviewer_type",
+      "decision",
+      "final_label",
+      "reviewed_at",
+      "review_note",
+      "provenance"
+    ]
+  },
+  "provenance": {
+    "kind": "issue64_preregistered_annotation_protocol",
+    "created_by": "issue64_leader",
+    "created_at": "2026-08-24T14:19:30+08:00",
+    "git_revision": "90811052194801263708627c1eda39a2765e9037"
+  }
+}
