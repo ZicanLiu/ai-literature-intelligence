@@ -17,10 +17,11 @@ payload 递归遍历（dict / nested dict / list 内 object），发现禁止 ke
    review / metric / ndcg / precision / recall / evaluation 及其复数形）即禁止——
    因此 ``gold_label`` / ``relevance_labels`` / ``ndcg_at_10`` / ``precision_at_k`` /
    ``review_results`` / ``evaluation_metrics`` 等单复数或 ``_at_k`` 别名无法绕开；
-3. **allowlist 优先**：``GENERATION_ALLOWED_KEYS`` 中的当前合法 provenance key
-   （``label_access`` / ``review_state`` / ``reviewer``）不被 token 规则误杀；
-   ``retrieval`` / ``source_score`` / ``score_direction`` 等本身不含 forbidden token，
-   天然安全。
+3. **(path, key, value) 语义 allowlist**：合同明确允许的 provenance 仅在规定
+   路径、取规定值时放行（如 ``label_access.relevance_labels_read = false``、
+   ``freeze.evaluation_started_at``、字符串形的 ``review_state`` / ``reviewer``）；
+   错位置或值不为 ``false`` 一律禁止。``retrieval`` / ``source_score`` /
+   ``score_direction`` 等本身不含 forbidden token，天然安全。
 
 不防御任意隐写（如 ``foo = 2``）；目标是明显的 label / review / adjudication /
 evaluation / metric 语义家族不能以别名绕过。当前 artifact 中合法存在的
@@ -88,18 +89,6 @@ GENERATION_FORBIDDEN_TOKENS = frozenset(
     }
 )
 
-# 当前合法的 provenance key（allowlist 优先于 token 规则，防误杀）。
-GENERATION_ALLOWED_KEYS = frozenset(
-    {
-        "label_access",
-        "review_state",
-        "reviewer",
-        "evaluation_started_at",
-        "hidden_test_labels_read",
-        "relevance_labels_read",
-    }
-)
-
 _TOKEN_SPLIT = re.compile(r"[^a-z0-9]+")
 
 
@@ -107,12 +96,42 @@ def _key_tokens(key_lower: str) -> list[str]:
     return [token for token in _TOKEN_SPLIT.split(key_lower) if token]
 
 
-def is_forbidden_key(key: Any) -> bool:
-    """判断单个 key 是否命中 generation No-Leakage 禁令。"""
+# 当前合法 provenance 的 (path, key, value) 语义规则。
+# 全局 “key → allowed” 不足以表达合同边界：label 家族字段只有在合同明确允许的
+# provenance 路径、且取合同规定值时才合法；出现在 frozen_configuration /
+# policy.parameters / method.parameters 等 free-form object 内（无论真假值）都必须
+# fail closed。
+_LABEL_READ_KEYS = frozenset({"relevance_labels_read", "hidden_test_labels_read"})
+
+
+def _is_allowed_at(key_lower: str, path_lower: str, value: Any) -> bool:
+    """(path, key, value) → allowed：合同明确允许的 provenance 位置与规定值。"""
+    if key_lower == "label_access":
+        # 顶层 label_access 块（合同声明对象）或 normalization 内的 false 声明。
+        return (path_lower == "label_access" and isinstance(value, dict)) or (
+            path_lower == "score_processing.normalization.label_access"
+            and value is False
+        )
+    if key_lower in _LABEL_READ_KEYS:
+        # 只有 label_access 块内且值必须为 false；true 或错位置一律不允许。
+        return path_lower == f"label_access.{key_lower}" and value is False
+    if key_lower == "evaluation_started_at":
+        return path_lower == "freeze.evaluation_started_at"
+    if key_lower == "review_state":
+        # canonical suspected_relationships 的合法状态字段（非 label 信号）。
+        return isinstance(value, str)
+    if key_lower == "reviewer":
+        # canonicalization provenance 的合法 reviewer 字段（非 label 信号）。
+        return isinstance(value, str)
+    return False
+
+
+def is_forbidden_key_at(key: Any, path: str, value: Any) -> bool:
+    """判断 (key, path, value) 是否命中 generation No-Leakage 禁令。"""
     key_lower = str(key).lower()
     if key_lower in GENERATION_FORBIDDEN_KEYS:
         return True
-    if key_lower in GENERATION_ALLOWED_KEYS:
+    if _is_allowed_at(key_lower, path.lower(), value):
         return False
     return any(token in GENERATION_FORBIDDEN_TOKENS for token in _key_tokens(key_lower))
 
@@ -126,7 +145,7 @@ def find_forbidden_keys(value: Any) -> list[str]:
             for key, child in node.items():
                 key_text = str(key)
                 child_path = f"{path}.{key_text}" if path else key_text
-                if is_forbidden_key(key):
+                if is_forbidden_key_at(key, child_path, child):
                     hits.append(child_path)
                 walk(child, child_path)
         elif isinstance(node, list):

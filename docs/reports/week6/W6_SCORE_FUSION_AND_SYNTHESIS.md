@@ -162,6 +162,24 @@ python -m app.run_w6_synthesis --output-dir <outdir>
   human verification 流程在后续任务中定义。
 - 真实 LLM backend 未实现（仅 Protocol）；接入前需要独立的凭据与安全审查。
 
+## 审查修复记录（PR #70 第四轮）
+
+第四轮聚焦复审只剩 No-Leakage semantic boundary 下 2 个 P1（其余 4 个 blocker 已独立确认关闭），修复如下：
+
+1. **P1-1 `parallel_development` 等价 contract validation**：`load_w6_base_context`
+   复用公共 `PARALLEL_MODULE_FIXTURE_REQUIREMENTS` 矩阵验证该块——槽位恰好六个、
+   entry 只含 `depends_on`/`artifacts`、只依赖 `w6_bootstrap`、declared artifact 集合
+   不得偏离公共矩阵，并对该块跑递归 side-channel guard 做纵深防御；注入
+   `metrics.ndcg` / `evaluation.relevance_label`（额外槽或槽内额外 key）即拒绝。
+2. **P1-2 allowlist 改为 (path, key, value) 语义**：`label_access` 仅允许顶层
+   dict 或 `score_processing.normalization.label_access=false`；
+   `relevance_labels_read` / `hidden_test_labels_read` 仅允许 `label_access.*` 且
+   值必须为 `false`（错位置或 `true` 一律 fail closed）；
+   `evaluation_started_at` 仅允许 `freeze.*`；`review_state` / `reviewer` 为字符串形
+   合法 provenance。`frozen_configuration.relevance_labels_read=true` 与
+   `pool.policy.parameters.hidden_test_labels_read=true` 全链自洽 rehash 后仍
+   fail closed，合法 fixture 不误杀。
+
 ## 审查修复记录（PR #70 第三轮）
 
 针对 owner 三轮审查的 5 个 P1 与 2 个 P2，修复如下（均有回归测试 + 独立攻击重放）：

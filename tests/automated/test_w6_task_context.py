@@ -866,5 +866,152 @@ class ExternalDependencyOrderTests(unittest.TestCase):
             self.assertEqual(rc, 1)
 
 
+class AllowlistSemanticsTests(unittest.TestCase):
+    """P1-2（第四轮）：allowlist 必须具备 (path, key, value) 语义。"""
+
+    def test_legitimate_label_provenance_paths_pass(self) -> None:
+        payload = {
+            "label_access": {
+                "relevance_labels_read": False,
+                "hidden_test_labels_read": False,
+                "declaration": "no labels were read",
+            },
+            "score_processing": {"normalization": {"label_access": False}},
+            "freeze": {"evaluation_started_at": None},
+            "suspected_relationships": {"x": {"review_state": "pending_review"}},
+            "canonicalization_provenance": {"reviewer": "fixture"},
+        }
+        self.assertEqual(find_forbidden_keys(payload), [])
+
+    def test_label_read_keys_outside_contract_path_forbidden(self) -> None:
+        # 即使值为 false，出现在 free-form object 内也必须 fail closed。
+        for value in (True, False):
+            with self.subTest(value=value):
+                payload = {
+                    "frozen_configuration": {"relevance_labels_read": value}
+                }
+                self.assertEqual(
+                    find_forbidden_keys(payload),
+                    ["frozen_configuration.relevance_labels_read"],
+                )
+
+    def test_label_read_true_anywhere_forbidden(self) -> None:
+        payload = {"label_access": {"relevance_labels_read": True}}
+        self.assertEqual(
+            find_forbidden_keys(payload), ["label_access.relevance_labels_read"]
+        )
+        payload = {"policy": {"parameters": {"hidden_test_labels_read": True}}}
+        self.assertEqual(
+            find_forbidden_keys(payload),
+            ["policy.parameters.hidden_test_labels_read"],
+        )
+
+    def test_retrieval_relevance_labels_read_attack_fails_clis(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "subset"
+            _write_subset_bundle(
+                root, [*BASE_CONTEXT_ARTIFACT_NAMES, "method_sparse_manifest", "method_dense_manifest"]
+            )
+            payload = load_json_object(root / "retrieval_runs.json")
+            payload["runs"][0]["frozen_configuration"]["relevance_labels_read"] = True
+            # 全链 self-consistent rehash。
+            payload["runs"][0]["configuration_sha256"] = canonical_json_sha256(
+                payload["runs"][0]["frozen_configuration"]
+            )
+            _update_artifact(root, "retrieval_provenance", "retrieval_runs.json", payload)
+            rc = _run_fusion_cli(
+                [
+                    "--bundle", str(root / "bundle_manifest.json"),
+                    "--manifest", str(root / "method_rankings/fake_sparse/manifest.json"),
+                    "--manifest", str(root / "method_rankings/fake_dense/manifest.json"),
+                    "--method-id", "w6_attack_fusion",
+                    "--output-dir", str(root / "out_f"),
+                ]
+            )
+            self.assertEqual(rc, 1)
+
+    def test_pool_hidden_labels_read_attack_fails_clis(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "subset"
+            _write_subset_bundle(
+                root, [*BASE_CONTEXT_ARTIFACT_NAMES, "method_sparse_manifest", "method_dense_manifest"]
+            )
+            payload = load_json_object(root / "candidate_pool.json")
+            payload["policy"]["parameters"]["hidden_test_labels_read"] = True
+            # 全链 self-consistent rehash。
+            payload["pool_identity"] = compute_pool_identity(payload)
+            _update_artifact(root, "candidate_pool", "candidate_pool.json", payload)
+            rc = _run_synthesis_cli(
+                [
+                    "--bundle", str(root / "bundle_manifest.json"),
+                    "--method-manifest",
+                    str(root / "method_rankings/fake_sparse/manifest.json"),
+                    "--output-dir", str(root / "out_s"),
+                ]
+            )
+            self.assertEqual(rc, 1)
+
+
+class ParallelDevelopmentContractTests(unittest.TestCase):
+    """P1-1（第四轮）：parallel_development 必须具备等价 contract validation。"""
+
+    def _run_both_clis(self, root: Path) -> tuple[int, int]:
+        rc_fusion = _run_fusion_cli(
+            [
+                "--bundle", str(root / "bundle_manifest.json"),
+                "--manifest", str(root / "method_rankings/fake_sparse/manifest.json"),
+                "--manifest", str(root / "method_rankings/fake_dense/manifest.json"),
+                "--method-id", "w6_attack_fusion",
+                "--output-dir", str(root / "out_f"),
+            ]
+        )
+        rc_synthesis = _run_synthesis_cli(
+            [
+                "--bundle", str(root / "bundle_manifest.json"),
+                "--method-manifest",
+                str(root / "method_rankings/fake_sparse/manifest.json"),
+                "--output-dir", str(root / "out_s"),
+            ]
+        )
+        return rc_fusion, rc_synthesis
+
+    def test_parallel_development_metric_slots_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "subset"
+            bundle = _write_subset_bundle(
+                root, [*BASE_CONTEXT_ARTIFACT_NAMES, "method_sparse_manifest", "method_dense_manifest"]
+            )
+            manifest = load_json_object(bundle)
+            manifest["parallel_development"]["metrics"] = {"ndcg": 0.99}
+            manifest["parallel_development"]["evaluation"] = {"relevance_label": 2}
+            bundle.write_text(
+                json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+            )
+            rc_fusion, rc_synthesis = self._run_both_clis(root)
+            self.assertEqual(rc_fusion, 1)
+            self.assertEqual(rc_synthesis, 1)
+
+    def test_parallel_development_entry_metadata_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "subset"
+            bundle = _write_subset_bundle(
+                root, [*BASE_CONTEXT_ARTIFACT_NAMES, "method_sparse_manifest", "method_dense_manifest"]
+            )
+            manifest = load_json_object(bundle)
+            manifest["parallel_development"]["synthesis_and_fusion"]["metrics"] = {
+                "ndcg": 0.99
+            }
+            bundle.write_text(
+                json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+            )
+            with self.assertRaisesRegex(ValueError, "字段不符合合同"):
+                load_w6_base_context(bundle)
+
+    def test_parallel_development_legitimate_fixture_passes(self) -> None:
+        # 原始 fixture 与 subset bundle 的 parallel_development 均合法。
+        context = load_w6_base_context(BUNDLE_PATH)
+        self.assertEqual(len(context["topics"]), 2)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

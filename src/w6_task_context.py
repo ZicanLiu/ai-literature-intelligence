@@ -39,6 +39,7 @@ from typing import Any, Mapping
 
 from src.annotation_tasks import sha256_file
 from src.w6_contracts import (
+    PARALLEL_MODULE_FIXTURE_REQUIREMENTS,
     W6_CONTRACT_NAME,
     W6_CONTRACT_VERSION,
     W6_SCHEMA_VERSION,
@@ -123,6 +124,39 @@ def _resolve_within_bundle(value: Any, *, bundle_dir: Path) -> Path:
     return resolved
 
 
+def _validate_parallel_development_block(value: Any) -> None:
+    """复用公共 contract 的 parallel_development 结构约束（P1-1）。
+
+    generation 会解析整个 bundle manifest，因此该块本身必须具备与 full
+    Bootstrap validator 等价的结构 guarantee：槽位恰好为六个公共模块、
+    每个 entry 只含 depends_on/artifacts、depends_on 只能依赖 w6_bootstrap、
+    declared artifact 集合不得偏离公共矩阵——任意 metric / evaluation /
+    label metadata 都无法混入。task-scoped subset bundle 合法地只含部分
+    artifact，因此不强制 ``artifacts ⊆ 当前 refs``（该闭包由 full validator 负责）。
+    """
+    if not isinstance(value, dict) or set(value) != set(
+        PARALLEL_MODULE_FIXTURE_REQUIREMENTS
+    ):
+        raise ValueError("parallel_development 必须覆盖六个公共任务槽位。")
+    for module_name, requirements in PARALLEL_MODULE_FIXTURE_REQUIREMENTS.items():
+        entry = value[module_name]
+        if not isinstance(entry, dict) or set(entry) != {"depends_on", "artifacts"}:
+            raise ValueError(f"parallel module {module_name} 字段不符合合同。")
+        if entry["depends_on"] != ["w6_bootstrap"]:
+            raise ValueError(f"{module_name} 不得依赖其他成员尚未合并的 PR/artifact。")
+        declared = entry["artifacts"]
+        if (
+            not isinstance(declared, list)
+            or not declared
+            or any(not isinstance(item, str) or not item.strip() for item in declared)
+        ):
+            raise ValueError(f"parallel module {module_name}.artifacts 必须是字符串数组。")
+        if set(declared) != requirements:
+            raise ValueError(f"{module_name} fixture dependency matrix 漂移。")
+    # 纵深防御：该块同样不得携带 label/metric side-channel。
+    assert_no_label_side_channel(value, artifact_label="parallel_development")
+
+
 def _build_artifact_index(
     artifact_refs: Mapping[str, Any],
 ) -> dict[str, dict[str, Any]]:
@@ -190,6 +224,7 @@ def load_w6_base_context(
     if manifest["is_fixture"] is not True:
         raise ValueError("Bootstrap bundle 必须明确标记 synthetic fixture。")
     _require_datetime_with_tz(manifest["created_at"], "bundle created_at")
+    _validate_parallel_development_block(manifest["parallel_development"])
     artifact_refs = manifest["artifacts"]
     if not isinstance(artifact_refs, dict):
         raise ValueError("W6 bundle artifacts 必须是 JSON object。")
