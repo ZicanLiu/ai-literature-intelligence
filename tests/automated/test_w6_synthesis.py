@@ -34,9 +34,10 @@ from src.w6_synthesis_pipeline import (
     build_evidence_units,
     generate_structured_synthesis,
     render_mini_review,
+    validate_canonical_render,
 )
 from src.w6_task_context import (
-    GENERATION_ARTIFACT_NAMES,
+    BASE_CONTEXT_ARTIFACT_NAMES,
     LABEL_AWARE_ARTIFACT_NAMES,
 )
 
@@ -298,6 +299,21 @@ class PipelineTests(W6SynthesisTestBase):
         with self.assertRaisesRegex(ValueError, "全部且仅结构化 claims"):
             self._validate(payload)
 
+    def test_canonical_render_consistency_enforced(self) -> None:
+        result = self._generate_on_fixture_input()
+        payload = copy.deepcopy(result["payload"])
+        validate_canonical_render(payload)
+        # 保持 claim IDs 不变，但删除真实 claim 内容 → fail。
+        tampered = copy.deepcopy(payload)
+        tampered["rendered_review"]["text"] = "All claims removed. [claim_001] [claim_002]"
+        with self.assertRaisesRegex(ValueError, "canonical render 不一致"):
+            validate_canonical_render(tampered)
+        # 保持 claim IDs 不变，但添加 claims 之外的事实性主张 → fail。
+        injected = copy.deepcopy(payload)
+        injected["rendered_review"]["text"] += " Proven best on hidden data. [claim_001]"
+        with self.assertRaisesRegex(ValueError, "canonical render 不一致"):
+            validate_canonical_render(injected)
+
 
 class SynthesisCliTests(W6SynthesisTestBase):
     def _run_cli(self, extra_args, output_dir: Path) -> int:
@@ -544,18 +560,23 @@ def _tracked_open_calls(func):
 
 
 def _copy_generation_subset(destination: Path) -> Path:
-    """只复制 generation 声明依赖的 artifact，构造最小 bundle。"""
+    """只复制 synthesis default 任务实际需要的 artifact（base + fusion 及其
+    传递依赖 sparse/dense），构造最小 dependency closure bundle。"""
+    names = [
+        *BASE_CONTEXT_ARTIFACT_NAMES,
+        "method_sparse_manifest",
+        "method_dense_manifest",
+        "method_fusion_manifest",
+    ]
     root = destination / "subset"
     root.mkdir(parents=True)
     manifest = load_json_object(BUNDLE_PATH)
     subset = copy.deepcopy(manifest)
-    subset["artifacts"] = {
-        name: manifest["artifacts"][name] for name in GENERATION_ARTIFACT_NAMES
-    }
+    subset["artifacts"] = {name: manifest["artifacts"][name] for name in names}
     (root / "bundle_manifest.json").write_text(
         json.dumps(subset, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
-    for name in GENERATION_ARTIFACT_NAMES:
+    for name in names:
         relative = Path(manifest["artifacts"][name]["path"])
         source = VALID_ROOT / relative
         target = root / relative

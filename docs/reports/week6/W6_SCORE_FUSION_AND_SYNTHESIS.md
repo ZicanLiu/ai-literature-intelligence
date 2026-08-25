@@ -50,7 +50,7 @@ score-level 加权融合，能否形成可信、可复现的 fusion baseline。
   排序与 min_max 一致且无 outlier 敏感点）；
 - weights：0.5 / 0.5（等权；不根据任何指标回调）；
 - version：`1.0`；configuration_sha256：
-  `81222d2240190bf9eb7530cd9d338a48087843b361abf3f6702e76dc35c69b68`。
+  `0c8410d77532bbb3dcbc1759babcaefee0164975c84b455df1ac4d71cc68cb5a`。
 
 该 config 在任何 W6 Dev/Hidden 评价结果可见之前冻结；后续调整必须新建版本。
 
@@ -58,6 +58,10 @@ score-level 加权融合，能否形成可信、可复现的 fusion baseline。
 `config_id` / `version` / `input_methods` / `normalization` / `weights` 五个核心字段；
 它不绑定 `frozen_at`、`output` 等 provenance 字段，不构成对这些字段的完整防篡改证明——
 freeze 时间证据由 Git history 提供（`frozen_at` 字段本身做严格 ISO-8601 + 时区校验）。
+第二轮审查起 hash 采用 canonical form：`input_methods` 按 method_id 排序后计入
+（weights 本身是 method→value mapping，不依赖 list 顺序）；**算法语义 config 未变化**，
+旧 hash `81222d22…` 与新 hash `0c8410d7…` 描述的是同一组 input methods / weights /
+normalization / fit scope，仅 hash 表达方式 canonicalize。
 
 ### 实现与 artifact
 
@@ -158,9 +162,45 @@ python -m app.run_w6_synthesis --output-dir <outdir>
   human verification 流程在后续任务中定义。
 - 真实 LLM backend 未实现（仅 Protocol）；接入前需要独立的凭据与安全审查。
 
+## 审查修复记录（PR #70 第二轮）
+
+针对 owner 二轮审查的 5 个 P1 与 2 个 P2，修复如下（均有回归测试 + 独立攻击重放）：
+
+1. **P1-A per-task dependency closure**：`src/w6_task_context.py` 重写为
+   `load_w6_base_context`（仅 topic/retrieval/records/canonical/pool 五个 base
+   artifact）+ `resolve_bundle_method` / `resolve_method_path`（按 manifest 声明的
+   method_inputs 从 bundle 声明中**递归**解析传递依赖）。Fusion 不再要求旧 fusion
+   package；Synthesis 显式 sparse 不再要求 dense/fusion；默认 fusion 按需加载其
+   传递依赖。minimal-closure 回归：无旧 fusion artifact 时 fusion PASS；仅
+   base+sparse 时 explicit synthesis PASS；删除真正传递依赖 fail closed。
+2. **P1-B 递归 No-Leakage guard**：新模块 `src/w6_no_leakage.py`
+   （`GENERATION_FORBIDDEN_KEYS`，exact-key + lowercase、**非 substring**，不误杀
+   retrieval/review_state/reviewer/score），对 generation 实际读取的每个 JSON
+   payload 递归执行。自洽 rehash 攻击（重算 configuration_sha256 / pool_identity /
+   bundle artifact sha）仍 fail closed。
+3. **P1-C method → 当前 context 身份绑定**：
+   `validate_method_against_generation_context` 要求 `inputs.topic_set` /
+   `inputs.candidate_pool` 及声明的每个 auxiliary input 精确等于当前 context 的
+   artifact identity；topic/pool role-swap 与 auxiliary swap（自洽重哈希）均 fail。
+4. **P1-D z-score 数值可靠性**：均值用 fsum 计算后在**偏差向量**上做
+   max-abs 缩放再算方差（近值相减无精度损失，平方不下溢/溢出）；
+   `min == max` 才是真 zero variance；非常量输入但偏差/方差数值归零 fail closed。
+   `[1e-308,-1e-308]`、`[5e-324,-5e-324]` 输出 `[1,-1]`（Decimal 高精度参照一致），
+   不再静默 `[0,0]`；大 offset + 可表示 spread 不再失真。
+5. **P1-E frozen path safety**：新共享模块 `src/w6_artifact_safety.py`
+   （`check_output_dir_safe`），Fusion/Synthesis 使用完全一致的对称 resolved-path
+   策略，protected 覆盖 bundle 目录与相关 method package 目录；
+   `bundle_root/generated_fusion` 拒绝，bundle 外新目录放行；junction/symlink 用例
+   在权限不足时显式 skip（不伪装 PASS）。
+6. **P2-1 canonical config hash**：semantic hash 中 `input_methods` 按 method_id
+   排序；primary config 重算 hash（算法语义 config 未变，仅 hash 表达 canonicalize）。
+7. **P2-2 canonical render 校验**：`validate_canonical_render` 用 structured claims
+   重新调用 deterministic renderer 并要求完全一致；保持 claim IDs 不变但删改/注入
+   文本即 fail。
+
 ## 审查修复记录（PR #70 第一轮）
 
-针对 owner 审查的 5 个 P1 与 2 个 P2，修复如下（均有回归测试）：
+针对 owner 一轮审查的 5 个 P1 与 2 个 P2，修复如下（均有回归测试）：
 
 1. **No-Leakage**：新增 `src/w6_task_context.py`（task-scoped、label-free 的
    generation loader），两个 CLI 不再调用完整 bundle validator；文件访问级测试断言

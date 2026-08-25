@@ -28,9 +28,9 @@ from src.w6_score_fusion import (
     validate_fusion_input_packages,
 )
 from src.w6_task_context import (
-    GENERATION_ARTIFACT_NAMES,
+    BASE_CONTEXT_ARTIFACT_NAMES,
     LABEL_AWARE_ARTIFACT_NAMES,
-    load_w6_generation_context,
+    load_w6_base_context,
 )
 
 
@@ -119,6 +119,52 @@ class NormalizeScoresTests(unittest.TestCase):
             self.assertTrue(math.isfinite(value))
         self.assertAlmostEqual(result[0], 1.0, places=6)
         self.assertAlmostEqual(result[1], -1.0, places=6)
+
+    # ---- P1-D：subnormal / 大 offset 数值可靠性 ----
+
+    def test_z_score_subnormal_not_misjudged_as_zero_variance(self) -> None:
+        for values in ([1e-308, -1e-308], [5e-324, -5e-324]):
+            result = normalize_scores(values, "z_score")
+            # 输入并非常量，绝不得静默返回 [0, 0]。
+            self.assertNotEqual(result, [0.0, 0.0])
+            self.assertAlmostEqual(result[0], 1.0, places=9)
+            self.assertAlmostEqual(result[1], -1.0, places=9)
+
+    def test_z_score_matches_decimal_reference(self) -> None:
+        from decimal import Decimal, getcontext
+
+        getcontext().prec = 80
+        cases = [
+            [1e-308, -1e-308],
+            [5e-324, -5e-324],
+            [1e308, -1e308],
+            [1.0, 2.0, 3.0, 4.0],
+        ]
+        for values in cases:
+            with self.subTest(values=values):
+                result = normalize_scores(values, "z_score")
+                decimals = [Decimal(repr(value)) for value in values]
+                mean = sum(decimals) / len(decimals)
+                variance = sum((value - mean) ** 2 for value in decimals) / len(decimals)
+                std = variance.sqrt()
+                reference = [float((value - mean) / std) for value in decimals]
+                for actual, expected in zip(result, reference):
+                    self.assertAlmostEqual(actual, expected, places=9)
+
+    def test_z_score_large_offset_representable_spread(self) -> None:
+        # 大公共 offset + float 可表示的小 spread：不得因平方下溢/精度损失归零。
+        base = 1e16
+        values = [base, base + 4.0, base + 8.0]
+        result = normalize_scores(values, "z_score")
+        expected = [-1.224744871391589, 0.0, 1.224744871391589]
+        for actual, want in zip(result, expected):
+            self.assertAlmostEqual(actual, want, places=9)
+
+    def test_min_max_and_robust_subnormal(self) -> None:
+        self.assertEqual(normalize_scores([1e-308, -1e-308], "min_max"), [1.0, 0.0])
+        result = normalize_scores([1e-308, -1e-308], "robust")
+        self.assertAlmostEqual(result[0], 0.5, places=12)
+        self.assertAlmostEqual(result[1], -0.5, places=12)
 
 
 class W6ScoreFusionTests(unittest.TestCase):
@@ -799,18 +845,22 @@ def _assert_no_label_aware_access(testcase: unittest.TestCase, opened: list[str]
 
 
 def _copy_generation_subset(destination: Path) -> Path:
-    """只复制 generation 声明依赖的 artifact，构造最小 bundle。"""
+    """只复制 fusion 任务实际需要的 artifact（base + sparse + dense，无旧 fusion
+    artifact），构造最小 dependency closure bundle。"""
+    names = [
+        *BASE_CONTEXT_ARTIFACT_NAMES,
+        "method_sparse_manifest",
+        "method_dense_manifest",
+    ]
     root = destination / "subset"
     root.mkdir(parents=True)
     manifest = load_json_object(BUNDLE_PATH)
     subset = copy.deepcopy(manifest)
-    subset["artifacts"] = {
-        name: manifest["artifacts"][name] for name in GENERATION_ARTIFACT_NAMES
-    }
+    subset["artifacts"] = {name: manifest["artifacts"][name] for name in names}
     (root / "bundle_manifest.json").write_text(
         json.dumps(subset, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
-    for name in GENERATION_ARTIFACT_NAMES:
+    for name in names:
         relative = Path(manifest["artifacts"][name]["path"])
         source = VALID_ROOT / relative
         target = root / relative
@@ -830,16 +880,15 @@ class TaskContextLeakageTests(unittest.TestCase):
         cls.bundle = validate_w6_bootstrap_bundle(BUNDLE_PATH)
 
     def test_loader_matches_bundle_context(self) -> None:
-        ctx = load_w6_generation_context(BUNDLE_PATH)
+        ctx = load_w6_base_context(BUNDLE_PATH)
         self.assertEqual(len(ctx["topics"]), 2)
         self.assertEqual(len(ctx["pool_members"]), 13)
-        self.assertEqual(len(ctx["method_packages"]), 3)
-        self.assertEqual(len(ctx["registry"]), len(GENERATION_ARTIFACT_NAMES))
+        self.assertEqual(len(ctx["registry"]), len(BASE_CONTEXT_ARTIFACT_NAMES))
         self.assertNotIn("annotation_results", ctx["payloads"])
         self.assertNotIn("split_manifest", ctx["payloads"])
 
     def test_loader_never_opens_label_aware_artifacts(self) -> None:
-        _, opened = _tracked_open_calls(lambda: load_w6_generation_context(BUNDLE_PATH))
+        _, opened = _tracked_open_calls(lambda: load_w6_base_context(BUNDLE_PATH))
         _assert_no_label_aware_access(self, opened)
 
     def test_fusion_cli_never_opens_label_aware_artifacts(self) -> None:

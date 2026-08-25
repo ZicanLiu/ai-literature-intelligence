@@ -42,9 +42,11 @@ from src.w6_score_fusion import (
     fuse_method_rankings,
 )
 from src.w6_task_context import (
-    check_frozen_method_identity,
-    load_w6_generation_context,
+    load_w6_base_context,
+    resolve_method_path,
+    validate_method_against_generation_context,
 )
+from src.w6_artifact_safety import check_output_dir_safe
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -209,10 +211,12 @@ def load_fusion_config(config_path: Path) -> dict:
         )
     if config["status"] != "frozen":
         raise ValueError("fusion config 必须处于 frozen 状态。")
+    # semantic configuration hash 的 canonical form：input_methods 按 method_id 排序，
+    # 同一 method set + 同一 weights/normalization 不因 list 顺序产生不同 identity。
     core = {
         "config_id": config["config_id"],
         "version": config["version"],
-        "input_methods": config["input_methods"],
+        "input_methods": sorted(config["input_methods"]),
         "normalization": config["normalization"],
         "weights": config["weights"],
     }
@@ -311,21 +315,6 @@ def build_manifest(
     return manifest
 
 
-def _check_output_dir_safe(output_dir: Path, input_package_dirs: list[Path]) -> None:
-    resolved = output_dir.resolve()
-    for package_dir in input_package_dirs:
-        package_resolved = package_dir.resolve()
-        if resolved == package_resolved or resolved.is_relative_to(
-            package_resolved
-        ) or package_resolved.is_relative_to(resolved):
-            raise ValueError(
-                f"输出目录与输入 package 重合，禁止覆盖输入 artifact：{package_resolved}"
-            )
-    if resolved.exists():
-        if any(resolved.iterdir()):
-            raise ValueError(f"输出目录已存在且非空，拒绝覆盖：{resolved}")
-
-
 def _publish_package(source_dir: Path, output_dir: Path) -> None:
     """在目标同级准备完整 package，再整体发布到最终目录。"""
     output_dir.parent.mkdir(parents=True, exist_ok=True)
@@ -383,31 +372,27 @@ def main(argv: list[str] | None = None) -> int:
         print(f"输出参数校验失败：{error}")
         return 1
 
-    # 预检 2：加载 generation 专用的 label-free 上下文（绝不打开 label-aware artifacts），
-    # 再逐个校验输入 package。
+    # 预检 2：加载 generation 的 base label-free 上下文（绝不打开 label-aware
+    # artifacts），再按需解析每个输入 method 的 dependency closure。
     try:
-        bundle = load_w6_generation_context(args.bundle)
+        bundle = load_w6_base_context(args.bundle)
     except (OSError, UnicodeError, ValueError) as error:
         print(f"W6 bundle 校验失败：{error}")
         return 1
     registry = bundle["registry"]
     pool_members = bundle["pool_members"]
-    frozen_method_packages = bundle["method_packages"]
 
     packages = []
-    known_method_packages = dict(frozen_method_packages)
+    known_method_packages: dict = {}
     try:
         for manifest_path in args.manifest:
-            package = validate_w6_method_package(
-                manifest_path,
-                artifact_registry=registry,
-                pool_members=pool_members,
-                known_method_packages=known_method_packages,
+            # 只加载当前任务实际需要的 method 闭包（含其声明的传递依赖），
+            # 并绑定当前 context 的真实 artifact identity。
+            package = resolve_method_path(
+                bundle, manifest_path, known=known_method_packages
             )
-            # 同一 artifact_id 不得代表两份不同内容。
-            check_frozen_method_identity(package, frozen_method_packages)
+            validate_method_against_generation_context(package, bundle)
             packages.append(package)
-            known_method_packages[package["artifact_id"]] = package
     except (OSError, UnicodeError, ValueError) as error:
         print(f"输入 method artifact 校验失败：{error}")
         return 1
@@ -434,10 +419,13 @@ def main(argv: list[str] | None = None) -> int:
         print("错误：无法确认完整 40 位 Git commit SHA。")
         return 1
 
-    # 预检 4：输出目录安全（不与输入 package 重合、不覆盖非空目标）。
+    # 预检 4：输出目录安全（覆盖 bundle 目录与全部输入 package 目录，
+    # ==/互为子目录均拒绝，不覆盖非空目标）。
     input_package_dirs = [p["manifest_path"].parent for p in packages]
     try:
-        _check_output_dir_safe(args.output_dir, input_package_dirs)
+        check_output_dir_safe(
+            args.output_dir, [*input_package_dirs, bundle["bundle_dir"]]
+        )
     except (OSError, ValueError) as error:
         print(f"输出目录校验失败：{error}")
         return 1

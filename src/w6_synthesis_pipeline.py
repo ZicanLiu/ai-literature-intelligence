@@ -324,6 +324,26 @@ def render_mini_review(claims: Mapping[str, dict[str, Any]]) -> str:
     return header + "\n\n" + " ".join(sentences)
 
 
+def validate_canonical_render(payload: Mapping[str, Any]) -> None:
+    """要求 rendered review 与 structured claims 的 canonical render 完全一致。
+
+    公共 contract 只校验 ``generated_from_claim_ids`` roster 与文本非空；本函数
+    用 payload 内的 structured claims 重新调用 deterministic renderer，保证
+    Markdown 确实是 structured claims 的纯 render——不得删除真实 claim 内容或
+    添加 claims 之外的事实性主张。
+    """
+    claims_list = payload.get("claims")
+    rendered = payload.get("rendered_review")
+    if not isinstance(claims_list, list) or not isinstance(rendered, dict):
+        raise ValueError("structured synthesis payload 结构不完整。")
+    claims = {claim["claim_id"]: claim for claim in claims_list}
+    expected_text = render_mini_review(claims)
+    if rendered.get("text") != expected_text:
+        raise ValueError(
+            "rendered review 与 structured claims 的 canonical render 不一致。"
+        )
+
+
 def audit_unsupported_claims(claims: Mapping[str, dict[str, Any]]) -> dict[str, Any]:
     """输出 unsupported / 部分支持 claim 的审计清单。
 
@@ -415,6 +435,7 @@ def generate_structured_synthesis(
         evidence=evidence,
         canonical=canonical,
     )
+    validate_canonical_render(payload)
     return {
         "payload": payload,
         "claims": validated_claims,

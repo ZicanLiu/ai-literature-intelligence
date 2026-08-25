@@ -88,14 +88,30 @@ def _tukey_hinges(sorted_values: list[float]) -> tuple[float, float]:
 def _apply_strategy(values: list[float], strategy: str) -> list[float] | None:
     """在给定向量上应用 normalization；中间量非有限时返回 None（触发缩放重算）。"""
     if strategy == "z_score":
-        mean = math.fsum(values) / len(values)
-        variance = math.fsum((value - mean) ** 2 for value in values) / len(values)
+        # z-score 的数值可靠实现：
+        # 1) 用 fsum 计算均值（correctly rounded），再以偏差向量计算方差——
+        #    大公共 offset 下偏差仍精确（近值相减无精度损失）；
+        # 2) 方差在 max(abs(deviation)) 缩放后的偏差上计算，避免平方下溢/溢出；
+        # 3) min == max 才是真正的 zero variance；非常量输入但偏差/方差数值
+        #    归零 → fail closed，绝不静默误判 zero variance。
+        if min(values) == max(values):
+            return [0.0] * len(values)
+        try:
+            mean = math.fsum(values) / len(values)
+        except OverflowError:
+            return None
+        deviations = [value - mean for value in values]
+        scale = max(abs(deviation) for deviation in deviations)
+        if scale == 0.0:
+            raise ValueError("非常量输入的 z-score 偏差数值归零，无法可靠 normalization。")
+        scaled = [deviation / scale for deviation in deviations]
+        variance = math.fsum(value * value for value in scaled) / len(scaled)
         std = math.sqrt(variance)
         if not math.isfinite(std):
             return None
         if std == 0.0:
-            return [0.0] * len(values)
-        return [(value - mean) / std for value in values]
+            raise ValueError("非常量输入的 z-score variance 数值下溢，无法可靠 normalization。")
+        return [value / std for value in scaled]
     if strategy == "min_max":
         low = min(values)
         high = max(values)
@@ -120,7 +136,10 @@ def _apply_strategy(values: list[float], strategy: str) -> list[float] | None:
 def normalize_scores(scores: Iterable[float], strategy: str) -> list[float]:
     """对单个 score 向量做无标签 normalization。
 
-    - ``z_score``：``(x - mean) / std``，总体标准差（ddof=0）；zero variance → 全部 0.0；
+    - ``z_score``：``(x - mean) / std``，总体标准差（ddof=0），始终在
+      ``max(abs(x))`` 缩放值上计算（scale-equivariant），避免平方下溢/溢出；
+      ``min == max`` 才是真 zero variance → 全部 0.0；非常量输入但方差数值
+      下溢 → fail closed ``ValueError``；
     - ``min_max``：``(x - min) / (max - min)``；zero variance → 全部 0.5（区间中点）；
     - ``robust``：``(x - median) / IQR``，IQR 为 Tukey exclusive hinges 的 Q3-Q1；
       IQR 为 0 → 全部 0.0；singleton 输入定义为 Q1=Q3=median，落入 zero-IQR 规则。

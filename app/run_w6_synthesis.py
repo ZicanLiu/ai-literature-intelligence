@@ -21,7 +21,6 @@ from pathlib import Path
 from src.annotation_tasks import sha256_file
 from src.w5_method_contract import GIT_REVISION_PATTERN
 from src.w6_contracts import load_json_object
-from src.w6_method_contract import validate_w6_method_package
 from src.w6_synthesis_contract import (
     load_and_validate_evidence_units,
     validate_structured_synthesis,
@@ -32,11 +31,15 @@ from src.w6_synthesis_pipeline import (
     build_evidence_units,
     build_synthesis_input,
     generate_structured_synthesis,
+    validate_canonical_render,
 )
 from src.w6_task_context import (
-    check_frozen_method_identity,
-    load_w6_generation_context,
+    load_w6_base_context,
+    resolve_bundle_method,
+    resolve_method_path,
+    validate_method_against_generation_context,
 )
+from src.w6_artifact_safety import check_output_dir_safe
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -112,23 +115,6 @@ def _write_json(path: Path, payload: dict) -> str:
     return sha256_file(path)
 
 
-def _check_output_dir_safe(output_dir: Path, protected_dirs: list[Path]) -> None:
-    """对称防护：output == 受保护目录、output 在其内部、其在 output 内部，均拒绝。"""
-    resolved = output_dir.resolve()
-    for protected in protected_dirs:
-        frozen_dir = protected.resolve()
-        if (
-            resolved == frozen_dir
-            or resolved.is_relative_to(frozen_dir)
-            or frozen_dir.is_relative_to(resolved)
-        ):
-            raise ValueError(
-                f"输出目录与冻结输入 artifact 目录重合，禁止写入：{frozen_dir}"
-            )
-    if resolved.exists() and any(resolved.iterdir()):
-        raise ValueError(f"输出目录已存在且非空，拒绝覆盖：{resolved}")
-
-
 def _publish_outputs(source_dir: Path, output_dir: Path, filenames: list[str]) -> None:
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(
@@ -145,9 +131,9 @@ def _publish_outputs(source_dir: Path, output_dir: Path, filenames: list[str]) -
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
 
-    # 预检 1：加载 generation 专用的 label-free 上下文（绝不打开 label-aware artifacts）。
+    # 预检 1：加载 generation 的 base label-free 上下文（绝不打开 label-aware artifacts）。
     try:
-        bundle = load_w6_generation_context(args.bundle)
+        bundle = load_w6_base_context(args.bundle)
     except (OSError, UnicodeError, ValueError) as error:
         print(f"W6 bundle 校验失败：{error}")
         return 1
@@ -157,15 +143,24 @@ def main(argv: list[str] | None = None) -> int:
     records = bundle["records"]
     canonical = bundle["canonical"]
     payloads = bundle["payloads"]
-    frozen_method_packages = bundle["method_packages"]
-    method_packages = dict(frozen_method_packages)
 
     if args.topic_id not in topics:
         print(f"错误：未知 topic_id：{args.topic_id}。")
         return 1
 
-    # 解析实际使用的 method manifest（默认 bundle 路径与显式 --method-manifest 走同一套检查）。
-    manifest_path = args.method_manifest or bundle["paths"]["method_fusion_manifest"]
+    # 按需解析所选 method 的 dependency closure（默认 bundle fusion 及其声明的
+    # 传递依赖；显式 --method-manifest 只加载该 method 闭包），并绑定当前
+    # context 的真实 artifact identity。
+    try:
+        if args.method_manifest is not None:
+            package = resolve_method_path(bundle, args.method_manifest)
+        else:
+            package = resolve_bundle_method(bundle, "method_fusion_manifest")
+        validate_method_against_generation_context(package, bundle)
+    except (OSError, UnicodeError, ValueError) as error:
+        print(f"输入 method artifact 校验失败：{error}")
+        return 1
+    method_packages = {package["artifact_id"]: package}
 
     # 预检 2：Git revision（provenance 需要完整 40 位 SHA；离线测试可 patch）。
     git_revision = _git_revision()
@@ -176,28 +171,13 @@ def main(argv: list[str] | None = None) -> int:
     # 预检 3：输出目录对称防护（method package 目录 + bundle 目录均不得被写入）。
     output_dir = args.output_dir.resolve()
     try:
-        _check_output_dir_safe(
+        check_output_dir_safe(
             output_dir,
-            [Path(manifest_path).resolve().parent, bundle["bundle_dir"]],
+            [package["manifest_path"].parent, bundle["bundle_dir"]],
         )
     except (OSError, ValueError) as error:
         print(f"输出目录校验失败：{error}")
         return 1
-
-    # 校验输入 method package（必须 frozen 且 identity 与 registry 一致）；
-    # 同一 artifact_id 不得代表两份不同内容。
-    try:
-        package = validate_w6_method_package(
-            manifest_path,
-            artifact_registry=registry,
-            pool_members=pool_members,
-            known_method_packages=method_packages,
-        )
-        check_frozen_method_identity(package, frozen_method_packages)
-    except (OSError, UnicodeError, ValueError) as error:
-        print(f"输入 method artifact 校验失败：{error}")
-        return 1
-    method_packages[package["artifact_id"]] = package
 
     created_at = datetime.now().astimezone().isoformat()
     prefix = args.artifact_prefix
@@ -327,7 +307,7 @@ def main(argv: list[str] | None = None) -> int:
         audit_path = tmp_dir / "unsupported_claim_audit.json"
         _write_json(audit_path, result["audit"])
 
-        # 5) 输出自检：从磁盘回读并重新通过 contract validator。
+        # 5) 输出自检：从磁盘回读并重新通过 contract validator 与 canonical render 校验。
         try:
             reloaded = load_json_object(structured_path, label="structured synthesis")
             validate_structured_synthesis(
@@ -336,6 +316,7 @@ def main(argv: list[str] | None = None) -> int:
                 evidence=evidence,
                 canonical=canonical,
             )
+            validate_canonical_render(reloaded)
         except (OSError, UnicodeError, ValueError) as error:
             print(f"输出自检失败：{error}")
             return 1
