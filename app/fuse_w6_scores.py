@@ -42,9 +42,9 @@ from src.w6_score_fusion import (
     fuse_method_rankings,
 )
 from src.w6_task_context import (
+    build_explicit_method_index,
     load_w6_base_context,
     resolve_method_path,
-    validate_method_against_generation_context,
 )
 from src.w6_artifact_safety import check_output_dir_safe
 
@@ -236,6 +236,8 @@ def load_fusion_config(config_path: Path) -> dict:
         raise ValueError("fusion config normalization.fit_scope 非法。")
     if not isinstance(config["input_methods"], list) or len(config["input_methods"]) < 2:
         raise ValueError("fusion config input_methods 至少需要两个 method_id。")
+    if len(set(config["input_methods"])) != len(config["input_methods"]):
+        raise ValueError("fusion config input_methods 不得重复。")
     if set(config["weights"]) != set(config["input_methods"]):
         raise ValueError("fusion config weights 必须精确覆盖 input_methods。")
     return config
@@ -373,7 +375,9 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     # 预检 2：加载 generation 的 base label-free 上下文（绝不打开 label-aware
-    # artifacts），再按需解析每个输入 method 的 dependency closure。
+    # artifacts）；再两阶段解析输入 method 的 dependency graph——
+    # Phase 1 建立 unique explicit artifact_id → path 索引（顺序无关），
+    # Phase 2 从「显式索引 + bundle 唯一索引」统一解析依赖闭包。
     try:
         bundle = load_w6_base_context(args.bundle)
     except (OSError, UnicodeError, ValueError) as error:
@@ -382,16 +386,24 @@ def main(argv: list[str] | None = None) -> int:
     registry = bundle["registry"]
     pool_members = bundle["pool_members"]
 
+    try:
+        explicit_index = build_explicit_method_index(args.manifest)
+    except (OSError, UnicodeError, ValueError) as error:
+        print(f"输入 method manifest 索引建立失败：{error}")
+        return 1
+
     packages = []
     known_method_packages: dict = {}
     try:
         for manifest_path in args.manifest:
             # 只加载当前任务实际需要的 method 闭包（含其声明的传递依赖），
-            # 并绑定当前 context 的真实 artifact identity。
+            # 每个被解析的 package 都绑定当前 context 的真实 artifact identity。
             package = resolve_method_path(
-                bundle, manifest_path, known=known_method_packages
+                bundle,
+                manifest_path,
+                known=known_method_packages,
+                explicit_index=explicit_index,
             )
-            validate_method_against_generation_context(package, bundle)
             packages.append(package)
     except (OSError, UnicodeError, ValueError) as error:
         print(f"输入 method artifact 校验失败：{error}")

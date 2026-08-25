@@ -162,6 +162,40 @@ python -m app.run_w6_synthesis --output-dir <outdir>
   human verification 流程在后续任务中定义。
 - 真实 LLM backend 未实现（仅 Protocol）；接入前需要独立的凭据与安全审查。
 
+## 审查修复记录（PR #70 第三轮）
+
+针对 owner 三轮审查的 5 个 P1 与 2 个 P2，修复如下（均有回归测试 + 独立攻击重放）：
+
+1. **P1-1 传递依赖逐级绑定**：`_resolve_method_recursive` 内对每个被解析的
+   package（含传递 dependency）执行 `validate_method_against_generation_context`，
+   不再只检查 top-level；correct top + role-swapped dependency（全部 hash 自洽
+   重算）→ default synthesis 与 fusion(top, dense) 均 fail closed。
+2. **P1-2 No-Leakage 语义边界**：bundle manifest 恢复严格结构验证（顶层 exact
+   fields、每个 artifact reference exact fields、is_fixture、created_at 时区），
+   arbitrary metadata 无法混入；guard 升级为 exact-key + token family（label /
+   judgement / annotation / adjudication / review / metric / ndcg / precision /
+   recall / evaluation 及其复数与 `_at_k` 别名），allowlist 保护 `label_access` /
+   `review_state` / `reviewer` / `evaluation_started_at` / `*_labels_read` 等合法
+   provenance。13 个别名逐个自洽 rehash → fail closed。
+3. **P1-3 bundle identity 无歧义**：加载时即对全部 artifact_refs 建
+   `artifact_id → entry` 唯一索引，duplicate artifact_id（含 method/非 method
+   碰撞、same ID 不同 path/SHA）立即 fail closed，两种 JSON 顺序结果一致；
+   dependency resolver 使用该索引而非 first-match。
+4. **P1-4 external dependency 顺序无关**：两阶段解析——Phase 1 为全部显式
+   manifest 建 unique `artifact_id → path` 索引（duplicate/collision fail），
+   Phase 2 从「显式索引 + bundle 唯一索引」统一解析 DAG；保留 cycle detection、
+   same-ID 锚定、context 绑定、依赖 hash 校验。External A(hybrid)→B 的
+   `[A,B]` / `[B,A]` 行为完全一致。
+5. **P1-5 z-score silent wrong finite 根除**：anchor + difference-space scaling
+   （原空间求差，溢出时回退缩放空间；在 difference space 内求 mean/centered/
+   variance，全程 max-abs 缩放防下溢/溢出），数学上与 `(x-mean)/std` 等价。
+   `[tiny, nextafter(tiny,+∞)]` → `[-1,1]`、`[prev(1e308),1e308,next(1e308)]` →
+   `[-1.2247,0,1.2247]`（修复前分别给出 -1.4142/±0.52 与 ±1.04/1.16 的错误值）；
+   全部用例经 Decimal（prec=80）高精度参照验证。
+6. **P2-1**：PR body 的 config hash 已更新为 canonicalized `0c8410d7…`，并改述
+   hash 绑定范围（semantic configuration，非全文件 provenance 防篡改）。
+7. **P2-2**：`load_fusion_config` 要求 `input_methods` ≥2 且无重复。
+
 ## 审查修复记录（PR #70 第二轮）
 
 针对 owner 二轮审查的 5 个 P1 与 2 个 P2，修复如下（均有回归测试 + 独立攻击重放）：

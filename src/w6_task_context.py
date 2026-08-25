@@ -5,17 +5,25 @@ split / hidden-label anchor / benchmark 等 label-aware artifacts），那是面
 “整包验收”的入口；ranking/fusion/synthesis 的 **generation** 进程按 W6
 No-Leakage 边界不得读取这些 payload。
 
-本模块提供真正的 per-task dependency closure：
+本模块提供真正的 per-task dependency closure 与 trust 边界：
 
 - base label-free context 只固定加载
   ``topic_set / retrieval_provenance / source_records / canonical_entities /
   candidate_pool``；
+- bundle manifest 本身做严格结构验证（顶层 exact fields、每个 artifact
+  reference exact fields、is_fixture、created_at 时区）， arbitrary metadata
+  无法混入 generation 进程；
+- 加载时即建立全量 ``artifact_id → entry`` 唯一索引：duplicate artifact_id
+  （含 method/非 method 碰撞、same ID 不同 path/SHA）立即 fail closed，
+  dependency resolution 不依赖 JSON 顺序；
 - method artifacts 按当前任务**实际需要**动态解析：fusion 只加载用户传入的
   method manifests；synthesis 只加载所选 method 及其 manifest 中显式声明的
-  传递 method_inputs（从 bundle 声明中按 artifact_id 定位并逐层校验）；
-- 动态加载不牺牲 trust：每个 method 都经过公共 contract validator
-  （schema / ranking hash / method-input chain / pool cardinality），且
-  显式 manifest 的 artifact_id 若已被 bundle 冻结记录占用，manifest/ranking
+  传递 method_inputs；显式 manifest 可组成 external dependency graph
+  （两阶段：先建 unique explicit artifact_id → path 索引，再解析 DAG，
+  与 CLI 参数顺序无关）；
+- 每个被解析的 package（含传递 dependency）都绑定当前 generation context
+  的真实 artifact identity（topic_set / candidate_pool / auxiliary inputs）；
+- 显式 manifest 的 artifact_id 若已被 bundle 冻结记录占用，manifest/ranking
   hash 与 method identity 必须精确一致（fail closed）；
 - 每个实际读取的 JSON payload 都经过 ``src/w6_no_leakage`` 的递归
   side-channel guard。
@@ -25,6 +33,7 @@ No-Leakage 边界不得读取这些 payload。
 
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -73,6 +82,32 @@ AUXILIARY_INPUT_ARTIFACT_NAMES = {
     "retrieval_provenance": "retrieval_provenance",
 }
 
+_BUNDLE_TOP_LEVEL_FIELDS = {
+    "schema_version",
+    "contract_name",
+    "contract_version",
+    "bundle_id",
+    "is_fixture",
+    "created_at",
+    "artifacts",
+    "parallel_development",
+}
+_ARTIFACT_REFERENCE_FIELDS = {"artifact_id", "path", "sha256"}
+
+
+def _require_datetime_with_tz(value: Any, label: str) -> None:
+    try:
+        parsed = datetime.fromisoformat(str(value or "").strip())
+    except ValueError as error:
+        raise ValueError(f"{label} 必须是 ISO-8601 时间。") from error
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ValueError(f"{label} 必须包含时区。")
+
+
+def _is_sha256(value: Any) -> bool:
+    text = str(value or "")
+    return len(text) == 64 and all(char in "0123456789abcdef" for char in text)
+
 
 def _resolve_within_bundle(value: Any, *, bundle_dir: Path) -> Path:
     text = str(value or "").strip()
@@ -88,33 +123,77 @@ def _resolve_within_bundle(value: Any, *, bundle_dir: Path) -> Path:
     return resolved
 
 
+def _build_artifact_index(
+    artifact_refs: Mapping[str, Any],
+) -> dict[str, dict[str, Any]]:
+    """全量 artifact reference 结构校验 + artifact_id 唯一索引（P1-3）。
+
+    每个 entry 必须精确只含 ``artifact_id / path / sha256`` 且格式合法；
+    duplicate artifact_id（含 method/非 method 碰撞、same ID 不同 path/SHA）
+    立即 fail closed——artifact identity 不得依赖 JSON 顺序。
+    """
+    index: dict[str, dict[str, Any]] = {}
+    for name, reference in artifact_refs.items():
+        if not isinstance(reference, dict) or set(reference) != _ARTIFACT_REFERENCE_FIELDS:
+            raise ValueError(
+                f"bundle artifact {name} 必须只含 artifact_id/path/sha256。"
+            )
+        artifact_id = reference["artifact_id"]
+        if not isinstance(artifact_id, str) or not artifact_id.strip():
+            raise ValueError(f"bundle artifact {name}.artifact_id 非法。")
+        if not _is_sha256(reference["sha256"]):
+            raise ValueError(f"bundle artifact {name}.sha256 非法。")
+        if not isinstance(reference["path"], str) or not reference["path"].strip():
+            raise ValueError(f"bundle artifact {name}.path 非法。")
+        if artifact_id in index:
+            raise ValueError(
+                f"bundle duplicate artifact_id：{artifact_id}"
+                f"（{index[artifact_id]['name']} 与 {name}）；artifact identity 不得歧义。"
+            )
+        index[artifact_id] = {"name": name, "reference": reference}
+    return index
+
+
 def load_w6_base_context(
     bundle_manifest_path: str | Path,
 ) -> dict[str, Any]:
     """加载 generation 的 base label-free 上下文（不含任何 method artifact）。
 
-    只读取 ``BASE_CONTEXT_ARTIFACT_NAMES`` 声明的 5 个 artifact；bundle manifest
-    中其余条目（method manifests、annotation/review/split/hidden-label/benchmark/
-    synthesis fixture 等）只保留声明引用、不打开文件。所有读取的 payload 都做
-    声明哈希校验、递归 side-channel guard 与 label-free 校验链。
+    bundle manifest 本身做严格结构验证（顶层 exact fields / 每个 artifact
+    reference exact fields / is_fixture / created_at 时区），任意 metadata 混入
+    即拒绝；只读取 ``BASE_CONTEXT_ARTIFACT_NAMES`` 声明的 5 个 artifact，全部
+    经过声明哈希校验、递归 side-channel guard 与 label-free 校验链。
 
     返回：``registry`` / ``topics`` / ``records`` / ``canonical`` /
     ``pool_members`` / ``paths`` / ``payloads`` / ``bundle_dir`` /
-    ``artifact_refs``（bundle 原始声明，供 method 动态解析定位）。
+    ``artifact_refs`` / ``artifact_index``（artifact_id → {name, reference}）。
     """
     bundle_path = Path(bundle_manifest_path).resolve()
     bundle_dir = bundle_path.parent
     manifest = load_json_object(bundle_path, label="W6 bundle manifest")
-    if manifest.get("schema_version") != W6_SCHEMA_VERSION:
+    # 严格结构：顶层只允许合同规定字段，不允许 arbitrary metadata 混入。
+    if set(manifest) != _BUNDLE_TOP_LEVEL_FIELDS:
+        raise ValueError(
+            "W6 bundle manifest 顶层字段不符合合同："
+            f"missing={sorted(_BUNDLE_TOP_LEVEL_FIELDS - set(manifest))}, "
+            f"extra={sorted(set(manifest) - _BUNDLE_TOP_LEVEL_FIELDS)}。"
+        )
+    if manifest["schema_version"] != W6_SCHEMA_VERSION:
         raise ValueError("W6 bundle schema_version 非法。")
     if (
-        manifest.get("contract_name") != W6_CONTRACT_NAME
-        or manifest.get("contract_version") != W6_CONTRACT_VERSION
+        manifest["contract_name"] != W6_CONTRACT_NAME
+        or manifest["contract_version"] != W6_CONTRACT_VERSION
     ):
         raise ValueError("W6 bundle contract name/version 非法。")
-    artifact_refs = manifest.get("artifacts")
+    if not isinstance(manifest["bundle_id"], str) or not manifest["bundle_id"].strip():
+        raise ValueError("W6 bundle bundle_id 非法。")
+    if manifest["is_fixture"] is not True:
+        raise ValueError("Bootstrap bundle 必须明确标记 synthetic fixture。")
+    _require_datetime_with_tz(manifest["created_at"], "bundle created_at")
+    artifact_refs = manifest["artifacts"]
     if not isinstance(artifact_refs, dict):
         raise ValueError("W6 bundle artifacts 必须是 JSON object。")
+    artifact_index = _build_artifact_index(artifact_refs)
 
     missing = [name for name in BASE_CONTEXT_ARTIFACT_NAMES if name not in artifact_refs]
     if missing:
@@ -127,12 +206,6 @@ def load_w6_base_context(
     payloads: dict[str, dict[str, Any]] = {}
     for name in BASE_CONTEXT_ARTIFACT_NAMES:
         reference = artifact_refs[name]
-        if not isinstance(reference, dict) or set(reference) != {
-            "artifact_id",
-            "path",
-            "sha256",
-        }:
-            raise ValueError(f"bundle artifact {name} 必须只含 artifact_id/path/sha256。")
         artifact_path = _resolve_within_bundle(reference["path"], bundle_dir=bundle_dir)
         if sha256_file(artifact_path) != reference["sha256"]:
             raise ValueError(f"bundle artifact {name} manifest hash mismatch。")
@@ -174,16 +247,68 @@ def load_w6_base_context(
         "payloads": payloads,
         "bundle_dir": bundle_dir,
         "artifact_refs": artifact_refs,
+        "artifact_index": artifact_index,
     }
 
 
-def _find_bundle_method_entry(
-    context: Mapping[str, Any], artifact_id: str
-) -> Mapping[str, Any] | None:
-    for reference in context["artifact_refs"].values():
-        if isinstance(reference, dict) and reference.get("artifact_id") == artifact_id:
-            return reference
-    return None
+def read_method_manifest_header(manifest_path: str | Path) -> dict[str, Any]:
+    """读取 method manifest 的最小 header（artifact_id + method_inputs）。
+
+    用于两阶段 dependency resolution 的 Phase 1：先为全部显式 manifest 建立
+    unique ``artifact_id → path`` 索引（duplicate/collision fail closed），
+    再解析 dependency DAG，保证结果与 CLI 参数顺序无关。
+    """
+    manifest_file = Path(manifest_path).resolve()
+    payload = load_json_object(manifest_file, label="W6 method manifest")
+    assert_no_label_side_channel(
+        payload, artifact_label=f"method manifest {manifest_file}"
+    )
+    return {
+        "artifact_id": str(payload.get("artifact_id") or ""),
+        "method_inputs": payload.get("method_inputs") or [],
+        "manifest_path": manifest_file,
+    }
+
+
+def build_explicit_method_index(
+    manifest_paths: list[str | Path],
+) -> dict[str, Path]:
+    """Phase 1：建立 unique explicit artifact_id → manifest_path 索引。"""
+    index: dict[str, Path] = {}
+    for manifest_path in manifest_paths:
+        header = read_method_manifest_header(manifest_path)
+        artifact_id = header["artifact_id"]
+        if not artifact_id:
+            raise ValueError(f"method manifest 缺少 artifact_id：{manifest_path}。")
+        existing = index.get(artifact_id)
+        if existing is not None:
+            raise ValueError(
+                f"显式 manifest artifact_id 重复/冲突：{artifact_id}"
+                f"（{existing} 与 {header['manifest_path']}）。"
+            )
+        index[artifact_id] = header["manifest_path"]
+    return index
+
+
+def _find_dependency_path(
+    context: Mapping[str, Any],
+    explicit_index: Mapping[str, Path] | None,
+    dependency_id: str,
+) -> Path:
+    """按优先级解析 dependency：显式索引 → bundle 唯一索引。"""
+    if explicit_index and dependency_id in explicit_index:
+        return explicit_index[dependency_id]
+    entry = context["artifact_index"].get(dependency_id)
+    if entry is None:
+        raise ValueError(
+            f"method input {dependency_id} 不在显式输入或 bundle 声明中，"
+            "无法建立 generation dependency closure。"
+        )
+    reference = entry["reference"]
+    path = _resolve_within_bundle(reference["path"], bundle_dir=context["bundle_dir"])
+    if sha256_file(path) != reference["sha256"]:
+        raise ValueError(f"method input {dependency_id} 与 bundle 冻结声明 hash drift。")
+    return path
 
 
 def _resolve_method_recursive(
@@ -192,8 +317,13 @@ def _resolve_method_recursive(
     *,
     known: dict[str, dict[str, Any]],
     resolving: set[str],
+    explicit_index: Mapping[str, Path] | None,
 ) -> dict[str, Any]:
-    """校验一个 method package 及其显式声明的传递 method_inputs（dependency closure）。"""
+    """校验一个 method package 及其显式声明的传递 method_inputs（dependency closure）。
+
+    每个被解析的 package（含传递 dependency）都必须通过公共 contract validator
+    并绑定当前 generation context 的真实 artifact identity。
+    """
     manifest_file = Path(manifest_path).resolve()
     manifest_payload = load_json_object(manifest_file, label="W6 method manifest")
     assert_no_label_side_channel(
@@ -204,26 +334,20 @@ def _resolve_method_recursive(
         raise ValueError(f"method_inputs 存在循环依赖：{artifact_id}。")
     resolving.add(artifact_id)
     try:
-        # 先按声明递归解析传递依赖（从 bundle 声明定位，逐层校验）。
+        # 先按声明递归解析传递依赖（显式索引 → bundle 唯一索引，逐层校验）。
         for item in manifest_payload.get("method_inputs") or []:
             dependency_id = str(item.get("manifest_artifact_id") or "")
             if dependency_id in known:
                 continue
-            entry = _find_bundle_method_entry(context, dependency_id)
-            if entry is None:
-                raise ValueError(
-                    f"method input {dependency_id} 不在 bundle 声明中，"
-                    "无法建立 generation dependency closure。"
-                )
-            dependency_path = _resolve_within_bundle(
-                entry["path"], bundle_dir=context["bundle_dir"]
+            dependency_path = _find_dependency_path(
+                context, explicit_index, dependency_id
             )
-            if sha256_file(dependency_path) != entry["sha256"]:
-                raise ValueError(
-                    f"method input {dependency_id} 与 bundle 冻结声明 hash drift。"
-                )
             dependency = _resolve_method_recursive(
-                context, dependency_path, known=known, resolving=resolving
+                context,
+                dependency_path,
+                known=known,
+                resolving=resolving,
+                explicit_index=explicit_index,
             )
             if dependency["artifact_id"] != dependency_id:
                 raise ValueError(
@@ -237,23 +361,30 @@ def _resolve_method_recursive(
             pool_members=context["pool_members"],
             known_method_packages=known,
         )
+        # 每个被解析的 package（含传递 dependency）都必须绑定当前 context。
+        validate_method_against_generation_context(package, context)
     finally:
         resolving.discard(artifact_id)
 
     # 显式 manifest 的 artifact_id 若已被 bundle 冻结记录占用：
     # manifest/ranking hash 与 method identity 必须与冻结记录精确一致。
-    anchor = _find_bundle_method_entry(context, package["artifact_id"])
-    if anchor is not None:
+    anchor_entry = context["artifact_index"].get(package["artifact_id"])
+    if anchor_entry is not None:
+        anchor_reference = anchor_entry["reference"]
         anchor_path = _resolve_within_bundle(
-            anchor["path"], bundle_dir=context["bundle_dir"]
+            anchor_reference["path"], bundle_dir=context["bundle_dir"]
         )
-        if sha256_file(anchor_path) != anchor["sha256"]:
+        if sha256_file(anchor_path) != anchor_reference["sha256"]:
             raise ValueError(
                 f"bundle method artifact {package['artifact_id']} manifest hash drift。"
             )
         if anchor_path != manifest_file:
             anchor_package = _resolve_method_recursive(
-                context, anchor_path, known=known, resolving=resolving
+                context,
+                anchor_path,
+                known=known,
+                resolving=resolving,
+                explicit_index=explicit_index,
             )
             check_frozen_method_identity(
                 package, {anchor_package["artifact_id"]: anchor_package}
@@ -267,10 +398,15 @@ def resolve_method_path(
     manifest_path: str | Path,
     *,
     known: dict[str, dict[str, Any]] | None = None,
+    explicit_index: Mapping[str, Path] | None = None,
 ) -> dict[str, Any]:
     """按显式路径解析 method package 及其传递依赖闭包。"""
     return _resolve_method_recursive(
-        context, Path(manifest_path), known=known if known is not None else {}, resolving=set()
+        context,
+        Path(manifest_path),
+        known=known if known is not None else {},
+        resolving=set(),
+        explicit_index=explicit_index,
     )
 
 
@@ -279,14 +415,11 @@ def resolve_bundle_method(
     artifact_name: str,
     *,
     known: dict[str, dict[str, Any]] | None = None,
+    explicit_index: Mapping[str, Path] | None = None,
 ) -> dict[str, Any]:
     """按 bundle artifact 名解析 method package 及其传递依赖闭包。"""
     reference = context["artifact_refs"].get(artifact_name)
-    if not isinstance(reference, dict) or set(reference) != {
-        "artifact_id",
-        "path",
-        "sha256",
-    }:
+    if not isinstance(reference, dict) or set(reference) != _ARTIFACT_REFERENCE_FIELDS:
         raise ValueError(f"bundle 未声明 method artifact：{artifact_name}。")
     manifest_path = _resolve_within_bundle(
         reference["path"], bundle_dir=context["bundle_dir"]
@@ -294,7 +427,11 @@ def resolve_bundle_method(
     if sha256_file(manifest_path) != reference["sha256"]:
         raise ValueError(f"bundle method artifact {artifact_name} manifest hash drift。")
     package = _resolve_method_recursive(
-        context, manifest_path, known=known if known is not None else {}, resolving=set()
+        context,
+        manifest_path,
+        known=known if known is not None else {},
+        resolving=set(),
+        explicit_index=explicit_index,
     )
     if package["artifact_id"] != reference["artifact_id"]:
         raise ValueError(f"bundle method artifact {artifact_name} identity mismatch。")

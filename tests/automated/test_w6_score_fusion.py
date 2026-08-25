@@ -17,7 +17,11 @@ from unittest import mock
 from app import fuse_w6_scores
 from src.annotation_tasks import sha256_file, write_csv_rows
 from src.w5_method_contract import RANKING_FIELDS
-from src.w6_contracts import load_json_object, validate_w6_bootstrap_bundle
+from src.w6_contracts import (
+    canonical_json_sha256,
+    load_json_object,
+    validate_w6_bootstrap_bundle,
+)
 from src.w6_method_contract import (
     compute_method_configuration_hash,
     validate_w6_method_package,
@@ -165,6 +169,46 @@ class NormalizeScoresTests(unittest.TestCase):
         result = normalize_scores([1e-308, -1e-308], "robust")
         self.assertAlmostEqual(result[0], 0.5, places=12)
         self.assertAlmostEqual(result[1], -0.5, places=12)
+
+    # ---- P1-5（第三轮）：相邻 finite float 不得 silent wrong ----
+
+    def test_z_score_adjacent_floats(self) -> None:
+        tiny = 5e-324
+        result = normalize_scores([tiny, math.nextafter(tiny, math.inf)], "z_score")
+        self.assertAlmostEqual(result[0], -1.0, places=12)
+        self.assertAlmostEqual(result[1], 1.0, places=12)
+        prev = math.nextafter(1e308, -math.inf)
+        nxt = math.nextafter(1e308, math.inf)
+        result = normalize_scores([prev, 1e308, nxt], "z_score")
+        expected = [-1.224744871391589, 0.0, 1.224744871391589]
+        for actual, want in zip(result, expected):
+            self.assertAlmostEqual(actual, want, places=9)
+        # 非对称向量：均值恰为第二个元素。
+        result = normalize_scores([2.0, 1.0, 3.0], "z_score")
+        self.assertAlmostEqual(result[0], 0.0, places=12)
+        self.assertAlmostEqual(result[1], -1.224744871391589, places=12)
+        self.assertAlmostEqual(result[2], 1.224744871391589, places=12)
+
+    def test_z_score_adjacent_floats_decimal_reference(self) -> None:
+        from decimal import Decimal, getcontext
+
+        getcontext().prec = 80
+        tiny = 5e-324
+        cases = [
+            [tiny, math.nextafter(tiny, math.inf)],
+            [math.nextafter(1e308, -math.inf), 1e308, math.nextafter(1e308, math.inf)],
+            [1e16, 1e16 + 4.0, 1e16 + 8.0],
+        ]
+        for values in cases:
+            with self.subTest(values=values):
+                result = normalize_scores(values, "z_score")
+                decimals = [Decimal(repr(value)) for value in values]
+                mean = sum(decimals) / len(decimals)
+                variance = sum((value - mean) ** 2 for value in decimals) / len(decimals)
+                std = variance.sqrt()
+                reference = [float((value - mean) / std) for value in decimals]
+                for actual, expected in zip(result, reference):
+                    self.assertAlmostEqual(actual, expected, places=9)
 
 
 class W6ScoreFusionTests(unittest.TestCase):
@@ -635,6 +679,25 @@ class W6ScoreFusionTests(unittest.TestCase):
             config_path = Path(tmp) / "config.json"
             config_path.write_text(json.dumps(config), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "configuration_sha256"):
+                fuse_w6_scores.load_fusion_config(config_path)
+
+    def test_cli_config_duplicate_input_methods_rejected(self) -> None:
+        config = load_json_object(CONFIG_PATH)
+        config["input_methods"] = ["w6_fixture_sparse_v1", "w6_fixture_sparse_v1"]
+        # 先让 hash 自洽，确保命中的是唯一性检查本身。
+        config["configuration_sha256"] = canonical_json_sha256(
+            {
+                "config_id": config["config_id"],
+                "version": config["version"],
+                "input_methods": sorted(config["input_methods"]),
+                "normalization": config["normalization"],
+                "weights": config["weights"],
+            }
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "config.json"
+            config_path.write_text(json.dumps(config), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "不得重复"):
                 fuse_w6_scores.load_fusion_config(config_path)
 
     def test_cli_requires_two_manifests(self) -> None:

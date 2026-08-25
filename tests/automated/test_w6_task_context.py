@@ -18,7 +18,8 @@ from pathlib import Path
 from unittest import mock
 
 from app import fuse_w6_scores, run_w6_synthesis
-from src.annotation_tasks import sha256_file
+from src.annotation_tasks import sha256_file, write_csv_rows
+from src.w5_method_contract import RANKING_FIELDS
 from src.w6_contracts import (
     canonical_json_sha256,
     compute_pool_identity,
@@ -115,6 +116,11 @@ class NoLeakageGuardTests(unittest.TestCase):
             "canonicalization_provenance": {"reviewer": "fixture", "tool": "x"},
             "suspected_relationships": {"review_state": "pending_review"},
             "score_processing": {"normalization": {"label_access": False}},
+            "freeze": {"evaluation_started_at": None},
+            "label_access": {
+                "relevance_labels_read": False,
+                "hidden_test_labels_read": False,
+            },
         }
         self.assertEqual(find_forbidden_keys(payload), [])
 
@@ -136,6 +142,20 @@ class NoLeakageGuardTests(unittest.TestCase):
                 ["items.evaluation", "items.evaluation.precision"],
             ),
             ({"METRICS": {"x": 1}}, ["METRICS"]),
+            # 语义别名（单复数 / _at_k / 前缀变形）不得绕开。
+            ({"relevance_labels": [2]}, ["relevance_labels"]),
+            ({"gold_label": 2}, ["gold_label"]),
+            ({"target_label": 1}, ["target_label"]),
+            ({"review_result": "pass"}, ["review_result"]),
+            ({"review_results": []}, ["review_results"]),
+            ({"adjudications": {}}, ["adjudications"]),
+            ({"evaluation_metric": {"x": 1}}, ["evaluation_metric"]),
+            ({"evaluation_metrics": {"ndcg": 1}}, ["evaluation_metrics", "evaluation_metrics.ndcg"]),
+            ({"ndcg_at_10": 0.9}, ["ndcg_at_10"]),
+            ({"precision_at_k": 0.9}, ["precision_at_k"]),
+            ({"recall_at_k": 0.9}, ["recall_at_k"]),
+            ({"dev_metric": 0.9}, ["dev_metric"]),
+            ({"hidden_metric": 0.9}, ["hidden_metric"]),
         ]
         for payload, expected in cases:
             with self.subTest(expected=expected):
@@ -537,6 +557,313 @@ class FrozenPathSafetyTests(unittest.TestCase):
             )
             self.assertEqual(rc, 1)
             self.assertFalse((Path(tmp) / "subset/generated_fusion").exists())
+
+
+class NestedDependencyRoleSwapTests(unittest.TestCase):
+    """P1-1：correct top + 被篡改的传递 dependency（全部 hash 自洽）必须 fail closed。"""
+
+    def _tamper_dependency(self, root: Path, *, swap_auxiliary: bool = False) -> None:
+        refs = load_json_object(root / "bundle_manifest.json")["artifacts"]
+        sparse_manifest = root / "method_rankings/fake_sparse/manifest.json"
+        manifest = load_json_object(sparse_manifest)
+        if swap_auxiliary:
+            manifest["auxiliary_inputs"]["source_records"] = {
+                "artifact_id": refs["canonical_entities"]["artifact_id"],
+                "sha256": refs["canonical_entities"]["sha256"],
+            }
+        else:
+            manifest["inputs"]["topic_set"] = {
+                "artifact_id": refs["candidate_pool"]["artifact_id"],
+                "sha256": refs["candidate_pool"]["sha256"],
+            }
+            manifest["inputs"]["candidate_pool"] = {
+                "artifact_id": refs["topic_set"]["artifact_id"],
+                "sha256": refs["topic_set"]["sha256"],
+            }
+        manifest["freeze"]["configuration_sha256"] = compute_method_configuration_hash(manifest)
+        sparse_manifest.write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+        # 顶层 fusion 的 method_inputs 与 configuration hash 自洽重算。
+        fusion_manifest_path = root / "method_rankings/fake_fusion/manifest.json"
+        fusion = load_json_object(fusion_manifest_path)
+        for item in fusion["method_inputs"]:
+            if item["manifest_artifact_id"] == "w6_fixture_method_sparse_v1":
+                item["manifest_sha256"] = sha256_file(sparse_manifest)
+        fusion["freeze"]["configuration_sha256"] = compute_method_configuration_hash(fusion)
+        fusion_manifest_path.write_text(
+            json.dumps(fusion, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+        # bundle 声明同步自洽。
+        manifest_path = root / "bundle_manifest.json"
+        bundle_manifest = load_json_object(manifest_path)
+        bundle_manifest["artifacts"]["method_sparse_manifest"]["sha256"] = sha256_file(
+            sparse_manifest
+        )
+        bundle_manifest["artifacts"]["method_fusion_manifest"]["sha256"] = sha256_file(
+            fusion_manifest_path
+        )
+        manifest_path.write_text(
+            json.dumps(bundle_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+
+    def _assert_nested_swap_fails(self, swap_auxiliary: bool) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "subset"
+            _write_subset_bundle(
+                root, [*BASE_CONTEXT_ARTIFACT_NAMES, *METHOD_ARTIFACT_NAMES]
+            )
+            self._tamper_dependency(root, swap_auxiliary=swap_auxiliary)
+            bundle = root / "bundle_manifest.json"
+            # default synthesis（top=fusion，dep 被篡改）必须 fail。
+            rc = _run_synthesis_cli(
+                ["--bundle", str(bundle), "--output-dir", str(root / "out_s")]
+            )
+            self.assertEqual(rc, 1)
+            # fusion(top, dense) 也必须 fail。
+            rc = _run_fusion_cli(
+                [
+                    "--bundle", str(bundle),
+                    "--manifest", str(root / "method_rankings/fake_fusion/manifest.json"),
+                    "--manifest", str(root / "method_rankings/fake_dense/manifest.json"),
+                    "--method-id", "w6_nested_attack",
+                    "--output-dir", str(root / "out_f"),
+                ]
+            )
+            self.assertEqual(rc, 1)
+
+    def test_nested_dependency_inputs_role_swap_fails(self) -> None:
+        self._assert_nested_swap_fails(swap_auxiliary=False)
+
+    def test_nested_dependency_auxiliary_role_swap_fails(self) -> None:
+        self._assert_nested_swap_fails(swap_auxiliary=True)
+
+
+class ManifestMetadataLeakageTests(unittest.TestCase):
+    """P1-2：bundle manifest 混入 arbitrary metadata 必须被严格结构拒绝。"""
+
+    def test_bundle_manifest_metadata_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "subset"
+            bundle = _write_subset_bundle(
+                root, [*BASE_CONTEXT_ARTIFACT_NAMES, "method_sparse_manifest", "method_dense_manifest"]
+            )
+            manifest = load_json_object(bundle)
+            manifest["metrics"] = {"ndcg": 0.99}
+            manifest["evaluation"] = {"relevance_label": 2}
+            bundle.write_text(
+                json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+            )
+            rc_fusion = _run_fusion_cli(
+                [
+                    "--bundle", str(bundle),
+                    "--manifest", str(root / "method_rankings/fake_sparse/manifest.json"),
+                    "--manifest", str(root / "method_rankings/fake_dense/manifest.json"),
+                    "--method-id", "w6_attack_fusion",
+                    "--output-dir", str(root / "out_f"),
+                ]
+            )
+            rc_synthesis = _run_synthesis_cli(
+                [
+                    "--bundle", str(bundle),
+                    "--method-manifest", str(root / "method_rankings/fake_sparse/manifest.json"),
+                    "--output-dir", str(root / "out_s"),
+                ]
+            )
+            self.assertEqual(rc_fusion, 1)
+            self.assertEqual(rc_synthesis, 1)
+
+    def test_alias_side_channel_self_consistent_rehash(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "subset"
+            _write_subset_bundle(
+                root, [*BASE_CONTEXT_ARTIFACT_NAMES, "method_sparse_manifest", "method_dense_manifest"]
+            )
+            payload = load_json_object(root / "retrieval_runs.json")
+            payload["runs"][0]["frozen_configuration"]["evaluation_metrics"] = {
+                "ndcg_at_10": 0.99
+            }
+            payload["runs"][0]["frozen_configuration"]["gold_label"] = 2
+            payload["runs"][0]["configuration_sha256"] = canonical_json_sha256(
+                payload["runs"][0]["frozen_configuration"]
+            )
+            _update_artifact(root, "retrieval_provenance", "retrieval_runs.json", payload)
+            rc = _run_fusion_cli(
+                [
+                    "--bundle", str(root / "bundle_manifest.json"),
+                    "--manifest", str(root / "method_rankings/fake_sparse/manifest.json"),
+                    "--manifest", str(root / "method_rankings/fake_dense/manifest.json"),
+                    "--method-id", "w6_attack_fusion",
+                    "--output-dir", str(root / "out_f"),
+                ]
+            )
+            self.assertEqual(rc, 1)
+
+
+class DuplicateArtifactIdTests(unittest.TestCase):
+    """P1-3：duplicate artifact_id 必须立即 fail closed（与 JSON 顺序无关）。"""
+
+    def _bundle_with_duplicate_id(self, root: Path, *, alt_first: bool) -> Path:
+        bundle = _write_subset_bundle(
+            root, [*BASE_CONTEXT_ARTIFACT_NAMES, "method_sparse_manifest", "method_dense_manifest"]
+        )
+        manifest = load_json_object(bundle)
+        dense_entry = manifest["artifacts"]["method_dense_manifest"]
+        alt_entry = {
+            "artifact_id": "w6_fixture_method_sparse_v1",
+            "path": dense_entry["path"],
+            "sha256": dense_entry["sha256"],
+        }
+        artifacts = manifest["artifacts"]
+        if alt_first:
+            rebuilt = {"method_sparse_alt": alt_entry}
+            rebuilt.update(artifacts)
+            manifest["artifacts"] = rebuilt
+        else:
+            artifacts["method_sparse_alt"] = alt_entry
+        bundle.write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+        return bundle
+
+    def test_duplicate_artifact_id_fails_both_orders(self) -> None:
+        for alt_first in (False, True):
+            with self.subTest(alt_first=alt_first), tempfile.TemporaryDirectory() as tmp:
+                bundle = self._bundle_with_duplicate_id(
+                    Path(tmp) / "subset", alt_first=alt_first
+                )
+                with self.assertRaisesRegex(ValueError, "duplicate artifact_id"):
+                    load_w6_base_context(bundle)
+
+
+def _make_external_copy(
+    root: Path, source_dir: Path, *, artifact_id: str, method_id: str
+) -> Path:
+    """复制 method package 为合法 external package（新 artifact_id/method_id）。"""
+    target = root / f"ext_{method_id}"
+    shutil.copytree(source_dir, target)
+    rows = []
+    with (target / "ranking.csv").open("r", encoding="utf-8-sig", newline="") as handle:
+        for row in csv.DictReader(handle):
+            row["method_id"] = method_id
+            rows.append(row)
+    write_csv_rows(target / "ranking.csv", RANKING_FIELDS, rows)
+    manifest = load_json_object(target / "manifest.json")
+    manifest["artifact_id"] = artifact_id
+    manifest["method"]["method_id"] = method_id
+    manifest["ranking"]["sha256"] = sha256_file(target / "ranking.csv")
+    manifest["freeze"]["configuration_sha256"] = compute_method_configuration_hash(manifest)
+    (target / "manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    return target / "manifest.json"
+
+
+class ExternalDependencyOrderTests(unittest.TestCase):
+    """P1-4：external dependency resolution 必须与 CLI 参数顺序无关。"""
+
+    def test_external_hybrid_dependency_order_independent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            # B：external dense（无 method_inputs）。
+            b_manifest = _make_external_copy(
+                root,
+                VALID_ROOT / "method_rankings/fake_dense",
+                artifact_id="w6_ext_method_dense_v1",
+                method_id="w6_ext_dense_v1",
+            )
+            # A：external hybrid，method_inputs = [external B, bundle sparse]。
+            a_dir = root / "ext_w6_ext_fusion_v1"
+            shutil.copytree(VALID_ROOT / "method_rankings/fake_fusion", a_dir)
+            rows = []
+            with (a_dir / "ranking.csv").open("r", encoding="utf-8-sig", newline="") as handle:
+                for row in csv.DictReader(handle):
+                    row["method_id"] = "w6_ext_fusion_v1"
+                    rows.append(row)
+            write_csv_rows(a_dir / "ranking.csv", RANKING_FIELDS, rows)
+            a_manifest = load_json_object(a_dir / "manifest.json")
+            a_manifest["artifact_id"] = "w6_ext_method_fusion_v1"
+            a_manifest["method"]["method_id"] = "w6_ext_fusion_v1"
+            bundle_manifest = load_json_object(BUNDLE_PATH)
+            sparse_entry = bundle_manifest["artifacts"]["method_sparse_manifest"]
+            sparse_ranking_sha = load_json_object(
+                VALID_ROOT / "method_rankings/fake_sparse/manifest.json"
+            )["ranking"]["sha256"]
+            a_manifest["method_inputs"] = [
+                {
+                    "method_id": "w6_ext_dense_v1",
+                    "manifest_artifact_id": "w6_ext_method_dense_v1",
+                    "manifest_sha256": sha256_file(b_manifest),
+                    "ranking_sha256": load_json_object(b_manifest)["ranking"]["sha256"],
+                    "uses_raw_score": True,
+                    "uses_rank": False,
+                },
+                {
+                    "method_id": "w6_fixture_sparse_v1",
+                    "manifest_artifact_id": sparse_entry["artifact_id"],
+                    "manifest_sha256": sparse_entry["sha256"],
+                    "ranking_sha256": sparse_ranking_sha,
+                    "uses_raw_score": True,
+                    "uses_rank": False,
+                },
+            ]
+            a_manifest["method"]["parameters"]["weights"] = {
+                "w6_ext_dense_v1": 0.5,
+                "w6_fixture_sparse_v1": 0.5,
+            }
+            a_manifest["ranking"]["sha256"] = sha256_file(a_dir / "ranking.csv")
+            a_manifest["freeze"]["configuration_sha256"] = compute_method_configuration_hash(
+                a_manifest
+            )
+            (a_dir / "manifest.json").write_text(
+                json.dumps(a_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+            )
+            # [A, B] 与 [B, A] 必须行为完全一致。
+            outputs = []
+            for order in ((a_dir / "manifest.json", b_manifest), (b_manifest, a_dir / "manifest.json")):
+                out = root / f"out_{len(outputs)}"
+                rc = _run_fusion_cli(
+                    [
+                        "--manifest", str(order[0]),
+                        "--manifest", str(order[1]),
+                        "--method-id", "w6_ext_order_fusion",
+                        "--output-dir", str(out),
+                    ]
+                )
+                self.assertEqual(rc, 0)
+                outputs.append(load_json_object(out / "manifest.json"))
+            self.assertEqual(
+                outputs[0]["ranking"]["sha256"], outputs[1]["ranking"]["sha256"]
+            )
+            self.assertEqual(
+                outputs[0]["freeze"]["configuration_sha256"],
+                outputs[1]["freeze"]["configuration_sha256"],
+            )
+
+    def test_duplicate_explicit_artifact_id_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            b1 = _make_external_copy(
+                root / "a",
+                VALID_ROOT / "method_rankings/fake_dense",
+                artifact_id="w6_ext_method_dense_v1",
+                method_id="w6_ext_dense_v1",
+            )
+            b2 = _make_external_copy(
+                root / "b",
+                VALID_ROOT / "method_rankings/fake_dense",
+                artifact_id="w6_ext_method_dense_v1",
+                method_id="w6_ext_dense_v1",
+            )
+            rc = _run_fusion_cli(
+                [
+                    "--manifest", str(b1),
+                    "--manifest", str(b2),
+                    "--method-id", "w6_ext_order_fusion",
+                    "--output-dir", str(root / "out"),
+                ]
+            )
+            self.assertEqual(rc, 1)
 
 
 if __name__ == "__main__":

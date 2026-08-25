@@ -34,10 +34,10 @@ from src.w6_synthesis_pipeline import (
     validate_canonical_render,
 )
 from src.w6_task_context import (
+    build_explicit_method_index,
     load_w6_base_context,
     resolve_bundle_method,
     resolve_method_path,
-    validate_method_against_generation_context,
 )
 from src.w6_artifact_safety import check_output_dir_safe
 
@@ -149,14 +149,18 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     # 按需解析所选 method 的 dependency closure（默认 bundle fusion 及其声明的
-    # 传递依赖；显式 --method-manifest 只加载该 method 闭包），并绑定当前
-    # context 的真实 artifact identity。
+    # 传递依赖；显式 --method-manifest 只加载该 method 闭包）。每个被解析的
+    # package（含传递 dependency）都在 resolver 内绑定当前 context 的真实
+    # artifact identity。
     try:
         if args.method_manifest is not None:
-            package = resolve_method_path(bundle, args.method_manifest)
+            package = resolve_method_path(
+                bundle,
+                args.method_manifest,
+                explicit_index=build_explicit_method_index([args.method_manifest]),
+            )
         else:
             package = resolve_bundle_method(bundle, "method_fusion_manifest")
-        validate_method_against_generation_context(package, bundle)
     except (OSError, UnicodeError, ValueError) as error:
         print(f"输入 method artifact 校验失败：{error}")
         return 1

@@ -88,30 +88,48 @@ def _tukey_hinges(sorted_values: list[float]) -> tuple[float, float]:
 def _apply_strategy(values: list[float], strategy: str) -> list[float] | None:
     """在给定向量上应用 normalization；中间量非有限时返回 None（触发缩放重算）。"""
     if strategy == "z_score":
-        # z-score 的数值可靠实现：
-        # 1) 用 fsum 计算均值（correctly rounded），再以偏差向量计算方差——
-        #    大公共 offset 下偏差仍精确（近值相减无精度损失）；
-        # 2) 方差在 max(abs(deviation)) 缩放后的偏差上计算，避免平方下溢/溢出；
-        # 3) min == max 才是真正的 zero variance；非常量输入但偏差/方差数值
-        #    归零 → fail closed，绝不静默误判 zero variance。
+        # z-score 的数值可靠实现（anchor + difference-space scaling）：
+        # 1) 以真实输入 float 为 anchor，先在原空间求差 d_i = x_i - anchor
+        #    （近值相减无精度损失，不先形成不可表示的 mean）；
+        # 2) 若差值非有限或 fsum 溢出（如 ±1e308 混合），回退到
+        #    x/max|x| 缩放空间求差（有界，数学等价）；
+        # 3) 在 max|d| 缩放后的 difference space 中求 mean（[-1,1] 内可表示）、
+        #    centered deviations，再按 max|centered| 缩放后算方差，
+        #    避免 subnormal 平方下溢与 1e308 平方溢出；
+        # 数学上与 (x - mean) / std 完全等价（translation/scale invariant）。
+        # min == max 才是真正的 zero variance；非常量输入但偏差/方差数值
+        # 归零 → fail closed，绝不返回 silent wrong finite result。
         if min(values) == max(values):
             return [0.0] * len(values)
+        anchor = values[0]
+        differences = [value - anchor for value in values]
         try:
-            mean = math.fsum(values) / len(values)
+            math.fsum(differences)
+            differences_ok = all(math.isfinite(value) for value in differences)
         except OverflowError:
-            return None
-        deviations = [value - mean for value in values]
-        scale = max(abs(deviation) for deviation in deviations)
-        if scale == 0.0:
+            differences_ok = False
+        if not differences_ok:
+            scale = max(abs(value) for value in values)
+            scaled = [value / scale for value in values]
+            anchor = scaled[0]
+            differences = [value - anchor for value in scaled]
+        difference_scale = max(abs(value) for value in differences)
+        # min != max 保证至少一个非零差值，difference_scale > 0。
+        ds = [value / difference_scale for value in differences]
+        mean_ds = math.fsum(ds) / len(ds)
+        centered = [value - mean_ds for value in ds]
+        center_scale = max(abs(value) for value in centered)
+        if center_scale == 0.0:
             raise ValueError("非常量输入的 z-score 偏差数值归零，无法可靠 normalization。")
-        scaled = [deviation / scale for deviation in deviations]
-        variance = math.fsum(value * value for value in scaled) / len(scaled)
+        variance = math.fsum(
+            (value / center_scale) ** 2 for value in centered
+        ) / len(centered)
         std = math.sqrt(variance)
         if not math.isfinite(std):
             return None
         if std == 0.0:
             raise ValueError("非常量输入的 z-score variance 数值下溢，无法可靠 normalization。")
-        return [value / std for value in scaled]
+        return [(value / center_scale) / std for value in centered]
     if strategy == "min_max":
         low = min(values)
         high = max(values)
