@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import statistics
 import tempfile
 from collections import Counter, defaultdict
 from collections.abc import Callable, Mapping, Sequence
@@ -273,6 +274,13 @@ def acquire_and_audit(
         raise ValueError("OpenAlex authentication_source 无效。")
 
     started_at = timestamp_fn()
+    acquisition_run_id = deterministic_identity(
+        "w6-openalex-live-run",
+        {
+            "config_identity": config["config_identity"],
+            "acquisition_started_at": started_at,
+        },
+    )
     records_by_id: dict[str, dict[str, Any]] = {}
     hits: list[dict[str, Any]] = []
     query_runs: list[dict[str, Any]] = []
@@ -281,6 +289,14 @@ def acquire_and_audit(
     for topic in config["topics"]:
         topic_id = topic["topic_id"]
         for variant in topic["query_variants"]:
+            query_run_id = deterministic_identity(
+                "w6-openalex-query-run",
+                {
+                    "acquisition_run_id": acquisition_run_id,
+                    "topic_id": topic_id,
+                    "query_variant_id": variant["query_variant_id"],
+                },
+            )
             query_started_at = timestamp_fn()
             result = fetcher(
                 variant["query_text"],
@@ -317,7 +333,7 @@ def acquire_and_audit(
                 hit_id = deterministic_identity(
                     HIT_IDENTITY_PREFIX,
                     {
-                        "config_identity": config["config_identity"],
+                        "acquisition_run_id": acquisition_run_id,
                         "topic_id": topic_id,
                         "query_variant_id": variant["query_variant_id"],
                         "openalex_id": normalized_id,
@@ -325,6 +341,8 @@ def acquire_and_audit(
                 )
                 hit = {
                     "hit_id": hit_id,
+                    "acquisition_run_id": acquisition_run_id,
+                    "query_run_id": query_run_id,
                     "record_id": record_id,
                     "openalex_id": normalized_id,
                     "topic_id": topic_id,
@@ -339,6 +357,7 @@ def acquire_and_audit(
                         record_id=record_id,
                         normalized_id=normalized_id,
                         retrieved_at=started_at,
+                        acquisition_run_id=acquisition_run_id,
                     )
                 record = records_by_id[normalized_id]
                 record["hit_ids"].append(hit_id)
@@ -356,14 +375,8 @@ def acquire_and_audit(
             safe_stats = _safe_client_stats(stats)
             query_runs.append(
                 {
-                    "query_run_id": deterministic_identity(
-                        "w6-openalex-query-run",
-                        {
-                            "config_identity": config["config_identity"],
-                            "topic_id": topic_id,
-                            "query_variant_id": variant["query_variant_id"],
-                        },
-                    ),
+                    "query_run_id": query_run_id,
+                    "acquisition_run_id": acquisition_run_id,
                     "topic_id": topic_id,
                     "query_variant_id": variant["query_variant_id"],
                     "query_text": variant["query_text"],
@@ -407,6 +420,7 @@ def acquire_and_audit(
                 "schema_version": "1.0",
                 "artifact_type": "w6_openalex_query_runs",
                 "config_identity": config["config_identity"],
+                "acquisition_run_id": acquisition_run_id,
                 "acquisition_started_at": started_at,
                 "acquisition_completed_at": completed_at,
                 "query_count": len(query_runs),
@@ -432,6 +446,7 @@ def acquire_and_audit(
             "artifact_type": "w6_post_freeze_openalex_audit_package",
             "artifact_id": "w6_openalex_topic_robustness_audit_v1",
             "acquisition_identity": acquisition_identity,
+            "acquisition_run_id": acquisition_run_id,
             "status": "complete",
             "is_fixture": False,
             "post_freeze_audit": True,
@@ -540,12 +555,29 @@ def validate_acquisition_package(
         raise ValueError("works.jsonl 包含非规范 OpenAlex Work ID。")
     if len(normalized_ids) != len(set(normalized_ids)):
         raise ValueError("works.jsonl 包含重复 OpenAlex Work ID。")
+    acquisition_run_id = manifest.get("acquisition_run_id")
+    if not isinstance(acquisition_run_id, str) or not acquisition_run_id:
+        raise ValueError("manifest 缺少 acquisition_run_id。")
+    if any(row.get("acquisition_run_id") != acquisition_run_id for row in records):
+        raise ValueError("works.jsonl acquisition_run_id drift。")
+    required_record_fields = {
+        "publication_date",
+        "work_type",
+        "openalex_url",
+        "hit_ids",
+        "topic_ids",
+        "query_variant_ids",
+    }
+    if any(not required_record_fields.issubset(row) for row in records):
+        raise ValueError("works.jsonl 缺少 compact metadata/provenance fields。")
     record_id_set = set(record_ids)
     hit_ids = [row.get("hit_id") for row in hits]
     if len(hit_ids) != len(set(hit_ids)):
         raise ValueError("query_hits.jsonl 包含重复 hit_id。")
     if any(row.get("record_id") not in record_id_set for row in hits):
         raise ValueError("query hit 引用了不存在的 record。")
+    if any(row.get("acquisition_run_id") != acquisition_run_id for row in hits):
+        raise ValueError("query_hits.jsonl acquisition_run_id drift。")
     if manifest.get("unique_work_count") != len(records):
         raise ValueError("manifest unique_work_count drift。")
     if manifest.get("query_hit_count") != len(hits):
@@ -553,11 +585,92 @@ def validate_acquisition_package(
     runs = query_runs.get("runs")
     if not isinstance(runs, list) or manifest.get("query_count") != len(runs):
         raise ValueError("manifest/query_runs query_count drift。")
+    if query_runs.get("acquisition_run_id") != acquisition_run_id:
+        raise ValueError("query_runs acquisition_run_id drift。")
+    run_ids = {row.get("query_run_id") for row in runs}
+    if len(run_ids) != len(runs) or None in run_ids:
+        raise ValueError("query_runs query_run_id 不唯一或缺失。")
+    if any(row.get("acquisition_run_id") != acquisition_run_id for row in runs):
+        raise ValueError("query run acquisition_run_id drift。")
+    if any(row.get("query_run_id") not in run_ids for row in hits):
+        raise ValueError("query hit 引用了不存在的 query_run_id。")
+    hits_by_record: dict[str, set[str]] = defaultdict(set)
+    for hit in hits:
+        hits_by_record[str(hit["record_id"])].add(str(hit["hit_id"]))
+    for record in records:
+        if set(record.get("hit_ids", [])) != hits_by_record[str(record["record_id"])]:
+            raise ValueError("work record/query hit provenance closure drift。")
     if audit.get("config_identity") != config["config_identity"]:
         raise ValueError("topic audit config identity drift。")
     if audit.get("global_summary", {}).get("unique_work_count") != len(records):
         raise ValueError("topic audit unique_work_count drift。")
     return manifest
+
+
+def refresh_acquisition_audit(
+    *,
+    package_dir: str | Path,
+    config_path: str | Path,
+    topic_set_path: str | Path,
+    split_path: str | Path,
+) -> dict[str, Any]:
+    """Rebuild only derived audit files from a validated captured corpus."""
+
+    package = Path(package_dir)
+    manifest = validate_acquisition_package(
+        package_dir=package,
+        config_path=config_path,
+        topic_set_path=topic_set_path,
+        split_path=split_path,
+    )
+    config, _, split = load_and_validate_query_config(
+        config_path,
+        topic_set_path=topic_set_path,
+        split_path=split_path,
+    )
+    records = _read_jsonl(package / "works.jsonl")
+    hits = _read_jsonl(package / "query_hits.jsonl")
+    query_runs_artifact = load_json_object(
+        package / "query_runs.json", label="query runs"
+    )
+    audit = build_topic_audit(
+        config=config,
+        records=records,
+        hits=hits,
+        query_runs=query_runs_artifact["runs"],
+        generated_at=query_runs_artifact["acquisition_completed_at"],
+    )
+    with tempfile.TemporaryDirectory(
+        prefix=f".{package.name}-audit-refresh-", dir=package.parent
+    ) as temporary_directory:
+        staging = Path(temporary_directory)
+        _write_json(staging / "topic_audit.json", audit)
+        (staging / "topic_audit.md").write_text(
+            render_topic_audit_markdown(audit), encoding="utf-8", newline="\n"
+        )
+        file_hashes = dict(manifest["files"])
+        for name in ("topic_audit.json", "topic_audit.md"):
+            file_hashes[name] = sha256_file(staging / name)
+        refreshed_manifest = dict(manifest)
+        refreshed_manifest["files"] = file_hashes
+        refreshed_manifest["acquisition_identity"] = deterministic_identity(
+            ACQUISITION_IDENTITY_PREFIX,
+            {
+                "config_identity": config["config_identity"],
+                "topic_set_sha256": config["topic_set_reference"]["sha256"],
+                "split_identity": split["split_identity"],
+                "file_hashes": file_hashes,
+            },
+        )
+        _write_json(staging / "manifest.json", refreshed_manifest)
+        for name in ("topic_audit.json", "topic_audit.md", "manifest.json"):
+            os.replace(staging / name, package / name)
+    return validate_acquisition_package(
+        package_dir=package,
+        config_path=config_path,
+        topic_set_path=topic_set_path,
+        split_path=split_path,
+    )
 
 
 def build_topic_audit(
@@ -616,6 +729,9 @@ def build_topic_audit(
                     "api_hit_count": run.get("api_hit_count"),
                     "retrieved_work_count": len(members),
                     "unique_contribution_count": len(members - other_union),
+                    "unique_contribution_ratio": _ratio(
+                        len(members - other_union), len(members)
+                    ),
                     "union_coverage_ratio": _ratio(len(members), len(union)),
                 }
             )
@@ -635,6 +751,8 @@ def build_topic_audit(
                         "intersection_count": len(intersection),
                         "union_count": len(pair_union),
                         "jaccard": _ratio(len(intersection), len(pair_union)),
+                        "left_overlap_ratio": _ratio(len(intersection), len(left_set)),
+                        "right_overlap_ratio": _ratio(len(intersection), len(right_set)),
                     }
                 )
         topic_records = [record_by_id[record_id] for record_id in sorted(union)]
@@ -652,6 +770,9 @@ def build_topic_audit(
             "publication_year",
             "source_name",
             "landing_page_url",
+            "publication_date",
+            "work_type",
+            "openalex_url",
         )
         metadata = {}
         for field in metadata_fields:
@@ -662,6 +783,17 @@ def build_topic_audit(
                 "completeness_ratio": _ratio(present, len(topic_records)),
             }
         support_distribution = Counter(support_counts.values())
+        known_years = sorted(
+            int(record["publication_year"])
+            for record in topic_records
+            if isinstance(record.get("publication_year"), int)
+        )
+        year_bins = _publication_year_bins(
+            known_years,
+            from_year=config["acquisition_policy"]["from_year"],
+            to_year=config["acquisition_policy"]["to_year"],
+            missing_count=len(topic_records) - len(known_years),
+        )
         representatives = sorted(
             topic_records,
             key=lambda record: (
@@ -703,6 +835,18 @@ def build_topic_audit(
             {
                 "topic_id": topic_id,
                 "union_work_count": len(union),
+                "api_hit_count_sum": sum(
+                    row["api_hit_count"]
+                    for row in query_rows
+                    if isinstance(row["api_hit_count"], int)
+                ),
+                "retrieved_query_hit_count": sum(
+                    row["retrieved_work_count"] for row in query_rows
+                ),
+                "within_topic_repeated_hit_count": sum(
+                    row["retrieved_work_count"] for row in query_rows
+                )
+                - len(union),
                 "target_status": _target_status(len(union), targets),
                 "query_variants": query_rows,
                 "pairwise_query_overlap": pairwise,
@@ -713,6 +857,18 @@ def build_topic_audit(
                 "publication_year_distribution": {
                     key: year_distribution[key]
                     for key in sorted(year_distribution, key=_year_sort_key)
+                },
+                "publication_year_summary": {
+                    "minimum": min(known_years) if known_years else None,
+                    "median": statistics.median(known_years) if known_years else None,
+                    "maximum": max(known_years) if known_years else None,
+                    "known_count": len(known_years),
+                    "missing_count": len(topic_records) - len(known_years),
+                    "recent_five_year_count": sum(
+                        year >= config["acquisition_policy"]["to_year"] - 4
+                        for year in known_years
+                    ),
+                    "bins": year_bins,
                 },
                 "metadata_completeness": metadata,
                 "query_facet_coverage": facet_rows,
@@ -744,6 +900,12 @@ def build_topic_audit(
                     "intersection_count": len(intersection),
                     "union_count": len(union),
                     "jaccard": _ratio(len(intersection), len(union)),
+                    "left_overlap_ratio": _ratio(
+                        len(intersection), len(topic_sets[left_id])
+                    ),
+                    "right_overlap_ratio": _ratio(
+                        len(intersection), len(topic_sets[right_id])
+                    ),
                     "shared_openalex_ids": sorted(
                         str(record_by_id[record_id]["openalex_id"])
                         for record_id in intersection
@@ -762,6 +924,7 @@ def build_topic_audit(
             "query_count": len(query_runs),
             "unique_work_count": len(records),
             "query_hit_count": len(hits),
+            "repeated_query_hit_count": len(hits) - len(records),
         },
         "topics": topic_audits,
         "cross_topic_overlap": cross_topic,
@@ -808,16 +971,32 @@ def render_topic_audit_markdown(audit: Mapping[str, Any]) -> str:
             [
                 f"### `{topic['topic_id']}`",
                 "",
-                "| Query variant | API hits | Retrieved | Unique contribution | Union coverage |",
-                "|---|---:|---:|---:|---:|",
+                "| Query variant | API hits | Retrieved | Unique contribution | Unique ratio | Union coverage |",
+                "|---|---:|---:|---:|---:|---:|",
             ]
         )
         for query in topic["query_variants"]:
             lines.append(
                 f"| `{query['query_variant_id']}` | {query['api_hit_count']} | "
                 f"{query['retrieved_work_count']} | {query['unique_contribution_count']} | "
+                f"{query['unique_contribution_ratio']:.4f} | "
                 f"{query['union_coverage_ratio']:.4f} |"
             )
+        year = topic["publication_year_summary"]
+        metadata = topic["metadata_completeness"]
+        lines.extend(
+            [
+                "",
+                f"- API-hit sum / retrieved hits / union / repeated hits: "
+                f"{topic['api_hit_count_sum']} / {topic['retrieved_query_hit_count']} / "
+                f"{topic['union_work_count']} / {topic['within_topic_repeated_hit_count']}",
+                f"- Publication years: {year['minimum']}–{year['maximum']}, "
+                f"median={year['median']}, recent-five-year={year['recent_five_year_count']}",
+                f"- Abstract / DOI completeness: "
+                f"{metadata['abstract']['completeness_ratio']:.4f} / "
+                f"{metadata['doi']['completeness_ratio']:.4f}",
+            ]
+        )
         lines.extend(["", "Representative public works (descriptive ordering only):", ""])
         for work in topic["representative_works"]:
             lines.append(
@@ -832,18 +1011,19 @@ def render_topic_audit_markdown(audit: Mapping[str, Any]) -> str:
         [
             "## Cross-topic overlap",
             "",
-            "| Topic pair | Shared works | Jaccard |",
-            "|---|---:|---:|",
+            "| Topic pair | Shared works | Jaccard | Left overlap | Right overlap |",
+            "|---|---:|---:|---:|---:|",
         ]
     )
     if nonzero_cross:
         for row in nonzero_cross:
             lines.append(
                 f"| `{row['left_topic_id']}` / `{row['right_topic_id']}` | "
-                f"{row['intersection_count']} | {row['jaccard']:.4f} |"
+                f"{row['intersection_count']} | {row['jaccard']:.4f} | "
+                f"{row['left_overlap_ratio']:.4f} | {row['right_overlap_ratio']:.4f} |"
             )
     else:
-        lines.append("| none | 0 | 0.0000 |")
+        lines.append("| none | 0 | 0.0000 | 0.0000 | 0.0000 |")
     lines.extend(
         [
             "",
@@ -864,18 +1044,23 @@ def _normalize_work(
     record_id: str,
     normalized_id: str,
     retrieved_at: str,
+    acquisition_run_id: str,
 ) -> dict[str, Any]:
     authors_text = str(paper.get("authors") or "")
     authors = [name.strip() for name in authors_text.split(";") if name.strip()]
     return {
         "record_id": record_id,
+        "acquisition_run_id": acquisition_run_id,
         "openalex_id": normalized_id,
+        "openalex_url": f"https://openalex.org/{normalized_id}",
         "title": str(paper.get("title") or work.get("display_name") or ""),
         "abstract": str(paper.get("abstract") or ""),
         "authors": authors,
         "publication_year": work.get("publication_year")
         if isinstance(work.get("publication_year"), int)
         else None,
+        "publication_date": str(work.get("publication_date") or ""),
+        "work_type": str(work.get("type") or ""),
         "doi": str(work.get("doi") or ""),
         "cited_by_count": work.get("cited_by_count")
         if isinstance(work.get("cited_by_count"), int)
@@ -1016,3 +1201,26 @@ def _target_status(count: int, targets: Mapping[str, Any]) -> str:
 
 def _year_sort_key(value: str) -> tuple[int, str]:
     return (1, value) if value == "missing" else (0, value)
+
+
+def _publication_year_bins(
+    years: Sequence[int],
+    *,
+    from_year: int,
+    to_year: int,
+    missing_count: int,
+) -> dict[str, int]:
+    boundaries = (
+        (from_year, 2009),
+        (2010, 2014),
+        (2015, 2019),
+        (2020, 2022),
+        (2023, to_year),
+    )
+    bins = {
+        f"{start}-{end}": sum(start <= year <= end for year in years)
+        for start, end in boundaries
+        if start <= end
+    }
+    bins["missing"] = missing_count
+    return bins

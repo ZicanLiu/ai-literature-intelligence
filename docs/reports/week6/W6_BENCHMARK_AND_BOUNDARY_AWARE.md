@@ -84,8 +84,13 @@ config，不修改 Topic contract 内原 query variants，不参与 Topic select
 judgements、ranking metrics 或 annotations。详细 acquisition design、执行状态和后续真实 evidence
 单独记录于
 [`W6_OPENALEX_CORPUS_AND_TOPIC_ROBUSTNESS_AUDIT.md`](W6_OPENALEX_CORPUS_AND_TOPIC_ROBUSTNESS_AUDIT.md)。
-截至该 design freeze，当前进程仍未暴露环境变量 key，因此 live acquisition 尚未执行；此处不把
-离线 fixture 或预算截图写成 OpenAlex 查询 evidence。
+design freeze 时当前进程尚未暴露 key；之后从 Windows User environment 安全解析 key，于
+`2026-08-26T17:20:53+08:00` 至 `17:22:38+08:00` 完成正式 54-query acquisition。最终 artifact
+包含 2,977 个全局 unique Works、3,439 个 topic-work assignments 和 4,265 条 query-hit provenance，
+acquisition identity 为
+`w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c`。
+该 evidence 严格发生在 Topic/split freeze 之后，没有参与 Topic selection，也没有读取 labels；原
+smoke research 的历史限制和当时的 429 记录仍保持原样，不倒写成 freeze 前 evidence。
 
 ## 3. 最终 Topic freeze
 
@@ -300,6 +305,14 @@ source-config binding/chronology、method freeze chronology、两个 builder 的
 
 Full Gate 的三个 warning 与 base 一致：历史 W1 CSV 结构、W1 旧 label IDs、已跟踪历史 experiment。
 没有通过删除断言、放宽 validator 或降级 error 取得 PASS。
+
+### 8.1 Post-freeze OpenAlex expansion regression
+
+新增 live corpus 后再次执行：W6 contracts/Benchmark/Boundary/OpenAlex 126 tests（124 PASS / 2 个
+Windows symlink 条件性 skip）、W4/W5 164 tests、全量 offline 551 tests（549 PASS / 2 skip）；
+Basic Gate 扫描 376 files、0 error / 0 warning，Full Gate 扫描 376 files、0 error / 3 个相同历史
+warning，全部 PASS。W4 approved Benchmark、六个 W5 method artifacts、W5 metrics/Error Analysis、
+W6 Bootstrap contracts 相对 review 修复 head 均无 protected-path diff；四个 P1 保持 CLOSED。
 
 ## 9. 留给 Integration PR 的真实工作
 

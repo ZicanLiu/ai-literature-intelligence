@@ -15,6 +15,7 @@ from src.w6_openalex_audit import (
     acquire_and_audit,
     compute_query_config_identity,
     load_and_validate_query_config,
+    refresh_acquisition_audit,
     resolve_openalex_api_key,
     validate_acquisition_package,
     validate_query_config,
@@ -237,6 +238,11 @@ class W6OpenAlexAuditTests(unittest.TestCase):
                 36,
             )
             self.assertTrue(all("source_rank" in row for row in hits))
+            self.assertTrue(all("query_run_id" in row for row in hits))
+            self.assertTrue(all("acquisition_run_id" in row for row in records + hits))
+            self.assertEqual(shared["publication_date"], "2022-04-01")
+            self.assertEqual(shared["work_type"], "article")
+            self.assertEqual(shared["openalex_url"], "https://openalex.org/W9900001")
 
     def test_api_counts_years_metadata_representatives_and_risks_are_recorded(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -248,7 +254,27 @@ class W6OpenAlexAuditTests(unittest.TestCase):
             self.assertEqual(first["query_variants"][0]["api_hit_count"], 100)
             self.assertEqual(first["query_variants"][0]["retrieved_work_count"], 3)
             self.assertEqual(first["query_variants"][0]["unique_contribution_count"], 2)
+            self.assertEqual(first["query_variants"][0]["unique_contribution_ratio"], 0.666667)
             self.assertEqual(first["publication_year_distribution"], {"2021": 1, "2022": 1, "missing": 6})
+            self.assertEqual(
+                first["publication_year_summary"],
+                {
+                    "minimum": 2021,
+                    "median": 2021.5,
+                    "maximum": 2022,
+                    "known_count": 2,
+                    "missing_count": 6,
+                    "recent_five_year_count": 1,
+                    "bins": {
+                        "2000-2009": 0,
+                        "2010-2014": 0,
+                        "2015-2019": 0,
+                        "2020-2022": 2,
+                        "2023-2026": 0,
+                        "missing": 6,
+                    },
+                },
+            )
             self.assertEqual(first["metadata_completeness"]["abstract"]["present_count"], 2)
             self.assertIn("below_target_unique_work_count", first["audit_signals"])
             self.assertIn("abstract_completeness_below_0.5", first["audit_signals"])
@@ -356,6 +382,28 @@ class W6OpenAlexAuditTests(unittest.TestCase):
                     topic_set_path=TOPIC_PATH,
                     split_path=SPLIT_PATH,
                 )
+
+    def test_derived_audit_refresh_preserves_captured_source_hashes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            package = Path(temporary_directory) / "package"
+            before, _ = self.build_package(package)
+            source_hashes = {
+                name: before["files"][name]
+                for name in ("works.jsonl", "query_hits.jsonl", "query_runs.json")
+            }
+
+            after = refresh_acquisition_audit(
+                package_dir=package,
+                config_path=CONFIG_PATH,
+                topic_set_path=TOPIC_PATH,
+                split_path=SPLIT_PATH,
+            )
+
+            self.assertEqual(
+                {name: after["files"][name] for name in source_hashes},
+                source_hashes,
+            )
+            self.assertIn("Unique ratio", (package / "topic_audit.md").read_text(encoding="utf-8"))
 
     def test_same_fixture_produces_same_acquisition_identity(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

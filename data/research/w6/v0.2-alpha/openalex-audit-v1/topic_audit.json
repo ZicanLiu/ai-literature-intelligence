@@ -1,0 +1,4866 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "w6_openalex_topic_robustness_audit",
+  "status": "descriptive_label_free",
+  "generated_at": "2026-08-26T09:22:38+00:00",
+  "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+  "topic_set_reference": {
+    "path": "data/research/w6/v0.2-alpha/topics.json",
+    "artifact_id": "w6_research_topics_v0.2_alpha",
+    "sha256": "6e2f6e6b8fea56cef6e245dcf37fa97a46ba5efc6703fb47e9863840e3a06ca4"
+  },
+  "global_summary": {
+    "topic_count": 9,
+    "query_count": 54,
+    "unique_work_count": 2977,
+    "query_hit_count": 4265,
+    "repeated_query_hit_count": 1288
+  },
+  "topics": [
+    {
+      "topic_id": "w6_topic_galaxy_activity_spectra",
+      "union_work_count": 417,
+      "api_hit_count_sum": 5108,
+      "retrieved_query_hit_count": 469,
+      "within_topic_repeated_hit_count": 52,
+      "target_status": "above_preferred_within_soft_cap",
+      "query_variants": [
+        {
+          "query_variant_id": "galaxy_activity_aq01",
+          "query_text": "machine learning optical galaxy spectra activity classification",
+          "coverage_facets": [
+            "integrated optical spectra",
+            "activity classes",
+            "machine-learning classification"
+          ],
+          "api_hit_count": 1624,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 51,
+          "unique_contribution_ratio": 0.6375,
+          "union_coverage_ratio": 0.191847
+        },
+        {
+          "query_variant_id": "galaxy_activity_aq02",
+          "query_text": "automated AGN LINER star forming classification galaxy spectra",
+          "coverage_facets": [
+            "activity classes",
+            "AGN and LINER",
+            "emission lines"
+          ],
+          "api_hit_count": 225,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 73,
+          "unique_contribution_ratio": 0.9125,
+          "union_coverage_ratio": 0.191847
+        },
+        {
+          "query_variant_id": "galaxy_activity_aq03",
+          "query_text": "neural network BPT activity classification galaxy spectra",
+          "coverage_facets": [
+            "activity classes",
+            "emission lines",
+            "machine-learning classification"
+          ],
+          "api_hit_count": 69,
+          "retrieved_work_count": 69,
+          "unique_contribution_count": 64,
+          "unique_contribution_ratio": 0.927536,
+          "union_coverage_ratio": 0.165468
+        },
+        {
+          "query_variant_id": "galaxy_activity_aq04",
+          "query_text": "deep learning emission line galaxy nuclear activity classification",
+          "coverage_facets": [
+            "emission lines",
+            "AGN and LINER",
+            "machine-learning classification"
+          ],
+          "api_hit_count": 1064,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 56,
+          "unique_contribution_ratio": 0.7,
+          "union_coverage_ratio": 0.191847
+        },
+        {
+          "query_variant_id": "galaxy_activity_aq05",
+          "query_text": "spectroscopic galaxy AGN classification machine learning",
+          "coverage_facets": [
+            "integrated optical spectra",
+            "AGN and LINER",
+            "machine-learning classification"
+          ],
+          "api_hit_count": 1508,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 60,
+          "unique_contribution_ratio": 0.75,
+          "union_coverage_ratio": 0.191847
+        },
+        {
+          "query_variant_id": "galaxy_activity_aq06",
+          "query_text": "artificial intelligence galaxy spectra ionization class",
+          "coverage_facets": [
+            "integrated optical spectra",
+            "activity classes",
+            "emission lines"
+          ],
+          "api_hit_count": 618,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 70,
+          "unique_contribution_ratio": 0.875,
+          "union_coverage_ratio": 0.191847
+        }
+      ],
+      "pairwise_query_overlap": [
+        {
+          "left_query_variant_id": "galaxy_activity_aq01",
+          "right_query_variant_id": "galaxy_activity_aq02",
+          "intersection_count": 4,
+          "union_count": 156,
+          "jaccard": 0.025641,
+          "left_overlap_ratio": 0.05,
+          "right_overlap_ratio": 0.05
+        },
+        {
+          "left_query_variant_id": "galaxy_activity_aq01",
+          "right_query_variant_id": "galaxy_activity_aq03",
+          "intersection_count": 1,
+          "union_count": 148,
+          "jaccard": 0.006757,
+          "left_overlap_ratio": 0.0125,
+          "right_overlap_ratio": 0.014493
+        },
+        {
+          "left_query_variant_id": "galaxy_activity_aq01",
+          "right_query_variant_id": "galaxy_activity_aq04",
+          "intersection_count": 14,
+          "union_count": 146,
+          "jaccard": 0.09589,
+          "left_overlap_ratio": 0.175,
+          "right_overlap_ratio": 0.175
+        },
+        {
+          "left_query_variant_id": "galaxy_activity_aq01",
+          "right_query_variant_id": "galaxy_activity_aq05",
+          "intersection_count": 14,
+          "union_count": 146,
+          "jaccard": 0.09589,
+          "left_overlap_ratio": 0.175,
+          "right_overlap_ratio": 0.175
+        },
+        {
+          "left_query_variant_id": "galaxy_activity_aq01",
+          "right_query_variant_id": "galaxy_activity_aq06",
+          "intersection_count": 4,
+          "union_count": 156,
+          "jaccard": 0.025641,
+          "left_overlap_ratio": 0.05,
+          "right_overlap_ratio": 0.05
+        },
+        {
+          "left_query_variant_id": "galaxy_activity_aq02",
+          "right_query_variant_id": "galaxy_activity_aq03",
+          "intersection_count": 3,
+          "union_count": 146,
+          "jaccard": 0.020548,
+          "left_overlap_ratio": 0.0375,
+          "right_overlap_ratio": 0.043478
+        },
+        {
+          "left_query_variant_id": "galaxy_activity_aq02",
+          "right_query_variant_id": "galaxy_activity_aq04",
+          "intersection_count": 2,
+          "union_count": 158,
+          "jaccard": 0.012658,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.025
+        },
+        {
+          "left_query_variant_id": "galaxy_activity_aq02",
+          "right_query_variant_id": "galaxy_activity_aq05",
+          "intersection_count": 3,
+          "union_count": 157,
+          "jaccard": 0.019108,
+          "left_overlap_ratio": 0.0375,
+          "right_overlap_ratio": 0.0375
+        },
+        {
+          "left_query_variant_id": "galaxy_activity_aq02",
+          "right_query_variant_id": "galaxy_activity_aq06",
+          "intersection_count": 1,
+          "union_count": 159,
+          "jaccard": 0.006289,
+          "left_overlap_ratio": 0.0125,
+          "right_overlap_ratio": 0.0125
+        },
+        {
+          "left_query_variant_id": "galaxy_activity_aq03",
+          "right_query_variant_id": "galaxy_activity_aq04",
+          "intersection_count": 2,
+          "union_count": 147,
+          "jaccard": 0.013605,
+          "left_overlap_ratio": 0.028986,
+          "right_overlap_ratio": 0.025
+        },
+        {
+          "left_query_variant_id": "galaxy_activity_aq03",
+          "right_query_variant_id": "galaxy_activity_aq05",
+          "intersection_count": 0,
+          "union_count": 149,
+          "jaccard": 0.0,
+          "left_overlap_ratio": 0.0,
+          "right_overlap_ratio": 0.0
+        },
+        {
+          "left_query_variant_id": "galaxy_activity_aq03",
+          "right_query_variant_id": "galaxy_activity_aq06",
+          "intersection_count": 2,
+          "union_count": 147,
+          "jaccard": 0.013605,
+          "left_overlap_ratio": 0.028986,
+          "right_overlap_ratio": 0.025
+        },
+        {
+          "left_query_variant_id": "galaxy_activity_aq04",
+          "right_query_variant_id": "galaxy_activity_aq05",
+          "intersection_count": 7,
+          "union_count": 153,
+          "jaccard": 0.045752,
+          "left_overlap_ratio": 0.0875,
+          "right_overlap_ratio": 0.0875
+        },
+        {
+          "left_query_variant_id": "galaxy_activity_aq04",
+          "right_query_variant_id": "galaxy_activity_aq06",
+          "intersection_count": 5,
+          "union_count": 155,
+          "jaccard": 0.032258,
+          "left_overlap_ratio": 0.0625,
+          "right_overlap_ratio": 0.0625
+        },
+        {
+          "left_query_variant_id": "galaxy_activity_aq05",
+          "right_query_variant_id": "galaxy_activity_aq06",
+          "intersection_count": 1,
+          "union_count": 159,
+          "jaccard": 0.006289,
+          "left_overlap_ratio": 0.0125,
+          "right_overlap_ratio": 0.0125
+        }
+      ],
+      "multi_query_support_distribution": {
+        "1": 374,
+        "2": 36,
+        "3": 5,
+        "4": 2
+      },
+      "publication_year_distribution": {
+        "2000": 2,
+        "2004": 6,
+        "2005": 3,
+        "2006": 3,
+        "2007": 6,
+        "2008": 6,
+        "2009": 14,
+        "2010": 11,
+        "2011": 7,
+        "2012": 13,
+        "2013": 11,
+        "2014": 5,
+        "2015": 15,
+        "2016": 11,
+        "2017": 16,
+        "2018": 23,
+        "2019": 33,
+        "2020": 29,
+        "2021": 35,
+        "2022": 44,
+        "2023": 46,
+        "2024": 38,
+        "2025": 25,
+        "2026": 15
+      },
+      "publication_year_summary": {
+        "minimum": 2000,
+        "median": 2020,
+        "maximum": 2026,
+        "known_count": 417,
+        "missing_count": 0,
+        "recent_five_year_count": 168,
+        "bins": {
+          "2000-2009": 40,
+          "2010-2014": 47,
+          "2015-2019": 98,
+          "2020-2022": 108,
+          "2023-2026": 124,
+          "missing": 0
+        }
+      },
+      "metadata_completeness": {
+        "title": {
+          "present_count": 416,
+          "missing_count": 1,
+          "completeness_ratio": 0.997602
+        },
+        "abstract": {
+          "present_count": 406,
+          "missing_count": 11,
+          "completeness_ratio": 0.973621
+        },
+        "doi": {
+          "present_count": 404,
+          "missing_count": 13,
+          "completeness_ratio": 0.968825
+        },
+        "authors": {
+          "present_count": 417,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "publication_year": {
+          "present_count": 417,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "source_name": {
+          "present_count": 412,
+          "missing_count": 5,
+          "completeness_ratio": 0.98801
+        },
+        "landing_page_url": {
+          "present_count": 417,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "publication_date": {
+          "present_count": 417,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "work_type": {
+          "present_count": 417,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "openalex_url": {
+          "present_count": 417,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        }
+      },
+      "query_facet_coverage": [
+        {
+          "facet": "integrated optical spectra",
+          "query_variant_ids": [
+            "galaxy_activity_aq01",
+            "galaxy_activity_aq05",
+            "galaxy_activity_aq06"
+          ],
+          "retrieved_work_count_sum": 240,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "activity classes",
+          "query_variant_ids": [
+            "galaxy_activity_aq01",
+            "galaxy_activity_aq02",
+            "galaxy_activity_aq03",
+            "galaxy_activity_aq06"
+          ],
+          "retrieved_work_count_sum": 309,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "emission lines",
+          "query_variant_ids": [
+            "galaxy_activity_aq02",
+            "galaxy_activity_aq03",
+            "galaxy_activity_aq04",
+            "galaxy_activity_aq06"
+          ],
+          "retrieved_work_count_sum": 309,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "AGN and LINER",
+          "query_variant_ids": [
+            "galaxy_activity_aq02",
+            "galaxy_activity_aq04",
+            "galaxy_activity_aq05"
+          ],
+          "retrieved_work_count_sum": 240,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "machine-learning classification",
+          "query_variant_ids": [
+            "galaxy_activity_aq01",
+            "galaxy_activity_aq03",
+            "galaxy_activity_aq04",
+            "galaxy_activity_aq05"
+          ],
+          "retrieved_work_count_sum": 309,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        }
+      ],
+      "representative_works": [
+        {
+          "openalex_id": "W4296701857",
+          "title": "The merger fraction of post-starburst galaxies in UNIONS",
+          "publication_year": 2022,
+          "doi": "https://doi.org/10.1093/mnras/stac1962",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W4405197532",
+          "title": "Galaxy Spectroscopy without Spectra: Galaxy Properties from Photometric Images with Conditional Diffusion Models",
+          "publication_year": 2024,
+          "doi": "https://doi.org/10.3847/1538-4357/ad8bbe",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W2564202286",
+          "title": "Theoretical Challenges in Galaxy Formation",
+          "publication_year": 2017,
+          "doi": "https://doi.org/10.1146/annurev-astro-081913-040019",
+          "query_support_count": 3
+        },
+        {
+          "openalex_id": "W3030790048",
+          "title": "AI in Medical Imaging Informatics: Current Challenges and Future Directions",
+          "publication_year": 2020,
+          "doi": "https://doi.org/10.1109/jbhi.2020.2991043",
+          "query_support_count": 3
+        },
+        {
+          "openalex_id": "W2554959913",
+          "title": "The weirdest SDSS galaxies: results from an outlier detection algorithm",
+          "publication_year": 2016,
+          "doi": "https://doi.org/10.1093/mnras/stw3021",
+          "query_support_count": 3
+        }
+      ],
+      "audit_signals": [],
+      "potential_topic_amendments": []
+    },
+    {
+      "topic_id": "w6_topic_supernova_spectral_typing",
+      "union_work_count": 386,
+      "api_hit_count_sum": 61881,
+      "retrieved_query_hit_count": 480,
+      "within_topic_repeated_hit_count": 94,
+      "target_status": "within_preferred_range",
+      "query_variants": [
+        {
+          "query_variant_id": "supernova_typing_aq01",
+          "query_text": "deep learning supernova spectral classification",
+          "coverage_facets": [
+            "observed transient spectra",
+            "supernova type",
+            "machine-learning classification"
+          ],
+          "api_hit_count": 1534,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 28,
+          "unique_contribution_ratio": 0.35,
+          "union_coverage_ratio": 0.207254
+        },
+        {
+          "query_variant_id": "supernova_typing_aq02",
+          "query_text": "machine learning transient spectra automated typing",
+          "coverage_facets": [
+            "observed transient spectra",
+            "supernova type",
+            "machine-learning classification"
+          ],
+          "api_hit_count": 9746,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 67,
+          "unique_contribution_ratio": 0.8375,
+          "union_coverage_ratio": 0.207254
+        },
+        {
+          "query_variant_id": "supernova_typing_aq03",
+          "query_text": "automated supernova spectrum classification",
+          "coverage_facets": [
+            "observed transient spectra",
+            "supernova type"
+          ],
+          "api_hit_count": 2080,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 67,
+          "unique_contribution_ratio": 0.8375,
+          "union_coverage_ratio": 0.207254
+        },
+        {
+          "query_variant_id": "supernova_typing_aq04",
+          "query_text": "neural network supernova spectra type identification",
+          "coverage_facets": [
+            "observed transient spectra",
+            "supernova type",
+            "machine-learning classification"
+          ],
+          "api_hit_count": 823,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 58,
+          "unique_contribution_ratio": 0.725,
+          "union_coverage_ratio": 0.207254
+        },
+        {
+          "query_variant_id": "supernova_typing_aq05",
+          "query_text": "low signal supernova spectral typing machine learning",
+          "coverage_facets": [
+            "observed transient spectra",
+            "supernova type",
+            "low signal"
+          ],
+          "api_hit_count": 1794,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 33,
+          "unique_contribution_ratio": 0.4125,
+          "union_coverage_ratio": 0.207254
+        },
+        {
+          "query_variant_id": "supernova_typing_aq06",
+          "query_text": "phase varying transient spectral classification",
+          "coverage_facets": [
+            "observed transient spectra",
+            "supernova type",
+            "phase variation"
+          ],
+          "api_hit_count": 45904,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 69,
+          "unique_contribution_ratio": 0.8625,
+          "union_coverage_ratio": 0.207254
+        }
+      ],
+      "pairwise_query_overlap": [
+        {
+          "left_query_variant_id": "supernova_typing_aq01",
+          "right_query_variant_id": "supernova_typing_aq02",
+          "intersection_count": 8,
+          "union_count": 152,
+          "jaccard": 0.052632,
+          "left_overlap_ratio": 0.1,
+          "right_overlap_ratio": 0.1
+        },
+        {
+          "left_query_variant_id": "supernova_typing_aq01",
+          "right_query_variant_id": "supernova_typing_aq03",
+          "intersection_count": 11,
+          "union_count": 149,
+          "jaccard": 0.073826,
+          "left_overlap_ratio": 0.1375,
+          "right_overlap_ratio": 0.1375
+        },
+        {
+          "left_query_variant_id": "supernova_typing_aq01",
+          "right_query_variant_id": "supernova_typing_aq04",
+          "intersection_count": 14,
+          "union_count": 146,
+          "jaccard": 0.09589,
+          "left_overlap_ratio": 0.175,
+          "right_overlap_ratio": 0.175
+        },
+        {
+          "left_query_variant_id": "supernova_typing_aq01",
+          "right_query_variant_id": "supernova_typing_aq05",
+          "intersection_count": 41,
+          "union_count": 119,
+          "jaccard": 0.344538,
+          "left_overlap_ratio": 0.5125,
+          "right_overlap_ratio": 0.5125
+        },
+        {
+          "left_query_variant_id": "supernova_typing_aq01",
+          "right_query_variant_id": "supernova_typing_aq06",
+          "intersection_count": 7,
+          "union_count": 153,
+          "jaccard": 0.045752,
+          "left_overlap_ratio": 0.0875,
+          "right_overlap_ratio": 0.0875
+        },
+        {
+          "left_query_variant_id": "supernova_typing_aq02",
+          "right_query_variant_id": "supernova_typing_aq03",
+          "intersection_count": 2,
+          "union_count": 158,
+          "jaccard": 0.012658,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.025
+        },
+        {
+          "left_query_variant_id": "supernova_typing_aq02",
+          "right_query_variant_id": "supernova_typing_aq04",
+          "intersection_count": 5,
+          "union_count": 155,
+          "jaccard": 0.032258,
+          "left_overlap_ratio": 0.0625,
+          "right_overlap_ratio": 0.0625
+        },
+        {
+          "left_query_variant_id": "supernova_typing_aq02",
+          "right_query_variant_id": "supernova_typing_aq05",
+          "intersection_count": 6,
+          "union_count": 154,
+          "jaccard": 0.038961,
+          "left_overlap_ratio": 0.075,
+          "right_overlap_ratio": 0.075
+        },
+        {
+          "left_query_variant_id": "supernova_typing_aq02",
+          "right_query_variant_id": "supernova_typing_aq06",
+          "intersection_count": 5,
+          "union_count": 155,
+          "jaccard": 0.032258,
+          "left_overlap_ratio": 0.0625,
+          "right_overlap_ratio": 0.0625
+        },
+        {
+          "left_query_variant_id": "supernova_typing_aq03",
+          "right_query_variant_id": "supernova_typing_aq04",
+          "intersection_count": 3,
+          "union_count": 157,
+          "jaccard": 0.019108,
+          "left_overlap_ratio": 0.0375,
+          "right_overlap_ratio": 0.0375
+        },
+        {
+          "left_query_variant_id": "supernova_typing_aq03",
+          "right_query_variant_id": "supernova_typing_aq05",
+          "intersection_count": 8,
+          "union_count": 152,
+          "jaccard": 0.052632,
+          "left_overlap_ratio": 0.1,
+          "right_overlap_ratio": 0.1
+        },
+        {
+          "left_query_variant_id": "supernova_typing_aq03",
+          "right_query_variant_id": "supernova_typing_aq06",
+          "intersection_count": 5,
+          "union_count": 155,
+          "jaccard": 0.032258,
+          "left_overlap_ratio": 0.0625,
+          "right_overlap_ratio": 0.0625
+        },
+        {
+          "left_query_variant_id": "supernova_typing_aq04",
+          "right_query_variant_id": "supernova_typing_aq05",
+          "intersection_count": 12,
+          "union_count": 148,
+          "jaccard": 0.081081,
+          "left_overlap_ratio": 0.15,
+          "right_overlap_ratio": 0.15
+        },
+        {
+          "left_query_variant_id": "supernova_typing_aq04",
+          "right_query_variant_id": "supernova_typing_aq06",
+          "intersection_count": 3,
+          "union_count": 157,
+          "jaccard": 0.019108,
+          "left_overlap_ratio": 0.0375,
+          "right_overlap_ratio": 0.0375
+        },
+        {
+          "left_query_variant_id": "supernova_typing_aq05",
+          "right_query_variant_id": "supernova_typing_aq06",
+          "intersection_count": 7,
+          "union_count": 153,
+          "jaccard": 0.045752,
+          "left_overlap_ratio": 0.0875,
+          "right_overlap_ratio": 0.0875
+        }
+      ],
+      "multi_query_support_distribution": {
+        "1": 322,
+        "2": 43,
+        "3": 15,
+        "4": 4,
+        "5": 1,
+        "6": 1
+      },
+      "publication_year_distribution": {
+        "2000": 1,
+        "2001": 1,
+        "2002": 3,
+        "2003": 4,
+        "2004": 1,
+        "2005": 4,
+        "2006": 6,
+        "2007": 8,
+        "2008": 5,
+        "2009": 12,
+        "2010": 9,
+        "2011": 13,
+        "2012": 8,
+        "2013": 17,
+        "2014": 10,
+        "2015": 10,
+        "2016": 26,
+        "2017": 22,
+        "2018": 34,
+        "2019": 30,
+        "2020": 33,
+        "2021": 32,
+        "2022": 34,
+        "2023": 36,
+        "2024": 20,
+        "2025": 4,
+        "2026": 3
+      },
+      "publication_year_summary": {
+        "minimum": 2000,
+        "median": 2018.0,
+        "maximum": 2026,
+        "known_count": 386,
+        "missing_count": 0,
+        "recent_five_year_count": 97,
+        "bins": {
+          "2000-2009": 45,
+          "2010-2014": 57,
+          "2015-2019": 122,
+          "2020-2022": 99,
+          "2023-2026": 63,
+          "missing": 0
+        }
+      },
+      "metadata_completeness": {
+        "title": {
+          "present_count": 386,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "abstract": {
+          "present_count": 359,
+          "missing_count": 27,
+          "completeness_ratio": 0.930052
+        },
+        "doi": {
+          "present_count": 385,
+          "missing_count": 1,
+          "completeness_ratio": 0.997409
+        },
+        "authors": {
+          "present_count": 386,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "publication_year": {
+          "present_count": 386,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "source_name": {
+          "present_count": 385,
+          "missing_count": 1,
+          "completeness_ratio": 0.997409
+        },
+        "landing_page_url": {
+          "present_count": 386,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "publication_date": {
+          "present_count": 386,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "work_type": {
+          "present_count": 386,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "openalex_url": {
+          "present_count": 386,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        }
+      },
+      "query_facet_coverage": [
+        {
+          "facet": "observed transient spectra",
+          "query_variant_ids": [
+            "supernova_typing_aq01",
+            "supernova_typing_aq02",
+            "supernova_typing_aq03",
+            "supernova_typing_aq04",
+            "supernova_typing_aq05",
+            "supernova_typing_aq06"
+          ],
+          "retrieved_work_count_sum": 480,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "supernova type",
+          "query_variant_ids": [
+            "supernova_typing_aq01",
+            "supernova_typing_aq02",
+            "supernova_typing_aq03",
+            "supernova_typing_aq04",
+            "supernova_typing_aq05",
+            "supernova_typing_aq06"
+          ],
+          "retrieved_work_count_sum": 480,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "low signal",
+          "query_variant_ids": [
+            "supernova_typing_aq05"
+          ],
+          "retrieved_work_count_sum": 80,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "phase variation",
+          "query_variant_ids": [
+            "supernova_typing_aq06"
+          ],
+          "retrieved_work_count_sum": 80,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "machine-learning classification",
+          "query_variant_ids": [
+            "supernova_typing_aq01",
+            "supernova_typing_aq02",
+            "supernova_typing_aq04"
+          ],
+          "retrieved_work_count_sum": 240,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        }
+      ],
+      "representative_works": [
+        {
+          "openalex_id": "W2921352493",
+          "title": "DASH: Deep Learning for the Automated Spectral Classification of Supernovae and Their Hosts",
+          "publication_year": 2019,
+          "doi": "https://doi.org/10.3847/1538-4357/ab48f4",
+          "query_support_count": 6
+        },
+        {
+          "openalex_id": "W2147626801",
+          "title": "LOFAR: The LOw-Frequency ARray",
+          "publication_year": 2013,
+          "doi": "https://doi.org/10.1051/0004-6361/201220873",
+          "query_support_count": 5
+        },
+        {
+          "openalex_id": "W2133620426",
+          "title": "FIRST RESULTS FROM THE CATALINA REAL-TIME TRANSIENT SURVEY",
+          "publication_year": 2009,
+          "doi": "https://doi.org/10.1088/0004-637x/696/1/870",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W2911890654",
+          "title": "The Zwicky Transient Facility: Science Objectives",
+          "publication_year": 2019,
+          "doi": "https://doi.org/10.1088/1538-3873/ab006c",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W2292579160",
+          "title": "PHOTOMETRIC SUPERNOVA CLASSIFICATION WITH MACHINE LEARNING",
+          "publication_year": 2016,
+          "doi": "https://doi.org/10.3847/0067-0049/225/2/31",
+          "query_support_count": 4
+        }
+      ],
+      "audit_signals": [],
+      "potential_topic_amendments": []
+    },
+    {
+      "topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "union_work_count": 291,
+      "api_hit_count_sum": 1181,
+      "retrieved_query_hit_count": 462,
+      "within_topic_repeated_hit_count": 171,
+      "target_status": "within_preferred_range",
+      "query_variants": [
+        {
+          "query_variant_id": "exoplanet_retrieval_aq01",
+          "query_text": "machine learning exoplanet transmission spectra atmospheric retrieval",
+          "coverage_facets": [
+            "transmission spectra",
+            "atmospheric retrieval",
+            "learned inverse model"
+          ],
+          "api_hit_count": 296,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 16,
+          "unique_contribution_ratio": 0.2,
+          "union_coverage_ratio": 0.274914
+        },
+        {
+          "query_variant_id": "exoplanet_retrieval_aq02",
+          "query_text": "neural network exoplanet emission spectrum abundance inference",
+          "coverage_facets": [
+            "emission spectra",
+            "molecular abundance",
+            "learned inverse model"
+          ],
+          "api_hit_count": 133,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 42,
+          "unique_contribution_ratio": 0.525,
+          "union_coverage_ratio": 0.274914
+        },
+        {
+          "query_variant_id": "exoplanet_retrieval_aq03",
+          "query_text": "deep learning exoplanet atmospheric retrieval spectroscopy",
+          "coverage_facets": [
+            "atmospheric retrieval",
+            "learned inverse model"
+          ],
+          "api_hit_count": 313,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 25,
+          "unique_contribution_ratio": 0.3125,
+          "union_coverage_ratio": 0.274914
+        },
+        {
+          "query_variant_id": "exoplanet_retrieval_aq04",
+          "query_text": "machine learning molecular abundance retrieval exoplanet spectra",
+          "coverage_facets": [
+            "molecular abundance",
+            "atmospheric retrieval",
+            "learned inverse model"
+          ],
+          "api_hit_count": 241,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 17,
+          "unique_contribution_ratio": 0.2125,
+          "union_coverage_ratio": 0.274914
+        },
+        {
+          "query_variant_id": "exoplanet_retrieval_aq05",
+          "query_text": "neural posterior estimation exoplanet transmission spectrum",
+          "coverage_facets": [
+            "transmission spectra",
+            "atmospheric retrieval",
+            "learned inverse model"
+          ],
+          "api_hit_count": 136,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 40,
+          "unique_contribution_ratio": 0.5,
+          "union_coverage_ratio": 0.274914
+        },
+        {
+          "query_variant_id": "exoplanet_retrieval_aq06",
+          "query_text": "surrogate inverse model exoplanet atmospheric spectrum",
+          "coverage_facets": [
+            "atmospheric retrieval",
+            "learned inverse model"
+          ],
+          "api_hit_count": 62,
+          "retrieved_work_count": 62,
+          "unique_contribution_count": 44,
+          "unique_contribution_ratio": 0.709677,
+          "union_coverage_ratio": 0.213058
+        }
+      ],
+      "pairwise_query_overlap": [
+        {
+          "left_query_variant_id": "exoplanet_retrieval_aq01",
+          "right_query_variant_id": "exoplanet_retrieval_aq02",
+          "intersection_count": 10,
+          "union_count": 150,
+          "jaccard": 0.066667,
+          "left_overlap_ratio": 0.125,
+          "right_overlap_ratio": 0.125
+        },
+        {
+          "left_query_variant_id": "exoplanet_retrieval_aq01",
+          "right_query_variant_id": "exoplanet_retrieval_aq03",
+          "intersection_count": 42,
+          "union_count": 118,
+          "jaccard": 0.355932,
+          "left_overlap_ratio": 0.525,
+          "right_overlap_ratio": 0.525
+        },
+        {
+          "left_query_variant_id": "exoplanet_retrieval_aq01",
+          "right_query_variant_id": "exoplanet_retrieval_aq04",
+          "intersection_count": 50,
+          "union_count": 110,
+          "jaccard": 0.454545,
+          "left_overlap_ratio": 0.625,
+          "right_overlap_ratio": 0.625
+        },
+        {
+          "left_query_variant_id": "exoplanet_retrieval_aq01",
+          "right_query_variant_id": "exoplanet_retrieval_aq05",
+          "intersection_count": 14,
+          "union_count": 146,
+          "jaccard": 0.09589,
+          "left_overlap_ratio": 0.175,
+          "right_overlap_ratio": 0.175
+        },
+        {
+          "left_query_variant_id": "exoplanet_retrieval_aq01",
+          "right_query_variant_id": "exoplanet_retrieval_aq06",
+          "intersection_count": 4,
+          "union_count": 138,
+          "jaccard": 0.028986,
+          "left_overlap_ratio": 0.05,
+          "right_overlap_ratio": 0.064516
+        },
+        {
+          "left_query_variant_id": "exoplanet_retrieval_aq02",
+          "right_query_variant_id": "exoplanet_retrieval_aq03",
+          "intersection_count": 8,
+          "union_count": 152,
+          "jaccard": 0.052632,
+          "left_overlap_ratio": 0.1,
+          "right_overlap_ratio": 0.1
+        },
+        {
+          "left_query_variant_id": "exoplanet_retrieval_aq02",
+          "right_query_variant_id": "exoplanet_retrieval_aq04",
+          "intersection_count": 11,
+          "union_count": 149,
+          "jaccard": 0.073826,
+          "left_overlap_ratio": 0.1375,
+          "right_overlap_ratio": 0.1375
+        },
+        {
+          "left_query_variant_id": "exoplanet_retrieval_aq02",
+          "right_query_variant_id": "exoplanet_retrieval_aq05",
+          "intersection_count": 29,
+          "union_count": 131,
+          "jaccard": 0.221374,
+          "left_overlap_ratio": 0.3625,
+          "right_overlap_ratio": 0.3625
+        },
+        {
+          "left_query_variant_id": "exoplanet_retrieval_aq02",
+          "right_query_variant_id": "exoplanet_retrieval_aq06",
+          "intersection_count": 11,
+          "union_count": 131,
+          "jaccard": 0.083969,
+          "left_overlap_ratio": 0.1375,
+          "right_overlap_ratio": 0.177419
+        },
+        {
+          "left_query_variant_id": "exoplanet_retrieval_aq03",
+          "right_query_variant_id": "exoplanet_retrieval_aq04",
+          "intersection_count": 42,
+          "union_count": 118,
+          "jaccard": 0.355932,
+          "left_overlap_ratio": 0.525,
+          "right_overlap_ratio": 0.525
+        },
+        {
+          "left_query_variant_id": "exoplanet_retrieval_aq03",
+          "right_query_variant_id": "exoplanet_retrieval_aq05",
+          "intersection_count": 13,
+          "union_count": 147,
+          "jaccard": 0.088435,
+          "left_overlap_ratio": 0.1625,
+          "right_overlap_ratio": 0.1625
+        },
+        {
+          "left_query_variant_id": "exoplanet_retrieval_aq03",
+          "right_query_variant_id": "exoplanet_retrieval_aq06",
+          "intersection_count": 3,
+          "union_count": 139,
+          "jaccard": 0.021583,
+          "left_overlap_ratio": 0.0375,
+          "right_overlap_ratio": 0.048387
+        },
+        {
+          "left_query_variant_id": "exoplanet_retrieval_aq04",
+          "right_query_variant_id": "exoplanet_retrieval_aq05",
+          "intersection_count": 11,
+          "union_count": 149,
+          "jaccard": 0.073826,
+          "left_overlap_ratio": 0.1375,
+          "right_overlap_ratio": 0.1375
+        },
+        {
+          "left_query_variant_id": "exoplanet_retrieval_aq04",
+          "right_query_variant_id": "exoplanet_retrieval_aq06",
+          "intersection_count": 4,
+          "union_count": 138,
+          "jaccard": 0.028986,
+          "left_overlap_ratio": 0.05,
+          "right_overlap_ratio": 0.064516
+        },
+        {
+          "left_query_variant_id": "exoplanet_retrieval_aq05",
+          "right_query_variant_id": "exoplanet_retrieval_aq06",
+          "intersection_count": 9,
+          "union_count": 133,
+          "jaccard": 0.067669,
+          "left_overlap_ratio": 0.1125,
+          "right_overlap_ratio": 0.145161
+        }
+      ],
+      "multi_query_support_distribution": {
+        "1": 184,
+        "2": 62,
+        "3": 32,
+        "4": 8,
+        "5": 4,
+        "6": 1
+      },
+      "publication_year_distribution": {
+        "2009": 2,
+        "2011": 1,
+        "2012": 1,
+        "2013": 1,
+        "2014": 5,
+        "2015": 1,
+        "2016": 6,
+        "2017": 3,
+        "2018": 12,
+        "2019": 11,
+        "2020": 22,
+        "2021": 26,
+        "2022": 52,
+        "2023": 46,
+        "2024": 40,
+        "2025": 33,
+        "2026": 29
+      },
+      "publication_year_summary": {
+        "minimum": 2009,
+        "median": 2023,
+        "maximum": 2026,
+        "known_count": 291,
+        "missing_count": 0,
+        "recent_five_year_count": 200,
+        "bins": {
+          "2000-2009": 2,
+          "2010-2014": 8,
+          "2015-2019": 33,
+          "2020-2022": 100,
+          "2023-2026": 148,
+          "missing": 0
+        }
+      },
+      "metadata_completeness": {
+        "title": {
+          "present_count": 291,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "abstract": {
+          "present_count": 278,
+          "missing_count": 13,
+          "completeness_ratio": 0.955326
+        },
+        "doi": {
+          "present_count": 277,
+          "missing_count": 14,
+          "completeness_ratio": 0.95189
+        },
+        "authors": {
+          "present_count": 291,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "publication_year": {
+          "present_count": 291,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "source_name": {
+          "present_count": 279,
+          "missing_count": 12,
+          "completeness_ratio": 0.958763
+        },
+        "landing_page_url": {
+          "present_count": 291,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "publication_date": {
+          "present_count": 291,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "work_type": {
+          "present_count": 291,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "openalex_url": {
+          "present_count": 291,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        }
+      },
+      "query_facet_coverage": [
+        {
+          "facet": "transmission spectra",
+          "query_variant_ids": [
+            "exoplanet_retrieval_aq01",
+            "exoplanet_retrieval_aq05"
+          ],
+          "retrieved_work_count_sum": 160,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "emission spectra",
+          "query_variant_ids": [
+            "exoplanet_retrieval_aq02"
+          ],
+          "retrieved_work_count_sum": 80,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "atmospheric retrieval",
+          "query_variant_ids": [
+            "exoplanet_retrieval_aq01",
+            "exoplanet_retrieval_aq03",
+            "exoplanet_retrieval_aq04",
+            "exoplanet_retrieval_aq05",
+            "exoplanet_retrieval_aq06"
+          ],
+          "retrieved_work_count_sum": 382,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "molecular abundance",
+          "query_variant_ids": [
+            "exoplanet_retrieval_aq02",
+            "exoplanet_retrieval_aq04"
+          ],
+          "retrieved_work_count_sum": 160,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "learned inverse model",
+          "query_variant_ids": [
+            "exoplanet_retrieval_aq01",
+            "exoplanet_retrieval_aq02",
+            "exoplanet_retrieval_aq03",
+            "exoplanet_retrieval_aq04",
+            "exoplanet_retrieval_aq05",
+            "exoplanet_retrieval_aq06"
+          ],
+          "retrieved_work_count_sum": 462,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        }
+      ],
+      "representative_works": [
+        {
+          "openalex_id": "W4390748916",
+          "title": "To Sample or Not to Sample: Retrieving Exoplanetary Spectra with Variational Inference and Normalizing Flows",
+          "publication_year": 2024,
+          "doi": "https://doi.org/10.3847/1538-4357/ad063f",
+          "query_support_count": 6
+        },
+        {
+          "openalex_id": "W2805141721",
+          "title": "ExoGAN: Retrieving Exoplanetary Atmospheres Using Deep Convolutional Generative Adversarial Networks",
+          "publication_year": 2018,
+          "doi": "https://doi.org/10.3847/1538-3881/aae77c",
+          "query_support_count": 5
+        },
+        {
+          "openalex_id": "W3136101215",
+          "title": "Aurora: A Generalized Retrieval Framework for Exoplanetary Transmission Spectra",
+          "publication_year": 2021,
+          "doi": "https://doi.org/10.3847/1538-4357/abee94",
+          "query_support_count": 5
+        },
+        {
+          "openalex_id": "W3015894544",
+          "title": "Interpreting High-resolution Spectroscopy of Exoplanets using Cross-correlations and Supervised Machine Learning",
+          "publication_year": 2020,
+          "doi": "https://doi.org/10.3847/1538-3881/ab7a92",
+          "query_support_count": 5
+        },
+        {
+          "openalex_id": "W3020658478",
+          "title": "Information Content of JWST NIRSpec Transmission Spectra of Warm Neptunes",
+          "publication_year": 2020,
+          "doi": "https://doi.org/10.3847/1538-3881/ab9176",
+          "query_support_count": 5
+        }
+      ],
+      "audit_signals": [],
+      "potential_topic_amendments": []
+    },
+    {
+      "topic_id": "w6_topic_stellar_radial_velocity",
+      "union_work_count": 406,
+      "api_hit_count_sum": 18546,
+      "retrieved_query_hit_count": 480,
+      "within_topic_repeated_hit_count": 74,
+      "target_status": "above_preferred_within_soft_cap",
+      "query_variants": [
+        {
+          "query_variant_id": "stellar_rv_aq01",
+          "query_text": "data driven time series stellar spectra radial velocity",
+          "coverage_facets": [
+            "stellar spectra",
+            "radial velocity",
+            "time series"
+          ],
+          "api_hit_count": 11727,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 65,
+          "unique_contribution_ratio": 0.8125,
+          "union_coverage_ratio": 0.197044
+        },
+        {
+          "query_variant_id": "stellar_rv_aq02",
+          "query_text": "machine learning high resolution stellar spectrum Doppler velocity",
+          "coverage_facets": [
+            "stellar spectra",
+            "radial velocity",
+            "high resolution"
+          ],
+          "api_hit_count": 915,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 43,
+          "unique_contribution_ratio": 0.5375,
+          "union_coverage_ratio": 0.197044
+        },
+        {
+          "query_variant_id": "stellar_rv_aq03",
+          "query_text": "neural network stellar radial velocity spectroscopy",
+          "coverage_facets": [
+            "stellar spectra",
+            "radial velocity"
+          ],
+          "api_hit_count": 1111,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 62,
+          "unique_contribution_ratio": 0.775,
+          "union_coverage_ratio": 0.197044
+        },
+        {
+          "query_variant_id": "stellar_rv_aq04",
+          "query_text": "data driven spectral disentangling radial velocities stars",
+          "coverage_facets": [
+            "stellar spectra",
+            "radial velocity",
+            "spectral variability"
+          ],
+          "api_hit_count": 3564,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 63,
+          "unique_contribution_ratio": 0.7875,
+          "union_coverage_ratio": 0.197044
+        },
+        {
+          "query_variant_id": "stellar_rv_aq05",
+          "query_text": "machine learning precise radial velocity stellar activity spectra",
+          "coverage_facets": [
+            "stellar spectra",
+            "radial velocity",
+            "spectral variability"
+          ],
+          "api_hit_count": 990,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 42,
+          "unique_contribution_ratio": 0.525,
+          "union_coverage_ratio": 0.197044
+        },
+        {
+          "query_variant_id": "stellar_rv_aq06",
+          "query_text": "learned template stellar spectra Doppler shift",
+          "coverage_facets": [
+            "stellar spectra",
+            "radial velocity",
+            "high resolution"
+          ],
+          "api_hit_count": 239,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 73,
+          "unique_contribution_ratio": 0.9125,
+          "union_coverage_ratio": 0.197044
+        }
+      ],
+      "pairwise_query_overlap": [
+        {
+          "left_query_variant_id": "stellar_rv_aq01",
+          "right_query_variant_id": "stellar_rv_aq02",
+          "intersection_count": 2,
+          "union_count": 158,
+          "jaccard": 0.012658,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.025
+        },
+        {
+          "left_query_variant_id": "stellar_rv_aq01",
+          "right_query_variant_id": "stellar_rv_aq03",
+          "intersection_count": 5,
+          "union_count": 155,
+          "jaccard": 0.032258,
+          "left_overlap_ratio": 0.0625,
+          "right_overlap_ratio": 0.0625
+        },
+        {
+          "left_query_variant_id": "stellar_rv_aq01",
+          "right_query_variant_id": "stellar_rv_aq04",
+          "intersection_count": 9,
+          "union_count": 151,
+          "jaccard": 0.059603,
+          "left_overlap_ratio": 0.1125,
+          "right_overlap_ratio": 0.1125
+        },
+        {
+          "left_query_variant_id": "stellar_rv_aq01",
+          "right_query_variant_id": "stellar_rv_aq05",
+          "intersection_count": 5,
+          "union_count": 155,
+          "jaccard": 0.032258,
+          "left_overlap_ratio": 0.0625,
+          "right_overlap_ratio": 0.0625
+        },
+        {
+          "left_query_variant_id": "stellar_rv_aq01",
+          "right_query_variant_id": "stellar_rv_aq06",
+          "intersection_count": 0,
+          "union_count": 160,
+          "jaccard": 0.0,
+          "left_overlap_ratio": 0.0,
+          "right_overlap_ratio": 0.0
+        },
+        {
+          "left_query_variant_id": "stellar_rv_aq02",
+          "right_query_variant_id": "stellar_rv_aq03",
+          "intersection_count": 9,
+          "union_count": 151,
+          "jaccard": 0.059603,
+          "left_overlap_ratio": 0.1125,
+          "right_overlap_ratio": 0.1125
+        },
+        {
+          "left_query_variant_id": "stellar_rv_aq02",
+          "right_query_variant_id": "stellar_rv_aq04",
+          "intersection_count": 3,
+          "union_count": 157,
+          "jaccard": 0.019108,
+          "left_overlap_ratio": 0.0375,
+          "right_overlap_ratio": 0.0375
+        },
+        {
+          "left_query_variant_id": "stellar_rv_aq02",
+          "right_query_variant_id": "stellar_rv_aq05",
+          "intersection_count": 29,
+          "union_count": 131,
+          "jaccard": 0.221374,
+          "left_overlap_ratio": 0.3625,
+          "right_overlap_ratio": 0.3625
+        },
+        {
+          "left_query_variant_id": "stellar_rv_aq02",
+          "right_query_variant_id": "stellar_rv_aq06",
+          "intersection_count": 6,
+          "union_count": 154,
+          "jaccard": 0.038961,
+          "left_overlap_ratio": 0.075,
+          "right_overlap_ratio": 0.075
+        },
+        {
+          "left_query_variant_id": "stellar_rv_aq03",
+          "right_query_variant_id": "stellar_rv_aq04",
+          "intersection_count": 7,
+          "union_count": 153,
+          "jaccard": 0.045752,
+          "left_overlap_ratio": 0.0875,
+          "right_overlap_ratio": 0.0875
+        },
+        {
+          "left_query_variant_id": "stellar_rv_aq03",
+          "right_query_variant_id": "stellar_rv_aq05",
+          "intersection_count": 6,
+          "union_count": 154,
+          "jaccard": 0.038961,
+          "left_overlap_ratio": 0.075,
+          "right_overlap_ratio": 0.075
+        },
+        {
+          "left_query_variant_id": "stellar_rv_aq03",
+          "right_query_variant_id": "stellar_rv_aq06",
+          "intersection_count": 3,
+          "union_count": 157,
+          "jaccard": 0.019108,
+          "left_overlap_ratio": 0.0375,
+          "right_overlap_ratio": 0.0375
+        },
+        {
+          "left_query_variant_id": "stellar_rv_aq04",
+          "right_query_variant_id": "stellar_rv_aq05",
+          "intersection_count": 7,
+          "union_count": 153,
+          "jaccard": 0.045752,
+          "left_overlap_ratio": 0.0875,
+          "right_overlap_ratio": 0.0875
+        },
+        {
+          "left_query_variant_id": "stellar_rv_aq04",
+          "right_query_variant_id": "stellar_rv_aq06",
+          "intersection_count": 1,
+          "union_count": 159,
+          "jaccard": 0.006289,
+          "left_overlap_ratio": 0.0125,
+          "right_overlap_ratio": 0.0125
+        },
+        {
+          "left_query_variant_id": "stellar_rv_aq05",
+          "right_query_variant_id": "stellar_rv_aq06",
+          "intersection_count": 4,
+          "union_count": 156,
+          "jaccard": 0.025641,
+          "left_overlap_ratio": 0.05,
+          "right_overlap_ratio": 0.05
+        }
+      ],
+      "multi_query_support_distribution": {
+        "1": 348,
+        "2": 47,
+        "3": 7,
+        "4": 3,
+        "5": 1
+      },
+      "publication_year_distribution": {
+        "2000": 8,
+        "2001": 8,
+        "2002": 8,
+        "2003": 5,
+        "2004": 11,
+        "2005": 10,
+        "2006": 11,
+        "2007": 6,
+        "2008": 8,
+        "2009": 8,
+        "2010": 12,
+        "2011": 7,
+        "2012": 9,
+        "2013": 14,
+        "2014": 15,
+        "2015": 17,
+        "2016": 16,
+        "2017": 20,
+        "2018": 24,
+        "2019": 25,
+        "2020": 28,
+        "2021": 34,
+        "2022": 41,
+        "2023": 31,
+        "2024": 24,
+        "2025": 4,
+        "2026": 2
+      },
+      "publication_year_summary": {
+        "minimum": 2000,
+        "median": 2018.0,
+        "maximum": 2026,
+        "known_count": 406,
+        "missing_count": 0,
+        "recent_five_year_count": 102,
+        "bins": {
+          "2000-2009": 83,
+          "2010-2014": 57,
+          "2015-2019": 102,
+          "2020-2022": 103,
+          "2023-2026": 61,
+          "missing": 0
+        }
+      },
+      "metadata_completeness": {
+        "title": {
+          "present_count": 406,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "abstract": {
+          "present_count": 395,
+          "missing_count": 11,
+          "completeness_ratio": 0.972906
+        },
+        "doi": {
+          "present_count": 402,
+          "missing_count": 4,
+          "completeness_ratio": 0.990148
+        },
+        "authors": {
+          "present_count": 406,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "publication_year": {
+          "present_count": 406,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "source_name": {
+          "present_count": 405,
+          "missing_count": 1,
+          "completeness_ratio": 0.997537
+        },
+        "landing_page_url": {
+          "present_count": 406,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "publication_date": {
+          "present_count": 406,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "work_type": {
+          "present_count": 406,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "openalex_url": {
+          "present_count": 406,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        }
+      },
+      "query_facet_coverage": [
+        {
+          "facet": "stellar spectra",
+          "query_variant_ids": [
+            "stellar_rv_aq01",
+            "stellar_rv_aq02",
+            "stellar_rv_aq03",
+            "stellar_rv_aq04",
+            "stellar_rv_aq05",
+            "stellar_rv_aq06"
+          ],
+          "retrieved_work_count_sum": 480,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "radial velocity",
+          "query_variant_ids": [
+            "stellar_rv_aq01",
+            "stellar_rv_aq02",
+            "stellar_rv_aq03",
+            "stellar_rv_aq04",
+            "stellar_rv_aq05",
+            "stellar_rv_aq06"
+          ],
+          "retrieved_work_count_sum": 480,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "high resolution",
+          "query_variant_ids": [
+            "stellar_rv_aq02",
+            "stellar_rv_aq06"
+          ],
+          "retrieved_work_count_sum": 160,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "time series",
+          "query_variant_ids": [
+            "stellar_rv_aq01"
+          ],
+          "retrieved_work_count_sum": 80,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "spectral variability",
+          "query_variant_ids": [
+            "stellar_rv_aq04",
+            "stellar_rv_aq05"
+          ],
+          "retrieved_work_count_sum": 160,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        }
+      ],
+      "representative_works": [
+        {
+          "openalex_id": "W4309685034",
+          "title": "Statistical Methods for Exoplanet Detection with Radial Velocities",
+          "publication_year": 2022,
+          "doi": "https://doi.org/10.1146/annurev-statistics-033021-012225",
+          "query_support_count": 5
+        },
+        {
+          "openalex_id": "W1883251007",
+          "title": "A Gaussian process framework for modelling stellar activity signals in radial velocity data",
+          "publication_year": 2015,
+          "doi": "https://doi.org/10.1093/mnras/stv1428",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W2900811782",
+          "title": "Accuracy and Precision of Industrial Stellar Abundances",
+          "publication_year": 2019,
+          "doi": "https://doi.org/10.1146/annurev-astro-091918-104509",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W4220943208",
+          "title": "Recovery of TESS Stellar Rotation Periods Using Deep Learning",
+          "publication_year": 2022,
+          "doi": "https://doi.org/10.3847/1538-4357/ac498f",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W3098034015",
+          "title": "Gaia Data Release 3",
+          "publication_year": 2022,
+          "doi": "https://doi.org/10.1051/0004-6361/202244220",
+          "query_support_count": 3
+        }
+      ],
+      "audit_signals": [],
+      "potential_topic_amendments": []
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "union_work_count": 386,
+      "api_hit_count_sum": 4888,
+      "retrieved_query_hit_count": 480,
+      "within_topic_repeated_hit_count": 94,
+      "target_status": "within_preferred_range",
+      "query_variants": [
+        {
+          "query_variant_id": "spectral_anomaly_aq01",
+          "query_text": "machine learning rare objects astronomical spectra anomaly detection",
+          "coverage_facets": [
+            "astronomical spectra",
+            "anomaly or novelty",
+            "rare-object discovery"
+          ],
+          "api_hit_count": 461,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 36,
+          "unique_contribution_ratio": 0.45,
+          "union_coverage_ratio": 0.207254
+        },
+        {
+          "query_variant_id": "spectral_anomaly_aq02",
+          "query_text": "unsupervised outlier discovery spectroscopic survey",
+          "coverage_facets": [
+            "survey scale",
+            "anomaly or novelty",
+            "unsupervised learning"
+          ],
+          "api_hit_count": 724,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 59,
+          "unique_contribution_ratio": 0.7375,
+          "union_coverage_ratio": 0.207254
+        },
+        {
+          "query_variant_id": "spectral_anomaly_aq03",
+          "query_text": "anomaly detection stellar spectra machine learning",
+          "coverage_facets": [
+            "astronomical spectra",
+            "anomaly or novelty"
+          ],
+          "api_hit_count": 989,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 50,
+          "unique_contribution_ratio": 0.625,
+          "union_coverage_ratio": 0.207254
+        },
+        {
+          "query_variant_id": "spectral_anomaly_aq04",
+          "query_text": "unusual galaxy spectra unsupervised learning",
+          "coverage_facets": [
+            "astronomical spectra",
+            "unsupervised learning",
+            "rare-object discovery"
+          ],
+          "api_hit_count": 207,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 52,
+          "unique_contribution_ratio": 0.65,
+          "union_coverage_ratio": 0.207254
+        },
+        {
+          "query_variant_id": "spectral_anomaly_aq05",
+          "query_text": "novelty detection astronomical spectroscopy survey",
+          "coverage_facets": [
+            "astronomical spectra",
+            "survey scale",
+            "anomaly or novelty"
+          ],
+          "api_hit_count": 363,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 77,
+          "unique_contribution_ratio": 0.9625,
+          "union_coverage_ratio": 0.207254
+        },
+        {
+          "query_variant_id": "spectral_anomaly_aq06",
+          "query_text": "active learning rare spectral objects astronomy",
+          "coverage_facets": [
+            "astronomical spectra",
+            "rare-object discovery"
+          ],
+          "api_hit_count": 2144,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 54,
+          "unique_contribution_ratio": 0.675,
+          "union_coverage_ratio": 0.207254
+        }
+      ],
+      "pairwise_query_overlap": [
+        {
+          "left_query_variant_id": "spectral_anomaly_aq01",
+          "right_query_variant_id": "spectral_anomaly_aq02",
+          "intersection_count": 13,
+          "union_count": 147,
+          "jaccard": 0.088435,
+          "left_overlap_ratio": 0.1625,
+          "right_overlap_ratio": 0.1625
+        },
+        {
+          "left_query_variant_id": "spectral_anomaly_aq01",
+          "right_query_variant_id": "spectral_anomaly_aq03",
+          "intersection_count": 25,
+          "union_count": 135,
+          "jaccard": 0.185185,
+          "left_overlap_ratio": 0.3125,
+          "right_overlap_ratio": 0.3125
+        },
+        {
+          "left_query_variant_id": "spectral_anomaly_aq01",
+          "right_query_variant_id": "spectral_anomaly_aq04",
+          "intersection_count": 19,
+          "union_count": 141,
+          "jaccard": 0.134752,
+          "left_overlap_ratio": 0.2375,
+          "right_overlap_ratio": 0.2375
+        },
+        {
+          "left_query_variant_id": "spectral_anomaly_aq01",
+          "right_query_variant_id": "spectral_anomaly_aq05",
+          "intersection_count": 2,
+          "union_count": 158,
+          "jaccard": 0.012658,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.025
+        },
+        {
+          "left_query_variant_id": "spectral_anomaly_aq01",
+          "right_query_variant_id": "spectral_anomaly_aq06",
+          "intersection_count": 20,
+          "union_count": 140,
+          "jaccard": 0.142857,
+          "left_overlap_ratio": 0.25,
+          "right_overlap_ratio": 0.25
+        },
+        {
+          "left_query_variant_id": "spectral_anomaly_aq02",
+          "right_query_variant_id": "spectral_anomaly_aq03",
+          "intersection_count": 9,
+          "union_count": 151,
+          "jaccard": 0.059603,
+          "left_overlap_ratio": 0.1125,
+          "right_overlap_ratio": 0.1125
+        },
+        {
+          "left_query_variant_id": "spectral_anomaly_aq02",
+          "right_query_variant_id": "spectral_anomaly_aq04",
+          "intersection_count": 11,
+          "union_count": 149,
+          "jaccard": 0.073826,
+          "left_overlap_ratio": 0.1375,
+          "right_overlap_ratio": 0.1375
+        },
+        {
+          "left_query_variant_id": "spectral_anomaly_aq02",
+          "right_query_variant_id": "spectral_anomaly_aq05",
+          "intersection_count": 2,
+          "union_count": 158,
+          "jaccard": 0.012658,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.025
+        },
+        {
+          "left_query_variant_id": "spectral_anomaly_aq02",
+          "right_query_variant_id": "spectral_anomaly_aq06",
+          "intersection_count": 7,
+          "union_count": 153,
+          "jaccard": 0.045752,
+          "left_overlap_ratio": 0.0875,
+          "right_overlap_ratio": 0.0875
+        },
+        {
+          "left_query_variant_id": "spectral_anomaly_aq03",
+          "right_query_variant_id": "spectral_anomaly_aq04",
+          "intersection_count": 9,
+          "union_count": 151,
+          "jaccard": 0.059603,
+          "left_overlap_ratio": 0.1125,
+          "right_overlap_ratio": 0.1125
+        },
+        {
+          "left_query_variant_id": "spectral_anomaly_aq03",
+          "right_query_variant_id": "spectral_anomaly_aq05",
+          "intersection_count": 2,
+          "union_count": 158,
+          "jaccard": 0.012658,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.025
+        },
+        {
+          "left_query_variant_id": "spectral_anomaly_aq03",
+          "right_query_variant_id": "spectral_anomaly_aq06",
+          "intersection_count": 14,
+          "union_count": 146,
+          "jaccard": 0.09589,
+          "left_overlap_ratio": 0.175,
+          "right_overlap_ratio": 0.175
+        },
+        {
+          "left_query_variant_id": "spectral_anomaly_aq04",
+          "right_query_variant_id": "spectral_anomaly_aq05",
+          "intersection_count": 0,
+          "union_count": 160,
+          "jaccard": 0.0,
+          "left_overlap_ratio": 0.0,
+          "right_overlap_ratio": 0.0
+        },
+        {
+          "left_query_variant_id": "spectral_anomaly_aq04",
+          "right_query_variant_id": "spectral_anomaly_aq06",
+          "intersection_count": 7,
+          "union_count": 153,
+          "jaccard": 0.045752,
+          "left_overlap_ratio": 0.0875,
+          "right_overlap_ratio": 0.0875
+        },
+        {
+          "left_query_variant_id": "spectral_anomaly_aq05",
+          "right_query_variant_id": "spectral_anomaly_aq06",
+          "intersection_count": 2,
+          "union_count": 158,
+          "jaccard": 0.012658,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.025
+        }
+      ],
+      "multi_query_support_distribution": {
+        "1": 328,
+        "2": 32,
+        "3": 18,
+        "4": 6,
+        "5": 2
+      },
+      "publication_year_distribution": {
+        "2000": 2,
+        "2001": 3,
+        "2002": 2,
+        "2003": 2,
+        "2004": 2,
+        "2005": 1,
+        "2006": 4,
+        "2007": 3,
+        "2008": 3,
+        "2009": 2,
+        "2010": 4,
+        "2011": 8,
+        "2012": 6,
+        "2013": 11,
+        "2014": 11,
+        "2015": 12,
+        "2016": 12,
+        "2017": 12,
+        "2018": 17,
+        "2019": 27,
+        "2020": 32,
+        "2021": 51,
+        "2022": 48,
+        "2023": 44,
+        "2024": 43,
+        "2025": 20,
+        "2026": 4
+      },
+      "publication_year_summary": {
+        "minimum": 2000,
+        "median": 2021.0,
+        "maximum": 2026,
+        "known_count": 386,
+        "missing_count": 0,
+        "recent_five_year_count": 159,
+        "bins": {
+          "2000-2009": 24,
+          "2010-2014": 40,
+          "2015-2019": 80,
+          "2020-2022": 131,
+          "2023-2026": 111,
+          "missing": 0
+        }
+      },
+      "metadata_completeness": {
+        "title": {
+          "present_count": 384,
+          "missing_count": 2,
+          "completeness_ratio": 0.994819
+        },
+        "abstract": {
+          "present_count": 367,
+          "missing_count": 19,
+          "completeness_ratio": 0.950777
+        },
+        "doi": {
+          "present_count": 385,
+          "missing_count": 1,
+          "completeness_ratio": 0.997409
+        },
+        "authors": {
+          "present_count": 386,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "publication_year": {
+          "present_count": 386,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "source_name": {
+          "present_count": 382,
+          "missing_count": 4,
+          "completeness_ratio": 0.989637
+        },
+        "landing_page_url": {
+          "present_count": 386,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "publication_date": {
+          "present_count": 386,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "work_type": {
+          "present_count": 386,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "openalex_url": {
+          "present_count": 386,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        }
+      },
+      "query_facet_coverage": [
+        {
+          "facet": "astronomical spectra",
+          "query_variant_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq03",
+            "spectral_anomaly_aq04",
+            "spectral_anomaly_aq05",
+            "spectral_anomaly_aq06"
+          ],
+          "retrieved_work_count_sum": 400,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "survey scale",
+          "query_variant_ids": [
+            "spectral_anomaly_aq02",
+            "spectral_anomaly_aq05"
+          ],
+          "retrieved_work_count_sum": 160,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "anomaly or novelty",
+          "query_variant_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq02",
+            "spectral_anomaly_aq03",
+            "spectral_anomaly_aq05"
+          ],
+          "retrieved_work_count_sum": 320,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "unsupervised learning",
+          "query_variant_ids": [
+            "spectral_anomaly_aq02",
+            "spectral_anomaly_aq04"
+          ],
+          "retrieved_work_count_sum": 160,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "rare-object discovery",
+          "query_variant_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq04",
+            "spectral_anomaly_aq06"
+          ],
+          "retrieved_work_count_sum": 240,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        }
+      ],
+      "representative_works": [
+        {
+          "openalex_id": "W4306968094",
+          "title": "The Dawes Review 10: The impact of deep learning for the analysis of galaxy surveys",
+          "publication_year": 2023,
+          "doi": "https://doi.org/10.1017/pasa.2022.55",
+          "query_support_count": 5
+        },
+        {
+          "openalex_id": "W4417233847",
+          "title": "A Brief Review of Unsupervised Machine Learning Algorithms in Astronomy: Dimensionality Reduction and Clustering",
+          "publication_year": 2025,
+          "doi": "https://doi.org/10.3390/universe11120412",
+          "query_support_count": 5
+        },
+        {
+          "openalex_id": "W2554959913",
+          "title": "The weirdest SDSS galaxies: results from an outlier detection algorithm",
+          "publication_year": 2016,
+          "doi": "https://doi.org/10.1093/mnras/stw3021",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W4306248068",
+          "title": "Machine learning in electron microscopy for advanced nanocharacterization: current developments, available tools and future outlook",
+          "publication_year": 2022,
+          "doi": "https://doi.org/10.1039/d2nh00377e",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W2550814413",
+          "title": "Discovering the Unexpected in Astronomical Survey Data",
+          "publication_year": 2017,
+          "doi": "https://doi.org/10.1017/pasa.2016.63",
+          "query_support_count": 4
+        }
+      ],
+      "audit_signals": [],
+      "potential_topic_amendments": []
+    },
+    {
+      "topic_id": "w6_topic_stellar_spectral_denoising",
+      "union_work_count": 408,
+      "api_hit_count_sum": 5835,
+      "retrieved_query_hit_count": 480,
+      "within_topic_repeated_hit_count": 72,
+      "target_status": "above_preferred_within_soft_cap",
+      "query_variants": [
+        {
+          "query_variant_id": "stellar_denoising_aq01",
+          "query_text": "neural network stellar spectra denoising",
+          "coverage_facets": [
+            "stellar spectra",
+            "learned denoising"
+          ],
+          "api_hit_count": 322,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 39,
+          "unique_contribution_ratio": 0.4875,
+          "union_coverage_ratio": 0.196078
+        },
+        {
+          "query_variant_id": "stellar_denoising_aq02",
+          "query_text": "deep learning low signal stellar spectrum restoration",
+          "coverage_facets": [
+            "stellar spectra",
+            "low signal-to-noise",
+            "artifact restoration"
+          ],
+          "api_hit_count": 451,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 71,
+          "unique_contribution_ratio": 0.8875,
+          "union_coverage_ratio": 0.196078
+        },
+        {
+          "query_variant_id": "stellar_denoising_aq03",
+          "query_text": "machine learning low signal to noise stellar spectra",
+          "coverage_facets": [
+            "stellar spectra",
+            "low signal-to-noise",
+            "learned denoising"
+          ],
+          "api_hit_count": 4389,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 71,
+          "unique_contribution_ratio": 0.8875,
+          "union_coverage_ratio": 0.196078
+        },
+        {
+          "query_variant_id": "stellar_denoising_aq04",
+          "query_text": "autoencoder denoising astronomical spectra",
+          "coverage_facets": [
+            "stellar spectra",
+            "learned denoising"
+          ],
+          "api_hit_count": 266,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 49,
+          "unique_contribution_ratio": 0.6125,
+          "union_coverage_ratio": 0.196078
+        },
+        {
+          "query_variant_id": "stellar_denoising_aq05",
+          "query_text": "generative adversarial network stellar spectral denoising",
+          "coverage_facets": [
+            "stellar spectra",
+            "learned denoising",
+            "artifact restoration"
+          ],
+          "api_hit_count": 114,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 53,
+          "unique_contribution_ratio": 0.6625,
+          "union_coverage_ratio": 0.196078
+        },
+        {
+          "query_variant_id": "stellar_denoising_aq06",
+          "query_text": "learned noise removal optical stellar spectrum line preservation",
+          "coverage_facets": [
+            "stellar spectra",
+            "learned denoising",
+            "line preservation"
+          ],
+          "api_hit_count": 293,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 77,
+          "unique_contribution_ratio": 0.9625,
+          "union_coverage_ratio": 0.196078
+        }
+      ],
+      "pairwise_query_overlap": [
+        {
+          "left_query_variant_id": "stellar_denoising_aq01",
+          "right_query_variant_id": "stellar_denoising_aq02",
+          "intersection_count": 6,
+          "union_count": 154,
+          "jaccard": 0.038961,
+          "left_overlap_ratio": 0.075,
+          "right_overlap_ratio": 0.075
+        },
+        {
+          "left_query_variant_id": "stellar_denoising_aq01",
+          "right_query_variant_id": "stellar_denoising_aq03",
+          "intersection_count": 8,
+          "union_count": 152,
+          "jaccard": 0.052632,
+          "left_overlap_ratio": 0.1,
+          "right_overlap_ratio": 0.1
+        },
+        {
+          "left_query_variant_id": "stellar_denoising_aq01",
+          "right_query_variant_id": "stellar_denoising_aq04",
+          "intersection_count": 27,
+          "union_count": 133,
+          "jaccard": 0.203008,
+          "left_overlap_ratio": 0.3375,
+          "right_overlap_ratio": 0.3375
+        },
+        {
+          "left_query_variant_id": "stellar_denoising_aq01",
+          "right_query_variant_id": "stellar_denoising_aq05",
+          "intersection_count": 21,
+          "union_count": 139,
+          "jaccard": 0.151079,
+          "left_overlap_ratio": 0.2625,
+          "right_overlap_ratio": 0.2625
+        },
+        {
+          "left_query_variant_id": "stellar_denoising_aq01",
+          "right_query_variant_id": "stellar_denoising_aq06",
+          "intersection_count": 2,
+          "union_count": 158,
+          "jaccard": 0.012658,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.025
+        },
+        {
+          "left_query_variant_id": "stellar_denoising_aq02",
+          "right_query_variant_id": "stellar_denoising_aq03",
+          "intersection_count": 0,
+          "union_count": 160,
+          "jaccard": 0.0,
+          "left_overlap_ratio": 0.0,
+          "right_overlap_ratio": 0.0
+        },
+        {
+          "left_query_variant_id": "stellar_denoising_aq02",
+          "right_query_variant_id": "stellar_denoising_aq04",
+          "intersection_count": 3,
+          "union_count": 157,
+          "jaccard": 0.019108,
+          "left_overlap_ratio": 0.0375,
+          "right_overlap_ratio": 0.0375
+        },
+        {
+          "left_query_variant_id": "stellar_denoising_aq02",
+          "right_query_variant_id": "stellar_denoising_aq05",
+          "intersection_count": 5,
+          "union_count": 155,
+          "jaccard": 0.032258,
+          "left_overlap_ratio": 0.0625,
+          "right_overlap_ratio": 0.0625
+        },
+        {
+          "left_query_variant_id": "stellar_denoising_aq02",
+          "right_query_variant_id": "stellar_denoising_aq06",
+          "intersection_count": 1,
+          "union_count": 159,
+          "jaccard": 0.006289,
+          "left_overlap_ratio": 0.0125,
+          "right_overlap_ratio": 0.0125
+        },
+        {
+          "left_query_variant_id": "stellar_denoising_aq03",
+          "right_query_variant_id": "stellar_denoising_aq04",
+          "intersection_count": 5,
+          "union_count": 155,
+          "jaccard": 0.032258,
+          "left_overlap_ratio": 0.0625,
+          "right_overlap_ratio": 0.0625
+        },
+        {
+          "left_query_variant_id": "stellar_denoising_aq03",
+          "right_query_variant_id": "stellar_denoising_aq05",
+          "intersection_count": 4,
+          "union_count": 156,
+          "jaccard": 0.025641,
+          "left_overlap_ratio": 0.05,
+          "right_overlap_ratio": 0.05
+        },
+        {
+          "left_query_variant_id": "stellar_denoising_aq03",
+          "right_query_variant_id": "stellar_denoising_aq06",
+          "intersection_count": 0,
+          "union_count": 160,
+          "jaccard": 0.0,
+          "left_overlap_ratio": 0.0,
+          "right_overlap_ratio": 0.0
+        },
+        {
+          "left_query_variant_id": "stellar_denoising_aq04",
+          "right_query_variant_id": "stellar_denoising_aq05",
+          "intersection_count": 16,
+          "union_count": 144,
+          "jaccard": 0.111111,
+          "left_overlap_ratio": 0.2,
+          "right_overlap_ratio": 0.2
+        },
+        {
+          "left_query_variant_id": "stellar_denoising_aq04",
+          "right_query_variant_id": "stellar_denoising_aq06",
+          "intersection_count": 2,
+          "union_count": 158,
+          "jaccard": 0.012658,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.025
+        },
+        {
+          "left_query_variant_id": "stellar_denoising_aq05",
+          "right_query_variant_id": "stellar_denoising_aq06",
+          "intersection_count": 2,
+          "union_count": 158,
+          "jaccard": 0.012658,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.025
+        }
+      ],
+      "multi_query_support_distribution": {
+        "1": 360,
+        "2": 29,
+        "3": 15,
+        "4": 3,
+        "5": 1
+      },
+      "publication_year_distribution": {
+        "2001": 1,
+        "2004": 1,
+        "2005": 1,
+        "2006": 1,
+        "2007": 2,
+        "2008": 1,
+        "2009": 2,
+        "2010": 6,
+        "2011": 3,
+        "2012": 2,
+        "2013": 3,
+        "2014": 5,
+        "2015": 12,
+        "2016": 7,
+        "2017": 12,
+        "2018": 17,
+        "2019": 24,
+        "2020": 27,
+        "2021": 23,
+        "2022": 42,
+        "2023": 62,
+        "2024": 108,
+        "2025": 29,
+        "2026": 17
+      },
+      "publication_year_summary": {
+        "minimum": 2001,
+        "median": 2023.0,
+        "maximum": 2026,
+        "known_count": 408,
+        "missing_count": 0,
+        "recent_five_year_count": 258,
+        "bins": {
+          "2000-2009": 9,
+          "2010-2014": 19,
+          "2015-2019": 72,
+          "2020-2022": 92,
+          "2023-2026": 216,
+          "missing": 0
+        }
+      },
+      "metadata_completeness": {
+        "title": {
+          "present_count": 407,
+          "missing_count": 1,
+          "completeness_ratio": 0.997549
+        },
+        "abstract": {
+          "present_count": 387,
+          "missing_count": 21,
+          "completeness_ratio": 0.948529
+        },
+        "doi": {
+          "present_count": 387,
+          "missing_count": 21,
+          "completeness_ratio": 0.948529
+        },
+        "authors": {
+          "present_count": 353,
+          "missing_count": 55,
+          "completeness_ratio": 0.865196
+        },
+        "publication_year": {
+          "present_count": 408,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "source_name": {
+          "present_count": 340,
+          "missing_count": 68,
+          "completeness_ratio": 0.833333
+        },
+        "landing_page_url": {
+          "present_count": 408,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "publication_date": {
+          "present_count": 408,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "work_type": {
+          "present_count": 408,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "openalex_url": {
+          "present_count": 408,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        }
+      },
+      "query_facet_coverage": [
+        {
+          "facet": "stellar spectra",
+          "query_variant_ids": [
+            "stellar_denoising_aq01",
+            "stellar_denoising_aq02",
+            "stellar_denoising_aq03",
+            "stellar_denoising_aq04",
+            "stellar_denoising_aq05",
+            "stellar_denoising_aq06"
+          ],
+          "retrieved_work_count_sum": 480,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "low signal-to-noise",
+          "query_variant_ids": [
+            "stellar_denoising_aq02",
+            "stellar_denoising_aq03"
+          ],
+          "retrieved_work_count_sum": 160,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "learned denoising",
+          "query_variant_ids": [
+            "stellar_denoising_aq01",
+            "stellar_denoising_aq03",
+            "stellar_denoising_aq04",
+            "stellar_denoising_aq05",
+            "stellar_denoising_aq06"
+          ],
+          "retrieved_work_count_sum": 400,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "artifact restoration",
+          "query_variant_ids": [
+            "stellar_denoising_aq02",
+            "stellar_denoising_aq05"
+          ],
+          "retrieved_work_count_sum": 160,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "line preservation",
+          "query_variant_ids": [
+            "stellar_denoising_aq06"
+          ],
+          "retrieved_work_count_sum": 80,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        }
+      ],
+      "representative_works": [
+        {
+          "openalex_id": "W4411554983",
+          "title": "Exploring Generative Artificial Intelligence and Data Augmentation Techniques for Spectroscopy Analysis",
+          "publication_year": 2025,
+          "doi": "https://doi.org/10.1021/acs.chemrev.4c00815",
+          "query_support_count": 5
+        },
+        {
+          "openalex_id": "W4306248068",
+          "title": "Machine learning in electron microscopy for advanced nanocharacterization: current developments, available tools and future outlook",
+          "publication_year": 2022,
+          "doi": "https://doi.org/10.1039/d2nh00377e",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W4384201335",
+          "title": "Machine learning in solar physics",
+          "publication_year": 2023,
+          "doi": "https://doi.org/10.1007/s41116-023-00038-x",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W4399876663",
+          "title": "A review of unsupervised learning in astronomy",
+          "publication_year": 2024,
+          "doi": "https://doi.org/10.1016/j.ascom.2024.100851",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W3155899199",
+          "title": "Machine Learning Based Automatic Modulation Recognition for Wireless Communications: A Comprehensive Survey",
+          "publication_year": 2021,
+          "doi": "https://doi.org/10.1109/access.2021.3071801",
+          "query_support_count": 3
+        }
+      ],
+      "audit_signals": [],
+      "potential_topic_amendments": []
+    },
+    {
+      "topic_id": "w6_topic_stellar_spectral_emulation",
+      "union_work_count": 414,
+      "api_hit_count_sum": 3747,
+      "retrieved_query_hit_count": 480,
+      "within_topic_repeated_hit_count": 66,
+      "target_status": "above_preferred_within_soft_cap",
+      "query_variants": [
+        {
+          "query_variant_id": "stellar_emulation_aq01",
+          "query_text": "stellar spectra machine learning interpolation emulator",
+          "coverage_facets": [
+            "synthetic stellar spectra",
+            "forward surrogate",
+            "interpolation"
+          ],
+          "api_hit_count": 243,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 39,
+          "unique_contribution_ratio": 0.4875,
+          "union_coverage_ratio": 0.193237
+        },
+        {
+          "query_variant_id": "stellar_emulation_aq02",
+          "query_text": "neural network stellar spectral synthesis surrogate",
+          "coverage_facets": [
+            "synthetic stellar spectra",
+            "forward surrogate",
+            "spectral synthesis"
+          ],
+          "api_hit_count": 132,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 71,
+          "unique_contribution_ratio": 0.8875,
+          "union_coverage_ratio": 0.193237
+        },
+        {
+          "query_variant_id": "stellar_emulation_aq03",
+          "query_text": "data driven stellar spectrum generator physical parameters",
+          "coverage_facets": [
+            "synthetic stellar spectra",
+            "physical parameters",
+            "forward surrogate"
+          ],
+          "api_hit_count": 2082,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 72,
+          "unique_contribution_ratio": 0.9,
+          "union_coverage_ratio": 0.193237
+        },
+        {
+          "query_variant_id": "stellar_emulation_aq04",
+          "query_text": "machine learning emulator stellar atmosphere spectra",
+          "coverage_facets": [
+            "synthetic stellar spectra",
+            "forward surrogate",
+            "spectral synthesis"
+          ],
+          "api_hit_count": 213,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 46,
+          "unique_contribution_ratio": 0.575,
+          "union_coverage_ratio": 0.193237
+        },
+        {
+          "query_variant_id": "stellar_emulation_aq05",
+          "query_text": "neural spectral interpolation stellar model grid",
+          "coverage_facets": [
+            "synthetic stellar spectra",
+            "interpolation",
+            "physical parameters"
+          ],
+          "api_hit_count": 875,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 67,
+          "unique_contribution_ratio": 0.8375,
+          "union_coverage_ratio": 0.193237
+        },
+        {
+          "query_variant_id": "stellar_emulation_aq06",
+          "query_text": "generative model synthetic stellar spectra conditioned parameters",
+          "coverage_facets": [
+            "synthetic stellar spectra",
+            "physical parameters",
+            "forward surrogate"
+          ],
+          "api_hit_count": 202,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 66,
+          "unique_contribution_ratio": 0.825,
+          "union_coverage_ratio": 0.193237
+        }
+      ],
+      "pairwise_query_overlap": [
+        {
+          "left_query_variant_id": "stellar_emulation_aq01",
+          "right_query_variant_id": "stellar_emulation_aq02",
+          "intersection_count": 5,
+          "union_count": 155,
+          "jaccard": 0.032258,
+          "left_overlap_ratio": 0.0625,
+          "right_overlap_ratio": 0.0625
+        },
+        {
+          "left_query_variant_id": "stellar_emulation_aq01",
+          "right_query_variant_id": "stellar_emulation_aq03",
+          "intersection_count": 3,
+          "union_count": 157,
+          "jaccard": 0.019108,
+          "left_overlap_ratio": 0.0375,
+          "right_overlap_ratio": 0.0375
+        },
+        {
+          "left_query_variant_id": "stellar_emulation_aq01",
+          "right_query_variant_id": "stellar_emulation_aq04",
+          "intersection_count": 31,
+          "union_count": 129,
+          "jaccard": 0.24031,
+          "left_overlap_ratio": 0.3875,
+          "right_overlap_ratio": 0.3875
+        },
+        {
+          "left_query_variant_id": "stellar_emulation_aq01",
+          "right_query_variant_id": "stellar_emulation_aq05",
+          "intersection_count": 7,
+          "union_count": 153,
+          "jaccard": 0.045752,
+          "left_overlap_ratio": 0.0875,
+          "right_overlap_ratio": 0.0875
+        },
+        {
+          "left_query_variant_id": "stellar_emulation_aq01",
+          "right_query_variant_id": "stellar_emulation_aq06",
+          "intersection_count": 6,
+          "union_count": 154,
+          "jaccard": 0.038961,
+          "left_overlap_ratio": 0.075,
+          "right_overlap_ratio": 0.075
+        },
+        {
+          "left_query_variant_id": "stellar_emulation_aq02",
+          "right_query_variant_id": "stellar_emulation_aq03",
+          "intersection_count": 2,
+          "union_count": 158,
+          "jaccard": 0.012658,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.025
+        },
+        {
+          "left_query_variant_id": "stellar_emulation_aq02",
+          "right_query_variant_id": "stellar_emulation_aq04",
+          "intersection_count": 5,
+          "union_count": 155,
+          "jaccard": 0.032258,
+          "left_overlap_ratio": 0.0625,
+          "right_overlap_ratio": 0.0625
+        },
+        {
+          "left_query_variant_id": "stellar_emulation_aq02",
+          "right_query_variant_id": "stellar_emulation_aq05",
+          "intersection_count": 1,
+          "union_count": 159,
+          "jaccard": 0.006289,
+          "left_overlap_ratio": 0.0125,
+          "right_overlap_ratio": 0.0125
+        },
+        {
+          "left_query_variant_id": "stellar_emulation_aq02",
+          "right_query_variant_id": "stellar_emulation_aq06",
+          "intersection_count": 3,
+          "union_count": 157,
+          "jaccard": 0.019108,
+          "left_overlap_ratio": 0.0375,
+          "right_overlap_ratio": 0.0375
+        },
+        {
+          "left_query_variant_id": "stellar_emulation_aq03",
+          "right_query_variant_id": "stellar_emulation_aq04",
+          "intersection_count": 2,
+          "union_count": 158,
+          "jaccard": 0.012658,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.025
+        },
+        {
+          "left_query_variant_id": "stellar_emulation_aq03",
+          "right_query_variant_id": "stellar_emulation_aq05",
+          "intersection_count": 2,
+          "union_count": 158,
+          "jaccard": 0.012658,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.025
+        },
+        {
+          "left_query_variant_id": "stellar_emulation_aq03",
+          "right_query_variant_id": "stellar_emulation_aq06",
+          "intersection_count": 3,
+          "union_count": 157,
+          "jaccard": 0.019108,
+          "left_overlap_ratio": 0.0375,
+          "right_overlap_ratio": 0.0375
+        },
+        {
+          "left_query_variant_id": "stellar_emulation_aq04",
+          "right_query_variant_id": "stellar_emulation_aq05",
+          "intersection_count": 2,
+          "union_count": 158,
+          "jaccard": 0.012658,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.025
+        },
+        {
+          "left_query_variant_id": "stellar_emulation_aq04",
+          "right_query_variant_id": "stellar_emulation_aq06",
+          "intersection_count": 4,
+          "union_count": 156,
+          "jaccard": 0.025641,
+          "left_overlap_ratio": 0.05,
+          "right_overlap_ratio": 0.05
+        },
+        {
+          "left_query_variant_id": "stellar_emulation_aq05",
+          "right_query_variant_id": "stellar_emulation_aq06",
+          "intersection_count": 4,
+          "union_count": 156,
+          "jaccard": 0.025641,
+          "left_overlap_ratio": 0.05,
+          "right_overlap_ratio": 0.05
+        }
+      ],
+      "multi_query_support_distribution": {
+        "1": 361,
+        "2": 41,
+        "3": 11,
+        "4": 1
+      },
+      "publication_year_distribution": {
+        "2001": 4,
+        "2002": 1,
+        "2003": 5,
+        "2004": 2,
+        "2006": 7,
+        "2007": 4,
+        "2008": 4,
+        "2009": 3,
+        "2010": 2,
+        "2011": 9,
+        "2012": 6,
+        "2013": 5,
+        "2014": 6,
+        "2015": 13,
+        "2016": 10,
+        "2017": 13,
+        "2018": 17,
+        "2019": 14,
+        "2020": 25,
+        "2021": 36,
+        "2022": 56,
+        "2023": 59,
+        "2024": 45,
+        "2025": 39,
+        "2026": 29
+      },
+      "publication_year_summary": {
+        "minimum": 2001,
+        "median": 2022.0,
+        "maximum": 2026,
+        "known_count": 414,
+        "missing_count": 0,
+        "recent_five_year_count": 228,
+        "bins": {
+          "2000-2009": 30,
+          "2010-2014": 28,
+          "2015-2019": 67,
+          "2020-2022": 117,
+          "2023-2026": 172,
+          "missing": 0
+        }
+      },
+      "metadata_completeness": {
+        "title": {
+          "present_count": 412,
+          "missing_count": 2,
+          "completeness_ratio": 0.995169
+        },
+        "abstract": {
+          "present_count": 402,
+          "missing_count": 12,
+          "completeness_ratio": 0.971014
+        },
+        "doi": {
+          "present_count": 397,
+          "missing_count": 17,
+          "completeness_ratio": 0.958937
+        },
+        "authors": {
+          "present_count": 412,
+          "missing_count": 2,
+          "completeness_ratio": 0.995169
+        },
+        "publication_year": {
+          "present_count": 414,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "source_name": {
+          "present_count": 408,
+          "missing_count": 6,
+          "completeness_ratio": 0.985507
+        },
+        "landing_page_url": {
+          "present_count": 414,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "publication_date": {
+          "present_count": 414,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "work_type": {
+          "present_count": 414,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "openalex_url": {
+          "present_count": 414,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        }
+      },
+      "query_facet_coverage": [
+        {
+          "facet": "synthetic stellar spectra",
+          "query_variant_ids": [
+            "stellar_emulation_aq01",
+            "stellar_emulation_aq02",
+            "stellar_emulation_aq03",
+            "stellar_emulation_aq04",
+            "stellar_emulation_aq05",
+            "stellar_emulation_aq06"
+          ],
+          "retrieved_work_count_sum": 480,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "physical parameters",
+          "query_variant_ids": [
+            "stellar_emulation_aq03",
+            "stellar_emulation_aq05",
+            "stellar_emulation_aq06"
+          ],
+          "retrieved_work_count_sum": 240,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "forward surrogate",
+          "query_variant_ids": [
+            "stellar_emulation_aq01",
+            "stellar_emulation_aq02",
+            "stellar_emulation_aq03",
+            "stellar_emulation_aq04",
+            "stellar_emulation_aq06"
+          ],
+          "retrieved_work_count_sum": 400,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "interpolation",
+          "query_variant_ids": [
+            "stellar_emulation_aq01",
+            "stellar_emulation_aq05"
+          ],
+          "retrieved_work_count_sum": 160,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "spectral synthesis",
+          "query_variant_ids": [
+            "stellar_emulation_aq02",
+            "stellar_emulation_aq04"
+          ],
+          "retrieved_work_count_sum": 160,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        }
+      ],
+      "representative_works": [
+        {
+          "openalex_id": "W2292396867",
+          "title": "CONSTRUCTING A FLEXIBLE LIKELIHOOD FUNCTION FOR SPECTROSCOPIC INFERENCE",
+          "publication_year": 2015,
+          "doi": "https://doi.org/10.1088/0004-637x/812/2/128",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W4380446233",
+          "title": "Gaussian Process Regression for Astronomical Time Series",
+          "publication_year": 2023,
+          "doi": "https://doi.org/10.1146/annurev-astro-052920-103508",
+          "query_support_count": 3
+        },
+        {
+          "openalex_id": "W4378882632",
+          "title": "Astronomia ex machina: a history, primer and outlook on neural networks in astronomy",
+          "publication_year": 2023,
+          "doi": "https://doi.org/10.1098/rsos.221454",
+          "query_support_count": 3
+        },
+        {
+          "openalex_id": "W3039097989",
+          "title": "Cycle-StarNet: Bridging the Gap between Theory and Data by Leveraging Large Data Sets",
+          "publication_year": 2021,
+          "doi": "https://doi.org/10.3847/1538-4357/abca96",
+          "query_support_count": 3
+        },
+        {
+          "openalex_id": "W3034308574",
+          "title": "Forecasting Chemical Abundance Precision for Extragalactic Stellar Archaeology",
+          "publication_year": 2020,
+          "doi": "https://doi.org/10.3847/1538-4365/ab9cb0",
+          "query_support_count": 3
+        }
+      ],
+      "audit_signals": [],
+      "potential_topic_amendments": []
+    },
+    {
+      "topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "union_work_count": 379,
+      "api_hit_count_sum": 3760,
+      "retrieved_query_hit_count": 480,
+      "within_topic_repeated_hit_count": 101,
+      "target_status": "within_preferred_range",
+      "query_variants": [
+        {
+          "query_variant_id": "solar_inversion_aq01",
+          "query_text": "machine learning solar spectropolarimetric inversion",
+          "coverage_facets": [
+            "solar spectra",
+            "spectropolarimetry",
+            "atmospheric inversion"
+          ],
+          "api_hit_count": 207,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 32,
+          "unique_contribution_ratio": 0.4,
+          "union_coverage_ratio": 0.211082
+        },
+        {
+          "query_variant_id": "solar_inversion_aq02",
+          "query_text": "deep learning Stokes profiles magnetic field inversion",
+          "coverage_facets": [
+            "Stokes profiles",
+            "magnetic field",
+            "atmospheric inversion"
+          ],
+          "api_hit_count": 1350,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 48,
+          "unique_contribution_ratio": 0.6,
+          "union_coverage_ratio": 0.211082
+        },
+        {
+          "query_variant_id": "solar_inversion_aq03",
+          "query_text": "neural network solar Stokes inversion atmosphere",
+          "coverage_facets": [
+            "solar spectra",
+            "Stokes profiles",
+            "atmospheric inversion"
+          ],
+          "api_hit_count": 899,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 54,
+          "unique_contribution_ratio": 0.675,
+          "union_coverage_ratio": 0.211082
+        },
+        {
+          "query_variant_id": "solar_inversion_aq04",
+          "query_text": "machine learning solar magnetic field spectropolarimetry",
+          "coverage_facets": [
+            "solar spectra",
+            "spectropolarimetry",
+            "magnetic field"
+          ],
+          "api_hit_count": 148,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 51,
+          "unique_contribution_ratio": 0.6375,
+          "union_coverage_ratio": 0.211082
+        },
+        {
+          "query_variant_id": "solar_inversion_aq05",
+          "query_text": "physics informed neural network solar spectral inversion",
+          "coverage_facets": [
+            "solar spectra",
+            "atmospheric inversion"
+          ],
+          "api_hit_count": 737,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 70,
+          "unique_contribution_ratio": 0.875,
+          "union_coverage_ratio": 0.211082
+        },
+        {
+          "query_variant_id": "solar_inversion_aq06",
+          "query_text": "deep learning solar atmosphere inversion polarized spectra",
+          "coverage_facets": [
+            "solar spectra",
+            "spectropolarimetry",
+            "atmospheric inversion"
+          ],
+          "api_hit_count": 419,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 59,
+          "unique_contribution_ratio": 0.7375,
+          "union_coverage_ratio": 0.211082
+        }
+      ],
+      "pairwise_query_overlap": [
+        {
+          "left_query_variant_id": "solar_inversion_aq01",
+          "right_query_variant_id": "solar_inversion_aq02",
+          "intersection_count": 20,
+          "union_count": 140,
+          "jaccard": 0.142857,
+          "left_overlap_ratio": 0.25,
+          "right_overlap_ratio": 0.25
+        },
+        {
+          "left_query_variant_id": "solar_inversion_aq01",
+          "right_query_variant_id": "solar_inversion_aq03",
+          "intersection_count": 16,
+          "union_count": 144,
+          "jaccard": 0.111111,
+          "left_overlap_ratio": 0.2,
+          "right_overlap_ratio": 0.2
+        },
+        {
+          "left_query_variant_id": "solar_inversion_aq01",
+          "right_query_variant_id": "solar_inversion_aq04",
+          "intersection_count": 27,
+          "union_count": 133,
+          "jaccard": 0.203008,
+          "left_overlap_ratio": 0.3375,
+          "right_overlap_ratio": 0.3375
+        },
+        {
+          "left_query_variant_id": "solar_inversion_aq01",
+          "right_query_variant_id": "solar_inversion_aq05",
+          "intersection_count": 4,
+          "union_count": 156,
+          "jaccard": 0.025641,
+          "left_overlap_ratio": 0.05,
+          "right_overlap_ratio": 0.05
+        },
+        {
+          "left_query_variant_id": "solar_inversion_aq01",
+          "right_query_variant_id": "solar_inversion_aq06",
+          "intersection_count": 12,
+          "union_count": 148,
+          "jaccard": 0.081081,
+          "left_overlap_ratio": 0.15,
+          "right_overlap_ratio": 0.15
+        },
+        {
+          "left_query_variant_id": "solar_inversion_aq02",
+          "right_query_variant_id": "solar_inversion_aq03",
+          "intersection_count": 15,
+          "union_count": 145,
+          "jaccard": 0.103448,
+          "left_overlap_ratio": 0.1875,
+          "right_overlap_ratio": 0.1875
+        },
+        {
+          "left_query_variant_id": "solar_inversion_aq02",
+          "right_query_variant_id": "solar_inversion_aq04",
+          "intersection_count": 6,
+          "union_count": 154,
+          "jaccard": 0.038961,
+          "left_overlap_ratio": 0.075,
+          "right_overlap_ratio": 0.075
+        },
+        {
+          "left_query_variant_id": "solar_inversion_aq02",
+          "right_query_variant_id": "solar_inversion_aq05",
+          "intersection_count": 6,
+          "union_count": 154,
+          "jaccard": 0.038961,
+          "left_overlap_ratio": 0.075,
+          "right_overlap_ratio": 0.075
+        },
+        {
+          "left_query_variant_id": "solar_inversion_aq02",
+          "right_query_variant_id": "solar_inversion_aq06",
+          "intersection_count": 10,
+          "union_count": 150,
+          "jaccard": 0.066667,
+          "left_overlap_ratio": 0.125,
+          "right_overlap_ratio": 0.125
+        },
+        {
+          "left_query_variant_id": "solar_inversion_aq03",
+          "right_query_variant_id": "solar_inversion_aq04",
+          "intersection_count": 8,
+          "union_count": 152,
+          "jaccard": 0.052632,
+          "left_overlap_ratio": 0.1,
+          "right_overlap_ratio": 0.1
+        },
+        {
+          "left_query_variant_id": "solar_inversion_aq03",
+          "right_query_variant_id": "solar_inversion_aq05",
+          "intersection_count": 4,
+          "union_count": 156,
+          "jaccard": 0.025641,
+          "left_overlap_ratio": 0.05,
+          "right_overlap_ratio": 0.05
+        },
+        {
+          "left_query_variant_id": "solar_inversion_aq03",
+          "right_query_variant_id": "solar_inversion_aq06",
+          "intersection_count": 10,
+          "union_count": 150,
+          "jaccard": 0.066667,
+          "left_overlap_ratio": 0.125,
+          "right_overlap_ratio": 0.125
+        },
+        {
+          "left_query_variant_id": "solar_inversion_aq04",
+          "right_query_variant_id": "solar_inversion_aq05",
+          "intersection_count": 4,
+          "union_count": 156,
+          "jaccard": 0.025641,
+          "left_overlap_ratio": 0.05,
+          "right_overlap_ratio": 0.05
+        },
+        {
+          "left_query_variant_id": "solar_inversion_aq04",
+          "right_query_variant_id": "solar_inversion_aq06",
+          "intersection_count": 5,
+          "union_count": 155,
+          "jaccard": 0.032258,
+          "left_overlap_ratio": 0.0625,
+          "right_overlap_ratio": 0.0625
+        },
+        {
+          "left_query_variant_id": "solar_inversion_aq05",
+          "right_query_variant_id": "solar_inversion_aq06",
+          "intersection_count": 2,
+          "union_count": 158,
+          "jaccard": 0.012658,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.025
+        }
+      ],
+      "multi_query_support_distribution": {
+        "1": 314,
+        "2": 38,
+        "3": 21,
+        "4": 3,
+        "5": 3
+      },
+      "publication_year_distribution": {
+        "2001": 5,
+        "2002": 1,
+        "2003": 4,
+        "2004": 3,
+        "2005": 3,
+        "2006": 1,
+        "2007": 3,
+        "2008": 7,
+        "2009": 4,
+        "2010": 2,
+        "2011": 5,
+        "2012": 6,
+        "2013": 3,
+        "2014": 7,
+        "2015": 7,
+        "2016": 3,
+        "2017": 6,
+        "2018": 15,
+        "2019": 34,
+        "2020": 36,
+        "2021": 47,
+        "2022": 43,
+        "2023": 54,
+        "2024": 43,
+        "2025": 26,
+        "2026": 11
+      },
+      "publication_year_summary": {
+        "minimum": 2001,
+        "median": 2021,
+        "maximum": 2026,
+        "known_count": 379,
+        "missing_count": 0,
+        "recent_five_year_count": 177,
+        "bins": {
+          "2000-2009": 31,
+          "2010-2014": 23,
+          "2015-2019": 65,
+          "2020-2022": 126,
+          "2023-2026": 134,
+          "missing": 0
+        }
+      },
+      "metadata_completeness": {
+        "title": {
+          "present_count": 379,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "abstract": {
+          "present_count": 349,
+          "missing_count": 30,
+          "completeness_ratio": 0.920844
+        },
+        "doi": {
+          "present_count": 373,
+          "missing_count": 6,
+          "completeness_ratio": 0.984169
+        },
+        "authors": {
+          "present_count": 379,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "publication_year": {
+          "present_count": 379,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "source_name": {
+          "present_count": 369,
+          "missing_count": 10,
+          "completeness_ratio": 0.973615
+        },
+        "landing_page_url": {
+          "present_count": 379,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "publication_date": {
+          "present_count": 379,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "work_type": {
+          "present_count": 379,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "openalex_url": {
+          "present_count": 379,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        }
+      },
+      "query_facet_coverage": [
+        {
+          "facet": "solar spectra",
+          "query_variant_ids": [
+            "solar_inversion_aq01",
+            "solar_inversion_aq03",
+            "solar_inversion_aq04",
+            "solar_inversion_aq05",
+            "solar_inversion_aq06"
+          ],
+          "retrieved_work_count_sum": 400,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "Stokes profiles",
+          "query_variant_ids": [
+            "solar_inversion_aq02",
+            "solar_inversion_aq03"
+          ],
+          "retrieved_work_count_sum": 160,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "spectropolarimetry",
+          "query_variant_ids": [
+            "solar_inversion_aq01",
+            "solar_inversion_aq04",
+            "solar_inversion_aq06"
+          ],
+          "retrieved_work_count_sum": 240,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "magnetic field",
+          "query_variant_ids": [
+            "solar_inversion_aq02",
+            "solar_inversion_aq04"
+          ],
+          "retrieved_work_count_sum": 160,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "atmospheric inversion",
+          "query_variant_ids": [
+            "solar_inversion_aq01",
+            "solar_inversion_aq02",
+            "solar_inversion_aq03",
+            "solar_inversion_aq05",
+            "solar_inversion_aq06"
+          ],
+          "retrieved_work_count_sum": 400,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        }
+      ],
+      "representative_works": [
+        {
+          "openalex_id": "W4384201335",
+          "title": "Machine learning in solar physics",
+          "publication_year": 2023,
+          "doi": "https://doi.org/10.1007/s41116-023-00038-x",
+          "query_support_count": 5
+        },
+        {
+          "openalex_id": "W3033124288",
+          "title": "Mimicking spectropolarimetric inversions using convolutional neural networks",
+          "publication_year": 2020,
+          "doi": "https://doi.org/10.1051/0004-6361/201936537",
+          "query_support_count": 5
+        },
+        {
+          "openalex_id": "W4405103083",
+          "title": "Exploring spectropolarimetric inversions using neural fields",
+          "publication_year": 2024,
+          "doi": "https://doi.org/10.1051/0004-6361/202452172",
+          "query_support_count": 5
+        },
+        {
+          "openalex_id": "W3138164851",
+          "title": "Machine learning initialization to accelerate Stokes profile inversions",
+          "publication_year": 2021,
+          "doi": "https://doi.org/10.1051/0004-6361/201936910",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W3147526180",
+          "title": "Fast and Accurate Emulation of the SDO/HMI Stokes Inversion with Uncertainty Quantification",
+          "publication_year": 2021,
+          "doi": "https://doi.org/10.3847/1538-4357/abd7fe",
+          "query_support_count": 4
+        }
+      ],
+      "audit_signals": [],
+      "potential_topic_amendments": []
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "union_work_count": 352,
+      "api_hit_count_sum": 2743,
+      "retrieved_query_hit_count": 454,
+      "within_topic_repeated_hit_count": 102,
+      "target_status": "within_preferred_range",
+      "query_variants": [
+        {
+          "query_variant_id": "21cm_foreground_aq01",
+          "query_text": "neural network foreground removal 21 cm signal",
+          "coverage_facets": [
+            "21-cm data",
+            "foreground removal"
+          ],
+          "api_hit_count": 1669,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 57,
+          "unique_contribution_ratio": 0.7125,
+          "union_coverage_ratio": 0.227273
+        },
+        {
+          "query_variant_id": "21cm_foreground_aq02",
+          "query_text": "deep learning 21cm intensity mapping foreground separation",
+          "coverage_facets": [
+            "21-cm data",
+            "component separation",
+            "intensity mapping"
+          ],
+          "api_hit_count": 63,
+          "retrieved_work_count": 63,
+          "unique_contribution_count": 23,
+          "unique_contribution_ratio": 0.365079,
+          "union_coverage_ratio": 0.178977
+        },
+        {
+          "query_variant_id": "21cm_foreground_aq03",
+          "query_text": "machine learning cosmological 21 cm foreground subtraction",
+          "coverage_facets": [
+            "21-cm data",
+            "foreground removal"
+          ],
+          "api_hit_count": 278,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 51,
+          "unique_contribution_ratio": 0.6375,
+          "union_coverage_ratio": 0.227273
+        },
+        {
+          "query_variant_id": "21cm_foreground_aq04",
+          "query_text": "neural network component separation radio 21cm spectra",
+          "coverage_facets": [
+            "21-cm data",
+            "component separation"
+          ],
+          "api_hit_count": 71,
+          "retrieved_work_count": 71,
+          "unique_contribution_count": 36,
+          "unique_contribution_ratio": 0.507042,
+          "union_coverage_ratio": 0.201705
+        },
+        {
+          "query_variant_id": "21cm_foreground_aq05",
+          "query_text": "deep learning epoch reionization foreground removal",
+          "coverage_facets": [
+            "foreground removal",
+            "reionization"
+          ],
+          "api_hit_count": 192,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 41,
+          "unique_contribution_ratio": 0.5125,
+          "union_coverage_ratio": 0.227273
+        },
+        {
+          "query_variant_id": "21cm_foreground_aq06",
+          "query_text": "machine learning HI intensity mapping foreground cleaning",
+          "coverage_facets": [
+            "21-cm data",
+            "foreground removal",
+            "intensity mapping"
+          ],
+          "api_hit_count": 470,
+          "retrieved_work_count": 80,
+          "unique_contribution_count": 64,
+          "unique_contribution_ratio": 0.8,
+          "union_coverage_ratio": 0.227273
+        }
+      ],
+      "pairwise_query_overlap": [
+        {
+          "left_query_variant_id": "21cm_foreground_aq01",
+          "right_query_variant_id": "21cm_foreground_aq02",
+          "intersection_count": 2,
+          "union_count": 141,
+          "jaccard": 0.014184,
+          "left_overlap_ratio": 0.025,
+          "right_overlap_ratio": 0.031746
+        },
+        {
+          "left_query_variant_id": "21cm_foreground_aq01",
+          "right_query_variant_id": "21cm_foreground_aq03",
+          "intersection_count": 10,
+          "union_count": 150,
+          "jaccard": 0.066667,
+          "left_overlap_ratio": 0.125,
+          "right_overlap_ratio": 0.125
+        },
+        {
+          "left_query_variant_id": "21cm_foreground_aq01",
+          "right_query_variant_id": "21cm_foreground_aq04",
+          "intersection_count": 5,
+          "union_count": 146,
+          "jaccard": 0.034247,
+          "left_overlap_ratio": 0.0625,
+          "right_overlap_ratio": 0.070423
+        },
+        {
+          "left_query_variant_id": "21cm_foreground_aq01",
+          "right_query_variant_id": "21cm_foreground_aq05",
+          "intersection_count": 17,
+          "union_count": 143,
+          "jaccard": 0.118881,
+          "left_overlap_ratio": 0.2125,
+          "right_overlap_ratio": 0.2125
+        },
+        {
+          "left_query_variant_id": "21cm_foreground_aq01",
+          "right_query_variant_id": "21cm_foreground_aq06",
+          "intersection_count": 6,
+          "union_count": 154,
+          "jaccard": 0.038961,
+          "left_overlap_ratio": 0.075,
+          "right_overlap_ratio": 0.075
+        },
+        {
+          "left_query_variant_id": "21cm_foreground_aq02",
+          "right_query_variant_id": "21cm_foreground_aq03",
+          "intersection_count": 4,
+          "union_count": 139,
+          "jaccard": 0.028777,
+          "left_overlap_ratio": 0.063492,
+          "right_overlap_ratio": 0.05
+        },
+        {
+          "left_query_variant_id": "21cm_foreground_aq02",
+          "right_query_variant_id": "21cm_foreground_aq04",
+          "intersection_count": 29,
+          "union_count": 105,
+          "jaccard": 0.27619,
+          "left_overlap_ratio": 0.460317,
+          "right_overlap_ratio": 0.408451
+        },
+        {
+          "left_query_variant_id": "21cm_foreground_aq02",
+          "right_query_variant_id": "21cm_foreground_aq05",
+          "intersection_count": 12,
+          "union_count": 131,
+          "jaccard": 0.091603,
+          "left_overlap_ratio": 0.190476,
+          "right_overlap_ratio": 0.15
+        },
+        {
+          "left_query_variant_id": "21cm_foreground_aq02",
+          "right_query_variant_id": "21cm_foreground_aq06",
+          "intersection_count": 5,
+          "union_count": 138,
+          "jaccard": 0.036232,
+          "left_overlap_ratio": 0.079365,
+          "right_overlap_ratio": 0.0625
+        },
+        {
+          "left_query_variant_id": "21cm_foreground_aq03",
+          "right_query_variant_id": "21cm_foreground_aq04",
+          "intersection_count": 5,
+          "union_count": 146,
+          "jaccard": 0.034247,
+          "left_overlap_ratio": 0.0625,
+          "right_overlap_ratio": 0.070423
+        },
+        {
+          "left_query_variant_id": "21cm_foreground_aq03",
+          "right_query_variant_id": "21cm_foreground_aq05",
+          "intersection_count": 18,
+          "union_count": 142,
+          "jaccard": 0.126761,
+          "left_overlap_ratio": 0.225,
+          "right_overlap_ratio": 0.225
+        },
+        {
+          "left_query_variant_id": "21cm_foreground_aq03",
+          "right_query_variant_id": "21cm_foreground_aq06",
+          "intersection_count": 10,
+          "union_count": 150,
+          "jaccard": 0.066667,
+          "left_overlap_ratio": 0.125,
+          "right_overlap_ratio": 0.125
+        },
+        {
+          "left_query_variant_id": "21cm_foreground_aq04",
+          "right_query_variant_id": "21cm_foreground_aq05",
+          "intersection_count": 4,
+          "union_count": 147,
+          "jaccard": 0.027211,
+          "left_overlap_ratio": 0.056338,
+          "right_overlap_ratio": 0.05
+        },
+        {
+          "left_query_variant_id": "21cm_foreground_aq04",
+          "right_query_variant_id": "21cm_foreground_aq06",
+          "intersection_count": 2,
+          "union_count": 149,
+          "jaccard": 0.013423,
+          "left_overlap_ratio": 0.028169,
+          "right_overlap_ratio": 0.025
+        },
+        {
+          "left_query_variant_id": "21cm_foreground_aq05",
+          "right_query_variant_id": "21cm_foreground_aq06",
+          "intersection_count": 8,
+          "union_count": 152,
+          "jaccard": 0.052632,
+          "left_overlap_ratio": 0.1,
+          "right_overlap_ratio": 0.1
+        }
+      ],
+      "multi_query_support_distribution": {
+        "1": 272,
+        "2": 67,
+        "3": 7,
+        "4": 4,
+        "5": 1,
+        "6": 1
+      },
+      "publication_year_distribution": {
+        "2000": 1,
+        "2001": 2,
+        "2004": 1,
+        "2005": 1,
+        "2006": 2,
+        "2008": 1,
+        "2009": 3,
+        "2010": 1,
+        "2011": 4,
+        "2012": 7,
+        "2013": 9,
+        "2014": 1,
+        "2015": 12,
+        "2016": 7,
+        "2017": 16,
+        "2018": 9,
+        "2019": 20,
+        "2020": 21,
+        "2021": 31,
+        "2022": 57,
+        "2023": 50,
+        "2024": 37,
+        "2025": 38,
+        "2026": 21
+      },
+      "publication_year_summary": {
+        "minimum": 2000,
+        "median": 2022.0,
+        "maximum": 2026,
+        "known_count": 352,
+        "missing_count": 0,
+        "recent_five_year_count": 203,
+        "bins": {
+          "2000-2009": 11,
+          "2010-2014": 22,
+          "2015-2019": 64,
+          "2020-2022": 109,
+          "2023-2026": 146,
+          "missing": 0
+        }
+      },
+      "metadata_completeness": {
+        "title": {
+          "present_count": 350,
+          "missing_count": 2,
+          "completeness_ratio": 0.994318
+        },
+        "abstract": {
+          "present_count": 345,
+          "missing_count": 7,
+          "completeness_ratio": 0.980114
+        },
+        "doi": {
+          "present_count": 322,
+          "missing_count": 30,
+          "completeness_ratio": 0.914773
+        },
+        "authors": {
+          "present_count": 350,
+          "missing_count": 2,
+          "completeness_ratio": 0.994318
+        },
+        "publication_year": {
+          "present_count": 352,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "source_name": {
+          "present_count": 338,
+          "missing_count": 14,
+          "completeness_ratio": 0.960227
+        },
+        "landing_page_url": {
+          "present_count": 352,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "publication_date": {
+          "present_count": 352,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "work_type": {
+          "present_count": 352,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        },
+        "openalex_url": {
+          "present_count": 352,
+          "missing_count": 0,
+          "completeness_ratio": 1.0
+        }
+      },
+      "query_facet_coverage": [
+        {
+          "facet": "21-cm data",
+          "query_variant_ids": [
+            "21cm_foreground_aq01",
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq04",
+            "21cm_foreground_aq06"
+          ],
+          "retrieved_work_count_sum": 374,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "foreground removal",
+          "query_variant_ids": [
+            "21cm_foreground_aq01",
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq05",
+            "21cm_foreground_aq06"
+          ],
+          "retrieved_work_count_sum": 320,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "component separation",
+          "query_variant_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq04"
+          ],
+          "retrieved_work_count_sum": 134,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "reionization",
+          "query_variant_ids": [
+            "21cm_foreground_aq05"
+          ],
+          "retrieved_work_count_sum": 80,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        },
+        {
+          "facet": "intensity mapping",
+          "query_variant_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq06"
+          ],
+          "retrieved_work_count_sum": 143,
+          "coverage_kind": "query_design_only_not_relevance_judgement"
+        }
+      ],
+      "representative_works": [
+        {
+          "openalex_id": "W4414058109",
+          "title": "Square Kilometre Array Science Data Challenge 3a: foreground removal for an EoR experiment",
+          "publication_year": 2025,
+          "doi": "https://doi.org/10.1093/mnras/staf1466",
+          "query_support_count": 6
+        },
+        {
+          "openalex_id": "W4407090583",
+          "title": "A generative modeling approach to reconstructing 21 cm tomographic data",
+          "publication_year": 2025,
+          "doi": "https://doi.org/10.1088/2632-2153/adb19c",
+          "query_support_count": 5
+        },
+        {
+          "openalex_id": "W3099201768",
+          "title": "deep21: a deep learning method for 21 cm foreground removal",
+          "publication_year": 2021,
+          "doi": "https://doi.org/10.1088/1475-7516/2021/04/081",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W3195461121",
+          "title": "The BINGO project",
+          "publication_year": 2021,
+          "doi": "https://doi.org/10.1051/0004-6361/202140883",
+          "query_support_count": 4
+        },
+        {
+          "openalex_id": "W3180708328",
+          "title": "Cleaning foregrounds from single-dish 21 cm intensity maps with Kernel principal component analysis",
+          "publication_year": 2021,
+          "doi": "https://doi.org/10.1093/mnras/stab2855",
+          "query_support_count": 4
+        }
+      ],
+      "audit_signals": [],
+      "potential_topic_amendments": []
+    }
+  ],
+  "cross_topic_overlap": [
+    {
+      "left_topic_id": "w6_topic_galaxy_activity_spectra",
+      "right_topic_id": "w6_topic_supernova_spectral_typing",
+      "intersection_count": 25,
+      "union_count": 778,
+      "jaccard": 0.032134,
+      "left_overlap_ratio": 0.059952,
+      "right_overlap_ratio": 0.064767,
+      "shared_openalex_ids": [
+        "W1528624312",
+        "W2023037133",
+        "W2080610645",
+        "W2083217178",
+        "W2133620426",
+        "W2147626801",
+        "W2152334290",
+        "W2784396444",
+        "W2905450617",
+        "W2911890654",
+        "W2915006163",
+        "W2922961522",
+        "W2977076818",
+        "W3009386672",
+        "W3048107446",
+        "W3048749859",
+        "W4225422625",
+        "W4296774546",
+        "W4306248068",
+        "W4306968094",
+        "W4372215216",
+        "W4380357923",
+        "W4380551324",
+        "W4389485451",
+        "W4391294472"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_galaxy_activity_spectra",
+      "right_topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "intersection_count": 10,
+      "union_count": 698,
+      "jaccard": 0.014327,
+      "left_overlap_ratio": 0.023981,
+      "right_overlap_ratio": 0.034364,
+      "shared_openalex_ids": [
+        "W2892338809",
+        "W3031566039",
+        "W3205465672",
+        "W4283269348",
+        "W4306248068",
+        "W4323568501",
+        "W4382289334",
+        "W4388049739",
+        "W4399876663",
+        "W4417233847"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_galaxy_activity_spectra",
+      "right_topic_id": "w6_topic_stellar_radial_velocity",
+      "intersection_count": 13,
+      "union_count": 810,
+      "jaccard": 0.016049,
+      "left_overlap_ratio": 0.031175,
+      "right_overlap_ratio": 0.03202,
+      "shared_openalex_ids": [
+        "W2567715800",
+        "W2777402735",
+        "W2795545899",
+        "W2892338809",
+        "W3113695400",
+        "W3115781272",
+        "W3204559484",
+        "W4283025905",
+        "W4306968094",
+        "W4309387558",
+        "W4323929229",
+        "W4380357923",
+        "W4389485451"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_galaxy_activity_spectra",
+      "right_topic_id": "w6_topic_spectral_anomaly_detection",
+      "intersection_count": 52,
+      "union_count": 751,
+      "jaccard": 0.069241,
+      "left_overlap_ratio": 0.1247,
+      "right_overlap_ratio": 0.134715,
+      "shared_openalex_ids": [
+        "W1528624312",
+        "W1951071052",
+        "W1985181518",
+        "W2023037133",
+        "W2073151114",
+        "W2133620426",
+        "W2149360123",
+        "W2152334290",
+        "W2227274187",
+        "W2286156139",
+        "W2469346554",
+        "W2554959913",
+        "W2567715800",
+        "W2777402735",
+        "W2784396444",
+        "W2790786229",
+        "W2795545899",
+        "W2892338809",
+        "W2905450617",
+        "W2911890654",
+        "W2916674581",
+        "W2968923792",
+        "W2988562872",
+        "W2995155898",
+        "W3007705297",
+        "W3012986936",
+        "W3031566039",
+        "W3048107446",
+        "W3102100346",
+        "W3104662021",
+        "W3162917764",
+        "W3210245711",
+        "W4212881834",
+        "W4225422625",
+        "W4282979078",
+        "W4283025905",
+        "W4295102046",
+        "W4295886337",
+        "W4306248068",
+        "W4306968094",
+        "W4323929229",
+        "W4372215216",
+        "W4380357923",
+        "W4386841874",
+        "W4391212300",
+        "W4391881450",
+        "W4399364202",
+        "W4399876663",
+        "W4399922932",
+        "W4403396169",
+        "W4415629700",
+        "W4417233847"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_galaxy_activity_spectra",
+      "right_topic_id": "w6_topic_stellar_spectral_denoising",
+      "intersection_count": 16,
+      "union_count": 809,
+      "jaccard": 0.019778,
+      "left_overlap_ratio": 0.038369,
+      "right_overlap_ratio": 0.039216,
+      "shared_openalex_ids": [
+        "W2777402735",
+        "W2784396444",
+        "W2987499710",
+        "W3012986936",
+        "W3094812309",
+        "W3113695400",
+        "W4200631758",
+        "W4306248068",
+        "W4306968094",
+        "W4372215216",
+        "W4386841874",
+        "W4391881450",
+        "W4399876663",
+        "W4405197532",
+        "W4413412290",
+        "W4417233847"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_galaxy_activity_spectra",
+      "right_topic_id": "w6_topic_stellar_spectral_emulation",
+      "intersection_count": 17,
+      "union_count": 814,
+      "jaccard": 0.020885,
+      "left_overlap_ratio": 0.040767,
+      "right_overlap_ratio": 0.041063,
+      "shared_openalex_ids": [
+        "W1951071052",
+        "W2152334290",
+        "W2916674581",
+        "W3094812309",
+        "W3104662021",
+        "W4283269348",
+        "W4296774546",
+        "W4306248068",
+        "W4306968094",
+        "W4323568501",
+        "W4363671833",
+        "W4366990670",
+        "W4372215216",
+        "W4379163070",
+        "W4405197532",
+        "W4413412290",
+        "W7171834998"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_galaxy_activity_spectra",
+      "right_topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "intersection_count": 2,
+      "union_count": 794,
+      "jaccard": 0.002519,
+      "left_overlap_ratio": 0.004796,
+      "right_overlap_ratio": 0.005277,
+      "shared_openalex_ids": [
+        "W2916674581",
+        "W3031566039"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_galaxy_activity_spectra",
+      "right_topic_id": "w6_topic_21cm_foreground_removal",
+      "intersection_count": 11,
+      "union_count": 758,
+      "jaccard": 0.014512,
+      "left_overlap_ratio": 0.026379,
+      "right_overlap_ratio": 0.03125,
+      "shared_openalex_ids": [
+        "W2147626801",
+        "W2152334290",
+        "W2754224307",
+        "W2905450617",
+        "W3104662021",
+        "W4283025905",
+        "W4284965861",
+        "W4362553764",
+        "W4372215216",
+        "W4380357923",
+        "W4391294472"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_supernova_spectral_typing",
+      "right_topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "intersection_count": 4,
+      "union_count": 673,
+      "jaccard": 0.005944,
+      "left_overlap_ratio": 0.010363,
+      "right_overlap_ratio": 0.013746,
+      "shared_openalex_ids": [
+        "W4220924308",
+        "W4291129548",
+        "W4306248068",
+        "W4388694369"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_supernova_spectral_typing",
+      "right_topic_id": "w6_topic_stellar_radial_velocity",
+      "intersection_count": 14,
+      "union_count": 778,
+      "jaccard": 0.017995,
+      "left_overlap_ratio": 0.036269,
+      "right_overlap_ratio": 0.034483,
+      "shared_openalex_ids": [
+        "W147232447",
+        "W2090636411",
+        "W2102600871",
+        "W2547895327",
+        "W2785375817",
+        "W2991000715",
+        "W3127066026",
+        "W4220924308",
+        "W4306968094",
+        "W4311370693",
+        "W4378882632",
+        "W4380357923",
+        "W4385761412",
+        "W4389485451"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_supernova_spectral_typing",
+      "right_topic_id": "w6_topic_spectral_anomaly_detection",
+      "intersection_count": 30,
+      "union_count": 742,
+      "jaccard": 0.040431,
+      "left_overlap_ratio": 0.07772,
+      "right_overlap_ratio": 0.07772,
+      "shared_openalex_ids": [
+        "W1528624312",
+        "W2022799386",
+        "W2023037133",
+        "W2133620426",
+        "W2152334290",
+        "W2276568760",
+        "W2784396444",
+        "W2785375817",
+        "W2786398839",
+        "W2905450617",
+        "W2911890654",
+        "W2931471748",
+        "W2959412897",
+        "W3023795130",
+        "W3026041380",
+        "W3048107446",
+        "W3083510533",
+        "W3084061168",
+        "W3137069764",
+        "W4225422625",
+        "W4306248068",
+        "W4306968094",
+        "W4311370693",
+        "W4313266244",
+        "W4366090499",
+        "W4367853597",
+        "W4372215216",
+        "W4378882632",
+        "W4380357923",
+        "W4390605189"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_supernova_spectral_typing",
+      "right_topic_id": "w6_topic_stellar_spectral_denoising",
+      "intersection_count": 9,
+      "union_count": 785,
+      "jaccard": 0.011465,
+      "left_overlap_ratio": 0.023316,
+      "right_overlap_ratio": 0.022059,
+      "shared_openalex_ids": [
+        "W2745394653",
+        "W2784396444",
+        "W3048419233",
+        "W4223474580",
+        "W4306248068",
+        "W4306968094",
+        "W4372215216",
+        "W4378882632",
+        "W4385761412"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_supernova_spectral_typing",
+      "right_topic_id": "w6_topic_stellar_spectral_emulation",
+      "intersection_count": 15,
+      "union_count": 785,
+      "jaccard": 0.019108,
+      "left_overlap_ratio": 0.03886,
+      "right_overlap_ratio": 0.036232,
+      "shared_openalex_ids": [
+        "W2081681829",
+        "W2152334290",
+        "W2156537003",
+        "W2901922687",
+        "W4288083930",
+        "W4291129548",
+        "W4296774546",
+        "W4306248068",
+        "W4306968094",
+        "W4308012639",
+        "W4311370693",
+        "W4372215216",
+        "W4378882632",
+        "W4382725419",
+        "W4404362298"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_supernova_spectral_typing",
+      "right_topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "intersection_count": 4,
+      "union_count": 761,
+      "jaccard": 0.005256,
+      "left_overlap_ratio": 0.010363,
+      "right_overlap_ratio": 0.010554,
+      "shared_openalex_ids": [
+        "W3163993681",
+        "W3210620395",
+        "W4309502656",
+        "W4400340432"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_supernova_spectral_typing",
+      "right_topic_id": "w6_topic_21cm_foreground_removal",
+      "intersection_count": 11,
+      "union_count": 727,
+      "jaccard": 0.015131,
+      "left_overlap_ratio": 0.028497,
+      "right_overlap_ratio": 0.03125,
+      "shared_openalex_ids": [
+        "W2109275062",
+        "W2147626801",
+        "W2152334290",
+        "W2579264406",
+        "W2773631514",
+        "W2905450617",
+        "W4282930996",
+        "W4311370693",
+        "W4372215216",
+        "W4380357923",
+        "W4391294472"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "right_topic_id": "w6_topic_stellar_radial_velocity",
+      "intersection_count": 20,
+      "union_count": 677,
+      "jaccard": 0.029542,
+      "left_overlap_ratio": 0.068729,
+      "right_overlap_ratio": 0.049261,
+      "shared_openalex_ids": [
+        "W2524314881",
+        "W2886583185",
+        "W2892338809",
+        "W2920947047",
+        "W2952853822",
+        "W2970589039",
+        "W3015894544",
+        "W3109930489",
+        "W4205988566",
+        "W4213268716",
+        "W4220924308",
+        "W4221097113",
+        "W4225279478",
+        "W4293022516",
+        "W4309685034",
+        "W4312170662",
+        "W4386272996",
+        "W4398795508",
+        "W4403525010",
+        "W7151412329"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "right_topic_id": "w6_topic_spectral_anomaly_detection",
+      "intersection_count": 21,
+      "union_count": 656,
+      "jaccard": 0.032012,
+      "left_overlap_ratio": 0.072165,
+      "right_overlap_ratio": 0.054404,
+      "shared_openalex_ids": [
+        "W2524314881",
+        "W2754899469",
+        "W2892338809",
+        "W2920947047",
+        "W2952853822",
+        "W2970589039",
+        "W3031566039",
+        "W3199246711",
+        "W3204947612",
+        "W4293022516",
+        "W4294024790",
+        "W4306248068",
+        "W4309685034",
+        "W4380446233",
+        "W4385695866",
+        "W4386755576",
+        "W4389506788",
+        "W4390748916",
+        "W4399876663",
+        "W4405526895",
+        "W4417233847"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "right_topic_id": "w6_topic_stellar_spectral_denoising",
+      "intersection_count": 11,
+      "union_count": 688,
+      "jaccard": 0.015988,
+      "left_overlap_ratio": 0.037801,
+      "right_overlap_ratio": 0.026961,
+      "shared_openalex_ids": [
+        "W2920947047",
+        "W2999103724",
+        "W4283755979",
+        "W4306248068",
+        "W4385695866",
+        "W4398795508",
+        "W4399876663",
+        "W4405526895",
+        "W4409346043",
+        "W4411554983",
+        "W4417233847"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "right_topic_id": "w6_topic_stellar_spectral_emulation",
+      "intersection_count": 35,
+      "union_count": 670,
+      "jaccard": 0.052239,
+      "left_overlap_ratio": 0.120275,
+      "right_overlap_ratio": 0.084541,
+      "shared_openalex_ids": [
+        "W2805141721",
+        "W3009147880",
+        "W3136101215",
+        "W3158886610",
+        "W3206193768",
+        "W4221141384",
+        "W4224217236",
+        "W4224229064",
+        "W4226078909",
+        "W4280509395",
+        "W4283269348",
+        "W4291129548",
+        "W4293022516",
+        "W4293216434",
+        "W4303448890",
+        "W4306248068",
+        "W4312170662",
+        "W4317790263",
+        "W4323568501",
+        "W4361192744",
+        "W4378903887",
+        "W4380446233",
+        "W4389506788",
+        "W4390748916",
+        "W4398795508",
+        "W4409346043",
+        "W4411217127",
+        "W4411554983",
+        "W4412813377",
+        "W4415616273",
+        "W4415932873",
+        "W4417409058",
+        "W7118158935",
+        "W7128864981",
+        "W7165972729"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "right_topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "intersection_count": 5,
+      "union_count": 665,
+      "jaccard": 0.007519,
+      "left_overlap_ratio": 0.017182,
+      "right_overlap_ratio": 0.013193,
+      "shared_openalex_ids": [
+        "W3031566039",
+        "W3127195152",
+        "W4213268716",
+        "W4378903887",
+        "W4401819987"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "right_topic_id": "w6_topic_21cm_foreground_removal",
+      "intersection_count": 3,
+      "union_count": 640,
+      "jaccard": 0.004687,
+      "left_overlap_ratio": 0.010309,
+      "right_overlap_ratio": 0.008523,
+      "shared_openalex_ids": [
+        "W4221141379",
+        "W4221162443",
+        "W4223513122"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_stellar_radial_velocity",
+      "right_topic_id": "w6_topic_spectral_anomaly_detection",
+      "intersection_count": 39,
+      "union_count": 753,
+      "jaccard": 0.051793,
+      "left_overlap_ratio": 0.096059,
+      "right_overlap_ratio": 0.101036,
+      "shared_openalex_ids": [
+        "W1904504745",
+        "W2088072491",
+        "W2088894283",
+        "W2100891189",
+        "W2524314881",
+        "W2567715800",
+        "W2767505813",
+        "W2777402735",
+        "W2785375817",
+        "W2795545899",
+        "W2892338809",
+        "W2899826578",
+        "W2920947047",
+        "W2952853822",
+        "W2970589039",
+        "W3007884784",
+        "W3017279354",
+        "W3048493300",
+        "W3082723280",
+        "W3098034015",
+        "W3122729254",
+        "W3131502547",
+        "W3211411352",
+        "W4200004652",
+        "W4200436674",
+        "W4283025905",
+        "W4288485600",
+        "W4293022516",
+        "W4299844796",
+        "W4306968094",
+        "W4309685034",
+        "W4311370693",
+        "W4323929229",
+        "W4378882632",
+        "W4380357923",
+        "W4388519523",
+        "W4389217133",
+        "W4405278485",
+        "W4410081098"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_stellar_radial_velocity",
+      "right_topic_id": "w6_topic_stellar_spectral_denoising",
+      "intersection_count": 40,
+      "union_count": 774,
+      "jaccard": 0.05168,
+      "left_overlap_ratio": 0.098522,
+      "right_overlap_ratio": 0.098039,
+      "shared_openalex_ids": [
+        "W1883251007",
+        "W1904504745",
+        "W2006997511",
+        "W2032231736",
+        "W2061226721",
+        "W2088072491",
+        "W2088894283",
+        "W2127375519",
+        "W2767057808",
+        "W2767848202",
+        "W2777402735",
+        "W2798158223",
+        "W2883400858",
+        "W2899826578",
+        "W2900811782",
+        "W2901890075",
+        "W2920947047",
+        "W2999093079",
+        "W3017279354",
+        "W3038615701",
+        "W3107253413",
+        "W3113695400",
+        "W3197533758",
+        "W3204122709",
+        "W4206462583",
+        "W4211174310",
+        "W4220667678",
+        "W4220943208",
+        "W4286669192",
+        "W4293311441",
+        "W4306968094",
+        "W4378882632",
+        "W4384201335",
+        "W4385664020",
+        "W4385761412",
+        "W4391340948",
+        "W4398795508",
+        "W4403343007",
+        "W4403719444",
+        "W4405278485"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_stellar_radial_velocity",
+      "right_topic_id": "w6_topic_stellar_spectral_emulation",
+      "intersection_count": 42,
+      "union_count": 778,
+      "jaccard": 0.053985,
+      "left_overlap_ratio": 0.103448,
+      "right_overlap_ratio": 0.101449,
+      "shared_openalex_ids": [
+        "W1904504745",
+        "W1989505520",
+        "W2045849629",
+        "W2047218481",
+        "W2061226721",
+        "W2093776496",
+        "W2292396867",
+        "W2495294139",
+        "W2594445930",
+        "W2755365622",
+        "W2795641712",
+        "W2901890075",
+        "W2995178730",
+        "W2999093079",
+        "W3034308574",
+        "W3038615701",
+        "W3094982295",
+        "W3187091109",
+        "W3197533758",
+        "W3216552048",
+        "W3217651215",
+        "W4200095806",
+        "W4200436674",
+        "W4200631865",
+        "W4206462583",
+        "W4210954748",
+        "W4281721997",
+        "W4291287696",
+        "W4293022516",
+        "W4306968094",
+        "W4311370693",
+        "W4312170662",
+        "W4378882632",
+        "W4384201335",
+        "W4385972331",
+        "W4388665634",
+        "W4390270748",
+        "W4398795508",
+        "W4405278485",
+        "W4407138592",
+        "W4410789828",
+        "W4416445302"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_stellar_radial_velocity",
+      "right_topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "intersection_count": 9,
+      "union_count": 776,
+      "jaccard": 0.011598,
+      "left_overlap_ratio": 0.022167,
+      "right_overlap_ratio": 0.023747,
+      "shared_openalex_ids": [
+        "W1904504745",
+        "W2883400858",
+        "W3107253413",
+        "W3107965744",
+        "W4200095806",
+        "W4211174310",
+        "W4213268716",
+        "W4366988298",
+        "W4384201335"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_stellar_radial_velocity",
+      "right_topic_id": "w6_topic_21cm_foreground_removal",
+      "intersection_count": 3,
+      "union_count": 755,
+      "jaccard": 0.003974,
+      "left_overlap_ratio": 0.007389,
+      "right_overlap_ratio": 0.008523,
+      "shared_openalex_ids": [
+        "W4283025905",
+        "W4311370693",
+        "W4380357923"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_spectral_anomaly_detection",
+      "right_topic_id": "w6_topic_stellar_spectral_denoising",
+      "intersection_count": 34,
+      "union_count": 760,
+      "jaccard": 0.044737,
+      "left_overlap_ratio": 0.088083,
+      "right_overlap_ratio": 0.083333,
+      "shared_openalex_ids": [
+        "W1904504745",
+        "W2006224949",
+        "W2088072491",
+        "W2088894283",
+        "W2159691951",
+        "W2375984290",
+        "W2572150292",
+        "W2777402735",
+        "W2784396444",
+        "W2899826578",
+        "W2920947047",
+        "W2996668472",
+        "W3012986936",
+        "W3017279354",
+        "W3033299805",
+        "W3039097989",
+        "W3090580769",
+        "W3097410698",
+        "W3097600136",
+        "W4221145795",
+        "W4306248068",
+        "W4306968094",
+        "W4372215216",
+        "W4378882632",
+        "W4385695866",
+        "W4386694116",
+        "W4386841874",
+        "W4388221752",
+        "W4391881450",
+        "W4399876663",
+        "W4405278485",
+        "W4405526895",
+        "W4412639060",
+        "W4417233847"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_spectral_anomaly_detection",
+      "right_topic_id": "w6_topic_stellar_spectral_emulation",
+      "intersection_count": 28,
+      "union_count": 772,
+      "jaccard": 0.036269,
+      "left_overlap_ratio": 0.072539,
+      "right_overlap_ratio": 0.067633,
+      "shared_openalex_ids": [
+        "W1904504745",
+        "W1951071052",
+        "W2152334290",
+        "W2153231998",
+        "W2375984290",
+        "W2772138577",
+        "W2916674581",
+        "W3033299805",
+        "W3039097989",
+        "W3090580769",
+        "W3097410698",
+        "W3104662021",
+        "W3127256288",
+        "W3163559860",
+        "W3178449894",
+        "W4200436674",
+        "W4281552525",
+        "W4293022516",
+        "W4306248068",
+        "W4306968094",
+        "W4311370693",
+        "W4311486426",
+        "W4372215216",
+        "W4378882632",
+        "W4380446233",
+        "W4389506788",
+        "W4390748916",
+        "W4405278485"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_spectral_anomaly_detection",
+      "right_topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "intersection_count": 9,
+      "union_count": 756,
+      "jaccard": 0.011905,
+      "left_overlap_ratio": 0.023316,
+      "right_overlap_ratio": 0.023747,
+      "shared_openalex_ids": [
+        "W1904504745",
+        "W2027014790",
+        "W2047449019",
+        "W2159691951",
+        "W2604153218",
+        "W2916674581",
+        "W2997515054",
+        "W3031566039",
+        "W3163559860"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_spectral_anomaly_detection",
+      "right_topic_id": "w6_topic_21cm_foreground_removal",
+      "intersection_count": 13,
+      "union_count": 725,
+      "jaccard": 0.017931,
+      "left_overlap_ratio": 0.033679,
+      "right_overlap_ratio": 0.036932,
+      "shared_openalex_ids": [
+        "W2097433601",
+        "W2152334290",
+        "W2905450617",
+        "W3104662021",
+        "W3127256288",
+        "W4283025905",
+        "W4297806707",
+        "W4297814116",
+        "W4310177400",
+        "W4311370693",
+        "W4311486426",
+        "W4372215216",
+        "W4380357923"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_stellar_spectral_denoising",
+      "right_topic_id": "w6_topic_stellar_spectral_emulation",
+      "intersection_count": 42,
+      "union_count": 780,
+      "jaccard": 0.053846,
+      "left_overlap_ratio": 0.102941,
+      "right_overlap_ratio": 0.101449,
+      "shared_openalex_ids": [
+        "W1663830336",
+        "W1904504745",
+        "W2061226721",
+        "W2084341220",
+        "W2148249719",
+        "W2375984290",
+        "W2901890075",
+        "W2963423368",
+        "W2991395895",
+        "W2999093079",
+        "W3033299805",
+        "W3038615701",
+        "W3039097989",
+        "W3090580769",
+        "W3094812309",
+        "W3097410698",
+        "W3155899199",
+        "W3197533758",
+        "W3203394001",
+        "W4206462583",
+        "W4290064599",
+        "W4306248068",
+        "W4306968094",
+        "W4372215216",
+        "W4377866501",
+        "W4378882632",
+        "W4384201335",
+        "W4389116149",
+        "W4390120075",
+        "W4398795508",
+        "W4402006808",
+        "W4402853575",
+        "W4405033333",
+        "W4405197532",
+        "W4405278485",
+        "W4405354803",
+        "W4409346043",
+        "W4411554983",
+        "W4411841722",
+        "W4413412290",
+        "W7130819561",
+        "W7169542418"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_stellar_spectral_denoising",
+      "right_topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "intersection_count": 11,
+      "union_count": 776,
+      "jaccard": 0.014175,
+      "left_overlap_ratio": 0.026961,
+      "right_overlap_ratio": 0.029024,
+      "shared_openalex_ids": [
+        "W1780432012",
+        "W1904504745",
+        "W2013186740",
+        "W2159691951",
+        "W2542370379",
+        "W2883400858",
+        "W3107253413",
+        "W4211174310",
+        "W4319350487",
+        "W4382491450",
+        "W4384201335"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_stellar_spectral_denoising",
+      "right_topic_id": "w6_topic_21cm_foreground_removal",
+      "intersection_count": 3,
+      "union_count": 757,
+      "jaccard": 0.003963,
+      "left_overlap_ratio": 0.007353,
+      "right_overlap_ratio": 0.008523,
+      "shared_openalex_ids": [
+        "W2952607039",
+        "W4225492872",
+        "W4372215216"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_stellar_spectral_emulation",
+      "right_topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "intersection_count": 18,
+      "union_count": 775,
+      "jaccard": 0.023226,
+      "left_overlap_ratio": 0.043478,
+      "right_overlap_ratio": 0.047493,
+      "shared_openalex_ids": [
+        "W1904504745",
+        "W1973960549",
+        "W2033391585",
+        "W2088830306",
+        "W2216897913",
+        "W2914743205",
+        "W2916674581",
+        "W3033124288",
+        "W3091897528",
+        "W3105529740",
+        "W3130596224",
+        "W3163559860",
+        "W4200095806",
+        "W4299822797",
+        "W4309609398",
+        "W4378903887",
+        "W4384201335",
+        "W4405103083"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_stellar_spectral_emulation",
+      "right_topic_id": "w6_topic_21cm_foreground_removal",
+      "intersection_count": 13,
+      "union_count": 753,
+      "jaccard": 0.017264,
+      "left_overlap_ratio": 0.031401,
+      "right_overlap_ratio": 0.036932,
+      "shared_openalex_ids": [
+        "W1963311772",
+        "W2152334290",
+        "W2614352406",
+        "W2763843986",
+        "W3104662021",
+        "W3127256288",
+        "W4300930789",
+        "W4309954038",
+        "W4311370693",
+        "W4311486426",
+        "W4372215216",
+        "W4409784954",
+        "W4411497497"
+      ]
+    },
+    {
+      "left_topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "right_topic_id": "w6_topic_21cm_foreground_removal",
+      "intersection_count": 0,
+      "union_count": 731,
+      "jaccard": 0.0,
+      "left_overlap_ratio": 0.0,
+      "right_overlap_ratio": 0.0,
+      "shared_openalex_ids": []
+    }
+  ],
+  "potential_topic_amendments": [],
+  "interpretation_boundary": "Counts, overlaps, metadata completeness, and query-design facets are descriptive OpenAlex evidence only; they are not relevance labels, ranking metrics, or Topic selection evidence."
+}

@@ -161,6 +161,8 @@ class OpenAlexClientV2Tests(unittest.TestCase):
         self.assertEqual(request_get.calls[0]["timeout"], 7)
         self.assertEqual(request_get.calls[0]["params"]["cursor"], "*")
         self.assertEqual(request_get.calls[0]["params"]["per_page"], 20)
+        self.assertIn("publication_date", request_get.calls[0]["params"]["select"])
+        self.assertIn("type", request_get.calls[0]["params"]["select"].split(","))
 
     def test_supported_result_limits_20_100_120_and_150(self) -> None:
         for requested in (20, 100, 120, 150):

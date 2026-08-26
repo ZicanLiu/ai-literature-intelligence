@@ -15,6 +15,7 @@ from src.openalex_client_v2 import OpenAlexClientV2Error
 from src.w6_openalex_audit import (
     acquire_and_audit,
     load_and_validate_query_config,
+    refresh_acquisition_audit,
     resolve_openalex_api_key,
     validate_acquisition_package,
 )
@@ -39,6 +40,11 @@ def build_parser() -> argparse.ArgumentParser:
     acquire.add_argument("--output-dir", type=Path, required=True)
     validate = subparsers.add_parser("validate-package", help="Validate a completed package.")
     validate.add_argument("--package-dir", type=Path, required=True)
+    refresh = subparsers.add_parser(
+        "refresh-audit",
+        help="Rebuild derived audit JSON/Markdown without OpenAlex requests.",
+    )
+    refresh.add_argument("--package-dir", type=Path, required=True)
     return parser
 
 
@@ -90,7 +96,12 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
             return 0
-        manifest = validate_acquisition_package(
+        validator = (
+            refresh_acquisition_audit
+            if args.command == "refresh-audit"
+            else validate_acquisition_package
+        )
+        manifest = validator(
             package_dir=args.package_dir,
             config_path=args.config,
             topic_set_path=args.topics,

@@ -20,7 +20,7 @@ from src.openalex_client import convert_openalex_work
 OPENALEX_WORKS_URL = "https://api.openalex.org/works"
 OPENALEX_MAX_PER_PAGE = 100
 OPENALEX_SELECT_FIELDS = (
-    "id,display_name,authorships,publication_year,doi,"
+    "id,display_name,authorships,publication_year,publication_date,type,doi,"
     "abstract_inverted_index,cited_by_count,primary_location"
 )
 RETRYABLE_STATUS_CODES = {408, 429}

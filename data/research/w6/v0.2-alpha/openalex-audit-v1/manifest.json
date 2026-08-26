@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "w6_post_freeze_openalex_audit_package",
+  "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+  "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+  "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+  "status": "complete",
+  "is_fixture": false,
+  "post_freeze_audit": true,
+  "label_free": true,
+  "retrieval_evaluation": false,
+  "config_reference": {
+    "artifact_id": "w6_openalex_topic_query_audit_v1",
+    "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+    "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+  },
+  "topic_set_reference": {
+    "path": "data/research/w6/v0.2-alpha/topics.json",
+    "artifact_id": "w6_research_topics_v0.2_alpha",
+    "sha256": "6e2f6e6b8fea56cef6e245dcf37fa97a46ba5efc6703fb47e9863840e3a06ca4"
+  },
+  "split_reference": {
+    "path": "data/research/w6/v0.2-alpha/split_manifest.json",
+    "artifact_id": "w6_topic_split_v0.2_alpha",
+    "sha256": "bb57448288f122406d195cbec09dde80f76f78a7a0a1d0ef9bc85c052aea69ad",
+    "split_identity": "w6-topic-split:sha256:8391d14987a15982b5afa2ae3760f029824909353f51056360d79fe9b85202bc",
+    "usage": "identity binding only; acquisition and audit must not branch on Dev/Hidden membership"
+  },
+  "acquisition_started_at": "2026-08-26T09:20:53+00:00",
+  "acquisition_completed_at": "2026-08-26T09:22:38+00:00",
+  "query_count": 54,
+  "unique_work_count": 2977,
+  "query_hit_count": 4265,
+  "potential_topic_amendments": [],
+  "files": {
+    "works.jsonl": "a7ab40f2bd19ecb3c0ed1dfa6633fa8f5b5af1b78a1df5278cbfaac263d46615",
+    "query_hits.jsonl": "8e9d0649999c3250152784b87489c36d0540ec1eca923808b7fa82953b74cc56",
+    "query_runs.json": "6ea65257acb473b76274b5893d04bfd7e1079240488a33429533a92fb8a165bf",
+    "topic_audit.json": "d12be9373b2bf173b3c6a245e7fd65b4f19e278bdaba67cedebb2ab1d47052b2",
+    "topic_audit.md": "55abba815b2d191c90391bb73631aa6a6635741e824d2202bed3178b930c855e"
+  },
+  "secret_handling": {
+    "api_key_received_from_environment": true,
+    "authentication_source": "windows_user_environment",
+    "api_key_persisted": false,
+    "dotenv_read": false
+  }
+}
