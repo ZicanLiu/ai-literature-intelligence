@@ -67,7 +67,8 @@ python -m app.run_w6_openalex_audit acquire --output-dir data/research/w6/v0.2-a
 python -m app.run_w6_openalex_audit validate-package --package-dir data/research/w6/v0.2-alpha/openalex-audit-v1
 ```
 
-live command 只从继承环境读取 `OPENALEX_API_KEY`，不读取 `.env`。它复用
+live command 只读取 process / Windows User / Windows Machine 环境中明确命名的
+`OPENALEX_API_KEY`，不枚举其他变量、不读取 `.env`。manifest 只记录来源类型，不记录值。它复用
 `src.openalex_client_v2.fetch_openalex_papers_v2` 的 cursor pagination、有限 retry/backoff、
 年份 filter 与安全统计；key 不进入参数日志、源码、config、fixture、report 或输出 artifact。
 
@@ -99,13 +100,14 @@ coverage 都不等于 scientific relevance 或 ranking quality。
 
 ## 5. Offline verification（采集前）
 
-新增纯离线 fixture 和 11 项定向测试，覆盖：
+新增纯离线 fixture 和 13 项定向测试，覆盖：
 
 - 9 Topic / 54 query / config identity / Topic 与 split hashes；
 - label-free、non-adaptive 和 exact-ID-only policy drift；
 - 全 query-hit provenance、同标题不同 ID 不合并、Topic 内/跨 Topic overlap；
 - API count、year、metadata completeness、representative identity 与 risk signal；
 - API key、个人绝对路径不落盘，且 live path 不导入 dotenv 或 label-aware W6 模块；
+- process → Windows User → Windows Machine 的限定 key-source 解析，不枚举其他环境 secret；
 - missing key、frozen input/output path overlap、file hash tampering；
 - 相同 fixture 的 acquisition identity 可复现。
 
@@ -113,11 +115,15 @@ coverage 都不等于 scientific relevance 或 ranking quality。
 
 ```text
 python -m unittest tests.automated.test_w6_openalex_audit -v
-Ran 11 tests ... OK
+Ran 13 tests ... OK
 ```
 
 OpenAlex v2 的多页 cursor、429/5xx/timeout retry/backoff、无效响应和 safe-error 行为继续由既有
 `tests/automated/test_openalex_client_v2.py` 离线测试覆盖。
+
+采集前全量回归为 548 tests 全部通过（含 2 个既有 Windows symlink 条件性 skip）；Basic Gate
+扫描 370 files，0 error / 0 warning；Full Gate 扫描 370 files，0 error / 3 个既有历史 warning，
+均 PASSED。live artifact 进入仓库后必须再次执行完整验证，不能直接沿用本次采集前结果。
 
 ## 6. Live evidence（待执行）
 

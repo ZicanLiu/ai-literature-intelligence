@@ -15,6 +15,7 @@ from src.w6_openalex_audit import (
     acquire_and_audit,
     compute_query_config_identity,
     load_and_validate_query_config,
+    resolve_openalex_api_key,
     validate_acquisition_package,
     validate_query_config,
 )
@@ -131,6 +132,7 @@ class W6OpenAlexAuditTests(unittest.TestCase):
             split_path=SPLIT_PATH,
             output_dir=output,
             api_key=TEST_API_KEY,
+            authentication_source="process_environment",
             fetcher=fetcher,
             timestamp_fn=lambda: "2026-08-26T08:00:00+00:00",
         )
@@ -271,10 +273,51 @@ class W6OpenAlexAuditTests(unittest.TestCase):
                 manifest["secret_handling"],
                 {
                     "api_key_received_from_environment": True,
+                    "authentication_source": "process_environment",
                     "api_key_persisted": False,
                     "dotenv_read": False,
                 },
             )
+
+    def test_key_resolution_uses_process_then_explicit_windows_scopes(self) -> None:
+        registry_calls: list[str] = []
+
+        def reader(scope: str) -> str | None:
+            registry_calls.append(scope)
+            return "user-key" if scope == "user" else "machine-key"
+
+        self.assertEqual(
+            resolve_openalex_api_key(
+                getenv=lambda _name, _default: "process-key",
+                windows_reader=reader,
+            ),
+            ("process-key", "process_environment"),
+        )
+        self.assertEqual(registry_calls, [])
+        self.assertEqual(
+            resolve_openalex_api_key(
+                getenv=lambda _name, _default: "",
+                windows_reader=reader,
+            ),
+            ("user-key", "windows_user_environment"),
+        )
+        self.assertEqual(registry_calls, ["user"])
+
+    def test_key_resolution_can_fall_back_to_machine_or_unavailable(self) -> None:
+        self.assertEqual(
+            resolve_openalex_api_key(
+                getenv=lambda _name, _default: "",
+                windows_reader=lambda scope: "machine-key" if scope == "machine" else None,
+            ),
+            ("machine-key", "windows_machine_environment"),
+        )
+        self.assertEqual(
+            resolve_openalex_api_key(
+                getenv=lambda _name, _default: "",
+                windows_reader=lambda _scope: None,
+            ),
+            ("", "unavailable"),
+        )
 
     def test_missing_key_and_output_overlap_fail_before_fetch(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

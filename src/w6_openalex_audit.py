@@ -10,6 +10,7 @@ statistics without reading labels, judgements, rankings, or evaluation metrics.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import tempfile
 from collections import Counter, defaultdict
@@ -40,6 +41,35 @@ PACKAGE_FILES = (
     "topic_audit.json",
     "topic_audit.md",
 )
+AUTHENTICATION_SOURCES = {
+    "process_environment",
+    "windows_user_environment",
+    "windows_machine_environment",
+}
+
+
+def resolve_openalex_api_key(
+    *,
+    getenv: Callable[[str, str], str | None] | None = None,
+    windows_reader: Callable[[str], str | None] | None = None,
+) -> tuple[str, str]:
+    """Resolve only OPENALEX_API_KEY without dotenv, logging, or broad secret scans."""
+
+    environment_get = getenv or os.getenv
+    process_value = environment_get("OPENALEX_API_KEY", "")
+    if isinstance(process_value, str) and process_value.strip():
+        return process_value.strip(), "process_environment"
+    if os.name != "nt" and windows_reader is None:
+        return "", "unavailable"
+    reader = windows_reader or _read_windows_openalex_api_key
+    for scope, source in (
+        ("user", "windows_user_environment"),
+        ("machine", "windows_machine_environment"),
+    ):
+        value = reader(scope)
+        if isinstance(value, str) and value.strip():
+            return value.strip(), source
+    return "", "unavailable"
 
 
 def compute_query_config_identity(config: Mapping[str, Any]) -> str:
@@ -217,6 +247,7 @@ def acquire_and_audit(
     split_path: str | Path,
     output_dir: str | Path,
     api_key: str,
+    authentication_source: str = "process_environment",
     fetcher: Callable[..., dict[str, Any]] = fetch_openalex_papers_v2,
     timestamp_fn: Callable[[], str] = current_timestamp,
 ) -> dict[str, Any]:
@@ -238,6 +269,8 @@ def acquire_and_audit(
         raise ValueError("output_dir 已存在；为保护 research evidence，拒绝覆盖。")
     if not isinstance(api_key, str) or not api_key.strip():
         raise ValueError("OpenAlex live acquisition 需要环境变量 OPENALEX_API_KEY。")
+    if authentication_source not in AUTHENTICATION_SOURCES:
+        raise ValueError("OpenAlex authentication_source 无效。")
 
     started_at = timestamp_fn()
     records_by_id: dict[str, dict[str, Any]] = {}
@@ -420,6 +453,7 @@ def acquire_and_audit(
             "files": file_hashes,
             "secret_handling": {
                 "api_key_received_from_environment": True,
+                "authentication_source": authentication_source,
                 "api_key_persisted": False,
                 "dotenv_read": False,
             },
@@ -467,11 +501,13 @@ def validate_acquisition_package(
     if manifest.get("split_reference") != config["split_reference"]:
         raise ValueError("OpenAlex audit package split binding drift。")
     secret_handling = _require_mapping(manifest.get("secret_handling"), "secret_handling")
-    if secret_handling != {
-        "api_key_received_from_environment": True,
-        "api_key_persisted": False,
-        "dotenv_read": False,
-    }:
+    if secret_handling.get("api_key_received_from_environment") is not True:
+        raise ValueError("OpenAlex audit package environment authentication drift。")
+    if secret_handling.get("authentication_source") not in AUTHENTICATION_SOURCES:
+        raise ValueError("OpenAlex audit package authentication source drift。")
+    if secret_handling.get("api_key_persisted") is not False:
+        raise ValueError("OpenAlex audit package secret persistence drift。")
+    if secret_handling.get("dotenv_read") is not False or len(secret_handling) != 4:
         raise ValueError("OpenAlex audit package secret-handling declaration drift。")
 
     file_hashes = _require_mapping(manifest.get("files"), "files")
@@ -851,6 +887,27 @@ def _normalize_work(
         "topic_ids": [],
         "query_variant_ids": [],
     }
+
+
+def _read_windows_openalex_api_key(scope: str) -> str | None:
+    """Read one explicitly authorized Windows environment value from Registry."""
+
+    import winreg
+
+    if scope == "user":
+        root = winreg.HKEY_CURRENT_USER
+        subkey = "Environment"
+    elif scope == "machine":
+        root = winreg.HKEY_LOCAL_MACHINE
+        subkey = r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
+    else:
+        raise ValueError("Windows environment scope 无效。")
+    try:
+        with winreg.OpenKey(root, subkey) as key:
+            value, _ = winreg.QueryValueEx(key, "OPENALEX_API_KEY")
+    except OSError:
+        return None
+    return value if isinstance(value, str) else None
 
 
 def _safe_client_stats(value: Any) -> dict[str, Any]:

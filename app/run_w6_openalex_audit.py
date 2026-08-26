@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -16,6 +15,7 @@ from src.openalex_client_v2 import OpenAlexClientV2Error
 from src.w6_openalex_audit import (
     acquire_and_audit,
     load_and_validate_query_config,
+    resolve_openalex_api_key,
     validate_acquisition_package,
 )
 
@@ -68,13 +68,14 @@ def main(argv: list[str] | None = None) -> int:
             )
             return 0
         if args.command == "acquire":
-            api_key = os.getenv("OPENALEX_API_KEY", "")
+            api_key, authentication_source = resolve_openalex_api_key()
             manifest = acquire_and_audit(
                 config_path=args.config,
                 topic_set_path=args.topics,
                 split_path=args.split,
                 output_dir=args.output_dir,
                 api_key=api_key,
+                authentication_source=authentication_source,
             )
             print(
                 json.dumps(
