@@ -11,11 +11,13 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import statistics
 import tempfile
 from collections import Counter, defaultdict
 from collections.abc import Callable, Mapping, Sequence
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -33,8 +35,20 @@ from src.w6_contracts import (
 QUERY_CONFIG_IDENTITY_PREFIX = "w6-openalex-query-audit-config"
 ACQUISITION_IDENTITY_PREFIX = "w6-openalex-acquisition"
 HIT_IDENTITY_PREFIX = "w6-openalex-hit"
+ACQUISITION_RUN_IDENTITY_PREFIX = "w6-openalex-live-run"
+QUERY_RUN_IDENTITY_PREFIX = "w6-openalex-query-run"
 EXPECTED_TOPIC_COUNT = 9
 ALLOWED_QUERY_COUNT_RANGE = range(5, 9)
+TRUSTED_QUERY_CONFIG_ARTIFACT_ID = "w6_openalex_topic_query_audit_v1"
+TRUSTED_QUERY_CONFIG_IDENTITY = (
+    "w6-openalex-query-audit-config:sha256:"
+    "9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4"
+)
+TRUSTED_QUERY_CONFIG_SHA256 = (
+    "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+)
+TRUSTED_QUERY_CONFIG_FREEZE_COMMIT = "59f458733b44c4c3f97b16b8ca30b0273bda5f45"
+OPENALEX_WORK_ID_PATTERN = re.compile(r"W[1-9][0-9]*\Z")
 PACKAGE_FILES = (
     "works.jsonl",
     "query_hits.jsonl",
@@ -80,6 +94,55 @@ def compute_query_config_identity(config: Mapping[str, Any]) -> str:
     return deterministic_identity(QUERY_CONFIG_IDENTITY_PREFIX, payload)
 
 
+def compute_acquisition_run_id(
+    *, config_identity: str, acquisition_started_at: str
+) -> str:
+    """Compute the semantic parent run identity used by acquisition and validation."""
+
+    return deterministic_identity(
+        ACQUISITION_RUN_IDENTITY_PREFIX,
+        {
+            "config_identity": config_identity,
+            "acquisition_started_at": acquisition_started_at,
+        },
+    )
+
+
+def compute_query_run_id(
+    *, acquisition_run_id: str, topic_id: str, query_variant_id: str
+) -> str:
+    """Compute one frozen query run identity, excluding non-semantic timestamps."""
+
+    return deterministic_identity(
+        QUERY_RUN_IDENTITY_PREFIX,
+        {
+            "acquisition_run_id": acquisition_run_id,
+            "topic_id": topic_id,
+            "query_variant_id": query_variant_id,
+        },
+    )
+
+
+def compute_query_hit_id(
+    *,
+    acquisition_run_id: str,
+    topic_id: str,
+    query_variant_id: str,
+    openalex_id: str,
+) -> str:
+    """Compute one exact-OpenAlex-ID hit identity."""
+
+    return deterministic_identity(
+        HIT_IDENTITY_PREFIX,
+        {
+            "acquisition_run_id": acquisition_run_id,
+            "topic_id": topic_id,
+            "query_variant_id": query_variant_id,
+            "openalex_id": openalex_id,
+        },
+    )
+
+
 def load_and_validate_query_config(
     config_path: str | Path,
     *,
@@ -101,6 +164,15 @@ def load_and_validate_query_config(
         split=split,
         split_sha256=sha256_file(split_file),
     )
+    if config.get("artifact_id") != TRUSTED_QUERY_CONFIG_ARTIFACT_ID:
+        raise ValueError("query audit config 不是真实冻结的受信 artifact。")
+    if config.get("config_identity") != TRUSTED_QUERY_CONFIG_IDENTITY:
+        raise ValueError(
+            "query audit config 与 pre-acquisition 冻结 identity 不一致"
+            f"（freeze commit {TRUSTED_QUERY_CONFIG_FREEZE_COMMIT}）。"
+        )
+    if sha256_file(config_file).lower() != TRUSTED_QUERY_CONFIG_SHA256:
+        raise ValueError("query audit config 与 pre-acquisition 冻结 SHA-256 不一致。")
     return config, topic_set, split
 
 
@@ -274,12 +346,9 @@ def acquire_and_audit(
         raise ValueError("OpenAlex authentication_source 无效。")
 
     started_at = timestamp_fn()
-    acquisition_run_id = deterministic_identity(
-        "w6-openalex-live-run",
-        {
-            "config_identity": config["config_identity"],
-            "acquisition_started_at": started_at,
-        },
+    acquisition_run_id = compute_acquisition_run_id(
+        config_identity=config["config_identity"],
+        acquisition_started_at=started_at,
     )
     records_by_id: dict[str, dict[str, Any]] = {}
     hits: list[dict[str, Any]] = []
@@ -289,13 +358,10 @@ def acquire_and_audit(
     for topic in config["topics"]:
         topic_id = topic["topic_id"]
         for variant in topic["query_variants"]:
-            query_run_id = deterministic_identity(
-                "w6-openalex-query-run",
-                {
-                    "acquisition_run_id": acquisition_run_id,
-                    "topic_id": topic_id,
-                    "query_variant_id": variant["query_variant_id"],
-                },
+            query_run_id = compute_query_run_id(
+                acquisition_run_id=acquisition_run_id,
+                topic_id=topic_id,
+                query_variant_id=variant["query_variant_id"],
             )
             query_started_at = timestamp_fn()
             result = fetcher(
@@ -330,14 +396,11 @@ def acquire_and_audit(
                 query_seen.add(normalized_id)
                 paper = paper_by_id.get(normalized_id, {})
                 record_id = f"openalex:{normalized_id}"
-                hit_id = deterministic_identity(
-                    HIT_IDENTITY_PREFIX,
-                    {
-                        "acquisition_run_id": acquisition_run_id,
-                        "topic_id": topic_id,
-                        "query_variant_id": variant["query_variant_id"],
-                        "openalex_id": normalized_id,
-                    },
+                hit_id = compute_query_hit_id(
+                    acquisition_run_id=acquisition_run_id,
+                    topic_id=topic_id,
+                    query_variant_id=variant["query_variant_id"],
+                    openalex_id=normalized_id,
                 )
                 hit = {
                     "hit_id": hit_id,
@@ -491,7 +554,7 @@ def validate_acquisition_package(
     topic_set_path: str | Path,
     split_path: str | Path,
 ) -> dict[str, Any]:
-    """Validate hashes, identities, exact-ID records, and hit closure."""
+    """Validate the complete frozen-query acquisition provenance closure."""
 
     package = Path(package_dir)
     config, _, split = load_and_validate_query_config(
@@ -500,17 +563,28 @@ def validate_acquisition_package(
         split_path=split_path,
     )
     manifest = load_json_object(package / "manifest.json", label="OpenAlex audit manifest")
-    if manifest.get("artifact_type") != "w6_post_freeze_openalex_audit_package":
+    if (
+        manifest.get("schema_version") != "1.0"
+        or manifest.get("artifact_type") != "w6_post_freeze_openalex_audit_package"
+        or manifest.get("artifact_id") != "w6_openalex_topic_robustness_audit_v1"
+    ):
         raise ValueError("OpenAlex audit manifest artifact_type 无效。")
     if manifest.get("status") != "complete" or manifest.get("is_fixture") is not False:
         raise ValueError("OpenAlex audit package 必须是真实 complete artifact。")
-    if manifest.get("label_free") is not True or manifest.get("retrieval_evaluation") is not False:
+    if (
+        manifest.get("post_freeze_audit") is not True
+        or manifest.get("label_free") is not True
+        or manifest.get("retrieval_evaluation") is not False
+    ):
         raise ValueError("OpenAlex audit package label-free boundary 无效。")
     config_reference = _require_mapping(manifest.get("config_reference"), "config_reference")
-    if config_reference.get("config_identity") != config["config_identity"]:
-        raise ValueError("OpenAlex audit package config identity drift。")
-    if str(config_reference.get("sha256", "")).lower() != sha256_file(Path(config_path)).lower():
-        raise ValueError("OpenAlex audit package config hash drift。")
+    expected_config_reference = {
+        "artifact_id": TRUSTED_QUERY_CONFIG_ARTIFACT_ID,
+        "config_identity": TRUSTED_QUERY_CONFIG_IDENTITY,
+        "sha256": TRUSTED_QUERY_CONFIG_SHA256,
+    }
+    if dict(config_reference) != expected_config_reference:
+        raise ValueError("OpenAlex audit package 与受信 frozen config 的绑定 drift。")
     if manifest.get("topic_set_reference") != config["topic_set_reference"]:
         raise ValueError("OpenAlex audit package Topic binding drift。")
     if manifest.get("split_reference") != config["split_reference"]:
@@ -547,19 +621,172 @@ def validate_acquisition_package(
     hits = _read_jsonl(package / "query_hits.jsonl")
     query_runs = load_json_object(package / "query_runs.json", label="query runs")
     audit = load_json_object(package / "topic_audit.json", label="topic audit")
-    record_ids = [row.get("record_id") for row in records]
-    if len(record_ids) != len(set(record_ids)):
-        raise ValueError("works.jsonl 包含重复 record_id。")
-    normalized_ids = [row.get("openalex_id") for row in records]
-    if any(not value or normalize_openalex_id(value) != value for value in normalized_ids):
-        raise ValueError("works.jsonl 包含非规范 OpenAlex Work ID。")
-    if len(normalized_ids) != len(set(normalized_ids)):
-        raise ValueError("works.jsonl 包含重复 OpenAlex Work ID。")
-    acquisition_run_id = manifest.get("acquisition_run_id")
-    if not isinstance(acquisition_run_id, str) or not acquisition_run_id:
-        raise ValueError("manifest 缺少 acquisition_run_id。")
-    if any(row.get("acquisition_run_id") != acquisition_run_id for row in records):
-        raise ValueError("works.jsonl acquisition_run_id drift。")
+
+    canonical_queries: dict[tuple[str, str], Mapping[str, Any]] = {}
+    for topic in config["topics"]:
+        topic_id = str(topic["topic_id"])
+        for variant in topic["query_variants"]:
+            key = (topic_id, str(variant["query_variant_id"]))
+            canonical_queries[key] = variant
+    expected_query_count = len(canonical_queries)
+
+    if (
+        query_runs.get("schema_version") != "1.0"
+        or query_runs.get("artifact_type") != "w6_openalex_query_runs"
+    ):
+        raise ValueError("query_runs artifact schema/type drift。")
+    if query_runs.get("config_identity") != TRUSTED_QUERY_CONFIG_IDENTITY:
+        raise ValueError("query_runs config identity drift。")
+
+    acquisition_started_at = _require_text(
+        manifest.get("acquisition_started_at"), "acquisition_started_at"
+    )
+    acquisition_completed_at = _require_text(
+        manifest.get("acquisition_completed_at"), "acquisition_completed_at"
+    )
+    if query_runs.get("acquisition_started_at") != acquisition_started_at:
+        raise ValueError("manifest/query_runs acquisition_started_at drift。")
+    if query_runs.get("acquisition_completed_at") != acquisition_completed_at:
+        raise ValueError("manifest/query_runs acquisition_completed_at drift。")
+    frozen_at_value = _parse_timezone_aware_timestamp(config.get("frozen_at"), "config frozen_at")
+    acquisition_started_value = _parse_timezone_aware_timestamp(
+        acquisition_started_at, "acquisition_started_at"
+    )
+    acquisition_completed_value = _parse_timezone_aware_timestamp(
+        acquisition_completed_at, "acquisition_completed_at"
+    )
+    if not frozen_at_value <= acquisition_started_value <= acquisition_completed_value:
+        raise ValueError("config freeze/acquisition chronology drift。")
+
+    acquisition_run_id = _require_text(
+        manifest.get("acquisition_run_id"), "acquisition_run_id"
+    )
+    expected_acquisition_run_id = compute_acquisition_run_id(
+        config_identity=TRUSTED_QUERY_CONFIG_IDENTITY,
+        acquisition_started_at=acquisition_started_at,
+    )
+    if acquisition_run_id != expected_acquisition_run_id:
+        raise ValueError("acquisition_run_id deterministic derivation drift。")
+    if query_runs.get("acquisition_run_id") != acquisition_run_id:
+        raise ValueError("query_runs acquisition_run_id drift。")
+
+    runs = query_runs.get("runs")
+    if not isinstance(runs, list):
+        raise ValueError("query_runs.runs 必须是 list。")
+    if (
+        manifest.get("query_count") != expected_query_count
+        or query_runs.get("query_count") != expected_query_count
+        or len(runs) != expected_query_count
+    ):
+        raise ValueError("manifest/query_runs/frozen config query_count drift。")
+    run_by_key: dict[tuple[str, str], Mapping[str, Any]] = {}
+    run_by_id: dict[str, Mapping[str, Any]] = {}
+    policy = config["acquisition_policy"]
+    expected_filters = {
+        "from_year": policy["from_year"],
+        "to_year": policy["to_year"],
+    }
+    for index, run_value in enumerate(runs):
+        run = _require_mapping(run_value, f"query_runs.runs[{index}]")
+        topic_id = _require_text(run.get("topic_id"), "run topic_id")
+        variant_id = _require_text(run.get("query_variant_id"), "run query_variant_id")
+        key = (topic_id, variant_id)
+        variant = canonical_queries.get(key)
+        if variant is None:
+            raise ValueError(f"query run 引用了 unknown frozen topic/query：{key}")
+        if key in run_by_key:
+            raise ValueError(f"frozen query 对应了重复 run：{key}")
+        if run.get("query_text") != variant["query_text"]:
+            raise ValueError(f"{variant_id} query_text 与 frozen config drift。")
+        if run.get("acquisition_run_id") != acquisition_run_id:
+            raise ValueError("query run acquisition_run_id drift。")
+        expected_query_run_id = compute_query_run_id(
+            acquisition_run_id=acquisition_run_id,
+            topic_id=topic_id,
+            query_variant_id=variant_id,
+        )
+        if run.get("query_run_id") != expected_query_run_id:
+            raise ValueError(f"{variant_id} query_run_id deterministic derivation drift。")
+        if expected_query_run_id in run_by_id:
+            raise ValueError("query_runs query_run_id 重复。")
+        query_started_value = _parse_timezone_aware_timestamp(
+            run.get("query_started_at"), f"{variant_id}.query_started_at"
+        )
+        query_completed_value = _parse_timezone_aware_timestamp(
+            run.get("query_completed_at"), f"{variant_id}.query_completed_at"
+        )
+        if not (
+            acquisition_started_value
+            <= query_started_value
+            <= query_completed_value
+            <= acquisition_completed_value
+        ):
+            raise ValueError(f"{variant_id} query/acquisition chronology drift。")
+
+        retrieved_count = _require_nonnegative_int(
+            run.get("retrieved_work_count"), f"{variant_id}.retrieved_work_count"
+        )
+        missing_count = _require_nonnegative_int(
+            run.get("missing_openalex_id_skipped"),
+            f"{variant_id}.missing_openalex_id_skipped",
+        )
+        if missing_count != 0:
+            raise ValueError(
+                f"{variant_id} formal package 不允许无法绑定 canonical Work ID 的 result。"
+            )
+        if retrieved_count > policy["max_results_per_query"]:
+            raise ValueError(f"{variant_id} retrieved_work_count 超过 frozen cap。")
+        api_hit_count = run.get("api_hit_count")
+        if api_hit_count is not None:
+            api_hit_count = _require_nonnegative_int(
+                api_hit_count, f"{variant_id}.api_hit_count"
+            )
+            if api_hit_count < retrieved_count:
+                raise ValueError(f"{variant_id} API meta.count 小于 client retrieved count。")
+        stats = _require_mapping(run.get("client_stats"), f"{variant_id}.client_stats")
+        if stats.get("requested_max_results") != policy["max_results_per_query"]:
+            raise ValueError(f"{variant_id} requested cap 与 frozen config drift。")
+        if stats.get("applied_filters") != expected_filters:
+            raise ValueError(f"{variant_id} year/filter semantics 与 frozen config drift。")
+        actual_result_count = _require_nonnegative_int(
+            stats.get("actual_result_count"), f"{variant_id}.actual_result_count"
+        )
+        if actual_result_count != retrieved_count + missing_count:
+            raise ValueError(f"{variant_id} client/result/retrieved count closure drift。")
+        page_count = _require_nonnegative_int(
+            stats.get("page_count"), f"{variant_id}.page_count"
+        )
+        request_count = _require_nonnegative_int(
+            stats.get("request_count"), f"{variant_id}.request_count"
+        )
+        retry_count = _require_nonnegative_int(
+            stats.get("retry_count"), f"{variant_id}.retry_count"
+        )
+        if page_count != 1 or request_count != page_count + retry_count:
+            raise ValueError(f"{variant_id} single-page request/count semantics drift。")
+        if stats.get("status") != "success":
+            raise ValueError(f"{variant_id} client status 不是 success。")
+        if stats.get("stopped_reason") not in {
+            "max_results_reached",
+            "cursor_exhausted",
+            "results_exhausted",
+        }:
+            raise ValueError(f"{variant_id} stopped_reason 无效。")
+        for field in ("duplicate_records_skipped", "output_duplicate_id_count"):
+            if stats.get(field) != 0:
+                raise ValueError(f"{variant_id} {field} 破坏 preserved-hit closure。")
+        elapsed = stats.get("elapsed_seconds")
+        if isinstance(elapsed, bool) or not isinstance(elapsed, (int, float)) or elapsed < 0:
+            raise ValueError(f"{variant_id} elapsed_seconds 无效。")
+        run_by_key[key] = run
+        run_by_id[expected_query_run_id] = run
+    if set(run_by_key) != set(canonical_queries):
+        missing = sorted(set(canonical_queries) - set(run_by_key))
+        extra = sorted(set(run_by_key) - set(canonical_queries))
+        raise ValueError(f"frozen config/query run 非严格双射：missing={missing}, extra={extra}")
+
+    record_by_id: dict[str, Mapping[str, Any]] = {}
+    record_by_openalex_id: dict[str, Mapping[str, Any]] = {}
     required_record_fields = {
         "publication_date",
         "work_type",
@@ -568,42 +795,126 @@ def validate_acquisition_package(
         "topic_ids",
         "query_variant_ids",
     }
-    if any(not required_record_fields.issubset(row) for row in records):
-        raise ValueError("works.jsonl 缺少 compact metadata/provenance fields。")
-    record_id_set = set(record_ids)
-    hit_ids = [row.get("hit_id") for row in hits]
-    if len(hit_ids) != len(set(hit_ids)):
-        raise ValueError("query_hits.jsonl 包含重复 hit_id。")
-    if any(row.get("record_id") not in record_id_set for row in hits):
-        raise ValueError("query hit 引用了不存在的 record。")
-    if any(row.get("acquisition_run_id") != acquisition_run_id for row in hits):
-        raise ValueError("query_hits.jsonl acquisition_run_id drift。")
+    for index, record_value in enumerate(records):
+        record = _require_mapping(record_value, f"works.jsonl[{index}]")
+        if not required_record_fields.issubset(record):
+            raise ValueError("works.jsonl 缺少 compact metadata/provenance fields。")
+        openalex_id = _require_canonical_openalex_work_id(
+            record.get("openalex_id"), f"works.jsonl[{index}].openalex_id"
+        )
+        record_id = f"openalex:{openalex_id}"
+        if record.get("record_id") != record_id:
+            raise ValueError("work record_id 与 exact OpenAlex identity drift。")
+        if record.get("openalex_url") != f"https://openalex.org/{openalex_id}":
+            raise ValueError("work openalex_url 与 canonical Work ID drift。")
+        if record.get("acquisition_run_id") != acquisition_run_id:
+            raise ValueError("works.jsonl acquisition_run_id drift。")
+        if record.get("retrieved_at") != acquisition_started_at:
+            raise ValueError("work retrieved_at 与 acquisition start drift。")
+        if record_id in record_by_id or openalex_id in record_by_openalex_id:
+            raise ValueError("works.jsonl 包含重复 exact OpenAlex Work identity。")
+        record_by_id[record_id] = record
+        record_by_openalex_id[openalex_id] = record
+
+    seen_hit_ids: set[str] = set()
+    seen_triples: set[tuple[str, str, str]] = set()
+    hits_by_run: dict[tuple[str, str], list[Mapping[str, Any]]] = defaultdict(list)
+    hit_ids_by_record: dict[str, list[str]] = defaultdict(list)
+    topic_ids_by_record: dict[str, set[str]] = defaultdict(set)
+    variant_ids_by_record: dict[str, set[str]] = defaultdict(set)
+    for index, hit_value in enumerate(hits):
+        hit = _require_mapping(hit_value, f"query_hits.jsonl[{index}]")
+        topic_id = _require_text(hit.get("topic_id"), "hit topic_id")
+        variant_id = _require_text(hit.get("query_variant_id"), "hit query_variant_id")
+        key = (topic_id, variant_id)
+        run = run_by_key.get(key)
+        if run is None:
+            raise ValueError(f"query hit 引用了 unknown frozen topic/query：{key}")
+        if hit.get("acquisition_run_id") != acquisition_run_id:
+            raise ValueError("query_hits.jsonl acquisition_run_id drift。")
+        if hit.get("query_run_id") != run.get("query_run_id"):
+            raise ValueError("query hit 的 topic/query/run provenance 不一致。")
+        openalex_id = _require_canonical_openalex_work_id(
+            hit.get("openalex_id"), f"query_hits.jsonl[{index}].openalex_id"
+        )
+        record_id = f"openalex:{openalex_id}"
+        record = record_by_id.get(record_id)
+        if record is None or hit.get("record_id") != record_id:
+            raise ValueError("query hit 引用了不存在或不一致的 exact Work identity。")
+        triple = (topic_id, variant_id, openalex_id)
+        if triple in seen_triples:
+            raise ValueError("query_hits.jsonl 包含重复 (topic, query, work) provenance。")
+        seen_triples.add(triple)
+        expected_hit_id = compute_query_hit_id(
+            acquisition_run_id=acquisition_run_id,
+            topic_id=topic_id,
+            query_variant_id=variant_id,
+            openalex_id=openalex_id,
+        )
+        if hit.get("hit_id") != expected_hit_id:
+            raise ValueError("query hit ID deterministic derivation drift。")
+        if expected_hit_id in seen_hit_ids:
+            raise ValueError("query_hits.jsonl 包含重复 hit_id。")
+        seen_hit_ids.add(expected_hit_id)
+        _require_positive_int(hit.get("source_rank"), "source_rank")
+        hits_by_run[key].append(hit)
+        hit_ids_by_record[record_id].append(expected_hit_id)
+        topic_ids_by_record[record_id].add(topic_id)
+        variant_ids_by_record[record_id].add(variant_id)
+
+    for key, run in run_by_key.items():
+        run_hits = hits_by_run.get(key, [])
+        ranks = sorted(int(hit["source_rank"]) for hit in run_hits)
+        if ranks != list(range(1, len(run_hits) + 1)):
+            raise ValueError(f"{key[1]} source_rank coverage 必须严格为 1..N。")
+        if run.get("retrieved_work_count") != len(run_hits):
+            raise ValueError(f"{key[1]} run/hit retrieved count closure drift。")
+        stats = _require_mapping(run.get("client_stats"), f"{key[1]}.client_stats")
+        if stats.get("actual_result_count") != len(run_hits) + run.get(
+            "missing_openalex_id_skipped"
+        ):
+            raise ValueError(f"{key[1]} client/result/hit row closure drift。")
+
+    for record_id, record in record_by_id.items():
+        if record_id not in hit_ids_by_record:
+            raise ValueError("works.jsonl 包含没有 query hit 的 dangling work。")
+        expected_hit_ids = sorted(hit_ids_by_record[record_id])
+        expected_topic_ids = sorted(topic_ids_by_record[record_id])
+        expected_variant_ids = sorted(variant_ids_by_record[record_id])
+        for field, expected_values in (
+            ("hit_ids", expected_hit_ids),
+            ("topic_ids", expected_topic_ids),
+            ("query_variant_ids", expected_variant_ids),
+        ):
+            actual_values = record.get(field)
+            if not isinstance(actual_values, list) or any(
+                not isinstance(value, str) for value in actual_values
+            ):
+                raise ValueError(f"work {field} 必须是 string list。")
+            if len(actual_values) != len(set(actual_values)):
+                raise ValueError(f"work {field} 包含重复 derived provenance。")
+            if sorted(actual_values) != expected_values:
+                raise ValueError(f"work {field} 与 query hits 反向 provenance drift。")
+
     if manifest.get("unique_work_count") != len(records):
         raise ValueError("manifest unique_work_count drift。")
     if manifest.get("query_hit_count") != len(hits):
         raise ValueError("manifest query_hit_count drift。")
-    runs = query_runs.get("runs")
-    if not isinstance(runs, list) or manifest.get("query_count") != len(runs):
-        raise ValueError("manifest/query_runs query_count drift。")
-    if query_runs.get("acquisition_run_id") != acquisition_run_id:
-        raise ValueError("query_runs acquisition_run_id drift。")
-    run_ids = {row.get("query_run_id") for row in runs}
-    if len(run_ids) != len(runs) or None in run_ids:
-        raise ValueError("query_runs query_run_id 不唯一或缺失。")
-    if any(row.get("acquisition_run_id") != acquisition_run_id for row in runs):
-        raise ValueError("query run acquisition_run_id drift。")
-    if any(row.get("query_run_id") not in run_ids for row in hits):
-        raise ValueError("query hit 引用了不存在的 query_run_id。")
-    hits_by_record: dict[str, set[str]] = defaultdict(set)
-    for hit in hits:
-        hits_by_record[str(hit["record_id"])].add(str(hit["hit_id"]))
-    for record in records:
-        if set(record.get("hit_ids", [])) != hits_by_record[str(record["record_id"])]:
-            raise ValueError("work record/query hit provenance closure drift。")
-    if audit.get("config_identity") != config["config_identity"]:
-        raise ValueError("topic audit config identity drift。")
-    if audit.get("global_summary", {}).get("unique_work_count") != len(records):
-        raise ValueError("topic audit unique_work_count drift。")
+    if manifest.get("potential_topic_amendments") != []:
+        raise ValueError("manifest potential_topic_amendments drift。")
+
+    expected_audit = build_topic_audit(
+        config=config,
+        records=records,
+        hits=hits,
+        query_runs=runs,
+        generated_at=acquisition_completed_at,
+    )
+    if audit != expected_audit:
+        raise ValueError("topic_audit.json 与 canonical full audit model drift。")
+    expected_markdown = render_topic_audit_markdown(expected_audit)
+    if (package / "topic_audit.md").read_text(encoding="utf-8") != expected_markdown:
+        raise ValueError("topic_audit.md 与 canonical audit render drift。")
     return manifest
 
 
@@ -1169,6 +1480,39 @@ def _require_int(value: Any, label: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int):
         raise ValueError(f"{label} 必须是整数。")
     return value
+
+
+def _require_nonnegative_int(value: Any, label: str) -> int:
+    number = _require_int(value, label)
+    if number < 0:
+        raise ValueError(f"{label} 必须是非负整数。")
+    return number
+
+
+def _require_positive_int(value: Any, label: str) -> int:
+    number = _require_int(value, label)
+    if number <= 0:
+        raise ValueError(f"{label} 必须是正整数。")
+    return number
+
+
+def _require_canonical_openalex_work_id(value: Any, label: str) -> str:
+    if not isinstance(value, str) or OPENALEX_WORK_ID_PATTERN.fullmatch(value) is None:
+        raise ValueError(f"{label} 不是 canonical OpenAlex Work ID。")
+    if normalize_openalex_id(value) != value:
+        raise ValueError(f"{label} 未通过 exact OpenAlex ID normalization。")
+    return value
+
+
+def _parse_timezone_aware_timestamp(value: Any, label: str) -> datetime:
+    text = _require_text(value, label)
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise ValueError(f"{label} 不是合法 ISO-8601 timestamp。") from error
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ValueError(f"{label} 必须包含 timezone offset。")
+    return parsed
 
 
 def _ratio(numerator: int, denominator: int) -> float:

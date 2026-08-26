@@ -15,8 +15,9 @@ evaluation 或 label-aware method selection。
 - `OPENALEX_API_KEY` 从 Windows User environment 成功解析；没有读取 `.env`、没有从聊天明文重建
   key，且 key 未进入 stdout、源码、config、fixture、report、manifest 或 corpus；
 - 用户提供的 OpenAlex Usage 页面截图显示 Free Plan 当时 `$1.000` daily budget remaining
-  (`100%`)。两次 bounded 运行共 108 个 search requests、0 retries；按截图中的 10 credits/search
-  约为 1,080 credits，低于 10,000 credits 的免费日预算，没有产生付费使用；
+  (`100%`)。实现过程的运行记录报告两次 bounded 运行共 108 个 search requests、0 retries；按截图中的
+  10 credits/search 约为 1,080 credits，低于 10,000 credits 的免费日预算。仓库只保留最终 run，
+  因而两次运行合计仅作为过程记录，不作为可由 committed artifact 独立复核的正式证据；
 - 最终 package 含 2,977 个全局 unique Works、4,265 个完整 query hits；9 个 Topic 的 union 合计
   3,439 个 topic-work assignments；
 - `potential_topic_amendments` 为空，Topic Set 与 split 没有修改。
@@ -93,6 +94,33 @@ live command 只读取 process / Windows User / Windows Machine 环境中明确�
 不会做 DOI/title canonicalization、Multi-Retriever、enrichment、QA、fusion、synthesis 或新增 ranking
 算法。相同标题但不同 OpenAlex Work ID 的记录必须分别保留。
 
+### 3.1 Validator provenance closure 与 trust boundary
+
+package validator 不再把 run/hit/work/audit 中的自报字段当作 semantic truth。它从受信 frozen config
+构造 54 个 canonical `(topic_id, query_variant_id)`，验证 config 与 query runs 严格双射、query 文本和
+year/filter/cap 完全一致，并按正式 derivation 重算 acquisition run ID、query run ID、hit ID 与
+acquisition identity。随后从 hits 重算每个 run 的实际行数和连续 `1..N` rank coverage，区分 API
+`meta.count`、client result count 与 committed hit count；按 exact canonical OpenAlex Work ID 验证
+hit/work 双向 closure，并从 hits 重算每个 Work 的 hit/topic/query derived provenance。
+
+validator 还按 timezone-aware 时间解析检查
+`config freeze ≤ acquisition start ≤ query start ≤ query complete ≤ acquisition complete`，并从 frozen
+config、runs、hits 和 works 完整重建 canonical Topic Audit（含 36 个 cross-topic pairs）及 Markdown
+render 后逐语义比较。这里的 timestamp 约束只能证明已声明时间之间逻辑一致；timestamp 的外部真实性
+仍依赖 Git/external evidence，不能被描述成密码学时间证明。
+
+正式 package 的 `config_reference` 必须精确绑定：
+
+- artifact ID：`w6_openalex_topic_query_audit_v1`；
+- config identity：`w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4`；
+- config file SHA-256：`e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1`。
+
+machine validator 证明 package 相对于该受信 config 的内部 provenance closure。pre-acquisition freeze
+chronology 的外部 trust anchor 是独立提交 `59f4587`（完整 commit
+`59f458733b44c4c3f97b16b8ca30b0273bda5f45`），它先于 live acquisition artifact。package 内部 hash
+不能抵抗攻击者同时重写 config、package 和全部 hashes 的整体重新包装，也不作此声称；Git history / pinned
+commit 才承担该外部边界。
+
 ## 4. 预注册 Audit 指标与解释边界
 
 每个 query 记录 API hit count、retrieved count、对 Topic union 的 unique contribution，并计算 query
@@ -130,6 +158,13 @@ Ran 14 tests ... OK
 OpenAlex v2 的多页 cursor、429/5xx/timeout retry/backoff、无效响应和 safe-error 行为继续由既有
 `tests/automated/test_openalex_client_v2.py` 离线测试覆盖。
 
+最终 package 进入仓库后的 P1 closure 修复新增了 self-consistent repack adversarial regressions：
+mutation 后测试会重新计算全部受影响 child file SHA 与 manifest acquisition identity，再验证荒谬 rank、
+query text drift、unknown Topic、duplicate `(topic, query, work)`、run/client count drift、malformed Work
+ID、inverted chronology、重签 frozen query semantics、同步改写 acquisition/query/hit ID、Work derived
+provenance drift、Topic Audit/cross-topic statistic drift 与 Markdown drift 全部 fail closed。最终
+OpenAlex audit suite 为 31 tests；与 21 个 OpenAlex client tests 合计 52/52 PASS。
+
 采集前全量回归为 548 tests 全部通过（含 2 个既有 Windows symlink 条件性 skip）；Basic Gate
 扫描 370 files，0 error / 0 warning；Full Gate 扫描 370 files，0 error / 3 个既有历史 warning，
 均 PASSED。live artifact 进入仓库后必须再次执行完整验证，不能直接沿用本次采集前结果。
@@ -154,10 +189,12 @@ OpenAlex v2 的多页 cursor、429/5xx/timeout retry/backoff、无效响应和 s
   raw API response dump。
 
 第一次同 query 运行完成后发现 compact schema 缺少用户要求的 publication date、work type、
-OpenAlex URL 和显式 run identity。因此只扩展 OpenAlex `select` 与 provenance schema，未修改 query
-文本、顺序、year filter 或 cap；第二次运行的全部 2,977 Work IDs 和 4,265 个
-topic/query/rank hits 与第一次完全相同。第一次运行作为旧 schema 临时备份移出工作区，不进入 Git；
-最终 package 2,977/2,977 records 均含 date、type 与 OpenAlex URL。
+OpenAlex URL 和显式 run identity，因此实现只扩展 OpenAlex `select` 与 provenance schema，未修改
+frozen query 文本、顺序、year filter 或 cap。实现过程的运行记录报告两次 acquisition 得到相同的
+2,977 Work IDs 和 4,265 个 topic/query/rank hits；仓库保留并可独立验证的是最终 run，以及两次运行
+之间 frozen query semantics 未发生变化。第一轮旧-schema package 或独立 fingerprint 未保留，
+因此该跨运行一致性不作为机器可独立验证的正式证据。最终 package 的 2,977/2,977 records 均含
+date、type 与 OpenAlex URL。
 
 ### 6.1 Per-topic corpus size
 
@@ -268,18 +305,18 @@ sibling tasks。
 最终验收结果：
 
 - query config validator：9 Topics / 54 queries，config identity 与 Topic/split hashes PASS；
-- final OpenAlex package validator：54 queries / 2,977 works，acquisition identity 与 6 个 file hashes、
-  record-hit-run closure PASS；
+- final OpenAlex package validator：54 queries / 2,977 works / 4,265 hits，acquisition identity 与 5 个
+  child file hashes、frozen-config↔run↔hit↔work↔full-audit provenance closure PASS；
 - `validate_w6_topics`：9 Topics / Dev 5 / Hidden 4、原 split identity PASS；
 - `validate_w6_bootstrap`：2 synthetic Topics / 10 records / 13 pool items / 3 methods PASS；
 - committed W6 Benchmark validator：`bootstrap_fixture`、2 Topics、13 pool items、4 annotations PASS；
-- W6 contracts + Benchmark + Boundary + OpenAlex tests：126 tests，124 PASS / 2 个 Windows symlink
-  privilege 条件性 skip；其中 Boundary committed fixture 由 W6 strict validator PASS；
+- W6 contracts + Benchmark + Boundary + OpenAlex package/client tests：143 tests，141 PASS / 2 个
+  Windows symlink privilege 条件性 skip；其中 Boundary committed fixture 由 W6 strict validator PASS；
 - W4/W5 regressions：164 tests 全部 PASS；
 - W4 strict approved validator：60/60，每 RQ 20/20，manifest hash 保持
   `d503f5c2448409a9433bf3ffeada3890c7ddb31237bc7c95c529014b5fb8d094`；
 - 六个 W5 formal method manifests：6/6 PASS，ranking/manifest hashes 均保持；
-- 全量 offline unittest：551 tests，549 PASS / 2 skip；
+- 全量 offline unittest：568 tests，566 PASS / 2 skip；
 - Basic Quality Gate：扫描 376 files，0 error / 0 warning，PASSED；
 - Full Quality Gate：扫描 376 files，0 error / 3 个既有历史 warning，PASSED；
 - `git diff --check`、final package hash validation 与 protected path diff：PASS。

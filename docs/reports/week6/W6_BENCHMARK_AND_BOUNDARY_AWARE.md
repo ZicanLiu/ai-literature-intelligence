@@ -308,8 +308,9 @@ Full Gate 的三个 warning 与 base 一致：历史 W1 CSV 结构、W1 旧 labe
 
 ### 8.1 Post-freeze OpenAlex expansion regression
 
-新增 live corpus 后再次执行：W6 contracts/Benchmark/Boundary/OpenAlex 126 tests（124 PASS / 2 个
-Windows symlink 条件性 skip）、W4/W5 164 tests、全量 offline 551 tests（549 PASS / 2 skip）；
+新增 live corpus 并完成 package provenance-closure P1 修复后再次执行：W6
+contracts/Benchmark/Boundary/OpenAlex package/client 143 tests（141 PASS / 2 个 Windows symlink
+privilege 条件性 skip）、W4/W5 164 tests、全量 offline 568 tests（566 PASS / 2 skip）；
 Basic Gate 扫描 376 files、0 error / 0 warning，Full Gate 扫描 376 files、0 error / 3 个相同历史
 warning，全部 PASS。W4 approved Benchmark、六个 W5 method artifacts、W5 metrics/Error Analysis、
 W6 Bootstrap contracts 相对 review 修复 head 均无 protected-path diff；四个 P1 保持 CLOSED。

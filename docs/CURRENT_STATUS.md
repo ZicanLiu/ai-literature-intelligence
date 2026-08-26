@@ -1,9 +1,11 @@
 # 当前项目状态
 
-更新时间：2026-08-24
+更新时间：2026-08-26
 
-W6 Bootstrap 开工时核对的公共 `main` / 缓存 `origin/main` 起点：`6b9eb12`（W5 PR #56–#62
-已合并）。实时远端状态仍须在每次接手任务时重新 fetch/GitHub 核对。
+本次在 2026-08-26 fetch 后核对的公共 `origin/main` 为 `9081105`（PR #63，W6 Research Contract &
+Parallel Development Bootstrap）。PR #71 尚未合并；本文分别记录公共 `main` 与 PR #71 merge
+candidate，不能把后者表述成已经位于 `main`。实时远端状态仍须在每次接手任务时重新
+fetch/GitHub 核对。
 
 W5 Method Ranking Contract v1.1 已建立并向后兼容 v1.0。v1.1 只用于完整声明 B0/B1 的冻结
 source sample 输入；BM25、SPECTER2、Cross-Encoder 与 RRF 的 v1.0 package 继续有效。
@@ -198,18 +200,55 @@ python -m app.validate_w6_bootstrap
 Benchmark status 为 `bootstrap_fixture`；仓库没有真实 W6 hidden labels，也没有批准的 W6
 Benchmark v0.2-alpha。
 
+### PR #71 merge candidate（尚未进入 main）
+
+`feature/w6-benchmark-boundary-aware` 上的 PR #71 在公共 Bootstrap 之上形成了以下待合并成果：
+
+- 已完成并冻结 9 个真实 Research Topics；候选 roster、viability evidence、淘汰理由与 freeze 决策
+  记录于 W6 research artifact/report；
+- 已冻结 topic-level Dev 5 / Hidden 4 split，9 个 Topic 无遗漏、无交叉，`reveal_state=sealed`；
+- 已冻结 AI-assisted annotation、second annotation、review/adjudication protocol；仓库仍没有真实
+  Hidden labels；
+- 已完成 Boundary-Aware 候选方案比较并冻结 structured lexical prototype；当前 committed Benchmark
+  package 仍是 `bootstrap_fixture`，不冒充真实 W6 Benchmark；
+- 在 Topic/split freeze 后另行冻结 54 个 OpenAlex query，形成 54 query runs、4,265 query hits、
+  3,439 topic-work assignments 和 2,977 unique Works 的 broad/raw acquisition corpus；它不是 final
+  Benchmark Pool、canonical entity set、labelled dataset 或 Hidden evaluation set；
+- OpenAlex package validator 已绑定 pre-acquisition config artifact identity 与 exact SHA-256，并从
+  frozen config 重算 query/run/hit/work/count/chronology/完整 Topic Audit provenance closure。Git
+  commit `59f4587` 提供 freeze 先于 acquisition 的外部 chronology anchor；package 内部 hashes 本身
+  不被描述成可抵抗 config 与 package 整体重新包装的外部 trust anchor。
+
+PR #71 没有修改 W4 approved Benchmark、W5 frozen method artifacts/metrics/error analysis，也没有重新
+采集或改写 9 Topics、Dev/Hidden split、54 queries 或 2,977-Work corpus。
+
+真实 W6 Integration 仍未完成：Multi-Retriever pooling、enrichment、exact-ID 之后的受控
+canonicalization、final pool selection、blind annotation/second annotation/review/adjudication、正式
+method/fusion generation、sealed Hidden evaluation 与 synthesis 均属于后续工作。
+
 ## 当前验证
+
+以下是 PR #71 merge candidate（含 OpenAlex provenance-closure P1 修复）的 2026-08-26 实际验证快照，
+不是公共 `main` 的测试快照：
 
 - approved benchmark strict validator：60/60、20 × 3，通过；
 - 正式 W5 artifact checker：精确六方法 roster 6/6，通过；
 - W6 public bundle validator：2 topics、10 source records、13 pool items、3 method packages，通过；
-- W6 contract/fixture 定向测试：48 项通过（含六任务隔离 dependency-closure smoke 与审查绕过
-  regressions）；W4/W5/W6 相关回归：212 项通过；
-- 全量离线测试：494 项通过，0 failure / 0 error；
-- Basic Quality Gate：扫描 328 个文件，0 error / 0 warning，PASSED；
-- Full Quality Gate：扫描 328 个文件，0 error / 3 个既有历史 warning，PASSED；
+- W6 Topic validator：9 Topics、Dev 5 / Hidden 4、split identity 匹配；
+- committed Issue #64 Benchmark validator：`bootstrap_fixture`、2 Topics、13 pool items、4 synthetic
+  annotations，通过；
+- committed OpenAlex package validator：54 runs、2,977 Works、4,265 hits，受信 config、deterministic
+  IDs、rank/count、chronology、Work reverse provenance 与完整 Topic Audit closure 通过；
+- OpenAlex package adversarial/audit tests：31/31；OpenAlex client + package tests：52/52；
+- W6 contracts/Benchmark/Boundary/OpenAlex package/client：143 tests，141 PASS / 2 个 Windows
+  symlink privilege 条件性 skip；Issue #64 Benchmark/Boundary 定向 tests：43 tests，41 PASS / 2 skip；
+- W4/W5 regressions：164/164；
+- 全量离线测试：568 tests，566 PASS / 2 skip，0 failure / 0 error；
+- Basic Quality Gate：扫描 376 个文件，0 error / 0 warning，PASSED；
+- Full Quality Gate：扫描 376 个文件，0 error / 3 个既有历史 warning，PASSED；
 - experiment metrics 与六个 method manifest hash 复核一致；`git diff --check` 通过；
-- 所有测试使用本地 fixture 或已提交样例，没有新增 OpenAlex live 请求或神经模型推理。
+- 所有测试使用本地 fixture、临时 self-consistent mutations 或已提交 package，没有新增 OpenAlex live
+  请求或神经模型推理。
 
 Full Gate 的三个 warning 与此前公共基线一致：W1 一处历史 CSV 结构问题、
 `data/manual/relevance_labels_w1.csv` 的 19 个旧 ID 未对齐当前统一样例、一个历史已跟踪
@@ -217,11 +256,14 @@ experiment `openalex_stellar_spectra_60`。本次没有修改这些历史 eviden
 
 ## W6 后续 Issue 保留的研究决策
 
-1. 最终 Topic 数量、内容、viability 与 freeze；
-2. 真实 multi-retriever roster、pool depth/target/minimum 和 pooling policy；
-3. 真实 Dev/Hidden topic split、hidden-label custodian 和一次性 reveal 流程；
-4. AI annotation prompt/model/evidence lookup/human review/adjudication policy；
-5. Boundary-Aware method、score normalization/weights 和 preregistration；
+PR #71 已完成 Topic freeze、topic-level Dev/Hidden split、annotation/review policy 与 Boundary-Aware
+prototype preregistration。仍待真实 Integration/后续 Issue 完成：
+
+1. multi-retriever roster、pool depth/target/minimum、pooling 与 enrichment 执行；
+2. exact OpenAlex ID 之外的受控 canonicalization、alias review 与 final Benchmark Pool freeze；
+3. blind annotation、20% second annotation、human review/adjudication 的实际执行与 provenance 验收；
+4. independent hidden-label custodian、external anchor 与一次性 reveal/evaluation 流程；
+5. frozen real method/fusion inputs、Boundary-Aware Integration 与 Dev-only method selection；
 6. synthesis LLM/backend、证据抽取许可与人工事实核验。
 
 不得根据当前正式指标回调参数后仍冒充同一次冻结实验；不得自行创建 W6 Issue。

@@ -12,14 +12,22 @@ from typing import Any
 from src.annotation_tasks import sha256_file
 from src.openalex_client import convert_openalex_work
 from src.w6_openalex_audit import (
+    ACQUISITION_IDENTITY_PREFIX,
+    PACKAGE_FILES,
     acquire_and_audit,
+    build_topic_audit,
+    compute_acquisition_run_id,
     compute_query_config_identity,
+    compute_query_hit_id,
+    compute_query_run_id,
     load_and_validate_query_config,
     refresh_acquisition_audit,
+    render_topic_audit_markdown,
     resolve_openalex_api_key,
     validate_acquisition_package,
     validate_query_config,
 )
+from src.w6_contracts import deterministic_identity
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -27,6 +35,9 @@ CONFIG_PATH = PROJECT_ROOT / "configs" / "w6" / "openalex_topic_query_audit_v1.j
 TOPIC_PATH = PROJECT_ROOT / "data" / "research" / "w6" / "v0.2-alpha" / "topics.json"
 SPLIT_PATH = PROJECT_ROOT / "data" / "research" / "w6" / "v0.2-alpha" / "split_manifest.json"
 FIXTURE_PATH = PROJECT_ROOT / "tests" / "fixtures" / "w6_openalex_audit" / "base_works.json"
+COMMITTED_PACKAGE_PATH = (
+    PROJECT_ROOT / "data" / "research" / "w6" / "v0.2-alpha" / "openalex-audit-v1"
+)
 TEST_API_KEY = "offline-test-key-never-persist"
 
 
@@ -37,6 +48,91 @@ def read_json(path: Path) -> dict[str, Any]:
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
+
+
+def write_json(path: Path, value: Any) -> None:
+    path.write_text(
+        json.dumps(value, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
+def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
+    path.write_text(
+        "".join(
+            json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+            + "\n"
+            for row in rows
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+
+
+def repackage_with_fresh_hashes(package: Path) -> None:
+    """Rehash every child and the manifest identity after an adversarial mutation."""
+
+    manifest = read_json(package / "manifest.json")
+    manifest["files"] = {name: sha256_file(package / name) for name in PACKAGE_FILES}
+    manifest["acquisition_identity"] = deterministic_identity(
+        ACQUISITION_IDENTITY_PREFIX,
+        {
+            "config_identity": manifest["config_reference"]["config_identity"],
+            "topic_set_sha256": manifest["topic_set_reference"]["sha256"],
+            "split_identity": manifest["split_reference"]["split_identity"],
+            "file_hashes": manifest["files"],
+        },
+    )
+    write_json(package / "manifest.json", manifest)
+
+
+def rewrite_package_run_identity(
+    package: Path,
+    *,
+    acquisition_run_id: str,
+    config_identity: str | None = None,
+) -> None:
+    """Synchronize every child identity so tests do not rely on a stale reference."""
+
+    manifest = read_json(package / "manifest.json")
+    runs_artifact = read_json(package / "query_runs.json")
+    hits = read_jsonl(package / "query_hits.jsonl")
+    records = read_jsonl(package / "works.jsonl")
+    manifest["acquisition_run_id"] = acquisition_run_id
+    runs_artifact["acquisition_run_id"] = acquisition_run_id
+    if config_identity is not None:
+        runs_artifact["config_identity"] = config_identity
+    query_run_ids: dict[tuple[str, str], str] = {}
+    for run in runs_artifact["runs"]:
+        run["acquisition_run_id"] = acquisition_run_id
+        run["query_run_id"] = compute_query_run_id(
+            acquisition_run_id=acquisition_run_id,
+            topic_id=run["topic_id"],
+            query_variant_id=run["query_variant_id"],
+        )
+        query_run_ids[(run["topic_id"], run["query_variant_id"])] = run[
+            "query_run_id"
+        ]
+    hit_ids_by_record: dict[str, list[str]] = {}
+    for hit in hits:
+        hit["acquisition_run_id"] = acquisition_run_id
+        key = (hit["topic_id"], hit["query_variant_id"])
+        hit["query_run_id"] = query_run_ids[key]
+        hit["hit_id"] = compute_query_hit_id(
+            acquisition_run_id=acquisition_run_id,
+            topic_id=hit["topic_id"],
+            query_variant_id=hit["query_variant_id"],
+            openalex_id=hit["openalex_id"],
+        )
+        hit_ids_by_record.setdefault(hit["record_id"], []).append(hit["hit_id"])
+    for record in records:
+        record["acquisition_run_id"] = acquisition_run_id
+        record["hit_ids"] = sorted(hit_ids_by_record[record["record_id"]])
+    write_json(package / "manifest.json", manifest)
+    write_json(package / "query_runs.json", runs_artifact)
+    write_jsonl(package / "query_hits.jsonl", hits)
+    write_jsonl(package / "works.jsonl", records)
 
 
 class FrozenQueryFetcher:
@@ -138,6 +234,24 @@ class W6OpenAlexAuditTests(unittest.TestCase):
             timestamp_fn=lambda: "2026-08-26T08:00:00+00:00",
         )
         return manifest, fetcher
+
+    def assert_repacked_mutation_rejected(
+        self,
+        mutate: Any,
+        message_pattern: str,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            package = Path(temporary_directory) / "package"
+            self.build_package(package)
+            mutate(package)
+            repackage_with_fresh_hashes(package)
+            with self.assertRaisesRegex(ValueError, message_pattern):
+                validate_acquisition_package(
+                    package_dir=package,
+                    config_path=CONFIG_PATH,
+                    topic_set_path=TOPIC_PATH,
+                    split_path=SPLIT_PATH,
+                )
 
     def test_frozen_config_binds_nine_topics_and_fifty_four_queries(self) -> None:
         config, topics, split = load_and_validate_query_config(
@@ -413,6 +527,276 @@ class W6OpenAlexAuditTests(unittest.TestCase):
 
             self.assertEqual(first["acquisition_identity"], second["acquisition_identity"])
             self.assertEqual(first["files"], second["files"])
+
+    def test_committed_openalex_package_has_full_provenance_closure(self) -> None:
+        manifest = validate_acquisition_package(
+            package_dir=COMMITTED_PACKAGE_PATH,
+            config_path=CONFIG_PATH,
+            topic_set_path=TOPIC_PATH,
+            split_path=SPLIT_PATH,
+        )
+
+        self.assertEqual(manifest["query_count"], 54)
+        self.assertEqual(manifest["unique_work_count"], 2977)
+        self.assertEqual(manifest["query_hit_count"], 4265)
+
+    def test_repacked_absurd_rank_is_rejected(self) -> None:
+        def mutate(package: Path) -> None:
+            hits = read_jsonl(package / "query_hits.jsonl")
+            hits[0]["source_rank"] = 9999
+            write_jsonl(package / "query_hits.jsonl", hits)
+
+        self.assert_repacked_mutation_rejected(mutate, "source_rank coverage")
+
+    def test_repacked_query_text_drift_is_rejected(self) -> None:
+        def mutate(package: Path) -> None:
+            runs = read_json(package / "query_runs.json")
+            runs["runs"][0]["query_text"] += " post-hoc drift"
+            write_json(package / "query_runs.json", runs)
+
+        self.assert_repacked_mutation_rejected(mutate, "query_text.*frozen config drift")
+
+    def test_repacked_unknown_topic_hit_is_rejected(self) -> None:
+        def mutate(package: Path) -> None:
+            hits = read_jsonl(package / "query_hits.jsonl")
+            records = read_jsonl(package / "works.jsonl")
+            hit = hits[1]
+            old_hit_id = hit["hit_id"]
+            hit["topic_id"] = "w6_topic_unknown"
+            hit["hit_id"] = compute_query_hit_id(
+                acquisition_run_id=hit["acquisition_run_id"],
+                topic_id=hit["topic_id"],
+                query_variant_id=hit["query_variant_id"],
+                openalex_id=hit["openalex_id"],
+            )
+            record = next(row for row in records if row["record_id"] == hit["record_id"])
+            record["hit_ids"] = [
+                hit["hit_id"] if value == old_hit_id else value
+                for value in record["hit_ids"]
+            ]
+            record["topic_ids"] = sorted(set(record["topic_ids"] + [hit["topic_id"]]))
+            write_jsonl(package / "query_hits.jsonl", hits)
+            write_jsonl(package / "works.jsonl", records)
+
+        self.assert_repacked_mutation_rejected(mutate, "unknown frozen topic/query")
+
+    def test_repacked_duplicate_topic_query_work_triple_is_rejected(self) -> None:
+        def mutate(package: Path) -> None:
+            hits = read_jsonl(package / "query_hits.jsonl")
+            hits.append(copy.deepcopy(hits[0]))
+            write_jsonl(package / "query_hits.jsonl", hits)
+
+        self.assert_repacked_mutation_rejected(mutate, "重复 \\(topic, query, work\\)")
+
+    def test_repacked_run_and_client_count_drift_is_rejected(self) -> None:
+        def mutate(package: Path) -> None:
+            runs = read_json(package / "query_runs.json")
+            run = runs["runs"][0]
+            run["retrieved_work_count"] += 1
+            run["client_stats"]["actual_result_count"] += 1
+            write_json(package / "query_runs.json", runs)
+
+        self.assert_repacked_mutation_rejected(mutate, "run/hit retrieved count closure")
+
+        def fabricate_missing_id_count(package: Path) -> None:
+            runs = read_json(package / "query_runs.json")
+            run = runs["runs"][0]
+            run["missing_openalex_id_skipped"] = 1
+            run["client_stats"]["actual_result_count"] += 1
+            write_json(package / "query_runs.json", runs)
+
+        self.assert_repacked_mutation_rejected(
+            fabricate_missing_id_count,
+            "不允许无法绑定 canonical Work ID",
+        )
+
+    def test_repacked_malformed_openalex_work_id_is_rejected(self) -> None:
+        def mutate(package: Path) -> None:
+            records = read_jsonl(package / "works.jsonl")
+            hits = read_jsonl(package / "query_hits.jsonl")
+            record = next(row for row in records if len(row["hit_ids"]) == 1)
+            hit = next(row for row in hits if row["record_id"] == record["record_id"])
+            malformed_id = "W01"
+            record["openalex_id"] = malformed_id
+            record["record_id"] = f"openalex:{malformed_id}"
+            record["openalex_url"] = f"https://openalex.org/{malformed_id}"
+            hit["openalex_id"] = malformed_id
+            hit["record_id"] = record["record_id"]
+            hit["hit_id"] = compute_query_hit_id(
+                acquisition_run_id=hit["acquisition_run_id"],
+                topic_id=hit["topic_id"],
+                query_variant_id=hit["query_variant_id"],
+                openalex_id=malformed_id,
+            )
+            record["hit_ids"] = [hit["hit_id"]]
+            write_jsonl(package / "works.jsonl", records)
+            write_jsonl(package / "query_hits.jsonl", hits)
+
+        self.assert_repacked_mutation_rejected(mutate, "canonical OpenAlex Work ID")
+
+    def test_repacked_inverted_query_chronology_is_rejected(self) -> None:
+        def mutate(package: Path) -> None:
+            runs = read_json(package / "query_runs.json")
+            runs["runs"][0]["query_completed_at"] = "2026-08-26T07:59:59+00:00"
+            write_json(package / "query_runs.json", runs)
+
+        self.assert_repacked_mutation_rejected(mutate, "chronology drift")
+
+    def test_repacked_modified_frozen_query_semantics_are_rejected_by_trust_anchor(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            package = root / "package"
+            drifted_config_path = root / "drifted-config.json"
+            self.build_package(package)
+            drifted_config = copy.deepcopy(self.config)
+            drifted_variant = drifted_config["topics"][0]["query_variants"][0]
+            drifted_variant["query_text"] += " post-hoc drift"
+            drifted_config["config_identity"] = compute_query_config_identity(
+                drifted_config
+            )
+            write_json(drifted_config_path, drifted_config)
+
+            manifest = read_json(package / "manifest.json")
+            manifest["config_reference"] = {
+                "artifact_id": drifted_config["artifact_id"],
+                "config_identity": drifted_config["config_identity"],
+                "sha256": sha256_file(drifted_config_path),
+            }
+            write_json(package / "manifest.json", manifest)
+            runs = read_json(package / "query_runs.json")
+            runs["runs"][0]["query_text"] = drifted_variant["query_text"]
+            write_json(package / "query_runs.json", runs)
+            new_run_id = compute_acquisition_run_id(
+                config_identity=drifted_config["config_identity"],
+                acquisition_started_at=manifest["acquisition_started_at"],
+            )
+            rewrite_package_run_identity(
+                package,
+                acquisition_run_id=new_run_id,
+                config_identity=drifted_config["config_identity"],
+            )
+            runs = read_json(package / "query_runs.json")
+            records = read_jsonl(package / "works.jsonl")
+            hits = read_jsonl(package / "query_hits.jsonl")
+            audit = build_topic_audit(
+                config=drifted_config,
+                records=records,
+                hits=hits,
+                query_runs=runs["runs"],
+                generated_at=runs["acquisition_completed_at"],
+            )
+            write_json(package / "topic_audit.json", audit)
+            (package / "topic_audit.md").write_text(
+                render_topic_audit_markdown(audit),
+                encoding="utf-8",
+                newline="\n",
+            )
+            repackage_with_fresh_hashes(package)
+
+            with self.assertRaisesRegex(ValueError, "pre-acquisition.*identity"):
+                validate_acquisition_package(
+                    package_dir=package,
+                    config_path=drifted_config_path,
+                    topic_set_path=TOPIC_PATH,
+                    split_path=SPLIT_PATH,
+                )
+
+    def test_repacked_arbitrary_acquisition_run_id_is_rejected(self) -> None:
+        def mutate(package: Path) -> None:
+            rewrite_package_run_identity(
+                package,
+                acquisition_run_id="w6-openalex-live-run:sha256:" + "0" * 64,
+            )
+
+        self.assert_repacked_mutation_rejected(
+            mutate, "acquisition_run_id deterministic derivation drift"
+        )
+
+    def test_repacked_arbitrary_query_run_id_is_rejected(self) -> None:
+        def mutate(package: Path) -> None:
+            runs = read_json(package / "query_runs.json")
+            hits = read_jsonl(package / "query_hits.jsonl")
+            run = runs["runs"][0]
+            arbitrary_id = "w6-openalex-query-run:sha256:" + "1" * 64
+            run["query_run_id"] = arbitrary_id
+            for hit in hits:
+                if (
+                    hit["topic_id"] == run["topic_id"]
+                    and hit["query_variant_id"] == run["query_variant_id"]
+                ):
+                    hit["query_run_id"] = arbitrary_id
+            write_json(package / "query_runs.json", runs)
+            write_jsonl(package / "query_hits.jsonl", hits)
+
+        self.assert_repacked_mutation_rejected(
+            mutate, "query_run_id deterministic derivation drift"
+        )
+
+    def test_repacked_arbitrary_hit_id_is_rejected(self) -> None:
+        def mutate(package: Path) -> None:
+            hits = read_jsonl(package / "query_hits.jsonl")
+            records = read_jsonl(package / "works.jsonl")
+            hit = hits[0]
+            old_hit_id = hit["hit_id"]
+            hit["hit_id"] = "w6-openalex-hit:sha256:" + "2" * 64
+            record = next(row for row in records if row["record_id"] == hit["record_id"])
+            record["hit_ids"] = [
+                hit["hit_id"] if value == old_hit_id else value
+                for value in record["hit_ids"]
+            ]
+            write_jsonl(package / "query_hits.jsonl", hits)
+            write_jsonl(package / "works.jsonl", records)
+
+        self.assert_repacked_mutation_rejected(
+            mutate, "hit ID deterministic derivation drift"
+        )
+
+    def test_repacked_derived_work_provenance_drift_is_rejected(self) -> None:
+        def mutate(package: Path) -> None:
+            records = read_jsonl(package / "works.jsonl")
+            records[0]["query_variant_ids"] = ["fabricated_query_variant"]
+            write_jsonl(package / "works.jsonl", records)
+
+        self.assert_repacked_mutation_rejected(mutate, "反向 provenance drift")
+
+    def test_repacked_topic_audit_drift_is_rejected(self) -> None:
+        def mutate(package: Path) -> None:
+            audit = read_json(package / "topic_audit.json")
+            audit["topics"][0]["union_work_count"] += 1
+            write_json(package / "topic_audit.json", audit)
+
+        self.assert_repacked_mutation_rejected(mutate, "canonical full audit model drift")
+
+    def test_repacked_cross_topic_statistic_drift_is_rejected(self) -> None:
+        def mutate(package: Path) -> None:
+            audit = read_json(package / "topic_audit.json")
+            audit["cross_topic_overlap"][0]["jaccard"] = 0.999999
+            write_json(package / "topic_audit.json", audit)
+
+        self.assert_repacked_mutation_rejected(mutate, "canonical full audit model drift")
+
+    def test_repacked_missing_query_run_breaks_frozen_bijection(self) -> None:
+        def mutate(package: Path) -> None:
+            runs = read_json(package / "query_runs.json")
+            runs["runs"].pop()
+            runs["query_count"] -= 1
+            manifest = read_json(package / "manifest.json")
+            manifest["query_count"] -= 1
+            write_json(package / "query_runs.json", runs)
+            write_json(package / "manifest.json", manifest)
+
+        self.assert_repacked_mutation_rejected(
+            mutate, "manifest/query_runs/frozen config query_count drift"
+        )
+
+    def test_repacked_topic_audit_markdown_drift_is_rejected(self) -> None:
+        def mutate(package: Path) -> None:
+            with (package / "topic_audit.md").open(
+                "a", encoding="utf-8", newline="\n"
+            ) as handle:
+                handle.write("post-hoc narrative drift\n")
+
+        self.assert_repacked_mutation_rejected(mutate, "canonical audit render drift")
 
     def test_live_path_does_not_import_dotenv_or_label_aware_w6_modules(self) -> None:
         source = (PROJECT_ROOT / "app" / "run_w6_openalex_audit.py").read_text(encoding="utf-8")
