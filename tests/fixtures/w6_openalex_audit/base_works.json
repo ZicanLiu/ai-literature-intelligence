@@ -1,0 +1,38 @@
+{
+  "shared": {
+    "id": "https://openalex.org/W9900001",
+    "display_name": "Shared offline audit work",
+    "authorships": [{"author": {"display_name": "Fixture Author"}}],
+    "publication_year": 2022,
+    "doi": "https://doi.org/10.0000/shared.audit",
+    "abstract_inverted_index": {"shared": [0], "audit": [1]},
+    "cited_by_count": 10,
+    "primary_location": {
+      "landing_page_url": "https://example.org/shared-audit",
+      "source": {"display_name": "Offline Audit Journal"}
+    }
+  },
+  "topic_common": {
+    "id": "https://openalex.org/W9900100",
+    "display_name": "Topic common offline work",
+    "authorships": [{"author": {"display_name": "Topic Fixture Author"}}],
+    "publication_year": 2021,
+    "doi": "",
+    "abstract_inverted_index": {"topic": [0], "common": [1]},
+    "cited_by_count": 5,
+    "primary_location": {
+      "landing_page_url": "https://example.org/topic-common",
+      "source": {"display_name": "Offline Audit Journal"}
+    }
+  },
+  "query_unique": {
+    "id": "https://openalex.org/W9901000",
+    "display_name": "Same title retained under different exact Work IDs",
+    "authorships": [],
+    "publication_year": null,
+    "doi": "",
+    "abstract_inverted_index": null,
+    "cited_by_count": 0,
+    "primary_location": null
+  }
+}

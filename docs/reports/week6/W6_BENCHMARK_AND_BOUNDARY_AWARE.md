@@ -76,6 +76,17 @@ count 也不自动保留；代表性论文是否直接匹配 object/modality/tas
 窗口恢复且 `OPENALEX_API_KEY` 作为环境变量实际暴露后再另行继续；本次不把失败批次写成成功
 evidence。失败响应不会补造 count、年份或论文 identity，也不会改变已经冻结的 Topic roster。
 
+### 2.3 PR #71 freeze 后 OpenAlex robustness audit
+
+`2026-08-26T15:50:21+08:00`，在上述 Topic Set 与 topic-level split 均已冻结之后，另行启动
+OpenAlex Multi-Query Corpus Expansion & Topic Robustness Audit。它使用独立的 54-query frozen
+config，不修改 Topic contract 内原 query variants，不参与 Topic selection，也不读取 labels、
+judgements、ranking metrics 或 annotations。详细 acquisition design、执行状态和后续真实 evidence
+单独记录于
+[`W6_OPENALEX_CORPUS_AND_TOPIC_ROBUSTNESS_AUDIT.md`](W6_OPENALEX_CORPUS_AND_TOPIC_ROBUSTNESS_AUDIT.md)。
+截至该 design freeze，当前进程仍未暴露环境变量 key，因此 live acquisition 尚未执行；此处不把
+离线 fixture 或预算截图写成 OpenAlex 查询 evidence。
+
 ## 3. 最终 Topic freeze
 
 冻结 Topic Set 位于 [`topics.json`](../../../data/research/w6/v0.2-alpha/topics.json)：

@@ -1,0 +1,187 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "w6_post_freeze_openalex_query_audit_config",
+  "artifact_id": "w6_openalex_topic_query_audit_v1",
+  "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+  "status": "frozen",
+  "is_fixture": false,
+  "post_freeze_audit": true,
+  "frozen_before_acquisition": true,
+  "frozen_at": "2026-08-26T15:50:21+08:00",
+  "purpose": "Label-free OpenAlex corpus expansion and robustness audit after the Issue #64 Topic freeze; this artifact is not a Topic selection or retrieval evaluation artifact.",
+  "topic_set_reference": {
+    "path": "data/research/w6/v0.2-alpha/topics.json",
+    "artifact_id": "w6_research_topics_v0.2_alpha",
+    "sha256": "6e2f6e6b8fea56cef6e245dcf37fa97a46ba5efc6703fb47e9863840e3a06ca4"
+  },
+  "split_reference": {
+    "path": "data/research/w6/v0.2-alpha/split_manifest.json",
+    "artifact_id": "w6_topic_split_v0.2_alpha",
+    "sha256": "bb57448288f122406d195cbec09dde80f76f78a7a0a1d0ef9bc85c052aea69ad",
+    "split_identity": "w6-topic-split:sha256:8391d14987a15982b5afa2ae3760f029824909353f51056360d79fe9b85202bc",
+    "usage": "identity binding only; acquisition and audit must not branch on Dev/Hidden membership"
+  },
+  "acquisition_policy": {
+    "provider": "OpenAlex",
+    "entity": "works",
+    "operation": "search",
+    "client": "src.openalex_client_v2.fetch_openalex_papers_v2",
+    "from_year": 2000,
+    "to_year": 2026,
+    "max_results_per_query": 80,
+    "query_variants_per_topic": 6,
+    "target_unique_works_per_topic": {
+      "minimum": 200,
+      "preferred_maximum": 400,
+      "soft_cap": 500
+    },
+    "deduplication": "exact normalized OpenAlex Work ID only",
+    "preserve_all_query_hits": true,
+    "api_key_source": "OPENALEX_API_KEY environment only; never dotenv or artifact",
+    "labels_allowed": false,
+    "adaptive_query_tuning_after_results": false,
+    "retrieval_evaluation": false
+  },
+  "audit_policy": {
+    "query_metrics": [
+      "api_hit_count",
+      "retrieved_work_count",
+      "unique_contribution_count",
+      "pairwise_intersection",
+      "pairwise_jaccard"
+    ],
+    "topic_metrics": [
+      "union_work_count",
+      "multi_query_support_distribution",
+      "publication_year_distribution",
+      "metadata_completeness",
+      "representative_works"
+    ],
+    "cross_topic_metrics": [
+      "pairwise_intersection",
+      "pairwise_jaccard",
+      "query_facet_coverage"
+    ],
+    "representative_work_policy": "highest query-support count, then cited_by_count, publication_year, and OpenAlex Work ID; descriptive only",
+    "topic_amendment_policy": "record potential_topic_amendment only; never mutate the frozen Topic Set or split"
+  },
+  "topics": [
+    {
+      "topic_id": "w6_topic_galaxy_activity_spectra",
+      "expected_facets": ["integrated optical spectra", "activity classes", "emission lines", "AGN and LINER", "machine-learning classification"],
+      "query_variants": [
+        {"query_variant_id": "galaxy_activity_aq01", "query_text": "machine learning optical galaxy spectra activity classification", "coverage_facets": ["integrated optical spectra", "activity classes", "machine-learning classification"], "rationale": "Preserves the original frozen broad formulation as an independently versioned audit query."},
+        {"query_variant_id": "galaxy_activity_aq02", "query_text": "automated AGN LINER star forming classification galaxy spectra", "coverage_facets": ["activity classes", "AGN and LINER", "emission lines"], "rationale": "Tests the named physical-class vocabulary used by activity-class studies."},
+        {"query_variant_id": "galaxy_activity_aq03", "query_text": "neural network BPT activity classification galaxy spectra", "coverage_facets": ["activity classes", "emission lines", "machine-learning classification"], "rationale": "Adds BPT terminology and a specific learned-model family without changing the Topic boundary."},
+        {"query_variant_id": "galaxy_activity_aq04", "query_text": "deep learning emission line galaxy nuclear activity classification", "coverage_facets": ["emission lines", "AGN and LINER", "machine-learning classification"], "rationale": "Probes emission-line and nuclear-activity phrasing used outside the broad spectrum wording."},
+        {"query_variant_id": "galaxy_activity_aq05", "query_text": "spectroscopic galaxy AGN classification machine learning", "coverage_facets": ["integrated optical spectra", "AGN and LINER", "machine-learning classification"], "rationale": "Tests the common spectroscopic-AGN formulation while retaining the learned classification task."},
+        {"query_variant_id": "galaxy_activity_aq06", "query_text": "artificial intelligence galaxy spectra ionization class", "coverage_facets": ["integrated optical spectra", "activity classes", "emission lines"], "rationale": "Tests artificial-intelligence and ionization-class synonyms that may not use activity-class wording."}
+      ]
+    },
+    {
+      "topic_id": "w6_topic_supernova_spectral_typing",
+      "expected_facets": ["observed transient spectra", "supernova type", "low signal", "phase variation", "machine-learning classification"],
+      "query_variants": [
+        {"query_variant_id": "supernova_typing_aq01", "query_text": "deep learning supernova spectral classification", "coverage_facets": ["observed transient spectra", "supernova type", "machine-learning classification"], "rationale": "Preserves the original frozen direct formulation as an audit query."},
+        {"query_variant_id": "supernova_typing_aq02", "query_text": "machine learning transient spectra automated typing", "coverage_facets": ["observed transient spectra", "supernova type", "machine-learning classification"], "rationale": "Covers transient and typing terminology beyond papers using supernova classification in titles."},
+        {"query_variant_id": "supernova_typing_aq03", "query_text": "automated supernova spectrum classification", "coverage_facets": ["observed transient spectra", "supernova type"], "rationale": "Uses singular spectrum and automated-classification vocabulary common in pipeline descriptions."},
+        {"query_variant_id": "supernova_typing_aq04", "query_text": "neural network supernova spectra type identification", "coverage_facets": ["observed transient spectra", "supernova type", "machine-learning classification"], "rationale": "Tests neural-network and type-identification synonyms."},
+        {"query_variant_id": "supernova_typing_aq05", "query_text": "low signal supernova spectral typing machine learning", "coverage_facets": ["observed transient spectra", "supernova type", "low signal"], "rationale": "Targets the frozen low-signal boundary explicitly."},
+        {"query_variant_id": "supernova_typing_aq06", "query_text": "phase varying transient spectral classification", "coverage_facets": ["observed transient spectra", "supernova type", "phase variation"], "rationale": "Targets phase-dependent vocabulary without adding photometric-only classification."}
+      ]
+    },
+    {
+      "topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "expected_facets": ["transmission spectra", "emission spectra", "atmospheric retrieval", "molecular abundance", "learned inverse model"],
+      "query_variants": [
+        {"query_variant_id": "exoplanet_retrieval_aq01", "query_text": "machine learning exoplanet transmission spectra atmospheric retrieval", "coverage_facets": ["transmission spectra", "atmospheric retrieval", "learned inverse model"], "rationale": "Preserves the original frozen transmission-spectrum formulation."},
+        {"query_variant_id": "exoplanet_retrieval_aq02", "query_text": "neural network exoplanet emission spectrum abundance inference", "coverage_facets": ["emission spectra", "molecular abundance", "learned inverse model"], "rationale": "Preserves the original frozen emission-spectrum and abundance formulation."},
+        {"query_variant_id": "exoplanet_retrieval_aq03", "query_text": "deep learning exoplanet atmospheric retrieval spectroscopy", "coverage_facets": ["atmospheric retrieval", "learned inverse model"], "rationale": "Tests a broad spectroscopy formulation used by retrieval-method papers."},
+        {"query_variant_id": "exoplanet_retrieval_aq04", "query_text": "machine learning molecular abundance retrieval exoplanet spectra", "coverage_facets": ["molecular abundance", "atmospheric retrieval", "learned inverse model"], "rationale": "Targets composition outputs rather than generic spectrum modelling."},
+        {"query_variant_id": "exoplanet_retrieval_aq05", "query_text": "neural posterior estimation exoplanet transmission spectrum", "coverage_facets": ["transmission spectra", "atmospheric retrieval", "learned inverse model"], "rationale": "Adds modern simulation-based inference terminology while preserving the inverse task."},
+        {"query_variant_id": "exoplanet_retrieval_aq06", "query_text": "surrogate inverse model exoplanet atmospheric spectrum", "coverage_facets": ["atmospheric retrieval", "learned inverse model"], "rationale": "Separates inverse-surrogate literature from forward-only spectral emulation."}
+      ]
+    },
+    {
+      "topic_id": "w6_topic_stellar_radial_velocity",
+      "expected_facets": ["stellar spectra", "radial velocity", "high resolution", "time series", "spectral variability"],
+      "query_variants": [
+        {"query_variant_id": "stellar_rv_aq01", "query_text": "data driven time series stellar spectra radial velocity", "coverage_facets": ["stellar spectra", "radial velocity", "time series"], "rationale": "Preserves the original frozen time-series formulation."},
+        {"query_variant_id": "stellar_rv_aq02", "query_text": "machine learning high resolution stellar spectrum Doppler velocity", "coverage_facets": ["stellar spectra", "radial velocity", "high resolution"], "rationale": "Preserves the original frozen high-resolution and Doppler formulation."},
+        {"query_variant_id": "stellar_rv_aq03", "query_text": "neural network stellar radial velocity spectroscopy", "coverage_facets": ["stellar spectra", "radial velocity"], "rationale": "Tests neural-network terminology in direct stellar-RV estimation."},
+        {"query_variant_id": "stellar_rv_aq04", "query_text": "data driven spectral disentangling radial velocities stars", "coverage_facets": ["stellar spectra", "radial velocity", "spectral variability"], "rationale": "Targets data-driven disentangling while requiring radial-velocity output."},
+        {"query_variant_id": "stellar_rv_aq05", "query_text": "machine learning precise radial velocity stellar activity spectra", "coverage_facets": ["stellar spectra", "radial velocity", "spectral variability"], "rationale": "Probes the activity-separation portion of the frozen Topic boundary."},
+        {"query_variant_id": "stellar_rv_aq06", "query_text": "learned template stellar spectra Doppler shift", "coverage_facets": ["stellar spectra", "radial velocity", "high resolution"], "rationale": "Covers learned-template vocabulary distinct from fixed cross-correlation templates."}
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "expected_facets": ["astronomical spectra", "survey scale", "anomaly or novelty", "unsupervised learning", "rare-object discovery"],
+      "query_variants": [
+        {"query_variant_id": "spectral_anomaly_aq01", "query_text": "machine learning rare objects astronomical spectra anomaly detection", "coverage_facets": ["astronomical spectra", "anomaly or novelty", "rare-object discovery"], "rationale": "Preserves the original frozen rare-object formulation."},
+        {"query_variant_id": "spectral_anomaly_aq02", "query_text": "unsupervised outlier discovery spectroscopic survey", "coverage_facets": ["survey scale", "anomaly or novelty", "unsupervised learning"], "rationale": "Preserves the original frozen survey and unsupervised formulation."},
+        {"query_variant_id": "spectral_anomaly_aq03", "query_text": "anomaly detection stellar spectra machine learning", "coverage_facets": ["astronomical spectra", "anomaly or novelty"], "rationale": "Tests the stellar-spectra subdomain without narrowing the frozen Topic globally."},
+        {"query_variant_id": "spectral_anomaly_aq04", "query_text": "unusual galaxy spectra unsupervised learning", "coverage_facets": ["astronomical spectra", "unsupervised learning", "rare-object discovery"], "rationale": "Tests unusual-galaxy vocabulary common in spectroscopic discovery studies."},
+        {"query_variant_id": "spectral_anomaly_aq05", "query_text": "novelty detection astronomical spectroscopy survey", "coverage_facets": ["astronomical spectra", "survey scale", "anomaly or novelty"], "rationale": "Adds novelty-detection and spectroscopy synonyms."},
+        {"query_variant_id": "spectral_anomaly_aq06", "query_text": "active learning rare spectral objects astronomy", "coverage_facets": ["astronomical spectra", "rare-object discovery"], "rationale": "Covers the active-learning route explicitly allowed by the frozen research question."}
+      ]
+    },
+    {
+      "topic_id": "w6_topic_stellar_spectral_denoising",
+      "expected_facets": ["stellar spectra", "low signal-to-noise", "learned denoising", "artifact restoration", "line preservation"],
+      "query_variants": [
+        {"query_variant_id": "stellar_denoising_aq01", "query_text": "neural network stellar spectra denoising", "coverage_facets": ["stellar spectra", "learned denoising"], "rationale": "Preserves the original frozen direct formulation."},
+        {"query_variant_id": "stellar_denoising_aq02", "query_text": "deep learning low signal stellar spectrum restoration", "coverage_facets": ["stellar spectra", "low signal-to-noise", "artifact restoration"], "rationale": "Preserves the original frozen low-signal restoration formulation."},
+        {"query_variant_id": "stellar_denoising_aq03", "query_text": "machine learning low signal to noise stellar spectra", "coverage_facets": ["stellar spectra", "low signal-to-noise", "learned denoising"], "rationale": "Tests explicit signal-to-noise terminology."},
+        {"query_variant_id": "stellar_denoising_aq04", "query_text": "autoencoder denoising astronomical spectra", "coverage_facets": ["stellar spectra", "learned denoising"], "rationale": "Adds autoencoder vocabulary while retaining spectrum denoising as the task."},
+        {"query_variant_id": "stellar_denoising_aq05", "query_text": "generative adversarial network stellar spectral denoising", "coverage_facets": ["stellar spectra", "learned denoising", "artifact restoration"], "rationale": "Tests a generative denoising family used in restoration work."},
+        {"query_variant_id": "stellar_denoising_aq06", "query_text": "learned noise removal optical stellar spectrum line preservation", "coverage_facets": ["stellar spectra", "learned denoising", "line preservation"], "rationale": "Targets the scientific line-preservation constraint of the frozen Topic."}
+      ]
+    },
+    {
+      "topic_id": "w6_topic_stellar_spectral_emulation",
+      "expected_facets": ["synthetic stellar spectra", "physical parameters", "forward surrogate", "interpolation", "spectral synthesis"],
+      "query_variants": [
+        {"query_variant_id": "stellar_emulation_aq01", "query_text": "stellar spectra machine learning interpolation emulator", "coverage_facets": ["synthetic stellar spectra", "forward surrogate", "interpolation"], "rationale": "Preserves the original frozen interpolation formulation."},
+        {"query_variant_id": "stellar_emulation_aq02", "query_text": "neural network stellar spectral synthesis surrogate", "coverage_facets": ["synthetic stellar spectra", "forward surrogate", "spectral synthesis"], "rationale": "Preserves the original frozen synthesis-surrogate formulation."},
+        {"query_variant_id": "stellar_emulation_aq03", "query_text": "data driven stellar spectrum generator physical parameters", "coverage_facets": ["synthetic stellar spectra", "physical parameters", "forward surrogate"], "rationale": "Requires the forward parameter-to-spectrum direction."},
+        {"query_variant_id": "stellar_emulation_aq04", "query_text": "machine learning emulator stellar atmosphere spectra", "coverage_facets": ["synthetic stellar spectra", "forward surrogate", "spectral synthesis"], "rationale": "Adds stellar-atmosphere emulator vocabulary."},
+        {"query_variant_id": "stellar_emulation_aq05", "query_text": "neural spectral interpolation stellar model grid", "coverage_facets": ["synthetic stellar spectra", "interpolation", "physical parameters"], "rationale": "Targets interpolation across model grids rather than inverse parameter estimation."},
+        {"query_variant_id": "stellar_emulation_aq06", "query_text": "generative model synthetic stellar spectra conditioned parameters", "coverage_facets": ["synthetic stellar spectra", "physical parameters", "forward surrogate"], "rationale": "Covers parameter-conditioned generative terminology."}
+      ]
+    },
+    {
+      "topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "expected_facets": ["solar spectra", "Stokes profiles", "spectropolarimetry", "magnetic field", "atmospheric inversion"],
+      "query_variants": [
+        {"query_variant_id": "solar_inversion_aq01", "query_text": "machine learning solar spectropolarimetric inversion", "coverage_facets": ["solar spectra", "spectropolarimetry", "atmospheric inversion"], "rationale": "Preserves the original frozen direct formulation."},
+        {"query_variant_id": "solar_inversion_aq02", "query_text": "deep learning Stokes profiles magnetic field inversion", "coverage_facets": ["Stokes profiles", "magnetic field", "atmospheric inversion"], "rationale": "Preserves the original frozen Stokes and magnetic-field formulation."},
+        {"query_variant_id": "solar_inversion_aq03", "query_text": "neural network solar Stokes inversion atmosphere", "coverage_facets": ["solar spectra", "Stokes profiles", "atmospheric inversion"], "rationale": "Tests neural-network and atmosphere wording."},
+        {"query_variant_id": "solar_inversion_aq04", "query_text": "machine learning solar magnetic field spectropolarimetry", "coverage_facets": ["solar spectra", "spectropolarimetry", "magnetic field"], "rationale": "Tests magnetic-field estimation phrasing that may omit inversion in titles."},
+        {"query_variant_id": "solar_inversion_aq05", "query_text": "physics informed neural network solar spectral inversion", "coverage_facets": ["solar spectra", "atmospheric inversion"], "rationale": "Adds physics-informed terminology while retaining a solar inverse task."},
+        {"query_variant_id": "solar_inversion_aq06", "query_text": "deep learning solar atmosphere inversion polarized spectra", "coverage_facets": ["solar spectra", "spectropolarimetry", "atmospheric inversion"], "rationale": "Covers polarized-spectrum terminology beyond the Stokes keyword."}
+      ]
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "expected_facets": ["21-cm data", "foreground removal", "component separation", "reionization", "intensity mapping"],
+      "query_variants": [
+        {"query_variant_id": "21cm_foreground_aq01", "query_text": "neural network foreground removal 21 cm signal", "coverage_facets": ["21-cm data", "foreground removal"], "rationale": "Preserves the original frozen direct formulation."},
+        {"query_variant_id": "21cm_foreground_aq02", "query_text": "deep learning 21cm intensity mapping foreground separation", "coverage_facets": ["21-cm data", "component separation", "intensity mapping"], "rationale": "Preserves the original frozen intensity-mapping formulation."},
+        {"query_variant_id": "21cm_foreground_aq03", "query_text": "machine learning cosmological 21 cm foreground subtraction", "coverage_facets": ["21-cm data", "foreground removal"], "rationale": "Adds foreground-subtraction terminology while retaining the cosmological signal context."},
+        {"query_variant_id": "21cm_foreground_aq04", "query_text": "neural network component separation radio 21cm spectra", "coverage_facets": ["21-cm data", "component separation"], "rationale": "Targets frequency-resolved radio-spectrum and component-separation wording."},
+        {"query_variant_id": "21cm_foreground_aq05", "query_text": "deep learning epoch reionization foreground removal", "coverage_facets": ["foreground removal", "reionization"], "rationale": "Covers Epoch-of-Reionization terminology common in 21-cm literature."},
+        {"query_variant_id": "21cm_foreground_aq06", "query_text": "machine learning HI intensity mapping foreground cleaning", "coverage_facets": ["21-cm data", "foreground removal", "intensity mapping"], "rationale": "Adds HI and foreground-cleaning synonyms used by intensity-mapping studies."}
+      ]
+    }
+  ],
+  "potential_topic_amendments": [],
+  "provenance": {
+    "kind": "pr71_post_freeze_query_design",
+    "created_by": "issue64_leader_followup",
+    "created_at": "2026-08-26T15:50:21+08:00",
+    "base_git_revision": "fbe8db766798e17e49c1ba4a774a905aba75b96b",
+    "selection_labels_used": false,
+    "ranking_metrics_used": false
+  }
+}
