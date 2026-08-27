@@ -273,6 +273,7 @@ class W6ScoreFusionTests(unittest.TestCase):
             fusion=fusion,
             method_inputs=method_inputs,
             git_revision=FAKE_GIT_REVISION,
+            is_fixture=True,
         )
         manifest_path = tmp_dir / "manifest.json"
         manifest_path.write_text(

@@ -73,6 +73,7 @@ class W6SynthesisTestBase(unittest.TestCase):
             artifact_id="w6_test_evidence",
             created_at=FIXED_TIME,
             git_revision=FAKE_GIT_REVISION,
+            is_fixture=True,
         )
         return validate_evidence_units(payload, records=self.records, canonical=self.canonical)
 
@@ -109,6 +110,7 @@ class EvidenceExtractionTests(W6SynthesisTestBase):
             artifact_id="w6_test_evidence_long",
             created_at=FIXED_TIME,
             git_revision=FAKE_GIT_REVISION,
+            is_fixture=True,
         )
         snippet = payload["evidence_units"][0]["content"]["snippet"]
         self.assertEqual(len(snippet), MAX_SNIPPET_CHARACTERS)
@@ -189,6 +191,7 @@ class PipelineTests(W6SynthesisTestBase):
             synthesis_id="w6_test_synthesis",
             created_at=FIXED_TIME,
             git_revision=FAKE_GIT_REVISION,
+            is_fixture=True,
         )
 
     def test_end_to_end_on_fixture_selection(self) -> None:

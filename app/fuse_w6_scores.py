@@ -43,6 +43,7 @@ from src.w6_score_fusion import (
 )
 from src.w6_task_context import (
     build_explicit_method_index,
+    derive_output_is_fixture,
     load_w6_base_context,
     resolve_method_path,
 )
@@ -253,6 +254,7 @@ def build_manifest(
     fusion: dict,
     method_inputs: list[dict],
     git_revision: str,
+    is_fixture: bool,
 ) -> dict:
     now = datetime.now().astimezone().isoformat()
     manifest = {
@@ -261,7 +263,7 @@ def build_manifest(
         "contract_version": W6_METHOD_CONTRACT_VERSION,
         "artifact_type": W6_METHOD_ARTIFACT_TYPE,
         "artifact_id": f"{output_method_id}_artifact",
-        "is_fixture": False,
+        "is_fixture": is_fixture,
         "status": "frozen",
         "compatibility": W6_COMPATIBILITY,
         "method": {
@@ -422,6 +424,13 @@ def main(argv: list[str] | None = None) -> int:
         equal = 1.0 / len(packages)
         weights = {method_id_item: equal for method_id_item in input_method_ids}
 
+    # fixture provenance 由可信输入 context 与闭包内全部 package 派生，不硬编码。
+    try:
+        output_is_fixture = derive_output_is_fixture(bundle, known_method_packages)
+    except ValueError as error:
+        print(f"fixture provenance 派生失败：{error}")
+        return 1
+
     # 预检 3：Git clean 状态与完整 revision（写文件前提前失败）。
     git_revision = _git_revision()
     if not _git_worktree_clean():
@@ -490,6 +499,7 @@ def main(argv: list[str] | None = None) -> int:
             fusion=fusion,
             method_inputs=method_inputs,
             git_revision=git_revision,
+            is_fixture=output_is_fixture,
         )
         manifest_path = tmp_dir / "manifest.json"
         manifest_path.write_text(

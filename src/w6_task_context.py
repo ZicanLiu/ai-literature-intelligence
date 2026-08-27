@@ -514,6 +514,37 @@ def validate_method_against_generation_context(
             )
 
 
+def derive_output_is_fixture(
+    context: Mapping[str, Any],
+    packages: Mapping[str, Mapping[str, Any]],
+) -> bool:
+    """从可信输入 context 与闭包内全部 method package 派生输出 artifact 的
+    fixture identity。
+
+    规则：base context 的 5 个 payload 与闭包内每个 method package（含传递
+    依赖）的 ``is_fixture`` 必须**全部一致**——fixture context → fixture
+    generation artifacts；real context → non-fixture artifacts；混合 identity
+    fail closed。输出 artifact 不得自行"猜测"或硬编码自己的 provenance。
+    """
+    statuses: set[bool] = set()
+    for name in BASE_CONTEXT_ARTIFACT_NAMES:
+        value = context["payloads"][name].get("is_fixture")
+        if not isinstance(value, bool):
+            raise ValueError(f"base context artifact {name} 缺少合法 is_fixture。")
+        statuses.add(value)
+    for artifact_id, package in packages.items():
+        value = package["manifest"].get("is_fixture")
+        if not isinstance(value, bool):
+            raise ValueError(f"method package {artifact_id} 缺少合法 is_fixture。")
+        statuses.add(value)
+    if len(statuses) != 1:
+        raise ValueError(
+            "输入 fixture identity 不一致（fixture 与 non-fixture 混合），"
+            "拒绝生成 artifact。"
+        )
+    return statuses.pop()
+
+
 def check_frozen_method_identity(
     package: Mapping[str, Any],
     frozen_method_packages: Mapping[str, Mapping[str, Any]],

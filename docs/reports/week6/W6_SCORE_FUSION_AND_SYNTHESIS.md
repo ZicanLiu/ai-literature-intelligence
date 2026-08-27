@@ -162,6 +162,20 @@ python -m app.run_w6_synthesis --output-dir <outdir>
   human verification 流程在后续任务中定义。
 - 真实 LLM backend 未实现（仅 Protocol）；接入前需要独立的凭据与安全审查。
 
+## 审查修复记录（PR #70 第五轮）
+
+第五轮为 provenance correctness 收口（1 个 P1 + 1 个 P2），未触动已关闭主体：
+
+1. **P1-1 fixture provenance 正确传播**：新增 `derive_output_is_fixture(context,
+   packages)`——base context 5 个 payload 与闭包内全部 method package（含传递
+   依赖）的 `is_fixture` 必须全部一致，输出 artifact 从可信输入**派生**该值，
+   混合 identity fail closed；fusion manifest 与 synthesis 三个 artifact
+   （evidence/input/structured）的 `is_fixture` 不再硬编码/默认值，pipeline
+   builder 改为必填关键字参数。回归：fixture 链全部输出 `is_fixture: true`；
+   翻转任一输入（自洽 rehash）→ fail closed；fixture fusion 输出再进 synthesis
+   链保持 true；real-like 全 False 一致输入 → 派生 False。
+2. **P2**：PR body 的测试统计同步为 current head 真实数字。
+
 ## 审查修复记录（PR #70 第四轮）
 
 第四轮聚焦复审只剩 No-Leakage semantic boundary 下 2 个 P1（其余 4 个 blocker 已独立确认关闭），修复如下：

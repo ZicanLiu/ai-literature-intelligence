@@ -35,6 +35,7 @@ from src.w6_synthesis_pipeline import (
 )
 from src.w6_task_context import (
     build_explicit_method_index,
+    derive_output_is_fixture,
     load_w6_base_context,
     resolve_bundle_method,
     resolve_method_path,
@@ -152,19 +153,31 @@ def main(argv: list[str] | None = None) -> int:
     # 传递依赖；显式 --method-manifest 只加载该 method 闭包）。每个被解析的
     # package（含传递 dependency）都在 resolver 内绑定当前 context 的真实
     # artifact identity。
+    known_packages: dict = {}
     try:
         if args.method_manifest is not None:
             package = resolve_method_path(
                 bundle,
                 args.method_manifest,
+                known=known_packages,
                 explicit_index=build_explicit_method_index([args.method_manifest]),
             )
         else:
-            package = resolve_bundle_method(bundle, "method_fusion_manifest")
+            package = resolve_bundle_method(
+                bundle, "method_fusion_manifest", known=known_packages
+            )
     except (OSError, UnicodeError, ValueError) as error:
         print(f"输入 method artifact 校验失败：{error}")
         return 1
     method_packages = {package["artifact_id"]: package}
+
+    # fixture provenance 由可信输入 context 与所选 method 闭包（含传递依赖）
+    # 派生，不硬编码。
+    try:
+        output_is_fixture = derive_output_is_fixture(bundle, known_packages)
+    except ValueError as error:
+        print(f"fixture provenance 派生失败：{error}")
+        return 1
 
     # 预检 2：Git revision（provenance 需要完整 40 位 SHA；离线测试可 patch）。
     git_revision = _git_revision()
@@ -211,6 +224,7 @@ def main(argv: list[str] | None = None) -> int:
             artifact_id=f"{prefix}_evidence",
             created_at=created_at,
             git_revision=git_revision,
+            is_fixture=output_is_fixture,
         )
         evidence_path = tmp_dir / "evidence_units.json"
         evidence_sha = _write_json(evidence_path, evidence_payload)
@@ -256,6 +270,7 @@ def main(argv: list[str] | None = None) -> int:
                 synthesis_input_id=f"{prefix}_input_v1",
                 created_at=created_at,
                 git_revision=git_revision,
+                is_fixture=output_is_fixture,
             )
         except ValueError as error:
             print(f"synthesis input 构造失败：{error}")
@@ -299,6 +314,7 @@ def main(argv: list[str] | None = None) -> int:
                 synthesis_id=f"{prefix}_synthesis_v1",
                 created_at=created_at,
                 git_revision=git_revision,
+                is_fixture=output_is_fixture,
             )
         except ValueError as error:
             print(f"structured synthesis 生成失败：{error}")

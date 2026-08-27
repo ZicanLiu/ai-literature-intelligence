@@ -34,6 +34,7 @@ from src.w6_no_leakage import (
 from src.w6_task_context import (
     BASE_CONTEXT_ARTIFACT_NAMES,
     LABEL_AWARE_ARTIFACT_NAMES,
+    derive_output_is_fixture,
     load_w6_base_context,
     resolve_bundle_method,
     resolve_method_path,
@@ -1011,6 +1012,150 @@ class ParallelDevelopmentContractTests(unittest.TestCase):
         # 原始 fixture 与 subset bundle 的 parallel_development 均合法。
         context = load_w6_base_context(BUNDLE_PATH)
         self.assertEqual(len(context["topics"]), 2)
+
+
+class FixtureProvenanceTests(unittest.TestCase):
+    """P1-1（第五轮）：fixture provenance 必须由可信输入派生并正确传播。"""
+
+    def test_fusion_output_inherits_fixture_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "out"
+            rc = _run_fusion_cli(
+                [
+                    "--manifest",
+                    str(VALID_ROOT / "method_rankings/fake_sparse/manifest.json"),
+                    "--manifest",
+                    str(VALID_ROOT / "method_rankings/fake_dense/manifest.json"),
+                    "--method-id", "w6_prov_fusion",
+                    "--output-dir", str(out),
+                ]
+            )
+            self.assertEqual(rc, 0)
+            manifest = load_json_object(out / "manifest.json")
+            self.assertIs(manifest["is_fixture"], True)
+
+    def test_synthesis_chain_inherits_fixture_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "out"
+            rc = _run_synthesis_cli(["--output-dir", str(out)])
+            self.assertEqual(rc, 0)
+            for name in (
+                "evidence_units.json",
+                "synthesis_input.json",
+                "structured_synthesis.json",
+            ):
+                payload = load_json_object(out / name)
+                self.assertIs(payload["is_fixture"], True, name)
+
+    def test_fusion_output_feeds_synthesis_chain(self) -> None:
+        # fixture fusion 输出再进入 synthesis：链上 is_fixture 保持 true。
+        with tempfile.TemporaryDirectory() as tmp:
+            fusion_out = Path(tmp) / "fusion"
+            rc = _run_fusion_cli(
+                [
+                    "--manifest",
+                    str(VALID_ROOT / "method_rankings/fake_sparse/manifest.json"),
+                    "--manifest",
+                    str(VALID_ROOT / "method_rankings/fake_dense/manifest.json"),
+                    "--method-id", "w6_prov_fusion",
+                    "--output-dir", str(fusion_out),
+                ]
+            )
+            self.assertEqual(rc, 0)
+            synth_out = Path(tmp) / "synth"
+            rc = _run_synthesis_cli(
+                [
+                    "--method-manifest", str(fusion_out / "manifest.json"),
+                    "--output-dir", str(synth_out),
+                ]
+            )
+            self.assertEqual(rc, 0)
+            payload = load_json_object(synth_out / "structured_synthesis.json")
+            self.assertIs(payload["is_fixture"], True)
+
+    def test_mixed_method_fixture_identity_fails_closed(self) -> None:
+        # 翻转一个 method package 的 is_fixture（自洽重算 bundle 声明 sha）→ 拒绝。
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "subset"
+            _write_subset_bundle(
+                root, [*BASE_CONTEXT_ARTIFACT_NAMES, "method_sparse_manifest", "method_dense_manifest"]
+            )
+            sparse_manifest = root / "method_rankings/fake_sparse/manifest.json"
+            payload = load_json_object(sparse_manifest)
+            payload["is_fixture"] = False
+            _update_artifact(
+                root,
+                "method_sparse_manifest",
+                "method_rankings/fake_sparse/manifest.json",
+                payload,
+            )
+            rc = _run_fusion_cli(
+                [
+                    "--bundle", str(root / "bundle_manifest.json"),
+                    "--manifest", str(sparse_manifest),
+                    "--manifest", str(root / "method_rankings/fake_dense/manifest.json"),
+                    "--method-id", "w6_prov_fusion",
+                    "--output-dir", str(root / "out_f"),
+                ]
+            )
+            self.assertEqual(rc, 1)
+
+    def test_mixed_base_payload_fixture_identity_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "subset"
+            _write_subset_bundle(
+                root, [*BASE_CONTEXT_ARTIFACT_NAMES, "method_sparse_manifest", "method_dense_manifest"]
+            )
+            pool = load_json_object(root / "candidate_pool.json")
+            pool["is_fixture"] = False
+            _update_artifact(root, "candidate_pool", "candidate_pool.json", pool)
+            rc = _run_synthesis_cli(
+                [
+                    "--bundle", str(root / "bundle_manifest.json"),
+                    "--method-manifest",
+                    str(root / "method_rankings/fake_sparse/manifest.json"),
+                    "--output-dir", str(root / "out_s"),
+                ]
+            )
+            self.assertEqual(rc, 1)
+
+    def test_real_like_consistent_non_fixture_derives_false(self) -> None:
+        # unit-level：全 False 一致输入 → 输出 False（机制可表达）。
+        context = load_w6_base_context(BUNDLE_PATH)
+        real_like_payloads = {
+            name: {**payload, "is_fixture": False}
+            for name, payload in context["payloads"].items()
+        }
+        real_like_context = {**context, "payloads": real_like_payloads}
+        self.assertIs(derive_output_is_fixture(real_like_context, {}), False)
+        self.assertIs(derive_output_is_fixture(context, {}), True)
+        with self.assertRaisesRegex(ValueError, "不一致"):
+            derive_output_is_fixture(
+                context,
+                {
+                    "pkg": {
+                        "manifest": {"is_fixture": False},
+                    }
+                },
+            )
+
+    def test_builders_propagate_explicit_fixture_flag(self) -> None:
+        # builder 层：is_fixture 为必填，显式 False/True 都正确传播。
+        records = load_json_object(VALID_ROOT / "source_records.json")
+        from src.w6_synthesis_pipeline import build_evidence_units
+
+        context = load_w6_base_context(BUNDLE_PATH)
+        for flag in (False, True):
+            payload = build_evidence_units(
+                context["records"],
+                context["canonical"],
+                ["rec_001"],
+                artifact_id="w6_prov_evidence",
+                created_at="2026-08-25T00:00:00+08:00",
+                git_revision=FAKE_GIT_REVISION,
+                is_fixture=flag,
+            )
+            self.assertIs(payload["is_fixture"], flag)
 
 
 if __name__ == "__main__":

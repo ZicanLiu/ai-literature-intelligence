@@ -138,7 +138,7 @@ def build_evidence_units(
     artifact_id: str,
     created_at: str,
     git_revision: str,
-    is_fixture: bool = False,
+    is_fixture: bool,
 ) -> dict[str, Any]:
     """为 selected papers 从 source records 确定性抽取结构化 evidence。
 
@@ -228,7 +228,7 @@ def build_synthesis_input(
     synthesis_input_id: str,
     created_at: str,
     git_revision: str,
-    is_fixture: bool = False,
+    is_fixture: bool,
 ) -> dict[str, Any]:
     """从一个已验证 frozen method package 构造 rank-ordered synthesis selection。
 
@@ -389,7 +389,7 @@ def generate_structured_synthesis(
     synthesis_id: str,
     created_at: str,
     git_revision: str,
-    is_fixture: bool = False,
+    is_fixture: bool,
 ) -> dict[str, Any]:
     """用 backend 生成 structured synthesis，并在返回前通过 contract validator。
 
