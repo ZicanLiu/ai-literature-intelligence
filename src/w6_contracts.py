@@ -1530,10 +1530,10 @@ def validate_artifact_identity_reference(value: Any, label: str) -> dict[str, st
     return reference
 
 
-def validate_w6_bootstrap_bundle(
+def load_w6_bootstrap_bundle_inventory(
     manifest_path: str | Path,
 ) -> dict[str, Any]:
-    """Validate the complete public W6 Bootstrap fixture bundle."""
+    """Validate and load the public W6 manifest, artifact roster, and hashes."""
     bundle_path = Path(manifest_path).resolve()
     bundle_dir = bundle_path.parent
     manifest = load_json_object(bundle_path, label="W6 bundle manifest")
@@ -1586,6 +1586,27 @@ def validate_w6_bootstrap_bundle(
             if payload.get("artifact_id") != artifact_id:
                 raise ValueError(f"bundle artifact {name} identity mismatch。")
             payloads[name] = payload
+
+    return {
+        "manifest_path": bundle_path,
+        "bundle_dir": bundle_dir,
+        "manifest": manifest,
+        "registry": registry,
+        "payloads": payloads,
+        "paths": paths,
+    }
+
+
+def validate_w6_bootstrap_bundle(
+    manifest_path: str | Path,
+) -> dict[str, Any]:
+    """Validate the complete public W6 Bootstrap fixture bundle."""
+    inventory = load_w6_bootstrap_bundle_inventory(manifest_path)
+    manifest = inventory["manifest"]
+    registry = inventory["registry"]
+    payloads = inventory["payloads"]
+    paths = inventory["paths"]
+    artifact_refs = manifest["artifacts"]
 
     parallel = _require_mapping_value(manifest["parallel_development"], "parallel_development")
     if set(parallel) != set(PARALLEL_MODULE_FIXTURE_REQUIREMENTS):
