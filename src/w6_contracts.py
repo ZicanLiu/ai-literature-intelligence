@@ -1743,6 +1743,86 @@ def validate_w6_bootstrap_bundle(
     }
 
 
+CANONICALIZATION_INPUT_NAMES = (
+    "topic_set",
+    "retrieval_provenance",
+    "source_records",
+    "precanonical_candidate_pool",
+)
+
+
+def load_canonicalization_inputs(bundle_manifest_path: str | Path) -> dict[str, Any]:
+    """Load and validate the minimal, label-free input closure for canonicalization.
+
+    Opens *only* the bundle manifest and the four canonicalization inputs:
+    topic_set, retrieval_provenance, source_records and the pre-canonical candidate
+    pool. It deliberately does not open canonical entities, the post-canonical pool,
+    annotation, review, split, hidden-label, benchmark, method, evidence or synthesis
+    artifacts, so the generation process never reads label-aware downstream files.
+    """
+    bundle_path = Path(bundle_manifest_path).resolve()
+    bundle_dir = bundle_path.parent
+    manifest = load_json_object(bundle_path, label="W6 bundle manifest")
+    if manifest.get("schema_version") != W6_SCHEMA_VERSION:
+        raise ValueError(f"W6 bundle schema_version 必须是 {W6_SCHEMA_VERSION}。")
+    artifact_refs = _require_mapping_value(
+        manifest.get("artifacts"), "bundle artifacts"
+    )
+    registry: dict[str, dict[str, str]] = {}
+    payloads: dict[str, dict[str, Any]] = {}
+    paths: dict[str, Path] = {}
+    for name in CANONICALIZATION_INPUT_NAMES:
+        reference = _require_mapping_value(
+            artifact_refs.get(name), f"bundle artifact {name}"
+        )
+        _require_exact_fields(
+            reference, {"artifact_id", "path", "sha256"}, f"bundle artifact {name}"
+        )
+        artifact_id = _require_id(reference["artifact_id"], f"{name}.artifact_id")
+        _require_sha256(reference["sha256"], f"{name}.sha256")
+        artifact_path = _resolve_within(
+            reference["path"], base=bundle_dir, root=bundle_dir
+        )
+        if sha256_file(artifact_path) != reference["sha256"]:
+            raise ValueError(f"bundle artifact {name} manifest hash mismatch。")
+        registry[artifact_id] = {
+            "artifact_id": artifact_id,
+            "sha256": reference["sha256"],
+        }
+        paths[name] = artifact_path
+        payload = load_json_object(artifact_path, label=f"bundle artifact {name}")
+        if payload.get("artifact_id") != artifact_id:
+            raise ValueError(f"bundle artifact {name} identity mismatch。")
+        payloads[name] = payload
+
+    topics = validate_topic_set(payloads["topic_set"])
+    retrieval = validate_retrieval_provenance(
+        payloads["retrieval_provenance"], topics=topics
+    )
+    records = validate_source_records(
+        payloads["source_records"], topics=topics, retrieval=retrieval
+    )
+    pre_pool_members = validate_candidate_pool(
+        payloads["precanonical_candidate_pool"],
+        topics=topics,
+        records=records,
+        retrieval=retrieval,
+        registry=registry,
+    )
+    return {
+        "bundle_dir": bundle_dir,
+        "manifest": manifest,
+        "registry": registry,
+        "paths": paths,
+        "payloads": payloads,
+        "topics": topics,
+        "retrieval": retrieval,
+        "records": records,
+        "precanonical_candidate_pool": payloads["precanonical_candidate_pool"],
+        "precanonical_pool_members": pre_pool_members,
+    }
+
+
 def normalize_doi(value: Any) -> str:
     text = str(value or "").strip().lower()
     for prefix in ("https://doi.org/", "http://doi.org/", "doi:"):

@@ -9,12 +9,16 @@ and each record is mapped onto a canonical entity:
 
 Only high-confidence *confirmed* identity may share one canonical entity:
 
-    - exact normalized OpenAlex ID;
-    - exact normalized DOI;
-    - exact normalized title (guarded against conflicting DOI).
+    - exact normalized DOI (authoritative; may reconcile different provider
+      OpenAlex IDs);
+    - exact normalized OpenAlex ID (only when it does not produce a DOI conflict);
+    - exact normalized title (only when non-generic and free of DOI / OpenAlex
+      conflict).
 
-Low/medium-confidence similar records are *not* merged. They are emitted as
-``suspected_duplicate`` relationships and remain two independent entities.
+A confirmed component must stay identity-consistent: at most one distinct
+non-empty DOI, and multiple OpenAlex IDs only when reconciled by a shared DOI.
+Conflicting identities are never auto-merged; they stay independent and become a
+``suspected_duplicate`` relationship.
 
 All record-level provenance (source record identity, alias, retrieval hits,
 retrieval system, query variant, source rank/score) is preserved verbatim; the
@@ -40,26 +44,7 @@ from src.w6_contracts import (
 CANONICALIZATION_TOOL = "w6_identity_mapper"
 CANONICALIZATION_VERSION = "v1"
 SUSPECTED_TITLE_RATIO_THRESHOLD = 0.80
-
-
-class _UnionFind:
-    def __init__(self, items: list[str]) -> None:
-        self._parent = {item: item for item in items}
-
-    def find(self, item: str) -> str:
-        parent = self._parent
-        root = item
-        while parent[root] != root:
-            root = parent[root]
-        while parent[item] != root:
-            parent[item], item = root, parent[item]
-        return root
-
-    def union(self, left: str, right: str) -> None:
-        root_left = self.find(left)
-        root_right = self.find(right)
-        if root_left != root_right:
-            self._parent[root_left] = root_right
+MIN_TITLE_IDENTITY_TOKENS = 3
 
 
 def _normalized_identity(record: Mapping[str, Any]) -> dict[str, str | None]:
@@ -72,57 +57,112 @@ def _normalized_identity(record: Mapping[str, Any]) -> dict[str, str | None]:
     }
 
 
-def _cluster_records(records: Mapping[str, Any]) -> list[set[str]]:
-    """Group records into confirmed canonical entities via union-find.
+def _title_is_strong(title: str) -> bool:
+    return len(title.split()) >= MIN_TITLE_IDENTITY_TOKENS
 
-    Confirmed identity priority (strongest first): exact normalized OpenAlex ID,
-    exact normalized DOI, exact normalized title. Title identity is accepted only
-    when the title group does not contain conflicting non-empty DOIs.
+
+class _UnionFind:
+    """Union-find that tracks each component's non-empty DOI and OpenAlex sets."""
+
+    def __init__(self, record_ids: list[str], identities: Mapping[str, Mapping[str, str | None]]) -> None:
+        self._parent = {rid: rid for rid in record_ids}
+        self._dois = {
+            rid: frozenset({identities[rid]["doi"]}) if identities[rid]["doi"] else frozenset()
+            for rid in record_ids
+        }
+        self._openalex = {
+            rid: frozenset({identities[rid]["openalex"]}) if identities[rid]["openalex"] else frozenset()
+            for rid in record_ids
+        }
+
+    def find(self, item: str) -> str:
+        parent = self._parent
+        root = item
+        while parent[root] != root:
+            root = parent[root]
+        while parent[item] != root:
+            parent[item], item = root, parent[item]
+        return root
+
+    def mergeable(self, left: str, right: str) -> bool:
+        root_left = self.find(left)
+        root_right = self.find(right)
+        if root_left == root_right:
+            return True
+        return _merge_allowed(
+            self._dois[root_left] | self._dois[root_right],
+            self._openalex[root_left] | self._openalex[root_right],
+        )
+
+    def union(self, left: str, right: str) -> None:
+        root_left = self.find(left)
+        root_right = self.find(right)
+        if root_left == root_right:
+            return
+        self._parent[root_left] = root_right
+        self._dois[root_right] = self._dois[root_right] | self._dois[root_left]
+        self._openalex[root_right] = self._openalex[root_right] | self._openalex[root_left]
+
+
+def _merge_allowed(dois: frozenset[str], openalex: frozenset[str]) -> bool:
+    """A confirmed component must stay identity-consistent.
+
+    - at most one distinct non-empty DOI;
+    - multiple OpenAlex IDs are allowed only when reconciled by a shared DOI.
     """
-    record_ids = list(records)
-    union_find = _UnionFind(record_ids)
-    identities = {record_id: _normalized_identity(records[record_id]) for record_id in record_ids}
+    if len(dois) > 1:
+        return False
+    if not dois and len(openalex) > 1:
+        return False
+    return True
 
+
+def _cluster_records(records: Mapping[str, Any]) -> list[set[str]]:
+    """Group records into confirmed canonical entities (identity-consistent)."""
+    record_ids = sorted(records)
+    identities = {rid: _normalized_identity(records[rid]) for rid in record_ids}
+    union_find = _UnionFind(record_ids, identities)
+
+    # Phase A — DOI (authoritative): same DOI always merges.
     by_doi: dict[str, list[str]] = defaultdict(list)
-    by_openalex: dict[str, list[str]] = defaultdict(list)
-    by_title: dict[str, list[str]] = defaultdict(list)
-    for record_id in record_ids:
-        identity = identities[record_id]
-        if identity["doi"]:
-            by_doi[identity["doi"]].append(record_id)
-        if identity["openalex"]:
-            by_openalex[identity["openalex"]].append(record_id)
-        by_title[identity["title"]].append(record_id)
-
+    for rid in record_ids:
+        if identities[rid]["doi"]:
+            by_doi[identities[rid]["doi"]].append(rid)
     for group in by_doi.values():
-        for record_id in group[1:]:
-            union_find.union(group[0], record_id)
+        for rid in group[1:]:
+            union_find.union(group[0], rid)
+
+    # Phase B — OpenAlex: merge only if the component stays DOI-consistent.
+    by_openalex: dict[str, list[str]] = defaultdict(list)
+    for rid in record_ids:
+        if identities[rid]["openalex"]:
+            by_openalex[identities[rid]["openalex"]].append(rid)
     for group in by_openalex.values():
-        for record_id in group[1:]:
-            union_find.union(group[0], record_id)
+        anchor = group[0]
+        for rid in group[1:]:
+            if union_find.mergeable(anchor, rid):
+                union_find.union(anchor, rid)
+
+    # Phase C — exact normalized title: only non-generic and conflict-free.
+    by_title: dict[str, list[str]] = defaultdict(list)
+    for rid in record_ids:
+        title = identities[rid]["title"]
+        if _title_is_strong(title):
+            by_title[title].append(rid)
     for group in by_title.values():
-        if len(group) < 2:
-            continue
-        dois = {identities[record_id]["doi"] for record_id in group if identities[record_id]["doi"]}
-        if len(dois) > 1:
-            # Conflicting identity: identical title but different DOIs. Do not merge;
-            # these records stay independent and become a suspected relationship.
-            continue
-        for record_id in group[1:]:
-            union_find.union(group[0], record_id)
+        anchor = group[0]
+        for rid in group[1:]:
+            if union_find.mergeable(anchor, rid):
+                union_find.union(anchor, rid)
 
     groups: dict[str, set[str]] = defaultdict(set)
-    for record_id in record_ids:
-        groups[union_find.find(record_id)].add(record_id)
+    for rid in record_ids:
+        groups[union_find.find(rid)].add(rid)
     return [set(group) for group in groups.values()]
 
 
 def _preferred_record(group: set[str], records: Mapping[str, Any]) -> str:
-    """Deterministic preferred-record selection.
-
-    Prefer most complete metadata, then a DOI, then an abstract, then the smallest
-    record_id.
-    """
+    """Deterministic preferred-record selection (display attribute only)."""
 
     def key(record_id: str) -> tuple:
         record = records[record_id]
@@ -180,16 +220,30 @@ def _build_entity(
                 ),
             }
         )
-    evidence.append(
-        {
-            "evidence_type": "normalized_title",
-            "value": normalize_title(records[preferred]["title"]),
-            "record_ids": aliases,
-        }
-    )
+    title_records: dict[str, list[str]] = defaultdict(list)
+    for record_id in aliases:
+        title_records[normalize_title(records[record_id]["title"])].append(record_id)
+    for title, record_ids in sorted(title_records.items()):
+        if len(record_ids) >= 2:
+            evidence.append(
+                {
+                    "evidence_type": "normalized_title",
+                    "value": title,
+                    "record_ids": sorted(record_ids),
+                }
+            )
+    if not evidence:
+        # A record without OpenAlex/DOI still needs its title as identity evidence.
+        evidence.append(
+            {
+                "evidence_type": "normalized_title",
+                "value": normalize_title(records[preferred]["title"]),
+                "record_ids": aliases,
+            }
+        )
 
     return {
-        "canonical_entity_id": f"entity_{preferred}",
+        "canonical_entity_id": f"entity_{aliases[0]}",
         "preferred_record_id": preferred,
         "normalized_openalex_ids": openalex_ids,
         "normalized_dois": dois,
@@ -209,13 +263,25 @@ def _build_entity(
     }
 
 
-def _suspected_evidence(ratio: float, *, doi_conflict: bool) -> list[str]:
-    if doi_conflict:
-        return ["identical normalized title with conflicting DOI identity"]
-    evidence = ["similar normalized titles"]
-    if ratio >= 1.0:
-        evidence[0] = "identical normalized title"
-    return evidence
+def _suspected_evidence(
+    entity: Mapping[str, Any], other: Mapping[str, Any], title_ratio: float
+) -> list[str]:
+    shared_openalex = set(entity["normalized_openalex_ids"]) & set(
+        other["normalized_openalex_ids"]
+    )
+    if shared_openalex:
+        return ["shared OpenAlex with conflicting DOI"]
+    if title_ratio >= 1.0:
+        entity_dois = set(entity["normalized_dois"])
+        other_dois = set(other["normalized_dois"])
+        if entity_dois and other_dois and entity_dois != other_dois:
+            return ["identical normalized title with conflicting DOI"]
+        entity_openalex = set(entity["normalized_openalex_ids"])
+        other_openalex = set(other["normalized_openalex_ids"])
+        if entity_openalex and other_openalex and entity_openalex != other_openalex:
+            return ["identical normalized title with conflicting OpenAlex"]
+        return ["identical normalized title"]
+    return ["similar normalized titles"]
 
 
 def build_canonical_entities(
@@ -224,18 +290,18 @@ def build_canonical_entities(
     artifact_id: str,
     created_at: str,
     git_revision: str,
+    is_fixture: bool,
     tool: str = CANONICALIZATION_TOOL,
     version: str = CANONICALIZATION_VERSION,
     reviewer: str | None = None,
     provenance_kind: str = "canonicalization_run",
     provenance_created_by: str = "w6_canonicalization",
-    is_fixture: bool = True,
 ) -> dict[str, Any]:
     """Build a ``w6_canonical_entities`` payload from source records.
 
-    The mapping is deterministic given the same ``records``: entity IDs, preferred
-    records, alias groups and suspected relationships depend only on record
-    identity, not on input order or time.
+    Deterministic given the same ``records``: entity IDs, preferred records, alias
+    groups and suspected relationships depend only on record identity, not on
+    input order or time.
     """
     groups = _cluster_records(records)
     entities_by_id: dict[str, dict[str, Any]] = {}
@@ -251,28 +317,27 @@ def build_canonical_entities(
         )
         entities_by_id[entity["canonical_entity_id"]] = entity
 
-    record_to_entity = {
-        record_id: entity_id
-        for entity_id, entity in entities_by_id.items()
-        for record_id in entity["alias_record_ids"]
-    }
-
     relationships: dict[str, dict[str, Any]] = {}
     entity_ids = sorted(entities_by_id)
     for left_index in range(len(entity_ids)):
         for right_index in range(left_index + 1, len(entity_ids)):
             left_id = entity_ids[left_index]
             right_id = entity_ids[right_index]
+            left_entity = entities_by_id[left_id]
+            right_entity = entities_by_id[right_id]
             left_title = normalize_title(
-                records[entities_by_id[left_id]["preferred_record_id"]]["title"]
+                records[left_entity["preferred_record_id"]]["title"]
             )
             right_title = normalize_title(
-                records[entities_by_id[right_id]["preferred_record_id"]]["title"]
+                records[right_entity["preferred_record_id"]]["title"]
             )
             ratio = SequenceMatcher(None, left_title, right_title).ratio()
-            if ratio < SUSPECTED_TITLE_RATIO_THRESHOLD:
+            shared_openalex = bool(
+                set(left_entity["normalized_openalex_ids"])
+                & set(right_entity["normalized_openalex_ids"])
+            )
+            if ratio < SUSPECTED_TITLE_RATIO_THRESHOLD and not shared_openalex:
                 continue
-            doi_conflict = ratio >= 1.0
             relationship_id = f"suspect_{left_id}_{right_id}"
             relationships[relationship_id] = {
                 "relationship_id": relationship_id,
@@ -280,7 +345,7 @@ def build_canonical_entities(
                 "relationship_type": "suspected_duplicate",
                 "review_state": "pending_review",
                 "confidence": "medium",
-                "evidence": _suspected_evidence(ratio, doi_conflict=doi_conflict),
+                "evidence": _suspected_evidence(left_entity, right_entity, ratio),
                 "provenance": {
                     "kind": provenance_kind,
                     "created_by": provenance_created_by,
@@ -326,9 +391,9 @@ def build_post_canonical_pool(
     canonical_sha256: str,
     created_at: str,
     git_revision: str,
+    is_fixture: bool,
     provenance_kind: str = "canonicalization_run",
     provenance_created_by: str = "w6_canonicalization",
-    is_fixture: bool = True,
 ) -> dict[str, Any]:
     """Deterministically transform a pre-canonical pool into a post-canonical pool.
 

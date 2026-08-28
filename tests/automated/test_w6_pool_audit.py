@@ -1,7 +1,8 @@
-"""Offline tests for the W6 pool bias audit (label-free)."""
+"""Offline tests for the W6 pool bias audit (label-free, roster-closed)."""
 
 from __future__ import annotations
 
+import copy
 import unittest
 from pathlib import Path
 
@@ -38,12 +39,13 @@ class PoolBiasAuditTests(unittest.TestCase):
             artifact_id=CANONICAL_ARTIFACT_ID,
             created_at=CREATED_AT,
             git_revision=GIT_REVISION,
+            is_fixture=True,
         )
         cls.canonical = validate_canonical_entities(
             canonical, records=cls.records, retrieval=cls.retrieval
         )
         canonical_sha256 = canonical_json_sha256(canonical)
-        post_pool = build_post_canonical_pool(
+        cls.post_pool = build_post_canonical_pool(
             cls.pre_pool,
             canonical,
             artifact_id="w6_test_post_pool_v1",
@@ -51,25 +53,12 @@ class PoolBiasAuditTests(unittest.TestCase):
             canonical_sha256=canonical_sha256,
             created_at=CREATED_AT,
             git_revision=GIT_REVISION,
-        )
-        registry = dict(cls.bundle["registry"])
-        registry[CANONICAL_ARTIFACT_ID] = {
-            "artifact_id": CANONICAL_ARTIFACT_ID,
-            "sha256": canonical_sha256,
-        }
-        cls.pool_members = validate_candidate_pool(
-            post_pool,
-            topics=cls.topics,
-            records=cls.records,
-            retrieval=cls.retrieval,
-            registry=registry,
-            canonical=cls.canonical,
+            is_fixture=True,
         )
         cls.audit = audit_pool_bias(
             retrieval=cls.retrieval,
-            pool_members=cls.pool_members,
+            post_pool_payload=cls.post_pool,
             canonical=cls.canonical,
-            included_run_ids=post_pool["policy"]["included_retrieval_run_ids"],
             artifact_id="w6_test_audit_v1",
             pool_reference={"artifact_id": "w6_test_post_pool_v1", "sha256": "0" * 64},
             canonical_reference={
@@ -78,6 +67,7 @@ class PoolBiasAuditTests(unittest.TestCase):
             },
             created_at=CREATED_AT,
             git_revision=GIT_REVISION,
+            is_fixture=True,
         )
 
     def test_audit_declares_label_free(self) -> None:
@@ -98,9 +88,7 @@ class PoolBiasAuditTests(unittest.TestCase):
 
     def test_unique_contribution_counts(self) -> None:
         per_system = self.audit["record_level"]["per_system"]
-        # rec_009 is found only by the dense retriever.
         self.assertEqual(per_system["dense_fixture"]["unique_item_count"], 1)
-        # rec_005 is found only by bm25.
         self.assertEqual(per_system["bm25_fixture"]["unique_item_count"], 1)
 
     def test_leave_one_retriever_out_record_level(self) -> None:
@@ -112,8 +100,6 @@ class PoolBiasAuditTests(unittest.TestCase):
 
     def test_leave_one_retriever_out_entity_level(self) -> None:
         loo = self.audit["entity_level"]["leave_one_out"]
-        # rec_008 (openalex-only) is an alias of entity_rec_003, which is also hit
-        # by bm25 through rec_003; so entity-level openalex-only loss is lower.
         self.assertEqual(loo["openalex_native"]["lost_item_count"], 2)
         self.assertEqual(loo["dense_fixture"]["lost_item_count"], 1)
 
@@ -133,6 +119,79 @@ class PoolBiasAuditTests(unittest.TestCase):
         families = self.audit["system_family"]
         self.assertEqual(families["bm25_fixture"], "sparse")
         self.assertEqual(families["dense_fixture"], "dense")
+
+
+class AuditRosterClosureTests(unittest.TestCase):
+    def _audit(self, retrieval, post_pool, canonical=None) -> dict:
+        canonical = canonical or {"entities": {}, "relationships": {}}
+        return audit_pool_bias(
+            retrieval=retrieval,
+            post_pool_payload=post_pool,
+            canonical=canonical,
+            artifact_id="a",
+            pool_reference={"artifact_id": "p", "sha256": "0" * 64},
+            canonical_reference={"artifact_id": "c", "sha256": "0" * 64},
+            created_at=CREATED_AT,
+            git_revision=GIT_REVISION,
+            is_fixture=True,
+        )
+
+    def test_unknown_included_run_is_rejected(self) -> None:
+        retrieval = {"runs": {}, "hits": {}}
+        post_pool = {"policy": {"included_retrieval_run_ids": ["unknown_run"]}, "members": []}
+        with self.assertRaisesRegex(ValueError, "unknown run"):
+            self._audit(retrieval, post_pool)
+
+    def test_member_hit_outside_frozen_roster_is_rejected(self) -> None:
+        bundle = validate_w6_bootstrap_bundle(BUNDLE_PATH)
+        canonical = build_canonical_entities(
+            bundle["records"],
+            artifact_id=CANONICAL_ARTIFACT_ID,
+            created_at=CREATED_AT,
+            git_revision=GIT_REVISION,
+            is_fixture=True,
+        )
+        post_pool = build_post_canonical_pool(
+            bundle["payloads"]["precanonical_candidate_pool"],
+            canonical,
+            artifact_id="p",
+            canonical_artifact_id=CANONICAL_ARTIFACT_ID,
+            canonical_sha256=canonical_json_sha256(canonical),
+            created_at=CREATED_AT,
+            git_revision=GIT_REVISION,
+            is_fixture=True,
+        )
+        post_pool = copy.deepcopy(post_pool)
+        # 从冻结 roster 删除一个 run，但其 member 仍引用该 run 的 hit。
+        post_pool["policy"]["included_retrieval_run_ids"].remove("run_denoise_openalex")
+        canonical_result = validate_canonical_entities(
+            canonical, records=bundle["records"], retrieval=bundle["retrieval"]
+        )
+        with self.assertRaisesRegex(ValueError, "不在 frozen included roster"):
+            self._audit(bundle["retrieval"], post_pool, canonical_result)
+
+    def test_conflicting_family_within_system_is_rejected(self) -> None:
+        retrieval = {
+            "runs": {
+                "r1": {
+                    "retrieval_run_id": "r1",
+                    "acquisition_system": "sys_a",
+                    "method": {"family": "sparse"},
+                },
+                "r2": {
+                    "retrieval_run_id": "r2",
+                    "acquisition_system": "sys_a",
+                    "method": {"family": "dense"},
+                },
+            },
+            "hits": {},
+        }
+        post_pool = {
+            "policy": {"included_retrieval_run_ids": ["r1", "r2"]},
+            "members": [],
+        }
+        with self.assertRaisesRegex(ValueError, "冲突的 family"):
+            self._audit(retrieval, post_pool)
 
 
 if __name__ == "__main__":

@@ -35,28 +35,40 @@ error analysis，也不把 pooled coverage 称作真实 recall。
 
 按可靠度从高到低：
 
-1. **normalized OpenAlex ID**：精确相同 → 同一 canonical entity（confirmed，high）。
-2. **normalized DOI**：精确相同 → 同一 canonical entity（confirmed，high）。
-3. **normalized title**：精确相同 → 同一 canonical entity（confirmed，high），但**仅当该 title
-   group 不含互相冲突的非空 DOI**。
+1. **normalized DOI**（authoritative）：精确相同 → 同一 canonical entity（confirmed，high）。
+   同一 DOI 可调和不同 provider 的 OpenAlex ID（`rec_003` / `rec_008`）。
+2. **normalized OpenAlex ID**：精确相同 → 同一 entity，但仅当合并后的 component 不产生
+   DOI 冲突（`≤1` 个非空 DOI）。
+3. **normalized title**：精确相同 → 同一 entity，但仅当（a）title 非 generic（`≥3` 个
+   token）、（b）无 DOI 冲突、（c）无 OpenAlex 冲突。
 
-“title 很像”不直接当作同一论文：只有**精确 normalized title 一致**才是 high-confidence title
-identity；模糊相似的 title 只进入 suspected relationship。
+一个 confirmed component 必须满足 **identity 一致性不变量**：
+
+- 至多一个非空 normalized DOI；
+- 多个非空 OpenAlex ID 仅当由同一 DOI 调和时才允许。
+
+“title 很像”不直接当作同一论文：只有精确 normalized title 一致才是 high-confidence title
+identity；模糊相似 title 只进入 suspected relationship；generic/empty title 不作为自动
+confirmed identity。
 
 ## 3. Confirmed / Suspected 边界
 
 - 只有 `high + confirmed` 的多 record alias group 才映射为同一 canonical entity。
-- 低/中置信候选（模糊 title 相似，或“同一 title 但不同 DOI”的 conflicting identity）进入
-  `suspected_relationships`（`relationship_type = suspected_duplicate`，`review_state =
-  pending_review`），保持两个独立 entities。
-- 不为减少 pool size、提高指标或方便代码而自动合并 suspected duplicate。
+- 低/中置信候选（模糊 title 相似、同 title 不同 DOI、同 OpenAlex 不同 DOI 等 conflicting
+  identity）进入 `suspected_relationships`（`relationship_type = suspected_duplicate`，
+  `review_state = pending_review`），保持两个独立 entities。
+- 不为减少 pool size、提高指标或方便代码而自动合并 suspected duplicate，也不做跨 identity
+  类型的 transitive chaining 合并。
 
 fixture 验证：
 
-- `rec_003` + `rec_008`：normalized DOI 均为 `10.5555/fixture.alias`，标题规范化后一致 →
-  confirmed alias，映射为 `entity_rec_003`。
+- `rec_003` + `rec_008`：normalized DOI 均为 `10.5555/fixture.alias`（不同 provider 的
+  OpenAlex ID）→ confirmed alias，映射为 `entity_rec_003`。
 - `rec_005` + `rec_010`：标题高度相似但 DOI 不同（`fixture.005a` vs `fixture.005b`）→
   suspected duplicate，保持 `entity_rec_005` / `entity_rec_010` 两个独立 entities。
+
+adversarial 回归覆盖：不同 OpenAlex + 相同 title、相同 OpenAlex + 不同 DOI、
+相同 title + 不同 DOI、transitive conflict、generic title，均不 confirmed merge。
 
 ## 4. Provenance Preservation
 
@@ -66,7 +78,10 @@ fixture 验证：
   `source_system_membership`、`selection_reasons`）与 pre-pool 逐字节一致；
 - canonical entity 记录 `alias_record_ids`、`identity_evidence`、
   `source_retrieval_provenance_union`（alias 记录 retrieval hit 的并集）与
-  `canonicalization_provenance`（tool/version/git/reviewer）。
+  `canonicalization_provenance`（tool/version/git/reviewer）；
+- `identity_evidence` 只记录真实发生的 identity：每个 evidence 的 `record_ids` 精确等于匹配该
+  value 的 records，`normalized_title` evidence 只在多个 record 真正共享该 title 时产生，不按
+  preferred record 事后伪造覆盖整个 alias group 的 title evidence。
 
 ## 5. Post-canonical Pool 确定性转换
 
@@ -81,7 +96,11 @@ fixture 验证：
 
 ## 6. Pool Bias Audit 指标
 
-`src/w6_pool_audit.audit_pool_bias()` 在 record-level 与 canonical entity-level 两层分别报告：
+`src/w6_pool_audit.audit_pool_bias()` 从已验证 post-canonical pool 的 frozen policy
+（`included_retrieval_run_ids`）派生 retriever roster，并校验 pool member hits → retrieval
+runs → acquisition systems → frozen roster 的完整闭包；不接受 caller 额外传入的可漂移 roster。
+同一 acquisition_system 在多个 included runs 中声明不同 family 时 fail closed。审计在
+record-level 与 canonical entity-level 两层分别报告：
 
 - **Retriever overlap**：任意两个 acquisition system 的共同 candidate 数量（对称矩阵）。
 - **Unique contribution**：每个 system 独有的 candidate 数量/比例。
@@ -108,11 +127,12 @@ sensitivity 的体现。
 
 | 文件 | 作用 |
 |------|------|
-| `src/w6_canonicalization.py` | confirmed 聚类、preferred record、post-pool 转换、provenance union |
-| `src/w6_pool_audit.py` | label-free pool bias audit（overlap/unique/multi-system/LOO/alias sensitivity） |
-| `app/canonicalize_w6.py` | 薄 CLI：canonicalize → post-pool → audit → 自检 |
-| `tests/automated/test_w6_canonicalization.py` | 19 个离线测试 |
-| `tests/automated/test_w6_pool_audit.py` | 9 个离线测试 |
+| `src/w6_canonicalization.py` | confirmed 聚类（identity 一致性）、truthful evidence、preferred record、post-pool 转换 |
+| `src/w6_pool_audit.py` | label-free pool bias audit（roster 闭包校验 + overlap/unique/multi-system/LOO/alias sensitivity） |
+| `src/w6_contracts.load_canonicalization_inputs` | task-scoped、label-free 最小输入闭包 loader |
+| `app/canonicalize_w6.py` | 薄 CLI：load → canonicalize → post-pool → audit → 文件 SHA → 自检 → 原子发布 |
+| `tests/automated/test_w6_canonicalization.py` | 33 个离线测试 |
+| `tests/automated/test_w6_pool_audit.py` | 12 个离线测试 |
 
 未修改：W4/W5 frozen artifacts、Bootstrap contracts、Candidate Pool、Benchmark。
 
@@ -120,14 +140,19 @@ sensitivity 的体现。
 
 - exact DOI identity / exact OpenAlex identity / title normalization；
 - confirmed alias / suspected duplicate / conflicting identity；
-- preferred record（确定性）；
+- 不同 OpenAlex + 相同 title / 相同 OpenAlex + 不同 DOI / transitive conflict / generic title；
+- evidence truthfulness（同 DOI/OpenAlex 不同 title 不伪造 title evidence）；
+- preferred record（确定性，canonical ID 绑定最小 alias 而非 preferred）；
 - source record retention（pre→post 逐字段一致）；
 - retrieval provenance union；
 - pre→post mapping + post-pool 通过 contract validator；
 - deterministic identity；
 - leave-one-retriever-out（record / entity 两层）；
 - record/entity-level counts 与 alias sensitivity；
-- hash drift（canonical reference 漂移被拒绝）。
+- hash drift（canonical reference 漂移被拒绝）；
+- 最小依赖闭包 loader + process-level 只打开 4 个输入、不读 downstream artifact；
+- CLI 内嵌 SHA == 实际落盘文件 SHA；CLI 拒绝覆盖冻结输入树 / 非空目标；
+- audit roster 闭包（unknown run / 删 roster 后 member hit 失配 / 同一 system 冲突 family）。
 
 ## 9. 复现命令
 
@@ -140,7 +165,11 @@ python -m app.canonicalize_w6 --output-dir <dir>
 
 ## 10. 已知限制
 
-- 真实 canonicalization rules 的 review 阈值（title 相似阈值 0.80）、更丰富的 identity
-  evidence 与 sensitivity 报告仍属后续 Issue；本任务只提供可解释、确定性的 baseline。
+- 真实 canonicalization rules 的 review 阈值（title 相似阈值 0.80、title identity 最少 3 token）、
+  更丰富的 identity evidence 与 sensitivity 报告仍属后续 Issue；本任务只提供可解释、确定性的
+  baseline。
 - Pooled coverage 不代表真实 recall；本 audit 只描述 retriever 对当前 pooled candidate set 的
   贡献结构。
+- `included_retrieval_run_ids` 的顺序仍是 frozen policy 的一部分（`compute_pool_identity`
+  按原样纳入 policy），本 PR 不擅自修改共享 contract；若需 canonical sort 属于独立 contract
+  变更。

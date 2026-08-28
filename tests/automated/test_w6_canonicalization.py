@@ -6,12 +6,16 @@ import contextlib
 import copy
 import io
 import json
+import os
+import shutil
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 from app.canonicalize_w6 import main as canonicalize_cli_main
 from src.w6_canonicalization import (
+    MIN_TITLE_IDENTITY_TOKENS,
     SUSPECTED_TITLE_RATIO_THRESHOLD,
     build_canonical_entities,
     build_post_canonical_pool,
@@ -19,6 +23,7 @@ from src.w6_canonicalization import (
 )
 from src.w6_contracts import (
     canonical_json_sha256,
+    load_canonicalization_inputs,
     validate_candidate_pool,
     validate_canonical_entities,
     validate_w6_bootstrap_bundle,
@@ -72,6 +77,7 @@ def _build(records: dict, **overrides) -> dict:
         "artifact_id": CANONICAL_ARTIFACT_ID,
         "created_at": CREATED_AT,
         "git_revision": GIT_REVISION,
+        "is_fixture": True,
     }
     kwargs.update(overrides)
     return build_canonical_entities(records, **kwargs)
@@ -116,8 +122,6 @@ class CanonicalizationFixtureTests(unittest.TestCase):
         payload = self._canonical()
         mapping = entity_record_mapping(payload)
         self.assertEqual(set(mapping), set(self.records))
-        for record in self.records:
-            self.assertIn(record, mapping)
 
     def test_retrieval_provenance_union_is_complete(self) -> None:
         payload = self._canonical()
@@ -148,20 +152,19 @@ class CanonicalizationFixtureTests(unittest.TestCase):
     def test_deterministic_identity(self) -> None:
         first = self._canonical()
         second = self._canonical()
-        self.assertEqual(
-            canonical_json_sha256(first), canonical_json_sha256(second)
-        )
+        self.assertEqual(canonical_json_sha256(first), canonical_json_sha256(second))
 
-    def test_suspected_threshold_is_bounded(self) -> None:
+    def test_thresholds_are_bounded(self) -> None:
         self.assertGreaterEqual(SUSPECTED_TITLE_RATIO_THRESHOLD, 0.5)
         self.assertLessEqual(SUSPECTED_TITLE_RATIO_THRESHOLD, 1.0)
+        self.assertGreaterEqual(MIN_TITLE_IDENTITY_TOKENS, 1)
 
 
 class CanonicalizationIdentityTests(unittest.TestCase):
     def test_exact_doi_identity_merges(self) -> None:
         records = {
             "r1": _record("r1", doi="https://doi.org/10.5555/paper.1", title="Title One"),
-            "r2": _record("r2", doi="DOI:10.5555/PAPER.1", title="Title One Different Case"),
+            "r2": _record("r2", doi="DOI:10.5555/PAPER.1", title="Title One Different"),
         }
         mapping = entity_record_mapping(_build(records))
         self.assertEqual(mapping["r1"], mapping["r2"])
@@ -182,6 +185,34 @@ class CanonicalizationIdentityTests(unittest.TestCase):
         mapping = entity_record_mapping(_build(records))
         self.assertEqual(mapping["r1"], mapping["r2"])
 
+    def test_different_openalex_with_same_title_is_not_merged(self) -> None:
+        records = {
+            "r1": _record("r1", openalex_id="W1", title="A Very Distinctive Paper Title"),
+            "r2": _record("r2", openalex_id="W2", title="A Very Distinctive Paper Title"),
+        }
+        mapping = entity_record_mapping(_build(records))
+        self.assertNotEqual(mapping["r1"], mapping["r2"])
+
+    def test_same_openalex_with_different_doi_is_not_merged(self) -> None:
+        records = {
+            "r1": _record("r1", openalex_id="W1", doi="10.5555/x.1", title="Paper One Title"),
+            "r2": _record("r2", openalex_id="W1", doi="10.5555/x.2", title="Paper Two Title"),
+        }
+        payload = _build(records)
+        mapping = entity_record_mapping(payload)
+        self.assertNotEqual(mapping["r1"], mapping["r2"])
+        self.assertEqual(len(payload["suspected_relationships"]), 1)
+        evidence = payload["suspected_relationships"][0]["evidence"]
+        self.assertTrue(any("OpenAlex" in item for item in evidence))
+
+    def test_same_doi_with_different_openalex_merges_as_provider_alias(self) -> None:
+        records = {
+            "r1": _record("r1", openalex_id="W1", doi="10.5555/x.1", title="Alpha Title"),
+            "r2": _record("r2", openalex_id="W2", doi="10.5555/x.1", title="Beta Title"),
+        }
+        mapping = entity_record_mapping(_build(records))
+        self.assertEqual(mapping["r1"], mapping["r2"])
+
     def test_conflicting_identity_is_not_merged(self) -> None:
         records = {
             "r1": _record("r1", doi="10.5555/x.1", title="Identical Title"),
@@ -190,9 +221,26 @@ class CanonicalizationIdentityTests(unittest.TestCase):
         payload = _build(records)
         mapping = entity_record_mapping(payload)
         self.assertNotEqual(mapping["r1"], mapping["r2"])
-        relationships = payload["suspected_relationships"]
-        self.assertEqual(len(relationships), 1)
-        self.assertIn("conflicting DOI", relationships[0]["evidence"][0])
+        self.assertEqual(len(payload["suspected_relationships"]), 1)
+        self.assertIn("conflicting DOI", payload["suspected_relationships"][0]["evidence"][0])
+
+    def test_transitive_conflict_is_not_merged(self) -> None:
+        records = {
+            "a": _record("a", openalex_id="W1", doi="10.5555/d1", title="Paper One Title"),
+            "b": _record("b", openalex_id="W2", doi="10.5555/d1", title="Paper Two Title"),
+            "c": _record("c", openalex_id="W2", doi="10.5555/d2", title="Paper Three Title"),
+        }
+        mapping = entity_record_mapping(_build(records))
+        self.assertEqual(mapping["a"], mapping["b"])
+        self.assertNotEqual(mapping["b"], mapping["c"])
+
+    def test_generic_title_is_not_auto_confirmed(self) -> None:
+        records = {
+            "r1": _record("r1", title="machine learning"),
+            "r2": _record("r2", title="machine learning"),
+        }
+        mapping = entity_record_mapping(_build(records))
+        self.assertNotEqual(mapping["r1"], mapping["r2"])
 
     def test_fuzzy_similar_title_is_suspected_not_merged(self) -> None:
         records = {
@@ -214,6 +262,48 @@ class CanonicalizationIdentityTests(unittest.TestCase):
         self.assertEqual(len(result["relationships"]), 1)
 
 
+class EvidenceTruthfulnessTests(unittest.TestCase):
+    def test_same_doi_different_titles_do_not_fabricate_title_evidence(self) -> None:
+        records = {
+            "r1": _record("r1", doi="10.5555/x.1", title="Completely Different Alpha"),
+            "r2": _record("r2", doi="10.5555/x.1", title="Completely Different Beta"),
+        }
+        payload = _build(records)
+        entity = payload["entities"][0]
+        title_evidence = [
+            item for item in entity["identity_evidence"]
+            if item["evidence_type"] == "normalized_title"
+        ]
+        self.assertEqual(title_evidence, [])
+
+    def test_same_openalex_different_titles_do_not_fabricate_title_evidence(self) -> None:
+        records = {
+            "r1": _record("r1", openalex_id="W1", title="Completely Different Alpha"),
+            "r2": _record("r2", openalex_id="W1", title="Completely Different Beta"),
+        }
+        payload = _build(records)
+        entity = payload["entities"][0]
+        title_evidence = [
+            item for item in entity["identity_evidence"]
+            if item["evidence_type"] == "normalized_title"
+        ]
+        self.assertEqual(title_evidence, [])
+
+    def test_shared_title_evidence_scope_matches_records(self) -> None:
+        records = {
+            "r1": _record("r1", doi="10.5555/x.1", title="Line Preserving Neural Restoration"),
+            "r2": _record("r2", doi="10.5555/x.1", title="Line Preserving Neural Restoration"),
+        }
+        payload = _build(records)
+        entity = payload["entities"][0]
+        title_evidence = [
+            item for item in entity["identity_evidence"]
+            if item["evidence_type"] == "normalized_title"
+        ]
+        self.assertEqual(len(title_evidence), 1)
+        self.assertEqual(title_evidence[0]["record_ids"], ["r1", "r2"])
+
+
 class PostCanonicalPoolTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -223,8 +313,11 @@ class PostCanonicalPoolTests(unittest.TestCase):
         cls.topics = cls.bundle["topics"]
         cls.pre_pool = cls.bundle["payloads"]["precanonical_candidate_pool"]
 
+    def _canonical(self) -> dict:
+        return _build(self.records)
+
     def _build_post_pool(self, canonical_sha256: str | None = None) -> dict:
-        canonical = _build(self.records)
+        canonical = self._canonical()
         sha = canonical_sha256 or canonical_json_sha256(canonical)
         return build_post_canonical_pool(
             self.pre_pool,
@@ -234,11 +327,11 @@ class PostCanonicalPoolTests(unittest.TestCase):
             canonical_sha256=sha,
             created_at=CREATED_AT,
             git_revision=GIT_REVISION,
+            is_fixture=True,
         )
 
     def _registry(self, canonical_sha256: str | None = None) -> dict:
-        canonical = _build(self.records)
-        sha = canonical_sha256 or canonical_json_sha256(canonical)
+        sha = canonical_sha256 or canonical_json_sha256(self._canonical())
         registry = dict(self.bundle["registry"])
         registry[CANONICAL_ARTIFACT_ID] = {
             "artifact_id": CANONICAL_ARTIFACT_ID,
@@ -247,7 +340,7 @@ class PostCanonicalPoolTests(unittest.TestCase):
         return registry
 
     def test_post_pool_passes_contract_validator(self) -> None:
-        canonical = _build(self.records)
+        canonical = self._canonical()
         result = validate_canonical_entities(canonical, records=self.records, retrieval=self.retrieval)
         post_pool = self._build_post_pool()
         members = validate_candidate_pool(
@@ -283,7 +376,7 @@ class PostCanonicalPoolTests(unittest.TestCase):
         self.assertEqual(post_pool["identity_stage"], "post_canonicalization")
 
     def test_hash_drift_is_rejected(self) -> None:
-        canonical = _build(self.records)
+        canonical = self._canonical()
         result = validate_canonical_entities(canonical, records=self.records, retrieval=self.retrieval)
         post_pool = self._build_post_pool()
         with self.assertRaisesRegex(ValueError, "drift"):
@@ -295,6 +388,59 @@ class PostCanonicalPoolTests(unittest.TestCase):
                 registry=self._registry("0" * 64),
                 canonical=result,
             )
+
+
+class LoaderAndNoLeakageTests(unittest.TestCase):
+    def test_loader_loads_minimal_closure(self) -> None:
+        inputs = load_canonicalization_inputs(BUNDLE_PATH)
+        self.assertEqual(len(inputs["topics"]), 2)
+        self.assertEqual(len(inputs["records"]), 10)
+        self.assertEqual(len(inputs["precanonical_pool_members"]), 13)
+        self.assertNotIn("canonical_entities", inputs["payloads"])
+        self.assertNotIn("candidate_pool", inputs["payloads"])
+
+    def test_loader_does_not_open_downstream_artifacts(self) -> None:
+        opened: set[str] = set()
+
+        def audit_hook(event: str, args: tuple) -> None:
+            if event == "open" and args:
+                path = str(args[0])
+                if "w6_bootstrap" in path:
+                    opened.add(os.path.basename(path))
+
+        sys.addaudithook(audit_hook)
+        try:
+            load_canonicalization_inputs(BUNDLE_PATH)
+        finally:
+            pass
+        forbidden = {
+            "canonical_entities.json",
+            "candidate_pool.json",
+            "annotation_task_map.json",
+            "annotation_tasks.json",
+            "annotation_results.json",
+            "annotation_reviews.json",
+            "split_manifest.json",
+            "hidden_label_anchor.json",
+            "benchmark_manifest.json",
+            "evidence_units.json",
+            "synthesis_input.json",
+            "structured_synthesis.json",
+        }
+        self.assertFalse(opened & forbidden, f"unexpected opened files: {opened & forbidden}")
+
+    def test_loader_rejects_hash_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            copied = Path(temp_dir) / "valid"
+            shutil.copytree(BUNDLE_PATH.parent, copied)
+            topics = copied / "topics.json"
+            payload = json.loads(topics.read_text(encoding="utf-8"))
+            payload["topics"][0]["research_question"] += " tampered"
+            topics.write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+            )
+            with self.assertRaisesRegex(ValueError, "hash mismatch"):
+                load_canonicalization_inputs(copied / "bundle_manifest.json")
 
 
 class CanonicalizeCliTests(unittest.TestCase):
@@ -314,13 +460,54 @@ class CanonicalizeCliTests(unittest.TestCase):
                 "pool_bias_audit.json",
             ):
                 self.assertTrue((out_dir / name).is_file())
-            audit = json.loads(
-                (out_dir / "pool_bias_audit.json").read_text(encoding="utf-8")
-            )
-            self.assertEqual(
-                audit["alias_sensitivity"]["distinct_canonical_entities"], 9
-            )
+            audit = json.loads((out_dir / "pool_bias_audit.json").read_text(encoding="utf-8"))
+            self.assertEqual(audit["alias_sensitivity"]["distinct_canonical_entities"], 9)
             self.assertFalse(audit["label_access"]["relevance_labels_read"])
+
+    def test_cli_embedded_sha_matches_actual_file_sha(self) -> None:
+        from src.annotation_tasks import sha256_file
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            out_dir = Path(temp_dir) / "out"
+            with contextlib.redirect_stdout(io.StringIO()):
+                exit_code = canonicalize_cli_main(
+                    ["--manifest", str(BUNDLE_PATH), "--output-dir", str(out_dir)]
+                )
+            self.assertEqual(exit_code, 0)
+            post_pool = json.loads((out_dir / "post_canonical_pool.json").read_text(encoding="utf-8"))
+            canonical_sha = post_pool["inputs"]["canonical_entities"]["sha256"]
+            self.assertEqual(canonical_sha, sha256_file(out_dir / "canonical_entities.json"))
+            audit = json.loads((out_dir / "pool_bias_audit.json").read_text(encoding="utf-8"))
+            self.assertEqual(
+                audit["inputs"]["candidate_pool"]["sha256"],
+                sha256_file(out_dir / "post_canonical_pool.json"),
+            )
+
+    def test_cli_refuses_output_dir_inside_frozen_input_tree(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            copied = Path(temp_dir) / "valid"
+            shutil.copytree(BUNDLE_PATH.parent, copied)
+            manifest = copied / "bundle_manifest.json"
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                exit_code = canonicalize_cli_main(
+                    ["--manifest", str(manifest), "--output-dir", str(copied)]
+                )
+            self.assertEqual(exit_code, 1)
+            self.assertIn("重合", output.getvalue())
+
+    def test_cli_refuses_non_empty_output_dir(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            out_dir = Path(temp_dir) / "occupied"
+            out_dir.mkdir()
+            (out_dir / "existing.txt").write_text("keep", encoding="utf-8")
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                exit_code = canonicalize_cli_main(
+                    ["--manifest", str(BUNDLE_PATH), "--output-dir", str(out_dir)]
+                )
+            self.assertEqual(exit_code, 1)
+            self.assertIn("非空", output.getvalue())
 
 
 if __name__ == "__main__":

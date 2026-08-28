@@ -1,9 +1,11 @@
 """W6 pool bias audit: retriever overlap / unique contribution / multi-system
 support / leave-one-retriever-out / record-vs-entity alias sensitivity.
 
-This audit reads only the frozen retrieval provenance, source records, pool
-membership and canonical mapping. It never reads relevance labels, metrics or
-error analysis, and it never interprets pooled coverage as real recall.
+The audit derives its retriever roster strictly from the frozen post-canonical
+pool policy (``included_retrieval_run_ids``) and validates the closure between pool
+member hits, retrieval runs, acquisition systems and that frozen roster. It never
+reads relevance labels, metrics or error analysis, and never interprets pooled
+coverage as real recall.
 """
 
 from __future__ import annotations
@@ -12,16 +14,6 @@ from collections import Counter, defaultdict
 from typing import Any, Mapping
 
 from src.w6_contracts import W6_SCHEMA_VERSION
-
-
-def _system_families(
-    retrieval: Mapping[str, Any], included_run_ids: set[str]
-) -> dict[str, str]:
-    families: dict[str, str] = {}
-    for run in retrieval["runs"].values():
-        if run["retrieval_run_id"] in included_run_ids:
-            families[run["acquisition_system"]] = run["method"]["family"]
-    return families
 
 
 def _item_systems(pool_members: Mapping[str, Any], *, entity_level: bool) -> dict[str, set[str]]:
@@ -85,31 +77,67 @@ def _leave_one_out(
     return report
 
 
+def _derive_system_families(
+    retrieval: Mapping[str, Any], included: set[str]
+) -> dict[str, str]:
+    runs = retrieval["runs"]
+    unknown = sorted(included - set(runs))
+    if unknown:
+        raise ValueError(
+            "audit included_retrieval_run_ids 引用 unknown run：" + ", ".join(unknown)
+        )
+    families: dict[str, str] = {}
+    for run in runs.values():
+        if run["retrieval_run_id"] not in included:
+            continue
+        system = run["acquisition_system"]
+        family = run["method"]["family"]
+        if system in families and families[system] != family:
+            raise ValueError(
+                f"acquisition_system {system} 在 included runs 中声明了冲突的 family："
+                f"{families[system]} vs {family}"
+            )
+        families[system] = family
+    return families
+
+
 def audit_pool_bias(
     *,
     retrieval: Mapping[str, Any],
-    pool_members: Mapping[str, Any],
+    post_pool_payload: Mapping[str, Any],
     canonical: Mapping[str, Any],
-    included_run_ids: list[str],
     artifact_id: str,
     pool_reference: Mapping[str, str],
     canonical_reference: Mapping[str, str],
     created_at: str,
     git_revision: str,
+    is_fixture: bool,
     provenance_kind: str = "pool_bias_audit",
     provenance_created_by: str = "w6_pool_audit",
-    is_fixture: bool = True,
 ) -> dict[str, Any]:
-    """Produce a deterministic, label-free bias audit over a post-canonical pool."""
+    """Produce a deterministic, label-free bias audit over a post-canonical pool.
+
+    The retriever roster is derived from the frozen pool policy, not from a
+    caller-supplied argument, and is closed against the retrieval provenance.
+    """
+    included_run_ids = list(post_pool_payload["policy"]["included_retrieval_run_ids"])
     included = set(included_run_ids)
-    systems = sorted(
-        {
-            run["acquisition_system"]
-            for run in retrieval["runs"].values()
-            if run["retrieval_run_id"] in included
-        }
-    )
-    system_families = _system_families(retrieval, included)
+    system_families = _derive_system_families(retrieval, included)
+    systems = sorted(system_families)
+
+    pool_members = {
+        member["pool_item_id"]: member for member in post_pool_payload["members"]
+    }
+    # Defensive closure: every pooled hit must belong to the frozen included roster.
+    hits = retrieval["hits"]
+    for member in pool_members.values():
+        for hit_id in member["retrieval_hit_ids"]:
+            hit = hits.get(hit_id)
+            if hit is None or hit["retrieval_run_id"] not in included:
+                raise ValueError(
+                    f"pool member {member['pool_item_id']} 的 retrieval hit "
+                    f"{hit_id} 不在 frozen included roster。"
+                )
 
     record_systems = _item_systems(pool_members, entity_level=False)
     entity_systems = _item_systems(pool_members, entity_level=True)
@@ -150,7 +178,7 @@ def audit_pool_bias(
         },
         "included_retrieval_run_ids": sorted(included_run_ids),
         "acquisition_systems": systems,
-        "system_family": {system: system_families.get(system, "unknown") for system in systems},
+        "system_family": {system: system_families[system] for system in systems},
         "record_level": {
             "total_records": distinct_records,
             "per_system": _per_system_report(systems, record_systems),
