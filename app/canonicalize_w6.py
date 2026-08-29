@@ -78,8 +78,11 @@ def _check_output_dir_safe(output_dir: Path, input_root: Path) -> None:
     root = input_root.resolve()
     if resolved == root or resolved.is_relative_to(root) or root.is_relative_to(resolved):
         raise ValueError(f"输出目录与冻结输入树重合，禁止覆盖：{root}")
-    if resolved.exists() and any(resolved.iterdir()):
-        raise ValueError(f"输出目录已存在且非空，拒绝覆盖：{resolved}")
+    if resolved.exists():
+        if not resolved.is_dir():
+            raise ValueError(f"输出路径已存在且不是目录，拒绝覆盖：{resolved}")
+        if any(resolved.iterdir()):
+            raise ValueError(f"输出目录已存在且非空，拒绝覆盖：{resolved}")
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -96,6 +99,7 @@ def main(argv: list[str] | None = None) -> int:
     topics = inputs["topics"]
     pre_pool_payload = inputs["precanonical_candidate_pool"]
     input_root = inputs["bundle_dir"]
+    is_fixture = inputs["is_fixture"]
 
     git_revision = _git_revision()
     if not git_revision:
@@ -116,11 +120,17 @@ def main(argv: list[str] | None = None) -> int:
         artifact_id=canonical_artifact_id,
         created_at=created_at,
         git_revision=git_revision,
-        is_fixture=True,
+        is_fixture=is_fixture,
     )
 
-    with tempfile.TemporaryDirectory(prefix="w6_canonicalize_") as tmp:
-        tmp_dir = Path(tmp)
+    output_dir.parent.mkdir(parents=True, exist_ok=True)
+    staging_dir = Path(
+        tempfile.mkdtemp(
+            prefix=f".{output_dir.name}.staging_", dir=output_dir.parent
+        )
+    )
+    try:
+        tmp_dir = staging_dir
         canonical_path = tmp_dir / "canonical_entities.json"
         _write_json(canonical_path, canonical_payload)
         canonical_sha256 = sha256_file(canonical_path)
@@ -133,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
             canonical_sha256=canonical_sha256,
             created_at=created_at,
             git_revision=git_revision,
-            is_fixture=True,
+            is_fixture=is_fixture,
         )
         post_pool_path = tmp_dir / "post_canonical_pool.json"
         _write_json(post_pool_path, post_pool_payload)
@@ -172,19 +182,19 @@ def main(argv: list[str] | None = None) -> int:
             },
             created_at=created_at,
             git_revision=git_revision,
-            is_fixture=True,
+            is_fixture=is_fixture,
         )
         audit_path = tmp_dir / "pool_bias_audit.json"
         _write_json(audit_path, audit)
 
-        # 自检通过后再原子发布到最终 output directory。
-        output_dir.mkdir(parents=True, exist_ok=True)
-        for name in (
-            "canonical_entities.json",
-            "post_canonical_pool.json",
-            "pool_bias_audit.json",
-        ):
-            shutil.copy2(tmp_dir / name, output_dir / name)
+        # staging 与 final 位于同一 parent/filesystem。最终目录只在全部生成与
+        # validator 通过后通过一次 directory rename 出现，不暴露 partial package。
+        if output_dir.exists():
+            output_dir.rmdir()  # _check_output_dir_safe 已确认它为空。
+        staging_dir.replace(output_dir)
+    finally:
+        if staging_dir.exists():
+            shutil.rmtree(staging_dir)
 
     print(
         "W6 canonicalization PASSED: "

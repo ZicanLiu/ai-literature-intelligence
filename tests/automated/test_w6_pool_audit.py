@@ -136,6 +136,30 @@ class AuditRosterClosureTests(unittest.TestCase):
             is_fixture=True,
         )
 
+    def _fixture_post_pool(self) -> tuple[dict, dict, dict]:
+        bundle = validate_w6_bootstrap_bundle(BUNDLE_PATH)
+        canonical_payload = build_canonical_entities(
+            bundle["records"],
+            artifact_id=CANONICAL_ARTIFACT_ID,
+            created_at=CREATED_AT,
+            git_revision=GIT_REVISION,
+            is_fixture=True,
+        )
+        canonical = validate_canonical_entities(
+            canonical_payload, records=bundle["records"], retrieval=bundle["retrieval"]
+        )
+        post_pool = build_post_canonical_pool(
+            bundle["payloads"]["precanonical_candidate_pool"],
+            canonical_payload,
+            artifact_id="p",
+            canonical_artifact_id=CANONICAL_ARTIFACT_ID,
+            canonical_sha256=canonical_json_sha256(canonical_payload),
+            created_at=CREATED_AT,
+            git_revision=GIT_REVISION,
+            is_fixture=True,
+        )
+        return bundle, canonical, post_pool
+
     def test_unknown_included_run_is_rejected(self) -> None:
         retrieval = {"runs": {}, "hits": {}}
         post_pool = {"policy": {"included_retrieval_run_ids": ["unknown_run"]}, "members": []}
@@ -143,32 +167,37 @@ class AuditRosterClosureTests(unittest.TestCase):
             self._audit(retrieval, post_pool)
 
     def test_member_hit_outside_frozen_roster_is_rejected(self) -> None:
-        bundle = validate_w6_bootstrap_bundle(BUNDLE_PATH)
-        canonical = build_canonical_entities(
-            bundle["records"],
-            artifact_id=CANONICAL_ARTIFACT_ID,
-            created_at=CREATED_AT,
-            git_revision=GIT_REVISION,
-            is_fixture=True,
-        )
-        post_pool = build_post_canonical_pool(
-            bundle["payloads"]["precanonical_candidate_pool"],
-            canonical,
-            artifact_id="p",
-            canonical_artifact_id=CANONICAL_ARTIFACT_ID,
-            canonical_sha256=canonical_json_sha256(canonical),
-            created_at=CREATED_AT,
-            git_revision=GIT_REVISION,
-            is_fixture=True,
-        )
+        bundle, canonical_result, post_pool = self._fixture_post_pool()
         post_pool = copy.deepcopy(post_pool)
         # 从冻结 roster 删除一个 run，但其 member 仍引用该 run 的 hit。
         post_pool["policy"]["included_retrieval_run_ids"].remove("run_denoise_openalex")
-        canonical_result = validate_canonical_entities(
-            canonical, records=bundle["records"], retrieval=bundle["retrieval"]
-        )
         with self.assertRaisesRegex(ValueError, "不在 frozen included roster"):
             self._audit(bundle["retrieval"], post_pool, canonical_result)
+
+    def test_missing_declared_system_is_rejected(self) -> None:
+        bundle, canonical, post_pool = self._fixture_post_pool()
+        tampered = copy.deepcopy(post_pool)
+        member = next(
+            item for item in tampered["members"]
+            if len(item["source_system_membership"]) > 1
+        )
+        member["source_system_membership"] = member["source_system_membership"][:-1]
+        with self.assertRaisesRegex(ValueError, "source_system_membership"):
+            self._audit(bundle["retrieval"], tampered, canonical)
+
+    def test_extra_declared_system_is_rejected(self) -> None:
+        bundle, canonical, post_pool = self._fixture_post_pool()
+        tampered = copy.deepcopy(post_pool)
+        tampered["members"][0]["source_system_membership"].append("fabricated_system")
+        with self.assertRaisesRegex(ValueError, "source_system_membership"):
+            self._audit(bundle["retrieval"], tampered, canonical)
+
+    def test_wrong_declared_system_is_rejected(self) -> None:
+        bundle, canonical, post_pool = self._fixture_post_pool()
+        tampered = copy.deepcopy(post_pool)
+        tampered["members"][0]["source_system_membership"] = ["fabricated_system"]
+        with self.assertRaisesRegex(ValueError, "source_system_membership"):
+            self._audit(bundle["retrieval"], tampered, canonical)
 
     def test_conflicting_family_within_system_is_rejected(self) -> None:
         retrieval = {

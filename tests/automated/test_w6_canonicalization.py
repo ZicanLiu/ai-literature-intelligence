@@ -5,6 +5,7 @@ from __future__ import annotations
 import contextlib
 import copy
 import io
+import itertools
 import json
 import os
 import shutil
@@ -12,8 +13,10 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from app.canonicalize_w6 import main as canonicalize_cli_main
+from src.annotation_tasks import sha256_file
 from src.w6_canonicalization import (
     MIN_TITLE_IDENTITY_TOKENS,
     SUSPECTED_TITLE_RATIO_THRESHOLD,
@@ -23,6 +26,7 @@ from src.w6_canonicalization import (
 )
 from src.w6_contracts import (
     canonical_json_sha256,
+    compute_pool_identity,
     load_canonicalization_inputs,
     validate_candidate_pool,
     validate_canonical_entities,
@@ -46,6 +50,7 @@ def _record(
     doi: str | None = None,
     title: str,
     abstract: str = "A short synthetic abstract for testing.",
+    completeness_score: float = 1.0,
 ) -> dict:
     return {
         "record_id": record_id,
@@ -61,7 +66,7 @@ def _record(
         "metadata_completeness": {
             "status": "complete",
             "missing_fields": [],
-            "completeness_score": 1.0,
+            "completeness_score": completeness_score,
         },
         "acquisition_provenance_refs": [f"hit_{record_id}"],
         "record_provenance": {
@@ -81,6 +86,40 @@ def _build(records: dict, **overrides) -> dict:
     }
     kwargs.update(overrides)
     return build_canonical_entities(records, **kwargs)
+
+
+def _write_json(path: Path, payload: dict) -> None:
+    path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+
+
+def _rewrite_fixture_flags(
+    bundle_dir: Path, fixture_flags: dict[str, bool], *, manifest_is_fixture: bool
+) -> Path:
+    """Rewrite only a temporary copied canonicalization closure and rehash it."""
+    manifest_path = bundle_dir / "bundle_manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    upstream_names = ("topic_set", "retrieval_provenance", "source_records")
+    for name in upstream_names:
+        path = bundle_dir / manifest["artifacts"][name]["path"]
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload["is_fixture"] = fixture_flags[name]
+        _write_json(path, payload)
+        manifest["artifacts"][name]["sha256"] = sha256_file(path)
+
+    pool_name = "precanonical_candidate_pool"
+    pool_path = bundle_dir / manifest["artifacts"][pool_name]["path"]
+    pool = json.loads(pool_path.read_text(encoding="utf-8"))
+    pool["is_fixture"] = fixture_flags[pool_name]
+    for name in upstream_names:
+        pool["inputs"][name]["sha256"] = manifest["artifacts"][name]["sha256"]
+    pool["pool_identity"] = compute_pool_identity(pool)
+    _write_json(pool_path, pool)
+    manifest["artifacts"][pool_name]["sha256"] = sha256_file(pool_path)
+    manifest["is_fixture"] = manifest_is_fixture
+    _write_json(manifest_path, manifest)
+    return manifest_path
 
 
 class CanonicalizationFixtureTests(unittest.TestCase):
@@ -233,6 +272,79 @@ class CanonicalizationIdentityTests(unittest.TestCase):
         mapping = entity_record_mapping(_build(records))
         self.assertEqual(mapping["a"], mapping["b"])
         self.assertNotEqual(mapping["b"], mapping["c"])
+
+    def test_doi_title_bridge_cannot_import_unrelated_openalex(self) -> None:
+        records = {
+            "a": _record(
+                "a", openalex_id="W1", doi="10.5555/d1", title="Shared Exact Paper Title"
+            ),
+            "b": _record(
+                "b", openalex_id="W2", doi="10.5555/d1", title="Different Bridge Title"
+            ),
+            "c": _record("c", openalex_id="W3", title="Shared Exact Paper Title"),
+        }
+        payload = _build(records)
+        mapping = entity_record_mapping(payload)
+        self.assertEqual(mapping["a"], mapping["b"])
+        self.assertNotEqual(mapping["a"], mapping["c"])
+        self.assertTrue(
+            any(mapping["c"] in item["entity_ids"] for item in payload["suspected_relationships"])
+        )
+
+    def test_doi_title_bridge_is_input_order_independent(self) -> None:
+        records = {
+            "a": _record(
+                "a", openalex_id="W1", doi="10.5555/d1", title="Shared Exact Paper Title"
+            ),
+            "b": _record(
+                "b", openalex_id="W2", doi="10.5555/d1", title="Different Bridge Title"
+            ),
+            "c": _record("c", openalex_id="W3", title="Shared Exact Paper Title"),
+        }
+        expected = None
+        for order in itertools.permutations(records):
+            payload = _build({record_id: records[record_id] for record_id in order})
+            semantic = (
+                sorted(entity["alias_record_ids"] for entity in payload["entities"]),
+                sorted(
+                    (tuple(item["entity_ids"]), tuple(item["evidence"]))
+                    for item in payload["suspected_relationships"]
+                ),
+            )
+            expected = semantic if expected is None else expected
+            self.assertEqual(semantic, expected)
+
+    def test_bridge_conflict_uses_nonpreferred_alias_title_for_suspected_link(self) -> None:
+        records = {
+            "a": _record(
+                "a",
+                openalex_id="W1",
+                doi="10.5555/d1",
+                title="Shared Exact Paper Title",
+                completeness_score=0.8,
+            ),
+            "b": _record(
+                "b",
+                openalex_id="W2",
+                doi="10.5555/d1",
+                title="Preferred Different Bridge Title",
+                completeness_score=1.0,
+            ),
+            "c": _record("c", openalex_id="W3", title="Shared Exact Paper Title"),
+        }
+        payload = _build(records)
+        mapping = entity_record_mapping(payload)
+        alias_entity = next(
+            entity for entity in payload["entities"] if entity["canonical_entity_id"] == mapping["a"]
+        )
+        self.assertEqual(alias_entity["preferred_record_id"], "b")
+        self.assertNotEqual(mapping["a"], mapping["c"])
+        self.assertTrue(
+            any(
+                set(item["entity_ids"]) == {mapping["a"], mapping["c"]}
+                for item in payload["suspected_relationships"]
+            )
+        )
 
     def test_generic_title_is_not_auto_confirmed(self) -> None:
         records = {
@@ -398,6 +510,7 @@ class LoaderAndNoLeakageTests(unittest.TestCase):
         self.assertEqual(len(inputs["precanonical_pool_members"]), 13)
         self.assertNotIn("canonical_entities", inputs["payloads"])
         self.assertNotIn("candidate_pool", inputs["payloads"])
+        self.assertTrue(inputs["is_fixture"])
 
     def test_loader_does_not_open_downstream_artifacts(self) -> None:
         opened: set[str] = set()
@@ -442,6 +555,22 @@ class LoaderAndNoLeakageTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "hash mismatch"):
                 load_canonicalization_inputs(copied / "bundle_manifest.json")
 
+    def test_loader_rejects_mixed_fixture_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            copied = Path(temp_dir) / "valid"
+            shutil.copytree(BUNDLE_PATH.parent, copied)
+            flags = {
+                "topic_set": True,
+                "retrieval_provenance": False,
+                "source_records": False,
+                "precanonical_candidate_pool": False,
+            }
+            manifest = _rewrite_fixture_flags(
+                copied, flags, manifest_is_fixture=False
+            )
+            with self.assertRaisesRegex(ValueError, "is_fixture"):
+                load_canonicalization_inputs(manifest)
+
 
 class CanonicalizeCliTests(unittest.TestCase):
     def test_cli_produces_valid_artifacts_and_audit(self) -> None:
@@ -463,10 +592,45 @@ class CanonicalizeCliTests(unittest.TestCase):
             audit = json.loads((out_dir / "pool_bias_audit.json").read_text(encoding="utf-8"))
             self.assertEqual(audit["alias_sensitivity"]["distinct_canonical_entities"], 9)
             self.assertFalse(audit["label_access"]["relevance_labels_read"])
+            for name in (
+                "canonical_entities.json",
+                "post_canonical_pool.json",
+                "pool_bias_audit.json",
+            ):
+                payload = json.loads((out_dir / name).read_text(encoding="utf-8"))
+                self.assertTrue(payload["is_fixture"])
+
+    def test_cli_propagates_nonfixture_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            copied = Path(temp_dir) / "valid"
+            shutil.copytree(BUNDLE_PATH.parent, copied)
+            flags = {
+                name: False
+                for name in (
+                    "topic_set",
+                    "retrieval_provenance",
+                    "source_records",
+                    "precanonical_candidate_pool",
+                )
+            }
+            manifest = _rewrite_fixture_flags(
+                copied, flags, manifest_is_fixture=False
+            )
+            out_dir = Path(temp_dir) / "out"
+            with contextlib.redirect_stdout(io.StringIO()):
+                exit_code = canonicalize_cli_main(
+                    ["--manifest", str(manifest), "--output-dir", str(out_dir)]
+                )
+            self.assertEqual(exit_code, 0)
+            for name in (
+                "canonical_entities.json",
+                "post_canonical_pool.json",
+                "pool_bias_audit.json",
+            ):
+                payload = json.loads((out_dir / name).read_text(encoding="utf-8"))
+                self.assertFalse(payload["is_fixture"])
 
     def test_cli_embedded_sha_matches_actual_file_sha(self) -> None:
-        from src.annotation_tasks import sha256_file
-
         with tempfile.TemporaryDirectory() as temp_dir:
             out_dir = Path(temp_dir) / "out"
             with contextlib.redirect_stdout(io.StringIO()):
@@ -508,6 +672,19 @@ class CanonicalizeCliTests(unittest.TestCase):
                 )
             self.assertEqual(exit_code, 1)
             self.assertIn("非空", output.getvalue())
+
+    def test_publish_failure_leaves_no_partial_final_package(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            out_dir = Path(temp_dir) / "out"
+            with mock.patch.object(
+                Path, "replace", side_effect=OSError("injected directory publish failure")
+            ):
+                with self.assertRaisesRegex(OSError, "injected directory publish failure"):
+                    canonicalize_cli_main(
+                        ["--manifest", str(BUNDLE_PATH), "--output-dir", str(out_dir)]
+                    )
+            self.assertFalse(out_dir.exists())
+            self.assertEqual(list(Path(temp_dir).glob(".out.staging_*")), [])
 
 
 if __name__ == "__main__":

@@ -45,7 +45,14 @@ error analysis，也不把 pooled coverage 称作真实 recall。
 一个 confirmed component 必须满足 **identity 一致性不变量**：
 
 - 至多一个非空 normalized DOI；
-- 多个非空 OpenAlex ID 仅当由同一 DOI 调和时才允许。
+- exact DOI group 可以调和不同 provider OpenAlex ID；
+- exact OpenAlex group 不得产生 DOI 冲突；
+- exact title group 必须作为整体保持无歧义：存在多个带 OpenAlex identity 的 component 时，它们
+  必须具有真实 shared OpenAlex identity。某个 component 内已有 DOI 不能替另一个仅凭 title、且
+  OpenAlex 不相关的 record 提供“调和”。
+
+同一个 identity key 的全部待合并 components 会整体进行 compatibility 判断，不使用会因 anchor / union
+顺序而改变结果的 greedy partial merge。
 
 “title 很像”不直接当作同一论文：只有精确 normalized title 一致才是 high-confidence title
 identity；模糊相似 title 只进入 suspected relationship；generic/empty title 不作为自动
@@ -68,7 +75,8 @@ fixture 验证：
   suspected duplicate，保持 `entity_rec_005` / `entity_rec_010` 两个独立 entities。
 
 adversarial 回归覆盖：不同 OpenAlex + 相同 title、相同 OpenAlex + 不同 DOI、
-相同 title + 不同 DOI、transitive conflict、generic title，均不 confirmed merge。
+相同 title + 不同 DOI、DOI/title bridge、输入顺序 permutation、transitive conflict、generic title，
+均不错误 confirmed merge。
 
 ## 4. Provenance Preservation
 
@@ -99,6 +107,8 @@ adversarial 回归覆盖：不同 OpenAlex + 相同 title、相同 OpenAlex + �
 `src/w6_pool_audit.audit_pool_bias()` 从已验证 post-canonical pool 的 frozen policy
 （`included_retrieval_run_ids`）派生 retriever roster，并校验 pool member hits → retrieval
 runs → acquisition systems → frozen roster 的完整闭包；不接受 caller 额外传入的可漂移 roster。
+指标使用 hit/run 派生的 acquisition system 作为 source of truth；member 自报的
+`source_system_membership` 必须与派生集合精确一致，否则 fail closed。
 同一 acquisition_system 在多个 included runs 中声明不同 family 时 fail closed。审计在
 record-level 与 canonical entity-level 两层分别报告：
 
@@ -131,10 +141,12 @@ sensitivity 的体现。
 | `src/w6_pool_audit.py` | label-free pool bias audit（roster 闭包校验 + overlap/unique/multi-system/LOO/alias sensitivity） |
 | `src/w6_contracts.load_canonicalization_inputs` | task-scoped、label-free 最小输入闭包 loader |
 | `app/canonicalize_w6.py` | 薄 CLI：load → canonicalize → post-pool → audit → 文件 SHA → 自检 → 原子发布 |
-| `tests/automated/test_w6_canonicalization.py` | 33 个离线测试 |
-| `tests/automated/test_w6_pool_audit.py` | 12 个离线测试 |
+| `tests/automated/test_w6_canonicalization.py` | 39 个离线测试 |
+| `tests/automated/test_w6_pool_audit.py` | 15 个离线测试 |
 
-未修改：W4/W5 frozen artifacts、Bootstrap contracts、Candidate Pool、Benchmark。
+未修改：W4/W5 frozen artifacts、W6 Bootstrap fixtures、既有 Bootstrap validator 语义、
+Candidate Pool、Benchmark。Shared `w6_contracts.py` 只为 task-scoped loader 增加 fixture identity
+一致性检查与可信传播值。
 
 ## 8. 测试覆盖
 
@@ -153,6 +165,11 @@ sensitivity 的体现。
 - 最小依赖闭包 loader + process-level 只打开 4 个输入、不读 downstream artifact；
 - CLI 内嵌 SHA == 实际落盘文件 SHA；CLI 拒绝覆盖冻结输入树 / 非空目标；
 - audit roster 闭包（unknown run / 删 roster 后 member hit 失配 / 同一 system 冲突 family）。
+- audit system membership 闭包（missing / extra / wrong system 均 fail closed，指标只使用 hit 派生值）；
+- 四个 task-scoped inputs 与 bundle manifest 的 `is_fixture` 一致性；all-true / all-false 传播，mixed
+  fail closed；
+- sibling staging directory 完整生成和验证后一次 rename 发布；故障注入不会在 final path 留下
+  partial package。
 
 ## 9. 复现命令
 

@@ -62,7 +62,7 @@ def _title_is_strong(title: str) -> bool:
 
 
 class _UnionFind:
-    """Union-find that tracks each component's non-empty DOI and OpenAlex sets."""
+    """Union-find that retains component-level strong-identity provenance."""
 
     def __init__(self, record_ids: list[str], identities: Mapping[str, Mapping[str, str | None]]) -> None:
         self._parent = {rid: rid for rid in record_ids}
@@ -84,37 +84,65 @@ class _UnionFind:
             parent[item], item = root, parent[item]
         return root
 
-    def mergeable(self, left: str, right: str) -> bool:
-        root_left = self.find(left)
-        root_right = self.find(right)
-        if root_left == root_right:
-            return True
-        return _merge_allowed(
-            self._dois[root_left] | self._dois[root_right],
-            self._openalex[root_left] | self._openalex[root_right],
-        )
-
     def union(self, left: str, right: str) -> None:
         root_left = self.find(left)
         root_right = self.find(right)
         if root_left == root_right:
             return
-        self._parent[root_left] = root_right
-        self._dois[root_right] = self._dois[root_right] | self._dois[root_left]
-        self._openalex[root_right] = self._openalex[root_right] | self._openalex[root_left]
+        # Keep the representative deterministic even if callers enumerate an
+        # identity group in a different order.
+        if root_right < root_left:
+            root_left, root_right = root_right, root_left
+        self._parent[root_right] = root_left
+        self._dois[root_left] = self._dois[root_left] | self._dois[root_right]
+        self._openalex[root_left] = self._openalex[root_left] | self._openalex[root_right]
+
+    def roots_for(self, record_ids: list[str]) -> list[str]:
+        return sorted({self.find(record_id) for record_id in record_ids})
+
+    def identifiers_for(
+        self, record_ids: list[str]
+    ) -> tuple[frozenset[str], list[frozenset[str]]]:
+        roots = self.roots_for(record_ids)
+        dois = frozenset().union(*(self._dois[root] for root in roots))
+        openalex_sets = [self._openalex[root] for root in roots if self._openalex[root]]
+        return dois, openalex_sets
+
+    def union_all(self, record_ids: list[str]) -> None:
+        roots = self.roots_for(record_ids)
+        if not roots:
+            return
+        anchor = roots[0]
+        for root in roots[1:]:
+            self.union(anchor, root)
 
 
-def _merge_allowed(dois: frozenset[str], openalex: frozenset[str]) -> bool:
-    """A confirmed component must stay identity-consistent.
+def _openalex_group_is_compatible(
+    union_find: _UnionFind, record_ids: list[str]
+) -> bool:
+    """An exact OpenAlex group may merge only without a DOI conflict."""
+    dois, _ = union_find.identifiers_for(record_ids)
+    return len(dois) <= 1
 
-    - at most one distinct non-empty DOI;
-    - multiple OpenAlex IDs are allowed only when reconciled by a shared DOI.
+
+def _title_group_is_compatible(
+    union_find: _UnionFind, record_ids: list[str]
+) -> bool:
+    """Require one unambiguous strong-identity interpretation for a title group.
+
+    A DOI already present somewhere in one component cannot reconcile an unrelated
+    OpenAlex identity from another component.  If multiple components carry
+    OpenAlex identities, they must share an actual OpenAlex identity; components
+    with no OpenAlex identity may join only when the whole title group remains
+    unambiguous.  Evaluating the complete group avoids greedy/union-order choices
+    for a title-only record between conflicting strong identities.
     """
+    dois, openalex_sets = union_find.identifiers_for(record_ids)
     if len(dois) > 1:
         return False
-    if not dois and len(openalex) > 1:
-        return False
-    return True
+    if len(openalex_sets) <= 1:
+        return True
+    return bool(set.intersection(*(set(values) for values in openalex_sets)))
 
 
 def _cluster_records(records: Mapping[str, Any]) -> list[set[str]]:
@@ -128,20 +156,18 @@ def _cluster_records(records: Mapping[str, Any]) -> list[set[str]]:
     for rid in record_ids:
         if identities[rid]["doi"]:
             by_doi[identities[rid]["doi"]].append(rid)
-    for group in by_doi.values():
-        for rid in group[1:]:
-            union_find.union(group[0], rid)
+    for doi in sorted(by_doi):
+        union_find.union_all(by_doi[doi])
 
     # Phase B — OpenAlex: merge only if the component stays DOI-consistent.
     by_openalex: dict[str, list[str]] = defaultdict(list)
     for rid in record_ids:
         if identities[rid]["openalex"]:
             by_openalex[identities[rid]["openalex"]].append(rid)
-    for group in by_openalex.values():
-        anchor = group[0]
-        for rid in group[1:]:
-            if union_find.mergeable(anchor, rid):
-                union_find.union(anchor, rid)
+    for openalex_id in sorted(by_openalex):
+        group = by_openalex[openalex_id]
+        if _openalex_group_is_compatible(union_find, group):
+            union_find.union_all(group)
 
     # Phase C — exact normalized title: only non-generic and conflict-free.
     by_title: dict[str, list[str]] = defaultdict(list)
@@ -149,11 +175,10 @@ def _cluster_records(records: Mapping[str, Any]) -> list[set[str]]:
         title = identities[rid]["title"]
         if _title_is_strong(title):
             by_title[title].append(rid)
-    for group in by_title.values():
-        anchor = group[0]
-        for rid in group[1:]:
-            if union_find.mergeable(anchor, rid):
-                union_find.union(anchor, rid)
+    for title in sorted(by_title):
+        group = by_title[title]
+        if _title_group_is_compatible(union_find, group):
+            union_find.union_all(group)
 
     groups: dict[str, set[str]] = defaultdict(set)
     for rid in record_ids:
@@ -325,13 +350,19 @@ def build_canonical_entities(
             right_id = entity_ids[right_index]
             left_entity = entities_by_id[left_id]
             right_entity = entities_by_id[right_id]
-            left_title = normalize_title(
-                records[left_entity["preferred_record_id"]]["title"]
+            left_titles = {
+                normalize_title(records[record_id]["title"])
+                for record_id in left_entity["alias_record_ids"]
+            }
+            right_titles = {
+                normalize_title(records[record_id]["title"])
+                for record_id in right_entity["alias_record_ids"]
+            }
+            ratio = max(
+                SequenceMatcher(None, left_title, right_title).ratio()
+                for left_title in left_titles
+                for right_title in right_titles
             )
-            right_title = normalize_title(
-                records[right_entity["preferred_record_id"]]["title"]
-            )
-            ratio = SequenceMatcher(None, left_title, right_title).ratio()
             shared_openalex = bool(
                 set(left_entity["normalized_openalex_ids"])
                 & set(right_entity["normalized_openalex_ids"])

@@ -16,11 +16,16 @@ from typing import Any, Mapping
 from src.w6_contracts import W6_SCHEMA_VERSION
 
 
-def _item_systems(pool_members: Mapping[str, Any], *, entity_level: bool) -> dict[str, set[str]]:
+def _item_systems(
+    pool_members: Mapping[str, Any],
+    member_systems: Mapping[str, set[str]],
+    *,
+    entity_level: bool,
+) -> dict[str, set[str]]:
     item_systems: dict[str, set[str]] = defaultdict(set)
     for member in pool_members.values():
         key = member["canonical_entity_id"] if entity_level else member["record_id"]
-        item_systems[key].update(member["source_system_membership"])
+        item_systems[key].update(member_systems[member["pool_item_id"]])
     return dict(item_systems)
 
 
@@ -128,9 +133,15 @@ def audit_pool_bias(
     pool_members = {
         member["pool_item_id"]: member for member in post_pool_payload["members"]
     }
-    # Defensive closure: every pooled hit must belong to the frozen included roster.
+    # Defensive closure: every pooled hit must belong to the frozen included roster,
+    # and metrics use the acquisition systems derived from those hits as the source
+    # of truth.  A caller cannot rewrite contribution metrics through the member's
+    # denormalized source_system_membership field.
     hits = retrieval["hits"]
+    runs = retrieval["runs"]
+    member_systems: dict[str, set[str]] = {}
     for member in pool_members.values():
+        derived_systems: set[str] = set()
         for hit_id in member["retrieval_hit_ids"]:
             hit = hits.get(hit_id)
             if hit is None or hit["retrieval_run_id"] not in included:
@@ -138,9 +149,22 @@ def audit_pool_bias(
                     f"pool member {member['pool_item_id']} 的 retrieval hit "
                     f"{hit_id} 不在 frozen included roster。"
                 )
+            derived_systems.add(runs[hit["retrieval_run_id"]]["acquisition_system"])
+        declared_systems = member["source_system_membership"]
+        if (
+            not isinstance(declared_systems, list)
+            or any(not isinstance(value, str) or not value for value in declared_systems)
+            or len(declared_systems) != len(set(declared_systems))
+            or set(declared_systems) != derived_systems
+        ):
+            raise ValueError(
+                f"pool member {member['pool_item_id']} 的 source_system_membership "
+                "与 retrieval hits 派生系统不一致。"
+            )
+        member_systems[member["pool_item_id"]] = derived_systems
 
-    record_systems = _item_systems(pool_members, entity_level=False)
-    entity_systems = _item_systems(pool_members, entity_level=True)
+    record_systems = _item_systems(pool_members, member_systems, entity_level=False)
+    entity_systems = _item_systems(pool_members, member_systems, entity_level=True)
 
     total_pool_items = len(pool_members)
     distinct_records = len(record_systems)

@@ -1809,8 +1809,20 @@ def load_canonicalization_inputs(bundle_manifest_path: str | Path) -> dict[str, 
         retrieval=retrieval,
         registry=registry,
     )
+    fixture_values = {
+        payloads[name]["is_fixture"] for name in CANONICALIZATION_INPUT_NAMES
+    }
+    manifest_is_fixture = manifest.get("is_fixture")
+    if not isinstance(manifest_is_fixture, bool):
+        raise ValueError("W6 bundle manifest.is_fixture 必须是 boolean。")
+    if len(fixture_values) != 1 or manifest_is_fixture not in fixture_values:
+        raise ValueError(
+            "canonicalization inputs 与 bundle manifest 的 is_fixture 必须一致。"
+        )
+    is_fixture = next(iter(fixture_values))
     return {
         "bundle_dir": bundle_dir,
+        "is_fixture": is_fixture,
         "manifest": manifest,
         "registry": registry,
         "paths": paths,
