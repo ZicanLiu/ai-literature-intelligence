@@ -1,0 +1,12 @@
+{
+  "variant_statistics": [
+    {
+      "query_variant_id": "unknown",
+      "hit_count": 0,
+      "retrieval_success": false
+    }
+  ],
+  "unique_hit_record_count": 0,
+  "multi_query_intersection_count": 0,
+  "only_single_query_hit_count": 0
+}

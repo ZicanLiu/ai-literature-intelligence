@@ -1,0 +1,9 @@
+field,total,present,missing
+abstract,1,0,1
+doi,1,0,1
+openalex_id,1,0,1
+year,1,0,1
+venue,1,0,1
+authors,1,0,1
+landing_page,1,0,1
+provider,1,0,1
