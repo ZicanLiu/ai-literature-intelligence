@@ -11,6 +11,7 @@ ranking/        TF-IDF、排序和指标已知答案案例
 pipeline/       多查询、provenance、统一排序与 batch 离线端到端案例
 w5_method_contract/ 无标签的 60-pair 合法排名，用于 contract/RRF/evaluator/error-analysis
 w6_bootstrap/   W6 topic/pool/canonical/blind/hidden/method/synthesis 公共 contract 正负 fixture
+w6_pool_builder/ W6 Multi-Retriever Builder 的 hash-pinned synthetic pooling policy
 ```
 
 统一规则：
