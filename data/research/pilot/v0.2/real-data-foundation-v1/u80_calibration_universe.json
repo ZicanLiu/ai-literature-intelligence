@@ -1,0 +1,2774 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "srtp_pilot_u80_calibration_universe",
+  "artifact_id": "srtp_pilot_u80_bfbb0ff51856fd877d84c8a9",
+  "u80_identity": "srtp-pilot-u80:sha256:bfbb0ff51856fd877d84c8a9dfc0ee07d3c617723a318f8b5f8cd8a45002e5c9",
+  "protocol_version": "srtp-pilot-v0.2",
+  "name": "OpenAlex-query-conditioned calibration universe",
+  "is_fixture": false,
+  "created_at": "2026-08-30T18:19:26+08:00",
+  "inputs": {
+    "config": {
+      "artifact_id": "srtp_pilot_v0_2_real_data_foundation_v1",
+      "config_identity": "srtp-pilot-real-data-config:sha256:6fc2d1d5a4a6da53a0314e7a6e310c6cbe83422f2778655a6f82f54ed6a94296",
+      "sha256": "cb01f754ab94bd6c4a36bb868fa03fa9e3103e5ed426c6cbeb73924b65a9bb4f"
+    },
+    "frozen_topic_set": {
+      "path": "data/research/w6/v0.2-alpha/topics.json",
+      "artifact_id": "w6_research_topics_v0.2_alpha",
+      "sha256": "6e2f6e6b8fea56cef6e245dcf37fa97a46ba5efc6703fb47e9863840e3a06ca4"
+    },
+    "dev_split": {
+      "path": "data/research/w6/v0.2-alpha/split_manifest.json",
+      "artifact_id": "w6_topic_split_v0.2_alpha",
+      "split_identity": "w6-topic-split:sha256:8391d14987a15982b5afa2ae3760f029824909353f51056360d79fe9b85202bc",
+      "sha256": "bb57448288f122406d195cbec09dde80f76f78a7a0a1d0ef9bc85c052aea69ad"
+    },
+    "source_openalex_package": {
+      "path": "data/research/w6/v0.2-alpha/openalex-audit-v1",
+      "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+      "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+      "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+    },
+    "acquisition_query_runs": [
+      {
+        "topic_id": "w6_topic_21cm_foreground_removal",
+        "acquisition_query_id": "21cm_foreground_aq01",
+        "source_query_run_id": "w6-openalex-query-run:sha256:1df2778ba70c57436aa7bd099c8139bd6052a574e2ae79805dce2504250dde2c"
+      },
+      {
+        "topic_id": "w6_topic_21cm_foreground_removal",
+        "acquisition_query_id": "21cm_foreground_aq02",
+        "source_query_run_id": "w6-openalex-query-run:sha256:f6deb5c6925aa2720bc7bf03c720394df7081bbede6cc015c222059a69014ebb"
+      },
+      {
+        "topic_id": "w6_topic_21cm_foreground_removal",
+        "acquisition_query_id": "21cm_foreground_aq03",
+        "source_query_run_id": "w6-openalex-query-run:sha256:aac8c0890c23ece8047ceab6ff24d12627543bf6f780c3f49a6addf87cfbb85e"
+      },
+      {
+        "topic_id": "w6_topic_21cm_foreground_removal",
+        "acquisition_query_id": "21cm_foreground_aq04",
+        "source_query_run_id": "w6-openalex-query-run:sha256:41f15bedfcb91555566202831c909bb442f790dc14ca1c4b17b81db7f2285abe"
+      },
+      {
+        "topic_id": "w6_topic_21cm_foreground_removal",
+        "acquisition_query_id": "21cm_foreground_aq05",
+        "source_query_run_id": "w6-openalex-query-run:sha256:d6a53a2c4cc4788d7e463fcdd38c20ede80311622c281e7ab1619cfcee470342"
+      },
+      {
+        "topic_id": "w6_topic_21cm_foreground_removal",
+        "acquisition_query_id": "21cm_foreground_aq06",
+        "source_query_run_id": "w6-openalex-query-run:sha256:e0fbe7cf6af4bb51897b1ea05fd9531c1d9809d0f61e69694478eca4e90c9913"
+      },
+      {
+        "topic_id": "w6_topic_spectral_anomaly_detection",
+        "acquisition_query_id": "spectral_anomaly_aq01",
+        "source_query_run_id": "w6-openalex-query-run:sha256:90249a02aef9cdd40a7b3d1352674be613e1d62d35ca542e2979150c503cb3fd"
+      },
+      {
+        "topic_id": "w6_topic_spectral_anomaly_detection",
+        "acquisition_query_id": "spectral_anomaly_aq02",
+        "source_query_run_id": "w6-openalex-query-run:sha256:fb36abe842ca01d7ba019788e927024797481deb1ea2006a957a80557ef305ee"
+      },
+      {
+        "topic_id": "w6_topic_spectral_anomaly_detection",
+        "acquisition_query_id": "spectral_anomaly_aq03",
+        "source_query_run_id": "w6-openalex-query-run:sha256:82d7bd9718c77cf45fcdc86cf621191996e08363f093523e6d9f10f3058fd0e9"
+      },
+      {
+        "topic_id": "w6_topic_spectral_anomaly_detection",
+        "acquisition_query_id": "spectral_anomaly_aq04",
+        "source_query_run_id": "w6-openalex-query-run:sha256:c4d2fef5c817ac6f125b522c5320532185583e33f80d4e9933db14e285280133"
+      },
+      {
+        "topic_id": "w6_topic_spectral_anomaly_detection",
+        "acquisition_query_id": "spectral_anomaly_aq05",
+        "source_query_run_id": "w6-openalex-query-run:sha256:879075880bd838b6660fd59fb065b452215e6050b47b2ed39ee863d28278978b"
+      },
+      {
+        "topic_id": "w6_topic_spectral_anomaly_detection",
+        "acquisition_query_id": "spectral_anomaly_aq06",
+        "source_query_run_id": "w6-openalex-query-run:sha256:8c597a8ee794aa595b77410afc6085575dcfbad8795feb414362ef46b8dc88f7"
+      }
+    ],
+    "query_registry": {
+      "artifact_id": "srtp_pilot_query_registry_257f996c78bfdd8e0ec0367d",
+      "sha256": "42c1493040dc4e19248277450e0802c6ed4dcedca6500d8159dd05d689cb85d9"
+    },
+    "adapter": {
+      "adapter_identity": "srtp-pilot-openalex-w6-adapter:sha256:e3988c947662772e10bc65bcd1ff0f9acb8177e2f5ba131b5952d819f75340a1",
+      "retrieval_provenance": {
+        "artifact_id": "w6_retrieval_union_cb8c1ce1225bb977b9a8b363",
+        "sha256": "1e4488081537f337c64c16e6a8fcd631e575509151ed43aef3062cddcd0fd480"
+      },
+      "source_records": {
+        "artifact_id": "srtp_pilot_source_records_f575e35e04b780ea8e17b088",
+        "sha256": "c6ea1faadf2d2d5f1a623ac17ca5d8d48f0d2f354711b69620b774500aa6afc1"
+      }
+    },
+    "eligibility": {
+      "artifact_id": "srtp_pilot_eligibility_638a21697744be9b477f12f4",
+      "sha256": "8b832a572daa44a7d9774c1b27a64dafe08e4bbee353dc8215d3f22c7385ade4",
+      "policy_sha256": "696695e31b816edd6cd73c0cd95604aa539f20837e19fcbcaf0e0934115c2d49"
+    },
+    "candidate_pool": {
+      "artifact_id": "w6_precanonical_pool_332cfbd5b0f00649bdca9421",
+      "sha256": "24db785ab56342c133b8b970645d59f551201407c05eee18b0ac63185fe7edf5",
+      "pool_identity": "w6-pool:sha256:332cfbd5b0f00649bdca9421df1fe735388e81e369025d911475f79ecb5d07cb"
+    },
+    "canonicalization": {
+      "canonicalization_identity": "srtp-pilot-canonicalization:sha256:213e3649d980db311847d122df685d5637a22c195a7fb03be2c0f67f42b0c09b",
+      "canonical_entities": {
+        "artifact_id": "srtp_pilot_canonical_entities_4f09c253e25968057f5579fe",
+        "sha256": "b4248d26f9ac49db38cae28ed6a1b39cda713004d14f95a0498ee8a8f1942280"
+      },
+      "postcanonical_pool": {
+        "artifact_id": "srtp_pilot_postcanonical_pool_89d9f26524dd2224f55122c3",
+        "sha256": "fc6ba2f39c50227a38e6bff30fbe04fd0de700af264cc2197fd643ab4e4ba0a7",
+        "pool_identity": "w6-pool:sha256:53476011731a98d9fb5152c57fb65c343cfee2d0b50ba711b8f4dff4c501429b"
+      }
+    },
+    "canonical_selection_view": {
+      "artifact_id": "srtp_pilot_canonical_selection_55dcae7fe9d1acd1e1f9f2fd",
+      "sha256": "9ac6db1f703fc7b0cad7b2a9bc0c47a549db08a1fa2266763bf8a9dab4a05a9a"
+    }
+  },
+  "sampling": {
+    "method": "query_balanced_deterministic_hash_round_robin",
+    "version": "v1",
+    "hash_algorithm": "sha256",
+    "seed": "srtp-pilot-v0.2-u80",
+    "n_per_topic": 80,
+    "query_iteration_order": "seeded_hash_order",
+    "within_query_order": "seed_topic_query_canonical_entity_hash_order",
+    "duplicate_entity_handling": "first_admission_only_keep_all_query_support"
+  },
+  "topic_counts": {
+    "w6_topic_21cm_foreground_removal": 80,
+    "w6_topic_spectral_anomaly_detection": 80
+  },
+  "topics": [
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "eligible_canonical_entity_count": 322,
+      "requested_n": 80,
+      "query_iteration_order": [
+        "21cm_foreground_aq02",
+        "21cm_foreground_aq05",
+        "21cm_foreground_aq06",
+        "21cm_foreground_aq01",
+        "21cm_foreground_aq03",
+        "21cm_foreground_aq04"
+      ],
+      "ordered_canonical_entity_ids": [
+        "entity_pilot_openalex_w4406489043",
+        "entity_pilot_openalex_w4321605055",
+        "entity_pilot_openalex_w4206220255",
+        "entity_pilot_openalex_w3037164077",
+        "entity_pilot_openalex_w4205630102",
+        "entity_pilot_openalex_w4404204997",
+        "entity_pilot_openalex_w4415142830",
+        "entity_pilot_openalex_w4306311534",
+        "entity_pilot_openalex_w2910345227",
+        "entity_pilot_openalex_w4300962444",
+        "entity_pilot_openalex_w4414519684",
+        "entity_pilot_openalex_w4308671731",
+        "entity_pilot_openalex_w4387584366",
+        "entity_pilot_openalex_w4200632998",
+        "entity_pilot_openalex_w2945005950",
+        "entity_pilot_openalex_w2791562850",
+        "entity_pilot_openalex_w2147626801",
+        "entity_pilot_openalex_w7131914274",
+        "entity_pilot_openalex_w4404569850",
+        "entity_pilot_openalex_w2142385228",
+        "entity_pilot_openalex_w4405963173",
+        "entity_pilot_openalex_w4226106425",
+        "entity_pilot_openalex_w4405254524",
+        "entity_pilot_openalex_w232606272",
+        "entity_pilot_openalex_w3179696901",
+        "entity_pilot_openalex_w2981262744",
+        "entity_pilot_openalex_w4416926511",
+        "entity_pilot_openalex_w4384072169",
+        "entity_pilot_openalex_w3119692005",
+        "entity_pilot_openalex_w4221141379",
+        "entity_pilot_openalex_w4221162453",
+        "entity_pilot_openalex_w4297806707",
+        "entity_pilot_openalex_w3127256288",
+        "entity_pilot_openalex_w4411497497",
+        "entity_pilot_openalex_w2340852100",
+        "entity_pilot_openalex_w3133633794",
+        "entity_pilot_openalex_w7160154611",
+        "entity_pilot_openalex_w2773631514",
+        "entity_pilot_openalex_w2896273336",
+        "entity_pilot_openalex_w4386080688",
+        "entity_pilot_openalex_w2152334290",
+        "entity_pilot_openalex_w4405766596",
+        "entity_pilot_openalex_w4288055178",
+        "entity_pilot_openalex_w4392722025",
+        "entity_pilot_openalex_w1956826296",
+        "entity_pilot_openalex_w2018433132",
+        "entity_pilot_openalex_w3099201768",
+        "entity_pilot_openalex_w4389500815",
+        "entity_pilot_openalex_w7167748818",
+        "entity_pilot_openalex_w4387594746",
+        "entity_pilot_openalex_w4221061209",
+        "entity_pilot_openalex_w2597412078",
+        "entity_pilot_openalex_w3102470324",
+        "entity_pilot_openalex_w4400666947",
+        "entity_pilot_openalex_w4414580497",
+        "entity_pilot_openalex_w2963434653",
+        "entity_pilot_openalex_w3128526753",
+        "entity_pilot_openalex_w2011566601",
+        "entity_pilot_openalex_w2614352406",
+        "entity_pilot_openalex_w3180708328",
+        "entity_pilot_openalex_w4242535764",
+        "entity_pilot_openalex_w4384111952",
+        "entity_pilot_openalex_w3005858595",
+        "entity_pilot_openalex_w4206399715",
+        "entity_pilot_openalex_w3125395269",
+        "entity_pilot_openalex_w7166901574",
+        "entity_pilot_openalex_w2806612008",
+        "entity_pilot_openalex_w2802101283",
+        "entity_pilot_openalex_w4391747279",
+        "entity_pilot_openalex_w4206448450",
+        "entity_pilot_openalex_w4372215216",
+        "entity_pilot_openalex_w4411723140",
+        "entity_pilot_openalex_w3014146647",
+        "entity_pilot_openalex_w4392885958",
+        "entity_pilot_openalex_w4313259475",
+        "entity_pilot_openalex_w3018651684",
+        "entity_pilot_openalex_w4409324264",
+        "entity_pilot_openalex_w2097433601",
+        "entity_pilot_openalex_w4414058109",
+        "entity_pilot_openalex_w3092456483"
+      ],
+      "preferred_record_ids": [
+        "pilot_openalex_w4406489043",
+        "pilot_openalex_w4321605055",
+        "pilot_openalex_w4206220255",
+        "pilot_openalex_w3037164077",
+        "pilot_openalex_w4205630102",
+        "pilot_openalex_w4404204997",
+        "pilot_openalex_w4415142830",
+        "pilot_openalex_w4306311534",
+        "pilot_openalex_w2910345227",
+        "pilot_openalex_w4300962444",
+        "pilot_openalex_w4414519684",
+        "pilot_openalex_w4308671731",
+        "pilot_openalex_w4387584366",
+        "pilot_openalex_w4200632998",
+        "pilot_openalex_w2945005950",
+        "pilot_openalex_w2791562850",
+        "pilot_openalex_w2147626801",
+        "pilot_openalex_w7131914274",
+        "pilot_openalex_w4404569850",
+        "pilot_openalex_w2142385228",
+        "pilot_openalex_w4405963173",
+        "pilot_openalex_w4226106425",
+        "pilot_openalex_w4405254524",
+        "pilot_openalex_w232606272",
+        "pilot_openalex_w3179696901",
+        "pilot_openalex_w2981262744",
+        "pilot_openalex_w4416926511",
+        "pilot_openalex_w4384072169",
+        "pilot_openalex_w3119692005",
+        "pilot_openalex_w4221141379",
+        "pilot_openalex_w4221162453",
+        "pilot_openalex_w4297806707",
+        "pilot_openalex_w3127256288",
+        "pilot_openalex_w4411497497",
+        "pilot_openalex_w2340852100",
+        "pilot_openalex_w3133633794",
+        "pilot_openalex_w7160154611",
+        "pilot_openalex_w2773631514",
+        "pilot_openalex_w2896273336",
+        "pilot_openalex_w4386080688",
+        "pilot_openalex_w2152334290",
+        "pilot_openalex_w4405766596",
+        "pilot_openalex_w4288055178",
+        "pilot_openalex_w4392722025",
+        "pilot_openalex_w1956826296",
+        "pilot_openalex_w2018433132",
+        "pilot_openalex_w3099201768",
+        "pilot_openalex_w4389500815",
+        "pilot_openalex_w7167748818",
+        "pilot_openalex_w4387594746",
+        "pilot_openalex_w4221061209",
+        "pilot_openalex_w2597412078",
+        "pilot_openalex_w3102470324",
+        "pilot_openalex_w4400666947",
+        "pilot_openalex_w4414580497",
+        "pilot_openalex_w2963434653",
+        "pilot_openalex_w3128526753",
+        "pilot_openalex_w2011566601",
+        "pilot_openalex_w2614352406",
+        "pilot_openalex_w3180708328",
+        "pilot_openalex_w4242535764",
+        "pilot_openalex_w4384111952",
+        "pilot_openalex_w3005858595",
+        "pilot_openalex_w4206399715",
+        "pilot_openalex_w3125395269",
+        "pilot_openalex_w7166901574",
+        "pilot_openalex_w2806612008",
+        "pilot_openalex_w2802101283",
+        "pilot_openalex_w4391747279",
+        "pilot_openalex_w4206448450",
+        "pilot_openalex_w4372215216",
+        "pilot_openalex_w4411723140",
+        "pilot_openalex_w3014146647",
+        "pilot_openalex_w4392885958",
+        "pilot_openalex_w4313259475",
+        "pilot_openalex_w3018651684",
+        "pilot_openalex_w4409324264",
+        "pilot_openalex_w2097433601",
+        "pilot_openalex_w4414058109",
+        "pilot_openalex_w3092456483"
+      ],
+      "ordered_items": [
+        {
+          "sample_order": 1,
+          "canonical_selection_item_id": "pilot_selection_item_40525841bb4f01ea8c0df3e2",
+          "canonical_entity_id": "entity_pilot_openalex_w4406489043",
+          "preferred_record_id": "pilot_openalex_w4406489043",
+          "alias_record_ids": [
+            "pilot_openalex_w4406489043"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq02"
+        },
+        {
+          "sample_order": 2,
+          "canonical_selection_item_id": "pilot_selection_item_0e6b6b61fbeae9f7cce17e30",
+          "canonical_entity_id": "entity_pilot_openalex_w4321605055",
+          "preferred_record_id": "pilot_openalex_w4321605055",
+          "alias_record_ids": [
+            "pilot_openalex_w4321605055"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01",
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq05"
+        },
+        {
+          "sample_order": 3,
+          "canonical_selection_item_id": "pilot_selection_item_5653f75f8696441471c1c107",
+          "canonical_entity_id": "entity_pilot_openalex_w4206220255",
+          "preferred_record_id": "pilot_openalex_w4206220255",
+          "alias_record_ids": [
+            "pilot_openalex_w4206220255"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq06"
+        },
+        {
+          "sample_order": 4,
+          "canonical_selection_item_id": "pilot_selection_item_ce7eeabcd4b48f748b6b9164",
+          "canonical_entity_id": "entity_pilot_openalex_w3037164077",
+          "preferred_record_id": "pilot_openalex_w3037164077",
+          "alias_record_ids": [
+            "pilot_openalex_w3037164077"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01",
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq01"
+        },
+        {
+          "sample_order": 5,
+          "canonical_selection_item_id": "pilot_selection_item_12829e21b006a98b9050faf3",
+          "canonical_entity_id": "entity_pilot_openalex_w4205630102",
+          "preferred_record_id": "pilot_openalex_w4205630102",
+          "alias_record_ids": [
+            "pilot_openalex_w4205630102"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq03"
+        },
+        {
+          "sample_order": 6,
+          "canonical_selection_item_id": "pilot_selection_item_b5bb3753915334e8ce8786fc",
+          "canonical_entity_id": "entity_pilot_openalex_w4404204997",
+          "preferred_record_id": "pilot_openalex_w4404204997",
+          "alias_record_ids": [
+            "pilot_openalex_w4404204997"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq04"
+        },
+        {
+          "sample_order": 7,
+          "canonical_selection_item_id": "pilot_selection_item_74c7f3de903993b24751cb4a",
+          "canonical_entity_id": "entity_pilot_openalex_w4415142830",
+          "preferred_record_id": "pilot_openalex_w4415142830",
+          "alias_record_ids": [
+            "pilot_openalex_w4415142830"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq02"
+        },
+        {
+          "sample_order": 8,
+          "canonical_selection_item_id": "pilot_selection_item_792f659717d5cfe257b5ffc3",
+          "canonical_entity_id": "entity_pilot_openalex_w4306311534",
+          "preferred_record_id": "pilot_openalex_w4306311534",
+          "alias_record_ids": [
+            "pilot_openalex_w4306311534"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq05"
+        },
+        {
+          "sample_order": 9,
+          "canonical_selection_item_id": "pilot_selection_item_baa259b5d4827caad7e36a84",
+          "canonical_entity_id": "entity_pilot_openalex_w2910345227",
+          "preferred_record_id": "pilot_openalex_w2910345227",
+          "alias_record_ids": [
+            "pilot_openalex_w2910345227"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq06"
+        },
+        {
+          "sample_order": 10,
+          "canonical_selection_item_id": "pilot_selection_item_6c6e903defce89fac1b9052c",
+          "canonical_entity_id": "entity_pilot_openalex_w4300962444",
+          "preferred_record_id": "pilot_openalex_w4300962444",
+          "alias_record_ids": [
+            "pilot_openalex_w4300962444"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq01"
+        },
+        {
+          "sample_order": 11,
+          "canonical_selection_item_id": "pilot_selection_item_0b9b417379679453f452cf9c",
+          "canonical_entity_id": "entity_pilot_openalex_w4414519684",
+          "preferred_record_id": "pilot_openalex_w4414519684",
+          "alias_record_ids": [
+            "pilot_openalex_w4414519684"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq03"
+        },
+        {
+          "sample_order": 12,
+          "canonical_selection_item_id": "pilot_selection_item_1bdb2d190156fa3b1de8f845",
+          "canonical_entity_id": "entity_pilot_openalex_w4308671731",
+          "preferred_record_id": "pilot_openalex_w4308671731",
+          "alias_record_ids": [
+            "pilot_openalex_w4308671731"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq04"
+        },
+        {
+          "sample_order": 13,
+          "canonical_selection_item_id": "pilot_selection_item_a3a9b798d8b4d1eaf219b393",
+          "canonical_entity_id": "entity_pilot_openalex_w4387584366",
+          "preferred_record_id": "pilot_openalex_w4387584366",
+          "alias_record_ids": [
+            "pilot_openalex_w4387584366"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq02"
+        },
+        {
+          "sample_order": 14,
+          "canonical_selection_item_id": "pilot_selection_item_9b27d20ddfd25e9f23acfe11",
+          "canonical_entity_id": "entity_pilot_openalex_w4200632998",
+          "preferred_record_id": "pilot_openalex_w4200632998",
+          "alias_record_ids": [
+            "pilot_openalex_w4200632998"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq05"
+        },
+        {
+          "sample_order": 15,
+          "canonical_selection_item_id": "pilot_selection_item_a497fcf44d95458c62f8c2e6",
+          "canonical_entity_id": "entity_pilot_openalex_w2945005950",
+          "preferred_record_id": "pilot_openalex_w2945005950",
+          "alias_record_ids": [
+            "pilot_openalex_w2945005950"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq06"
+        },
+        {
+          "sample_order": 16,
+          "canonical_selection_item_id": "pilot_selection_item_25daabdb0e07da6cf0b74bf1",
+          "canonical_entity_id": "entity_pilot_openalex_w2791562850",
+          "preferred_record_id": "pilot_openalex_w2791562850",
+          "alias_record_ids": [
+            "pilot_openalex_w2791562850"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq01"
+        },
+        {
+          "sample_order": 17,
+          "canonical_selection_item_id": "pilot_selection_item_acd9bab470c919997d7e0248",
+          "canonical_entity_id": "entity_pilot_openalex_w2147626801",
+          "preferred_record_id": "pilot_openalex_w2147626801",
+          "alias_record_ids": [
+            "pilot_openalex_w2147626801"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq03"
+        },
+        {
+          "sample_order": 18,
+          "canonical_selection_item_id": "pilot_selection_item_2e794800a733b109b05c8a9a",
+          "canonical_entity_id": "entity_pilot_openalex_w7131914274",
+          "preferred_record_id": "pilot_openalex_w7131914274",
+          "alias_record_ids": [
+            "pilot_openalex_w7131914274"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq04"
+        },
+        {
+          "sample_order": 19,
+          "canonical_selection_item_id": "pilot_selection_item_18e54d175438263a48e58134",
+          "canonical_entity_id": "entity_pilot_openalex_w4404569850",
+          "preferred_record_id": "pilot_openalex_w4404569850",
+          "alias_record_ids": [
+            "pilot_openalex_w4404569850"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq02"
+        },
+        {
+          "sample_order": 20,
+          "canonical_selection_item_id": "pilot_selection_item_8cd1bb5bb8366d9bf2af2416",
+          "canonical_entity_id": "entity_pilot_openalex_w2142385228",
+          "preferred_record_id": "pilot_openalex_w2142385228",
+          "alias_record_ids": [
+            "pilot_openalex_w2142385228"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq05"
+        },
+        {
+          "sample_order": 21,
+          "canonical_selection_item_id": "pilot_selection_item_7cf00c5a8d430217a23f917e",
+          "canonical_entity_id": "entity_pilot_openalex_w4405963173",
+          "preferred_record_id": "pilot_openalex_w4405963173",
+          "alias_record_ids": [
+            "pilot_openalex_w4405963173"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq06"
+        },
+        {
+          "sample_order": 22,
+          "canonical_selection_item_id": "pilot_selection_item_13b62d4c39836ad8f568181f",
+          "canonical_entity_id": "entity_pilot_openalex_w4226106425",
+          "preferred_record_id": "pilot_openalex_w4226106425",
+          "alias_record_ids": [
+            "pilot_openalex_w4226106425"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq01"
+        },
+        {
+          "sample_order": 23,
+          "canonical_selection_item_id": "pilot_selection_item_bbe848751318de20a5730170",
+          "canonical_entity_id": "entity_pilot_openalex_w4405254524",
+          "preferred_record_id": "pilot_openalex_w4405254524",
+          "alias_record_ids": [
+            "pilot_openalex_w4405254524"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq03"
+        },
+        {
+          "sample_order": 24,
+          "canonical_selection_item_id": "pilot_selection_item_5e92b76ac9336abae40d430a",
+          "canonical_entity_id": "entity_pilot_openalex_w232606272",
+          "preferred_record_id": "pilot_openalex_w232606272",
+          "alias_record_ids": [
+            "pilot_openalex_w232606272"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq04"
+        },
+        {
+          "sample_order": 25,
+          "canonical_selection_item_id": "pilot_selection_item_16fed0238068db94c0c59d67",
+          "canonical_entity_id": "entity_pilot_openalex_w3179696901",
+          "preferred_record_id": "pilot_openalex_w3179696901",
+          "alias_record_ids": [
+            "pilot_openalex_w3179696901"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq03"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq02"
+        },
+        {
+          "sample_order": 26,
+          "canonical_selection_item_id": "pilot_selection_item_118d4540e69480a97841485e",
+          "canonical_entity_id": "entity_pilot_openalex_w2981262744",
+          "preferred_record_id": "pilot_openalex_w2981262744",
+          "alias_record_ids": [
+            "pilot_openalex_w2981262744"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq05"
+        },
+        {
+          "sample_order": 27,
+          "canonical_selection_item_id": "pilot_selection_item_4ff8dc4d08031fc0907091c4",
+          "canonical_entity_id": "entity_pilot_openalex_w4416926511",
+          "preferred_record_id": "pilot_openalex_w4416926511",
+          "alias_record_ids": [
+            "pilot_openalex_w4416926511"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01",
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq05",
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq06"
+        },
+        {
+          "sample_order": 28,
+          "canonical_selection_item_id": "pilot_selection_item_1ed606e1f49d8bd242d5df8d",
+          "canonical_entity_id": "entity_pilot_openalex_w4384072169",
+          "preferred_record_id": "pilot_openalex_w4384072169",
+          "alias_record_ids": [
+            "pilot_openalex_w4384072169"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq01"
+        },
+        {
+          "sample_order": 29,
+          "canonical_selection_item_id": "pilot_selection_item_65d96a2fe4baa7c673bb55c6",
+          "canonical_entity_id": "entity_pilot_openalex_w3119692005",
+          "preferred_record_id": "pilot_openalex_w3119692005",
+          "alias_record_ids": [
+            "pilot_openalex_w3119692005"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq03"
+        },
+        {
+          "sample_order": 30,
+          "canonical_selection_item_id": "pilot_selection_item_2e7e34ab6ba418fd0675adee",
+          "canonical_entity_id": "entity_pilot_openalex_w4221141379",
+          "preferred_record_id": "pilot_openalex_w4221141379",
+          "alias_record_ids": [
+            "pilot_openalex_w4221141379"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq04"
+        },
+        {
+          "sample_order": 31,
+          "canonical_selection_item_id": "pilot_selection_item_1f4f3af069d4ce672269ff21",
+          "canonical_entity_id": "entity_pilot_openalex_w4221162453",
+          "preferred_record_id": "pilot_openalex_w4221162453",
+          "alias_record_ids": [
+            "pilot_openalex_w4221162453",
+            "pilot_openalex_w4223513122"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq02"
+        },
+        {
+          "sample_order": 32,
+          "canonical_selection_item_id": "pilot_selection_item_5101741f05ac6f7f9d2eb801",
+          "canonical_entity_id": "entity_pilot_openalex_w4297806707",
+          "preferred_record_id": "pilot_openalex_w4297806707",
+          "alias_record_ids": [
+            "pilot_openalex_w4297806707"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq05"
+        },
+        {
+          "sample_order": 33,
+          "canonical_selection_item_id": "pilot_selection_item_5099ee18a084b2ba9125982f",
+          "canonical_entity_id": "entity_pilot_openalex_w3127256288",
+          "preferred_record_id": "pilot_openalex_w3127256288",
+          "alias_record_ids": [
+            "pilot_openalex_w3127256288"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq05",
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq06"
+        },
+        {
+          "sample_order": 34,
+          "canonical_selection_item_id": "pilot_selection_item_e38275192da0bd7fd18ee3d1",
+          "canonical_entity_id": "entity_pilot_openalex_w4411497497",
+          "preferred_record_id": "pilot_openalex_w4411497497",
+          "alias_record_ids": [
+            "pilot_openalex_w4411497497"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01",
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq01"
+        },
+        {
+          "sample_order": 35,
+          "canonical_selection_item_id": "pilot_selection_item_10f08292ca41327259df768d",
+          "canonical_entity_id": "entity_pilot_openalex_w2340852100",
+          "preferred_record_id": "pilot_openalex_w2340852100",
+          "alias_record_ids": [
+            "pilot_openalex_w2340852100"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq03"
+        },
+        {
+          "sample_order": 36,
+          "canonical_selection_item_id": "pilot_selection_item_dca65fd64087dbcb9106cd63",
+          "canonical_entity_id": "entity_pilot_openalex_w3133633794",
+          "preferred_record_id": "pilot_openalex_w3133633794",
+          "alias_record_ids": [
+            "pilot_openalex_w3133633794"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq04"
+        },
+        {
+          "sample_order": 37,
+          "canonical_selection_item_id": "pilot_selection_item_284f3d06ef7e712ded56b7d0",
+          "canonical_entity_id": "entity_pilot_openalex_w7160154611",
+          "preferred_record_id": "pilot_openalex_w7160154611",
+          "alias_record_ids": [
+            "pilot_openalex_w7160154611"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq02"
+        },
+        {
+          "sample_order": 38,
+          "canonical_selection_item_id": "pilot_selection_item_4f6689b3c8438f61bd22412d",
+          "canonical_entity_id": "entity_pilot_openalex_w2773631514",
+          "preferred_record_id": "pilot_openalex_w2773631514",
+          "alias_record_ids": [
+            "pilot_openalex_w2773631514"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq05"
+        },
+        {
+          "sample_order": 39,
+          "canonical_selection_item_id": "pilot_selection_item_19e3ed14ca7ff363df851f93",
+          "canonical_entity_id": "entity_pilot_openalex_w2896273336",
+          "preferred_record_id": "pilot_openalex_w2896273336",
+          "alias_record_ids": [
+            "pilot_openalex_w2896273336"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq06"
+        },
+        {
+          "sample_order": 40,
+          "canonical_selection_item_id": "pilot_selection_item_d6adbc496f7cc355355df47d",
+          "canonical_entity_id": "entity_pilot_openalex_w4386080688",
+          "preferred_record_id": "pilot_openalex_w4386080688",
+          "alias_record_ids": [
+            "pilot_openalex_w4386080688"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01",
+            "21cm_foreground_aq05",
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq01"
+        },
+        {
+          "sample_order": 41,
+          "canonical_selection_item_id": "pilot_selection_item_465f602d2c858d9fa338b370",
+          "canonical_entity_id": "entity_pilot_openalex_w2152334290",
+          "preferred_record_id": "pilot_openalex_w2152334290",
+          "alias_record_ids": [
+            "pilot_openalex_w2152334290"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq03"
+        },
+        {
+          "sample_order": 42,
+          "canonical_selection_item_id": "pilot_selection_item_ec001c734d50776ad21e4e44",
+          "canonical_entity_id": "entity_pilot_openalex_w4405766596",
+          "preferred_record_id": "pilot_openalex_w4405766596",
+          "alias_record_ids": [
+            "pilot_openalex_w4405766596"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq04"
+        },
+        {
+          "sample_order": 43,
+          "canonical_selection_item_id": "pilot_selection_item_2238e9006eee4e1a9f620c64",
+          "canonical_entity_id": "entity_pilot_openalex_w4288055178",
+          "preferred_record_id": "pilot_openalex_w4288055178",
+          "alias_record_ids": [
+            "pilot_openalex_w4288055178"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq02"
+        },
+        {
+          "sample_order": 44,
+          "canonical_selection_item_id": "pilot_selection_item_604f2c02e35ea61fef661744",
+          "canonical_entity_id": "entity_pilot_openalex_w4392722025",
+          "preferred_record_id": "pilot_openalex_w4392722025",
+          "alias_record_ids": [
+            "pilot_openalex_w4392722025"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq05"
+        },
+        {
+          "sample_order": 45,
+          "canonical_selection_item_id": "pilot_selection_item_020eb18b70edb21b24504f9d",
+          "canonical_entity_id": "entity_pilot_openalex_w1956826296",
+          "preferred_record_id": "pilot_openalex_w1956826296",
+          "alias_record_ids": [
+            "pilot_openalex_w1956826296"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq06"
+        },
+        {
+          "sample_order": 46,
+          "canonical_selection_item_id": "pilot_selection_item_8359efd55a458badb1f7a0b1",
+          "canonical_entity_id": "entity_pilot_openalex_w2018433132",
+          "preferred_record_id": "pilot_openalex_w2018433132",
+          "alias_record_ids": [
+            "pilot_openalex_w2018433132"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq01"
+        },
+        {
+          "sample_order": 47,
+          "canonical_selection_item_id": "pilot_selection_item_c3df4188e0583cf2bd628331",
+          "canonical_entity_id": "entity_pilot_openalex_w3099201768",
+          "preferred_record_id": "pilot_openalex_w3099201768",
+          "alias_record_ids": [
+            "pilot_openalex_w3099201768"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01",
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq05",
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq03"
+        },
+        {
+          "sample_order": 48,
+          "canonical_selection_item_id": "pilot_selection_item_3278a96002728f50d5c0edfd",
+          "canonical_entity_id": "entity_pilot_openalex_w4389500815",
+          "preferred_record_id": "pilot_openalex_w4389500815",
+          "alias_record_ids": [
+            "pilot_openalex_w4389500815"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq04"
+        },
+        {
+          "sample_order": 49,
+          "canonical_selection_item_id": "pilot_selection_item_c5065ec0b7a71e85fad01020",
+          "canonical_entity_id": "entity_pilot_openalex_w7167748818",
+          "preferred_record_id": "pilot_openalex_w7167748818",
+          "alias_record_ids": [
+            "pilot_openalex_w7167748818"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq04",
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq02"
+        },
+        {
+          "sample_order": 50,
+          "canonical_selection_item_id": "pilot_selection_item_5dae09b45553e3e3715ba34b",
+          "canonical_entity_id": "entity_pilot_openalex_w4387594746",
+          "preferred_record_id": "pilot_openalex_w4387594746",
+          "alias_record_ids": [
+            "pilot_openalex_w4387594746"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01",
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq05"
+        },
+        {
+          "sample_order": 51,
+          "canonical_selection_item_id": "pilot_selection_item_94fe298c2c4fccf52481cf74",
+          "canonical_entity_id": "entity_pilot_openalex_w4221061209",
+          "preferred_record_id": "pilot_openalex_w4221061209",
+          "alias_record_ids": [
+            "pilot_openalex_w4221061209"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq06"
+        },
+        {
+          "sample_order": 52,
+          "canonical_selection_item_id": "pilot_selection_item_08583bcc3e26b76a8fa5581c",
+          "canonical_entity_id": "entity_pilot_openalex_w2597412078",
+          "preferred_record_id": "pilot_openalex_w2597412078",
+          "alias_record_ids": [
+            "pilot_openalex_w2597412078"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq01"
+        },
+        {
+          "sample_order": 53,
+          "canonical_selection_item_id": "pilot_selection_item_c11451d804388ce7cccecd89",
+          "canonical_entity_id": "entity_pilot_openalex_w3102470324",
+          "preferred_record_id": "pilot_openalex_w3102470324",
+          "alias_record_ids": [
+            "pilot_openalex_w3102470324"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq03"
+        },
+        {
+          "sample_order": 54,
+          "canonical_selection_item_id": "pilot_selection_item_89acd6814e619902804feda1",
+          "canonical_entity_id": "entity_pilot_openalex_w4400666947",
+          "preferred_record_id": "pilot_openalex_w4400666947",
+          "alias_record_ids": [
+            "pilot_openalex_w4400666947"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq04",
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq04"
+        },
+        {
+          "sample_order": 55,
+          "canonical_selection_item_id": "pilot_selection_item_ebdbee506eb77d472b5878c5",
+          "canonical_entity_id": "entity_pilot_openalex_w4414580497",
+          "preferred_record_id": "pilot_openalex_w4414580497",
+          "alias_record_ids": [
+            "pilot_openalex_w4414580497"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq02"
+        },
+        {
+          "sample_order": 56,
+          "canonical_selection_item_id": "pilot_selection_item_e47021eb0e69218e06a4c87b",
+          "canonical_entity_id": "entity_pilot_openalex_w2963434653",
+          "preferred_record_id": "pilot_openalex_w2963434653",
+          "alias_record_ids": [
+            "pilot_openalex_w2963434653"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq05"
+        },
+        {
+          "sample_order": 57,
+          "canonical_selection_item_id": "pilot_selection_item_85a7ee4349d80e85b18259c9",
+          "canonical_entity_id": "entity_pilot_openalex_w3128526753",
+          "preferred_record_id": "pilot_openalex_w3128526753",
+          "alias_record_ids": [
+            "pilot_openalex_w3128526753"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq06"
+        },
+        {
+          "sample_order": 58,
+          "canonical_selection_item_id": "pilot_selection_item_0f0860ea719bcbd81aeb0bf9",
+          "canonical_entity_id": "entity_pilot_openalex_w2011566601",
+          "preferred_record_id": "pilot_openalex_w2011566601",
+          "alias_record_ids": [
+            "pilot_openalex_w2011566601"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq01"
+        },
+        {
+          "sample_order": 59,
+          "canonical_selection_item_id": "pilot_selection_item_736a17de7c30fcb935925072",
+          "canonical_entity_id": "entity_pilot_openalex_w2614352406",
+          "preferred_record_id": "pilot_openalex_w2614352406",
+          "alias_record_ids": [
+            "pilot_openalex_w2614352406"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq03"
+        },
+        {
+          "sample_order": 60,
+          "canonical_selection_item_id": "pilot_selection_item_54d36084182173df52fd806d",
+          "canonical_entity_id": "entity_pilot_openalex_w3180708328",
+          "preferred_record_id": "pilot_openalex_w3180708328",
+          "alias_record_ids": [
+            "pilot_openalex_w3180708328"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01",
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq04",
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq04"
+        },
+        {
+          "sample_order": 61,
+          "canonical_selection_item_id": "pilot_selection_item_1de1b4b7546891a84e0f2163",
+          "canonical_entity_id": "entity_pilot_openalex_w4242535764",
+          "preferred_record_id": "pilot_openalex_w4242535764",
+          "alias_record_ids": [
+            "pilot_openalex_w4242535764"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq02"
+        },
+        {
+          "sample_order": 62,
+          "canonical_selection_item_id": "pilot_selection_item_b447a008a52f3cad294f2751",
+          "canonical_entity_id": "entity_pilot_openalex_w4384111952",
+          "preferred_record_id": "pilot_openalex_w4384111952",
+          "alias_record_ids": [
+            "pilot_openalex_w4384111952"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq05"
+        },
+        {
+          "sample_order": 63,
+          "canonical_selection_item_id": "pilot_selection_item_1caad118b51e97a2ec1cf939",
+          "canonical_entity_id": "entity_pilot_openalex_w3005858595",
+          "preferred_record_id": "pilot_openalex_w3005858595",
+          "alias_record_ids": [
+            "pilot_openalex_w3005858595"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq05",
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq06"
+        },
+        {
+          "sample_order": 64,
+          "canonical_selection_item_id": "pilot_selection_item_5d5c4b771ed12eed49bb15b0",
+          "canonical_entity_id": "entity_pilot_openalex_w4206399715",
+          "preferred_record_id": "pilot_openalex_w4206399715",
+          "alias_record_ids": [
+            "pilot_openalex_w4206399715"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01",
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq01"
+        },
+        {
+          "sample_order": 65,
+          "canonical_selection_item_id": "pilot_selection_item_4ae7adfa1da766cbba190d0b",
+          "canonical_entity_id": "entity_pilot_openalex_w3125395269",
+          "preferred_record_id": "pilot_openalex_w3125395269",
+          "alias_record_ids": [
+            "pilot_openalex_w3125395269"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq03"
+        },
+        {
+          "sample_order": 66,
+          "canonical_selection_item_id": "pilot_selection_item_730d8039f3bbe20468131b86",
+          "canonical_entity_id": "entity_pilot_openalex_w7166901574",
+          "preferred_record_id": "pilot_openalex_w7166901574",
+          "alias_record_ids": [
+            "pilot_openalex_w7166901574"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq04"
+        },
+        {
+          "sample_order": 67,
+          "canonical_selection_item_id": "pilot_selection_item_e8b87a53861b5d1442a306c5",
+          "canonical_entity_id": "entity_pilot_openalex_w2806612008",
+          "preferred_record_id": "pilot_openalex_w2806612008",
+          "alias_record_ids": [
+            "pilot_openalex_w2806612008"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq02"
+        },
+        {
+          "sample_order": 68,
+          "canonical_selection_item_id": "pilot_selection_item_45750e94f4602021fd188814",
+          "canonical_entity_id": "entity_pilot_openalex_w2802101283",
+          "preferred_record_id": "pilot_openalex_w2802101283",
+          "alias_record_ids": [
+            "pilot_openalex_w2802101283"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01",
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq05"
+        },
+        {
+          "sample_order": 69,
+          "canonical_selection_item_id": "pilot_selection_item_d18a40b30a539142b4f6e1ef",
+          "canonical_entity_id": "entity_pilot_openalex_w4391747279",
+          "preferred_record_id": "pilot_openalex_w4391747279",
+          "alias_record_ids": [
+            "pilot_openalex_w4391747279"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq06"
+        },
+        {
+          "sample_order": 70,
+          "canonical_selection_item_id": "pilot_selection_item_e02d2d8c3eb8c95829a22e2f",
+          "canonical_entity_id": "entity_pilot_openalex_w4206448450",
+          "preferred_record_id": "pilot_openalex_w4206448450",
+          "alias_record_ids": [
+            "pilot_openalex_w4206448450"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq01"
+        },
+        {
+          "sample_order": 71,
+          "canonical_selection_item_id": "pilot_selection_item_6a9d65d4ec813253fda04c47",
+          "canonical_entity_id": "entity_pilot_openalex_w4372215216",
+          "preferred_record_id": "pilot_openalex_w4372215216",
+          "alias_record_ids": [
+            "pilot_openalex_w4372215216"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq03"
+        },
+        {
+          "sample_order": 72,
+          "canonical_selection_item_id": "pilot_selection_item_fbb6d90fd17f2c91f35f2183",
+          "canonical_entity_id": "entity_pilot_openalex_w4411723140",
+          "preferred_record_id": "pilot_openalex_w4411723140",
+          "alias_record_ids": [
+            "pilot_openalex_w4411723140"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq04"
+        },
+        {
+          "sample_order": 73,
+          "canonical_selection_item_id": "pilot_selection_item_0a134b4e1a3a22ffa984e75f",
+          "canonical_entity_id": "entity_pilot_openalex_w3014146647",
+          "preferred_record_id": "pilot_openalex_w3014146647",
+          "alias_record_ids": [
+            "pilot_openalex_w3014146647"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq02"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq02"
+        },
+        {
+          "sample_order": 74,
+          "canonical_selection_item_id": "pilot_selection_item_3dfe22a58c85373f4850ce0f",
+          "canonical_entity_id": "entity_pilot_openalex_w4392885958",
+          "preferred_record_id": "pilot_openalex_w4392885958",
+          "alias_record_ids": [
+            "pilot_openalex_w4392885958"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq05"
+        },
+        {
+          "sample_order": 75,
+          "canonical_selection_item_id": "pilot_selection_item_00ef097c1c176cc791ba6c8e",
+          "canonical_entity_id": "entity_pilot_openalex_w4313259475",
+          "preferred_record_id": "pilot_openalex_w4313259475",
+          "alias_record_ids": [
+            "pilot_openalex_w4313259475"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq06"
+        },
+        {
+          "sample_order": 76,
+          "canonical_selection_item_id": "pilot_selection_item_6ff0b625352825f9dbcc8c89",
+          "canonical_entity_id": "entity_pilot_openalex_w3018651684",
+          "preferred_record_id": "pilot_openalex_w3018651684",
+          "alias_record_ids": [
+            "pilot_openalex_w3018651684"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq01"
+        },
+        {
+          "sample_order": 77,
+          "canonical_selection_item_id": "pilot_selection_item_1cbf8fb8c45599191659fdf3",
+          "canonical_entity_id": "entity_pilot_openalex_w4409324264",
+          "preferred_record_id": "pilot_openalex_w4409324264",
+          "alias_record_ids": [
+            "pilot_openalex_w4409324264"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq03"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq03"
+        },
+        {
+          "sample_order": 78,
+          "canonical_selection_item_id": "pilot_selection_item_bcac276ddd1cfdac90efa701",
+          "canonical_entity_id": "entity_pilot_openalex_w2097433601",
+          "preferred_record_id": "pilot_openalex_w2097433601",
+          "alias_record_ids": [
+            "pilot_openalex_w2097433601",
+            "pilot_openalex_w4297814116"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq04"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq04"
+        },
+        {
+          "sample_order": 79,
+          "canonical_selection_item_id": "pilot_selection_item_c8ac455b70f170c537b2c169",
+          "canonical_entity_id": "entity_pilot_openalex_w4414058109",
+          "preferred_record_id": "pilot_openalex_w4414058109",
+          "alias_record_ids": [
+            "pilot_openalex_w4414058109"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq01",
+            "21cm_foreground_aq02",
+            "21cm_foreground_aq03",
+            "21cm_foreground_aq04",
+            "21cm_foreground_aq05",
+            "21cm_foreground_aq06"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq02"
+        },
+        {
+          "sample_order": 80,
+          "canonical_selection_item_id": "pilot_selection_item_5f8750839c7c4a1173da8698",
+          "canonical_entity_id": "entity_pilot_openalex_w3092456483",
+          "preferred_record_id": "pilot_openalex_w3092456483",
+          "alias_record_ids": [
+            "pilot_openalex_w3092456483"
+          ],
+          "all_query_support_ids": [
+            "21cm_foreground_aq05"
+          ],
+          "first_selected_via_query_id": "21cm_foreground_aq05"
+        }
+      ],
+      "query_contribution_diagnostics": [
+        {
+          "acquisition_query_id": "21cm_foreground_aq01",
+          "eligible_roster_count": 74,
+          "first_selection_contribution_count": 13,
+          "support_count_in_u80": 20
+        },
+        {
+          "acquisition_query_id": "21cm_foreground_aq02",
+          "eligible_roster_count": 55,
+          "first_selection_contribution_count": 14,
+          "support_count_in_u80": 18
+        },
+        {
+          "acquisition_query_id": "21cm_foreground_aq03",
+          "eligible_roster_count": 73,
+          "first_selection_contribution_count": 13,
+          "support_count_in_u80": 24
+        },
+        {
+          "acquisition_query_id": "21cm_foreground_aq04",
+          "eligible_roster_count": 62,
+          "first_selection_contribution_count": 13,
+          "support_count_in_u80": 23
+        },
+        {
+          "acquisition_query_id": "21cm_foreground_aq05",
+          "eligible_roster_count": 76,
+          "first_selection_contribution_count": 14,
+          "support_count_in_u80": 28
+        },
+        {
+          "acquisition_query_id": "21cm_foreground_aq06",
+          "eligible_roster_count": 75,
+          "first_selection_contribution_count": 13,
+          "support_count_in_u80": 18
+        }
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "eligible_canonical_entity_count": 356,
+      "requested_n": 80,
+      "query_iteration_order": [
+        "spectral_anomaly_aq04",
+        "spectral_anomaly_aq02",
+        "spectral_anomaly_aq01",
+        "spectral_anomaly_aq05",
+        "spectral_anomaly_aq06",
+        "spectral_anomaly_aq03"
+      ],
+      "ordered_canonical_entity_ids": [
+        "entity_pilot_openalex_w4393177807",
+        "entity_pilot_openalex_w7119015618",
+        "entity_pilot_openalex_w3024037224",
+        "entity_pilot_openalex_w4387407158",
+        "entity_pilot_openalex_w4306968094",
+        "entity_pilot_openalex_w4386841874",
+        "entity_pilot_openalex_w4412157602",
+        "entity_pilot_openalex_w2201701667",
+        "entity_pilot_openalex_w2180681258",
+        "entity_pilot_openalex_w3163969316",
+        "entity_pilot_openalex_w2916674581",
+        "entity_pilot_openalex_w2524314881",
+        "entity_pilot_openalex_w4288023167",
+        "entity_pilot_openalex_w4391881450",
+        "entity_pilot_openalex_w3127256288",
+        "entity_pilot_openalex_w4306248068",
+        "entity_pilot_openalex_w3206364200",
+        "entity_pilot_openalex_w4309685034",
+        "entity_pilot_openalex_w2972913944",
+        "entity_pilot_openalex_w4417233847",
+        "entity_pilot_openalex_w2795545899",
+        "entity_pilot_openalex_w3127061090",
+        "entity_pilot_openalex_w2153231998",
+        "entity_pilot_openalex_w3154795226",
+        "entity_pilot_openalex_w2935751639",
+        "entity_pilot_openalex_w3118571930",
+        "entity_pilot_openalex_w3080378530",
+        "entity_pilot_openalex_w4389217133",
+        "entity_pilot_openalex_w3115677442",
+        "entity_pilot_openalex_w2908682948",
+        "entity_pilot_openalex_w2550814413",
+        "entity_pilot_openalex_w4223891445",
+        "entity_pilot_openalex_w4403396169",
+        "entity_pilot_openalex_w2968787982",
+        "entity_pilot_openalex_w2286156139",
+        "entity_pilot_openalex_w3026041380",
+        "entity_pilot_openalex_w2567715800",
+        "entity_pilot_openalex_w1668277529",
+        "entity_pilot_openalex_w4403503463",
+        "entity_pilot_openalex_w2340897870",
+        "entity_pilot_openalex_w2997515054",
+        "entity_pilot_openalex_w4385647456",
+        "entity_pilot_openalex_w4306772754",
+        "entity_pilot_openalex_w3048107446",
+        "entity_pilot_openalex_w3031566039",
+        "entity_pilot_openalex_w4311370693",
+        "entity_pilot_openalex_w4390605189",
+        "entity_pilot_openalex_w2554959913",
+        "entity_pilot_openalex_w4407248369",
+        "entity_pilot_openalex_w4309527517",
+        "entity_pilot_openalex_w3100900998",
+        "entity_pilot_openalex_w1991528180",
+        "entity_pilot_openalex_w3007884784",
+        "entity_pilot_openalex_w4399922932",
+        "entity_pilot_openalex_w2978323293",
+        "entity_pilot_openalex_w2088894283",
+        "entity_pilot_openalex_w4281401445",
+        "entity_pilot_openalex_w2152774862",
+        "entity_pilot_openalex_w2149360123",
+        "entity_pilot_openalex_w4412639060",
+        "entity_pilot_openalex_w3103446357",
+        "entity_pilot_openalex_w7114905274",
+        "entity_pilot_openalex_w2892503871",
+        "entity_pilot_openalex_w4283313225",
+        "entity_pilot_openalex_w2469346554",
+        "entity_pilot_openalex_w2295391252",
+        "entity_pilot_openalex_w4414570676",
+        "entity_pilot_openalex_w4401236061",
+        "entity_pilot_openalex_w3012986936",
+        "entity_pilot_openalex_w2952177779",
+        "entity_pilot_openalex_w2911890654",
+        "entity_pilot_openalex_w4401185017",
+        "entity_pilot_openalex_w4295886337",
+        "entity_pilot_openalex_w4283392904",
+        "entity_pilot_openalex_w4313266244",
+        "entity_pilot_openalex_w2921772064",
+        "entity_pilot_openalex_w2951590468",
+        "entity_pilot_openalex_w2088072491",
+        "entity_pilot_openalex_w4387628561",
+        "entity_pilot_openalex_w4411849462"
+      ],
+      "preferred_record_ids": [
+        "pilot_openalex_w4393177807",
+        "pilot_openalex_w7119015618",
+        "pilot_openalex_w3024037224",
+        "pilot_openalex_w4387407158",
+        "pilot_openalex_w4306968094",
+        "pilot_openalex_w4386841874",
+        "pilot_openalex_w4412157602",
+        "pilot_openalex_w2201701667",
+        "pilot_openalex_w2180681258",
+        "pilot_openalex_w3163969316",
+        "pilot_openalex_w2916674581",
+        "pilot_openalex_w2524314881",
+        "pilot_openalex_w4288023167",
+        "pilot_openalex_w4391881450",
+        "pilot_openalex_w3127256288",
+        "pilot_openalex_w4306248068",
+        "pilot_openalex_w3206364200",
+        "pilot_openalex_w4309685034",
+        "pilot_openalex_w2972913944",
+        "pilot_openalex_w4417233847",
+        "pilot_openalex_w2795545899",
+        "pilot_openalex_w3127061090",
+        "pilot_openalex_w2153231998",
+        "pilot_openalex_w3154795226",
+        "pilot_openalex_w2935751639",
+        "pilot_openalex_w3118571930",
+        "pilot_openalex_w3080378530",
+        "pilot_openalex_w4389217133",
+        "pilot_openalex_w3115677442",
+        "pilot_openalex_w2908682948",
+        "pilot_openalex_w2550814413",
+        "pilot_openalex_w4223891445",
+        "pilot_openalex_w4403396169",
+        "pilot_openalex_w2968787982",
+        "pilot_openalex_w2286156139",
+        "pilot_openalex_w3026041380",
+        "pilot_openalex_w2567715800",
+        "pilot_openalex_w1668277529",
+        "pilot_openalex_w4403503463",
+        "pilot_openalex_w2340897870",
+        "pilot_openalex_w2997515054",
+        "pilot_openalex_w4385647456",
+        "pilot_openalex_w4306772754",
+        "pilot_openalex_w3048107446",
+        "pilot_openalex_w3031566039",
+        "pilot_openalex_w4311370693",
+        "pilot_openalex_w4390605189",
+        "pilot_openalex_w2554959913",
+        "pilot_openalex_w4407248369",
+        "pilot_openalex_w4309527517",
+        "pilot_openalex_w3100900998",
+        "pilot_openalex_w1991528180",
+        "pilot_openalex_w3007884784",
+        "pilot_openalex_w4399922932",
+        "pilot_openalex_w2978323293",
+        "pilot_openalex_w2088894283",
+        "pilot_openalex_w4281401445",
+        "pilot_openalex_w2152774862",
+        "pilot_openalex_w2149360123",
+        "pilot_openalex_w4412639060",
+        "pilot_openalex_w3103446357",
+        "pilot_openalex_w7114905274",
+        "pilot_openalex_w2892503871",
+        "pilot_openalex_w4283313225",
+        "pilot_openalex_w2469346554",
+        "pilot_openalex_w2295391252",
+        "pilot_openalex_w4414570676",
+        "pilot_openalex_w4401236061",
+        "pilot_openalex_w3012986936",
+        "pilot_openalex_w2952177779",
+        "pilot_openalex_w2911890654",
+        "pilot_openalex_w4401185017",
+        "pilot_openalex_w4295886337",
+        "pilot_openalex_w4283392904",
+        "pilot_openalex_w4313266244",
+        "pilot_openalex_w2921772064",
+        "pilot_openalex_w2951590468",
+        "pilot_openalex_w2088072491",
+        "pilot_openalex_w4387628561",
+        "pilot_openalex_w4411849462"
+      ],
+      "ordered_items": [
+        {
+          "sample_order": 1,
+          "canonical_selection_item_id": "pilot_selection_item_8483f780e54aa5e6ba72a611",
+          "canonical_entity_id": "entity_pilot_openalex_w4393177807",
+          "preferred_record_id": "pilot_openalex_w4393177807",
+          "alias_record_ids": [
+            "pilot_openalex_w4393177807"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq04"
+        },
+        {
+          "sample_order": 2,
+          "canonical_selection_item_id": "pilot_selection_item_927354e4b945797f95f2a7f1",
+          "canonical_entity_id": "entity_pilot_openalex_w7119015618",
+          "preferred_record_id": "pilot_openalex_w7119015618",
+          "alias_record_ids": [
+            "pilot_openalex_w7119015618"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq02"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq02"
+        },
+        {
+          "sample_order": 3,
+          "canonical_selection_item_id": "pilot_selection_item_90aa2b11826003d40d8b631f",
+          "canonical_entity_id": "entity_pilot_openalex_w3024037224",
+          "preferred_record_id": "pilot_openalex_w3024037224",
+          "alias_record_ids": [
+            "pilot_openalex_w3024037224"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq01"
+        },
+        {
+          "sample_order": 4,
+          "canonical_selection_item_id": "pilot_selection_item_d31b732f954e2c2e22bb4cc6",
+          "canonical_entity_id": "entity_pilot_openalex_w4387407158",
+          "preferred_record_id": "pilot_openalex_w4387407158",
+          "alias_record_ids": [
+            "pilot_openalex_w4387407158"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq05"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq05"
+        },
+        {
+          "sample_order": 5,
+          "canonical_selection_item_id": "pilot_selection_item_4737d354343172c48d223e7b",
+          "canonical_entity_id": "entity_pilot_openalex_w4306968094",
+          "preferred_record_id": "pilot_openalex_w4306968094",
+          "alias_record_ids": [
+            "pilot_openalex_w4306968094"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq02",
+            "spectral_anomaly_aq03",
+            "spectral_anomaly_aq05",
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq06"
+        },
+        {
+          "sample_order": 6,
+          "canonical_selection_item_id": "pilot_selection_item_da627021db3c07d8fa9edb66",
+          "canonical_entity_id": "entity_pilot_openalex_w4386841874",
+          "preferred_record_id": "pilot_openalex_w4386841874",
+          "alias_record_ids": [
+            "pilot_openalex_w4386841874"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq03",
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq03"
+        },
+        {
+          "sample_order": 7,
+          "canonical_selection_item_id": "pilot_selection_item_0c5950c783d7bb2608e38959",
+          "canonical_entity_id": "entity_pilot_openalex_w4412157602",
+          "preferred_record_id": "pilot_openalex_w4412157602",
+          "alias_record_ids": [
+            "pilot_openalex_w4412157602"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq02",
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq04"
+        },
+        {
+          "sample_order": 8,
+          "canonical_selection_item_id": "pilot_selection_item_bb63af5f1088efb66b85533a",
+          "canonical_entity_id": "entity_pilot_openalex_w2201701667",
+          "preferred_record_id": "pilot_openalex_w2201701667",
+          "alias_record_ids": [
+            "pilot_openalex_w2201701667",
+            "pilot_openalex_w3102653831"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq02"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq02"
+        },
+        {
+          "sample_order": 9,
+          "canonical_selection_item_id": "pilot_selection_item_4be9bd65b4e3b48ca9d95266",
+          "canonical_entity_id": "entity_pilot_openalex_w2180681258",
+          "preferred_record_id": "pilot_openalex_w2180681258",
+          "alias_record_ids": [
+            "pilot_openalex_w2180681258"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq01"
+        },
+        {
+          "sample_order": 10,
+          "canonical_selection_item_id": "pilot_selection_item_b8af812e220b899e2bb1f2ca",
+          "canonical_entity_id": "entity_pilot_openalex_w3163969316",
+          "preferred_record_id": "pilot_openalex_w3163969316",
+          "alias_record_ids": [
+            "pilot_openalex_w3163969316"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq05"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq05"
+        },
+        {
+          "sample_order": 11,
+          "canonical_selection_item_id": "pilot_selection_item_d43b8cc41b98cb3d754cab1a",
+          "canonical_entity_id": "entity_pilot_openalex_w2916674581",
+          "preferred_record_id": "pilot_openalex_w2916674581",
+          "alias_record_ids": [
+            "pilot_openalex_w2916674581"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq06"
+        },
+        {
+          "sample_order": 12,
+          "canonical_selection_item_id": "pilot_selection_item_44198e4a2c4a60ad0932072f",
+          "canonical_entity_id": "entity_pilot_openalex_w2524314881",
+          "preferred_record_id": "pilot_openalex_w2524314881",
+          "alias_record_ids": [
+            "pilot_openalex_w2524314881"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq03"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq03"
+        },
+        {
+          "sample_order": 13,
+          "canonical_selection_item_id": "pilot_selection_item_61945e9cefeb7d46074cecd1",
+          "canonical_entity_id": "entity_pilot_openalex_w4288023167",
+          "preferred_record_id": "pilot_openalex_w4288023167",
+          "alias_record_ids": [
+            "pilot_openalex_w4288023167"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq02",
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq04"
+        },
+        {
+          "sample_order": 14,
+          "canonical_selection_item_id": "pilot_selection_item_b68a950ad29df121ad9b79b7",
+          "canonical_entity_id": "entity_pilot_openalex_w4391881450",
+          "preferred_record_id": "pilot_openalex_w4391881450",
+          "alias_record_ids": [
+            "pilot_openalex_w4391881450"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq02"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq02"
+        },
+        {
+          "sample_order": 15,
+          "canonical_selection_item_id": "pilot_selection_item_4cad6e1023a16f973573c0eb",
+          "canonical_entity_id": "entity_pilot_openalex_w3127256288",
+          "preferred_record_id": "pilot_openalex_w3127256288",
+          "alias_record_ids": [
+            "pilot_openalex_w3127256288"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq01"
+        },
+        {
+          "sample_order": 16,
+          "canonical_selection_item_id": "pilot_selection_item_8083fe9313605279143306ba",
+          "canonical_entity_id": "entity_pilot_openalex_w4306248068",
+          "preferred_record_id": "pilot_openalex_w4306248068",
+          "alias_record_ids": [
+            "pilot_openalex_w4306248068"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq03",
+            "spectral_anomaly_aq05",
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq05"
+        },
+        {
+          "sample_order": 17,
+          "canonical_selection_item_id": "pilot_selection_item_ca43e67ec6211edd8b711373",
+          "canonical_entity_id": "entity_pilot_openalex_w3206364200",
+          "preferred_record_id": "pilot_openalex_w3206364200",
+          "alias_record_ids": [
+            "pilot_openalex_w3206364200"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq06"
+        },
+        {
+          "sample_order": 18,
+          "canonical_selection_item_id": "pilot_selection_item_d3bc034a0f5c2a8d6c0f2af5",
+          "canonical_entity_id": "entity_pilot_openalex_w4309685034",
+          "preferred_record_id": "pilot_openalex_w4309685034",
+          "alias_record_ids": [
+            "pilot_openalex_w4309685034"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq03"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq03"
+        },
+        {
+          "sample_order": 19,
+          "canonical_selection_item_id": "pilot_selection_item_9024eae0100ea0043f8de8ce",
+          "canonical_entity_id": "entity_pilot_openalex_w2972913944",
+          "preferred_record_id": "pilot_openalex_w2972913944",
+          "alias_record_ids": [
+            "pilot_openalex_w2972913944"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq04"
+        },
+        {
+          "sample_order": 20,
+          "canonical_selection_item_id": "pilot_selection_item_e0bd3dbe06fb22eebc6120ae",
+          "canonical_entity_id": "entity_pilot_openalex_w4417233847",
+          "preferred_record_id": "pilot_openalex_w4417233847",
+          "alias_record_ids": [
+            "pilot_openalex_w4417233847"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq02",
+            "spectral_anomaly_aq03",
+            "spectral_anomaly_aq04",
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq02"
+        },
+        {
+          "sample_order": 21,
+          "canonical_selection_item_id": "pilot_selection_item_c6769e8f80b1d8902a4a5d5d",
+          "canonical_entity_id": "entity_pilot_openalex_w2795545899",
+          "preferred_record_id": "pilot_openalex_w2795545899",
+          "alias_record_ids": [
+            "pilot_openalex_w2795545899"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq02",
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq01"
+        },
+        {
+          "sample_order": 22,
+          "canonical_selection_item_id": "pilot_selection_item_3d00c324909ca396ee7b3dd5",
+          "canonical_entity_id": "entity_pilot_openalex_w3127061090",
+          "preferred_record_id": "pilot_openalex_w3127061090",
+          "alias_record_ids": [
+            "pilot_openalex_w3127061090"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq05"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq05"
+        },
+        {
+          "sample_order": 23,
+          "canonical_selection_item_id": "pilot_selection_item_b808e486cb0f6b884876e6c2",
+          "canonical_entity_id": "entity_pilot_openalex_w2153231998",
+          "preferred_record_id": "pilot_openalex_w2153231998",
+          "alias_record_ids": [
+            "pilot_openalex_w2153231998"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq06"
+        },
+        {
+          "sample_order": 24,
+          "canonical_selection_item_id": "pilot_selection_item_08a798b24035e2e85bdcd165",
+          "canonical_entity_id": "entity_pilot_openalex_w3154795226",
+          "preferred_record_id": "pilot_openalex_w3154795226",
+          "alias_record_ids": [
+            "pilot_openalex_w3154795226"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq03",
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq03"
+        },
+        {
+          "sample_order": 25,
+          "canonical_selection_item_id": "pilot_selection_item_39f39801a44f0279669a3fda",
+          "canonical_entity_id": "entity_pilot_openalex_w2935751639",
+          "preferred_record_id": "pilot_openalex_w2935751639",
+          "alias_record_ids": [
+            "pilot_openalex_w2935751639"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq04"
+        },
+        {
+          "sample_order": 26,
+          "canonical_selection_item_id": "pilot_selection_item_cd6b84558e4c966d16a7b0e6",
+          "canonical_entity_id": "entity_pilot_openalex_w3118571930",
+          "preferred_record_id": "pilot_openalex_w3118571930",
+          "alias_record_ids": [
+            "pilot_openalex_w3118571930"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq02"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq02"
+        },
+        {
+          "sample_order": 27,
+          "canonical_selection_item_id": "pilot_selection_item_c0e8366ec294e101b07f1e19",
+          "canonical_entity_id": "entity_pilot_openalex_w3080378530",
+          "preferred_record_id": "pilot_openalex_w3080378530",
+          "alias_record_ids": [
+            "pilot_openalex_w3080378530"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq03",
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq01"
+        },
+        {
+          "sample_order": 28,
+          "canonical_selection_item_id": "pilot_selection_item_a3666af623524625e548cb25",
+          "canonical_entity_id": "entity_pilot_openalex_w4389217133",
+          "preferred_record_id": "pilot_openalex_w4389217133",
+          "alias_record_ids": [
+            "pilot_openalex_w4389217133"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq05"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq05"
+        },
+        {
+          "sample_order": 29,
+          "canonical_selection_item_id": "pilot_selection_item_ebe6b6ee4e51b5f6b90f6545",
+          "canonical_entity_id": "entity_pilot_openalex_w3115677442",
+          "preferred_record_id": "pilot_openalex_w3115677442",
+          "alias_record_ids": [
+            "pilot_openalex_w3115677442"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq06"
+        },
+        {
+          "sample_order": 30,
+          "canonical_selection_item_id": "pilot_selection_item_3437a3b33800481610560bbd",
+          "canonical_entity_id": "entity_pilot_openalex_w2908682948",
+          "preferred_record_id": "pilot_openalex_w2908682948",
+          "alias_record_ids": [
+            "pilot_openalex_w2908682948"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq03"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq03"
+        },
+        {
+          "sample_order": 31,
+          "canonical_selection_item_id": "pilot_selection_item_24ef74274f02c1028faccfd1",
+          "canonical_entity_id": "entity_pilot_openalex_w2550814413",
+          "preferred_record_id": "pilot_openalex_w2550814413",
+          "alias_record_ids": [
+            "pilot_openalex_w2550814413"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq02",
+            "spectral_anomaly_aq04",
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq04"
+        },
+        {
+          "sample_order": 32,
+          "canonical_selection_item_id": "pilot_selection_item_cd6ae50262bb893148335f1e",
+          "canonical_entity_id": "entity_pilot_openalex_w4223891445",
+          "preferred_record_id": "pilot_openalex_w4223891445",
+          "alias_record_ids": [
+            "pilot_openalex_w4223891445"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq02"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq02"
+        },
+        {
+          "sample_order": 33,
+          "canonical_selection_item_id": "pilot_selection_item_c6a694061be9fc28ddde8cc4",
+          "canonical_entity_id": "entity_pilot_openalex_w4403396169",
+          "preferred_record_id": "pilot_openalex_w4403396169",
+          "alias_record_ids": [
+            "pilot_openalex_w4403396169"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq03"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq01"
+        },
+        {
+          "sample_order": 34,
+          "canonical_selection_item_id": "pilot_selection_item_506078ec8b03c1b52a479899",
+          "canonical_entity_id": "entity_pilot_openalex_w2968787982",
+          "preferred_record_id": "pilot_openalex_w2968787982",
+          "alias_record_ids": [
+            "pilot_openalex_w2968787982"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq05"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq05"
+        },
+        {
+          "sample_order": 35,
+          "canonical_selection_item_id": "pilot_selection_item_53189578abdb2b61b3783fb1",
+          "canonical_entity_id": "entity_pilot_openalex_w2286156139",
+          "preferred_record_id": "pilot_openalex_w2286156139",
+          "alias_record_ids": [
+            "pilot_openalex_w2286156139"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq06"
+        },
+        {
+          "sample_order": 36,
+          "canonical_selection_item_id": "pilot_selection_item_d7af2f27038f8669e70b8f32",
+          "canonical_entity_id": "entity_pilot_openalex_w3026041380",
+          "preferred_record_id": "pilot_openalex_w3026041380",
+          "alias_record_ids": [
+            "pilot_openalex_w3026041380"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq03"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq03"
+        },
+        {
+          "sample_order": 37,
+          "canonical_selection_item_id": "pilot_selection_item_4d364ed6615d1d949e1000f7",
+          "canonical_entity_id": "entity_pilot_openalex_w2567715800",
+          "preferred_record_id": "pilot_openalex_w2567715800",
+          "alias_record_ids": [
+            "pilot_openalex_w2567715800"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq02",
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq04"
+        },
+        {
+          "sample_order": 38,
+          "canonical_selection_item_id": "pilot_selection_item_36e76bda46a06b1e97d03ab2",
+          "canonical_entity_id": "entity_pilot_openalex_w1668277529",
+          "preferred_record_id": "pilot_openalex_w1668277529",
+          "alias_record_ids": [
+            "pilot_openalex_w1668277529"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq02"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq02"
+        },
+        {
+          "sample_order": 39,
+          "canonical_selection_item_id": "pilot_selection_item_8c7a8cddc0d7ea111151bf18",
+          "canonical_entity_id": "entity_pilot_openalex_w4403503463",
+          "preferred_record_id": "pilot_openalex_w4403503463",
+          "alias_record_ids": [
+            "pilot_openalex_w4403503463"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq01"
+        },
+        {
+          "sample_order": 40,
+          "canonical_selection_item_id": "pilot_selection_item_f9b6e320a73a692628e967ed",
+          "canonical_entity_id": "entity_pilot_openalex_w2340897870",
+          "preferred_record_id": "pilot_openalex_w2340897870",
+          "alias_record_ids": [
+            "pilot_openalex_w2340897870"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq05"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq05"
+        },
+        {
+          "sample_order": 41,
+          "canonical_selection_item_id": "pilot_selection_item_e9f2f1bda7eaf7da059f7c26",
+          "canonical_entity_id": "entity_pilot_openalex_w2997515054",
+          "preferred_record_id": "pilot_openalex_w2997515054",
+          "alias_record_ids": [
+            "pilot_openalex_w2997515054"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq06"
+        },
+        {
+          "sample_order": 42,
+          "canonical_selection_item_id": "pilot_selection_item_1fd9a83343ae63f46e3eb749",
+          "canonical_entity_id": "entity_pilot_openalex_w4385647456",
+          "preferred_record_id": "pilot_openalex_w4385647456",
+          "alias_record_ids": [
+            "pilot_openalex_w4385647456"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq03"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq03"
+        },
+        {
+          "sample_order": 43,
+          "canonical_selection_item_id": "pilot_selection_item_32f2cc45f38cccd3d199a321",
+          "canonical_entity_id": "entity_pilot_openalex_w4306772754",
+          "preferred_record_id": "pilot_openalex_w4306772754",
+          "alias_record_ids": [
+            "pilot_openalex_w4306772754"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq04"
+        },
+        {
+          "sample_order": 44,
+          "canonical_selection_item_id": "pilot_selection_item_d74e54cb067937b13d86d8b0",
+          "canonical_entity_id": "entity_pilot_openalex_w3048107446",
+          "preferred_record_id": "pilot_openalex_w3048107446",
+          "alias_record_ids": [
+            "pilot_openalex_w3048107446"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq02",
+            "spectral_anomaly_aq05"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq02"
+        },
+        {
+          "sample_order": 45,
+          "canonical_selection_item_id": "pilot_selection_item_bb5652e16ee8d15d66ebb634",
+          "canonical_entity_id": "entity_pilot_openalex_w3031566039",
+          "preferred_record_id": "pilot_openalex_w3031566039",
+          "alias_record_ids": [
+            "pilot_openalex_w3031566039"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq01"
+        },
+        {
+          "sample_order": 46,
+          "canonical_selection_item_id": "pilot_selection_item_6368b7880b5fb0d951d3ac31",
+          "canonical_entity_id": "entity_pilot_openalex_w4311370693",
+          "preferred_record_id": "pilot_openalex_w4311370693",
+          "alias_record_ids": [
+            "pilot_openalex_w4311370693"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq05"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq05"
+        },
+        {
+          "sample_order": 47,
+          "canonical_selection_item_id": "pilot_selection_item_6e5d35f6875578dbf670f616",
+          "canonical_entity_id": "entity_pilot_openalex_w4390605189",
+          "preferred_record_id": "pilot_openalex_w4390605189",
+          "alias_record_ids": [
+            "pilot_openalex_w4390605189"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq06"
+        },
+        {
+          "sample_order": 48,
+          "canonical_selection_item_id": "pilot_selection_item_558020bba3966c73b11b5e9c",
+          "canonical_entity_id": "entity_pilot_openalex_w2554959913",
+          "preferred_record_id": "pilot_openalex_w2554959913",
+          "alias_record_ids": [
+            "pilot_openalex_w2554959913"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq03",
+            "spectral_anomaly_aq04",
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq03"
+        },
+        {
+          "sample_order": 49,
+          "canonical_selection_item_id": "pilot_selection_item_4aca37869c4befc6c42c87b4",
+          "canonical_entity_id": "entity_pilot_openalex_w4407248369",
+          "preferred_record_id": "pilot_openalex_w4407248369",
+          "alias_record_ids": [
+            "pilot_openalex_w4407248369"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq04"
+        },
+        {
+          "sample_order": 50,
+          "canonical_selection_item_id": "pilot_selection_item_937430869bc5e1c15aa15403",
+          "canonical_entity_id": "entity_pilot_openalex_w4309527517",
+          "preferred_record_id": "pilot_openalex_w4309527517",
+          "alias_record_ids": [
+            "pilot_openalex_w4309527517"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq02"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq02"
+        },
+        {
+          "sample_order": 51,
+          "canonical_selection_item_id": "pilot_selection_item_5f663fb477a1cbb277ae96ce",
+          "canonical_entity_id": "entity_pilot_openalex_w3100900998",
+          "preferred_record_id": "pilot_openalex_w3100900998",
+          "alias_record_ids": [
+            "pilot_openalex_w3100900998"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq01"
+        },
+        {
+          "sample_order": 52,
+          "canonical_selection_item_id": "pilot_selection_item_972f6744713c8247985c04cb",
+          "canonical_entity_id": "entity_pilot_openalex_w1991528180",
+          "preferred_record_id": "pilot_openalex_w1991528180",
+          "alias_record_ids": [
+            "pilot_openalex_w1991528180"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq05"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq05"
+        },
+        {
+          "sample_order": 53,
+          "canonical_selection_item_id": "pilot_selection_item_9ac5817703627a53d98991db",
+          "canonical_entity_id": "entity_pilot_openalex_w3007884784",
+          "preferred_record_id": "pilot_openalex_w3007884784",
+          "alias_record_ids": [
+            "pilot_openalex_w3007884784"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq06"
+        },
+        {
+          "sample_order": 54,
+          "canonical_selection_item_id": "pilot_selection_item_09d877f67e1b2363b31c3633",
+          "canonical_entity_id": "entity_pilot_openalex_w4399922932",
+          "preferred_record_id": "pilot_openalex_w4399922932",
+          "alias_record_ids": [
+            "pilot_openalex_w4399922932"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq03"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq03"
+        },
+        {
+          "sample_order": 55,
+          "canonical_selection_item_id": "pilot_selection_item_9e1140d1e7ac6366d02f9f51",
+          "canonical_entity_id": "entity_pilot_openalex_w2978323293",
+          "preferred_record_id": "pilot_openalex_w2978323293",
+          "alias_record_ids": [
+            "pilot_openalex_w2978323293"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq02",
+            "spectral_anomaly_aq03",
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq04"
+        },
+        {
+          "sample_order": 56,
+          "canonical_selection_item_id": "pilot_selection_item_564f7e6629e6e0582792b204",
+          "canonical_entity_id": "entity_pilot_openalex_w2088894283",
+          "preferred_record_id": "pilot_openalex_w2088894283",
+          "alias_record_ids": [
+            "pilot_openalex_w2088894283"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq02"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq02"
+        },
+        {
+          "sample_order": 57,
+          "canonical_selection_item_id": "pilot_selection_item_325ed64d16663809b3d593e2",
+          "canonical_entity_id": "entity_pilot_openalex_w4281401445",
+          "preferred_record_id": "pilot_openalex_w4281401445",
+          "alias_record_ids": [
+            "pilot_openalex_w4281401445"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq01"
+        },
+        {
+          "sample_order": 58,
+          "canonical_selection_item_id": "pilot_selection_item_a3e742734d55735f9731fd70",
+          "canonical_entity_id": "entity_pilot_openalex_w2152774862",
+          "preferred_record_id": "pilot_openalex_w2152774862",
+          "alias_record_ids": [
+            "pilot_openalex_w2152774862"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq05"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq05"
+        },
+        {
+          "sample_order": 59,
+          "canonical_selection_item_id": "pilot_selection_item_e446ab524b21f24dbdcb9c74",
+          "canonical_entity_id": "entity_pilot_openalex_w2149360123",
+          "preferred_record_id": "pilot_openalex_w2149360123",
+          "alias_record_ids": [
+            "pilot_openalex_w2149360123"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq06"
+        },
+        {
+          "sample_order": 60,
+          "canonical_selection_item_id": "pilot_selection_item_2e05896ae8837e2c0d581320",
+          "canonical_entity_id": "entity_pilot_openalex_w4412639060",
+          "preferred_record_id": "pilot_openalex_w4412639060",
+          "alias_record_ids": [
+            "pilot_openalex_w4412639060"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq03"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq03"
+        },
+        {
+          "sample_order": 61,
+          "canonical_selection_item_id": "pilot_selection_item_f90cf27cf86865815641cc9b",
+          "canonical_entity_id": "entity_pilot_openalex_w3103446357",
+          "preferred_record_id": "pilot_openalex_w3103446357",
+          "alias_record_ids": [
+            "pilot_openalex_w3103446357"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq04"
+        },
+        {
+          "sample_order": 62,
+          "canonical_selection_item_id": "pilot_selection_item_7454eefe31cbd125b6700a8e",
+          "canonical_entity_id": "entity_pilot_openalex_w7114905274",
+          "preferred_record_id": "pilot_openalex_w7114905274",
+          "alias_record_ids": [
+            "pilot_openalex_w7114905274"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq02"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq02"
+        },
+        {
+          "sample_order": 63,
+          "canonical_selection_item_id": "pilot_selection_item_51e8e23a391ec03cfea629b9",
+          "canonical_entity_id": "entity_pilot_openalex_w2892503871",
+          "preferred_record_id": "pilot_openalex_w2892503871",
+          "alias_record_ids": [
+            "pilot_openalex_w2892503871"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq01"
+        },
+        {
+          "sample_order": 64,
+          "canonical_selection_item_id": "pilot_selection_item_8625105db5691f853dd235ea",
+          "canonical_entity_id": "entity_pilot_openalex_w4283313225",
+          "preferred_record_id": "pilot_openalex_w4283313225",
+          "alias_record_ids": [
+            "pilot_openalex_w4283313225"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq05"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq05"
+        },
+        {
+          "sample_order": 65,
+          "canonical_selection_item_id": "pilot_selection_item_81c6830b89d6dceddb831fdc",
+          "canonical_entity_id": "entity_pilot_openalex_w2469346554",
+          "preferred_record_id": "pilot_openalex_w2469346554",
+          "alias_record_ids": [
+            "pilot_openalex_w2469346554"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq06"
+        },
+        {
+          "sample_order": 66,
+          "canonical_selection_item_id": "pilot_selection_item_64faa2bbf06644d2349baa2d",
+          "canonical_entity_id": "entity_pilot_openalex_w2295391252",
+          "preferred_record_id": "pilot_openalex_w2295391252",
+          "alias_record_ids": [
+            "pilot_openalex_w2295391252"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq03"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq03"
+        },
+        {
+          "sample_order": 67,
+          "canonical_selection_item_id": "pilot_selection_item_0c485e6fb0a4e6976cd6dc3a",
+          "canonical_entity_id": "entity_pilot_openalex_w4414570676",
+          "preferred_record_id": "pilot_openalex_w4414570676",
+          "alias_record_ids": [
+            "pilot_openalex_w4414570676"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq04"
+        },
+        {
+          "sample_order": 68,
+          "canonical_selection_item_id": "pilot_selection_item_f3fd3bddd753ceab07cfc82d",
+          "canonical_entity_id": "entity_pilot_openalex_w4401236061",
+          "preferred_record_id": "pilot_openalex_w4401236061",
+          "alias_record_ids": [
+            "pilot_openalex_w4401236061"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq02"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq02"
+        },
+        {
+          "sample_order": 69,
+          "canonical_selection_item_id": "pilot_selection_item_bce9c9dfabd1334be82d1728",
+          "canonical_entity_id": "entity_pilot_openalex_w3012986936",
+          "preferred_record_id": "pilot_openalex_w3012986936",
+          "alias_record_ids": [
+            "pilot_openalex_w3012986936"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq03"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq01"
+        },
+        {
+          "sample_order": 70,
+          "canonical_selection_item_id": "pilot_selection_item_44687200b7eb4b4956a3f215",
+          "canonical_entity_id": "entity_pilot_openalex_w2952177779",
+          "preferred_record_id": "pilot_openalex_w2952177779",
+          "alias_record_ids": [
+            "pilot_openalex_w2952177779"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq05"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq05"
+        },
+        {
+          "sample_order": 71,
+          "canonical_selection_item_id": "pilot_selection_item_b2706fd8ab9761e73aa27272",
+          "canonical_entity_id": "entity_pilot_openalex_w2911890654",
+          "preferred_record_id": "pilot_openalex_w2911890654",
+          "alias_record_ids": [
+            "pilot_openalex_w2911890654"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq06"
+        },
+        {
+          "sample_order": 72,
+          "canonical_selection_item_id": "pilot_selection_item_d38ec93cee6c32c87be646f6",
+          "canonical_entity_id": "entity_pilot_openalex_w4401185017",
+          "preferred_record_id": "pilot_openalex_w4401185017",
+          "alias_record_ids": [
+            "pilot_openalex_w4401185017"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01",
+            "spectral_anomaly_aq02",
+            "spectral_anomaly_aq03"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq03"
+        },
+        {
+          "sample_order": 73,
+          "canonical_selection_item_id": "pilot_selection_item_89b143b8e70b99ed733b2011",
+          "canonical_entity_id": "entity_pilot_openalex_w4295886337",
+          "preferred_record_id": "pilot_openalex_w4295886337",
+          "alias_record_ids": [
+            "pilot_openalex_w4295886337"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq04"
+        },
+        {
+          "sample_order": 74,
+          "canonical_selection_item_id": "pilot_selection_item_50843e4ca777273a14d92e42",
+          "canonical_entity_id": "entity_pilot_openalex_w4283392904",
+          "preferred_record_id": "pilot_openalex_w4283392904",
+          "alias_record_ids": [
+            "pilot_openalex_w4283392904"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq02"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq02"
+        },
+        {
+          "sample_order": 75,
+          "canonical_selection_item_id": "pilot_selection_item_f432696b0ea367e220b5d9bd",
+          "canonical_entity_id": "entity_pilot_openalex_w4313266244",
+          "preferred_record_id": "pilot_openalex_w4313266244",
+          "alias_record_ids": [
+            "pilot_openalex_w4313266244"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq01"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq01"
+        },
+        {
+          "sample_order": 76,
+          "canonical_selection_item_id": "pilot_selection_item_08c4949be161cd389cf882c8",
+          "canonical_entity_id": "entity_pilot_openalex_w2921772064",
+          "preferred_record_id": "pilot_openalex_w2921772064",
+          "alias_record_ids": [
+            "pilot_openalex_w2921772064"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq05"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq05"
+        },
+        {
+          "sample_order": 77,
+          "canonical_selection_item_id": "pilot_selection_item_034dfdbb7a281ea905f67911",
+          "canonical_entity_id": "entity_pilot_openalex_w2951590468",
+          "preferred_record_id": "pilot_openalex_w2951590468",
+          "alias_record_ids": [
+            "pilot_openalex_w2951590468"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq06"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq06"
+        },
+        {
+          "sample_order": 78,
+          "canonical_selection_item_id": "pilot_selection_item_a50061cf5deedc94e643d0b7",
+          "canonical_entity_id": "entity_pilot_openalex_w2088072491",
+          "preferred_record_id": "pilot_openalex_w2088072491",
+          "alias_record_ids": [
+            "pilot_openalex_w2088072491"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq03"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq03"
+        },
+        {
+          "sample_order": 79,
+          "canonical_selection_item_id": "pilot_selection_item_d251af807b9a7eb77104a180",
+          "canonical_entity_id": "entity_pilot_openalex_w4387628561",
+          "preferred_record_id": "pilot_openalex_w4387628561",
+          "alias_record_ids": [
+            "pilot_openalex_w4387628561"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq04"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq04"
+        },
+        {
+          "sample_order": 80,
+          "canonical_selection_item_id": "pilot_selection_item_e33ef5fff095e993e3afe4c2",
+          "canonical_entity_id": "entity_pilot_openalex_w4411849462",
+          "preferred_record_id": "pilot_openalex_w4411849462",
+          "alias_record_ids": [
+            "pilot_openalex_w4411849462"
+          ],
+          "all_query_support_ids": [
+            "spectral_anomaly_aq02"
+          ],
+          "first_selected_via_query_id": "spectral_anomaly_aq02"
+        }
+      ],
+      "query_contribution_diagnostics": [
+        {
+          "acquisition_query_id": "spectral_anomaly_aq01",
+          "eligible_roster_count": 73,
+          "first_selection_contribution_count": 13,
+          "support_count_in_u80": 26
+        },
+        {
+          "acquisition_query_id": "spectral_anomaly_aq02",
+          "eligible_roster_count": 76,
+          "first_selection_contribution_count": 14,
+          "support_count_in_u80": 22
+        },
+        {
+          "acquisition_query_id": "spectral_anomaly_aq03",
+          "eligible_roster_count": 76,
+          "first_selection_contribution_count": 13,
+          "support_count_in_u80": 20
+        },
+        {
+          "acquisition_query_id": "spectral_anomaly_aq04",
+          "eligible_roster_count": 73,
+          "first_selection_contribution_count": 14,
+          "support_count_in_u80": 20
+        },
+        {
+          "acquisition_query_id": "spectral_anomaly_aq05",
+          "eligible_roster_count": 75,
+          "first_selection_contribution_count": 13,
+          "support_count_in_u80": 15
+        },
+        {
+          "acquisition_query_id": "spectral_anomaly_aq06",
+          "eligible_roster_count": 73,
+          "first_selection_contribution_count": 13,
+          "support_count_in_u80": 20
+        }
+      ]
+    }
+  ],
+  "generation": {
+    "git_revision": "fb4e0d70156c83435a8ba054ff8f1607e61b58f6",
+    "git_worktree_clean": true
+  },
+  "label_access": {
+    "dev_labels_read": false,
+    "hidden_labels_read": false,
+    "ranking_or_synthesis_outputs_read": false,
+    "declaration": "U80 generation used only frozen Dev Topic identity, committed OpenAlex provenance, metadata eligibility, canonical identity, and deterministic hashing."
+  }
+}
