@@ -1,0 +1,40 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_boundary_generation_inputs",
+  "artifact_id": "w6_fixture_boundary_generation_inputs_v1",
+  "is_fixture": true,
+  "created_at": "2026-08-24T15:58:17+08:00",
+  "artifacts": {
+    "topic_set": {
+      "artifact_id": "w6_fixture_topics_v1",
+      "path": "topics.json",
+      "sha256": "d262e66d64769a6e0fb30487d050b925b0e2bbd1c3099a818e80429490756d3a"
+    },
+    "retrieval_provenance": {
+      "artifact_id": "w6_fixture_retrieval_v1",
+      "path": "retrieval_runs.json",
+      "sha256": "acbcf34aae59c1d5eadc8f2c50bf06604dad7ee27b68566c851a0fab6b2c707c"
+    },
+    "source_records": {
+      "artifact_id": "w6_fixture_source_records_v1",
+      "path": "source_records.json",
+      "sha256": "1ee6864488e80b2d8a6b11bcd5166dbba7ca2beb993c0063c45bf3770d26ebce"
+    },
+    "canonical_entities": {
+      "artifact_id": "w6_fixture_canonical_entities_v1",
+      "path": "canonical_entities.json",
+      "sha256": "31a3dfa3a5bff8e244a0225d9f5223ad29b7c6e907c30c23f44745bf15e74ba8"
+    },
+    "candidate_pool": {
+      "artifact_id": "w6_fixture_candidate_pool_v1",
+      "path": "candidate_pool.json",
+      "sha256": "5fbd8acc3304b835e01332b4e57cafe5da5c196ea7d33c81c620a3e340c829ae"
+    }
+  },
+  "provenance": {
+    "kind": "task_scoped_locator_from_frozen_bootstrap_inputs",
+    "created_by": "issue64_boundary_workflow",
+    "created_at": "2026-08-24T15:58:17+08:00",
+    "git_revision": "ba71d44cd64543d36836dcec727eab1ec7e01c3e"
+  }
+}

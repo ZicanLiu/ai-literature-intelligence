@@ -1,0 +1,26 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_topic_split",
+  "artifact_id": "w6_fixture_split_v1",
+  "is_fixture": true,
+  "split_id": "w6_fixture_dev_hidden_v1",
+  "topic_set": {"artifact_id": "w6_fixture_topics_v1", "sha256": "d262e66d64769a6e0fb30487d050b925b0e2bbd1c3099a818e80429490756d3a"},
+  "split_identity": "w6-topic-split:sha256:07ea846c0c2ceb9f2f098b0345edc1bdf9c49f1f6a570cb6589733f59bc7d6bb",
+  "status": "frozen",
+  "frozen_at": "2026-08-24T08:39:00+08:00",
+  "frozen_by": "w6_bootstrap_fixture",
+  "freeze_policy": {
+    "unit": "topic",
+    "frozen_before_labels": true,
+    "frozen_before_label_aware_method_selection": true
+  },
+  "dev_topic_ids": ["w6_fixture_topic_denoising"],
+  "hidden_test_topic_ids": ["w6_fixture_topic_transients"],
+  "reveal_state": "sealed",
+  "provenance": {
+    "kind": "synthetic_fixture",
+    "created_by": "w6_bootstrap",
+    "created_at": "2026-08-24T08:39:00+08:00",
+    "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "schema_version": "0.2-alpha",
+  "contract_name": "w6_benchmark_workflow",
+  "contract_version": "0.2-alpha",
+  "artifact_type": "w6_benchmark_package",
+  "package_id": "w6_query_relevance_v0.2_alpha_package_v1",
+  "is_fixture": true,
+  "status": "bootstrap_fixture",
+  "created_at": "2026-08-24T16:21:51+08:00",
+  "artifacts": {
+    "topic_set": {
+      "artifact_id": "w6_fixture_topics_v1",
+      "path": "inputs/topic_set.json",
+      "sha256": "d262e66d64769a6e0fb30487d050b925b0e2bbd1c3099a818e80429490756d3a"
+    },
+    "retrieval_provenance": {
+      "artifact_id": "w6_fixture_retrieval_v1",
+      "path": "inputs/retrieval_provenance.json",
+      "sha256": "acbcf34aae59c1d5eadc8f2c50bf06604dad7ee27b68566c851a0fab6b2c707c"
+    },
+    "source_records": {
+      "artifact_id": "w6_fixture_source_records_v1",
+      "path": "inputs/source_records.json",
+      "sha256": "1ee6864488e80b2d8a6b11bcd5166dbba7ca2beb993c0063c45bf3770d26ebce"
+    },
+    "canonical_entities": {
+      "artifact_id": "w6_fixture_canonical_entities_v1",
+      "path": "inputs/canonical_entities.json",
+      "sha256": "31a3dfa3a5bff8e244a0225d9f5223ad29b7c6e907c30c23f44745bf15e74ba8"
+    },
+    "candidate_pool": {
+      "artifact_id": "w6_fixture_candidate_pool_v1",
+      "path": "inputs/candidate_pool.json",
+      "sha256": "5fbd8acc3304b835e01332b4e57cafe5da5c196ea7d33c81c620a3e340c829ae"
+    },
+    "annotation_task_map": {
+      "artifact_id": "w6_fixture_annotation_task_map_v1",
+      "path": "inputs/annotation_task_map.json",
+      "sha256": "2aa7d1012b772a8f2df1ea8d84659debe4be04065b35023795431fe717038e71"
+    },
+    "annotation_tasks": {
+      "artifact_id": "w6_fixture_blind_tasks_v1",
+      "path": "inputs/annotation_tasks.json",
+      "sha256": "84b4b4d1895a2aeb2ffba3ae4c55bf09f4ef401d105ffdd27b8d3ed2acc9f6f1"
+    },
+    "split_manifest": {
+      "artifact_id": "w6_fixture_split_v1",
+      "path": "inputs/split_manifest.json",
+      "sha256": "60a9e6bca37762fe4c20d150ff94df4d2e855fb9f2fb21062475204317acb0e7"
+    },
+    "annotation_results": {
+      "artifact_id": "w6_fixture_annotations_v1",
+      "path": "inputs/annotation_results.json",
+      "sha256": "a429ba5eae44f5418fffb757ca2047075784a045f7f56d6f6ec6a9fda6069c15"
+    },
+    "annotation_reviews": {
+      "artifact_id": "w6_fixture_annotation_reviews_v1",
+      "path": "inputs/annotation_reviews.json",
+      "sha256": "3f26a99478b4df2c06086a255736ee67fbedf5bca72d3ac7e222cb63a7399bbf"
+    },
+    "hidden_label_anchor": {
+      "artifact_id": "w6_fixture_hidden_anchor_v1",
+      "path": "inputs/hidden_label_anchor.json",
+      "sha256": "f9abbcf146f724f70f099a82dfc6c4c279bb9ea0f4bf4ed661129b0ba1ac7cfb"
+    },
+    "annotation_protocol": {
+      "artifact_id": "w6_fixture_annotation_protocol_v1",
+      "path": "annotation_protocol.json",
+      "sha256": "b8622ca820def223579a9133bf6b9223a39a6614cb3e53d3a3a5b5c8722cd220"
+    },
+    "second_annotation_results": {
+      "artifact_id": "w6_second_annotations_v1",
+      "path": "second_annotation_results.json",
+      "sha256": "b9ce9926cad71db84c3b1cd30e9e7ac02ed3c678ad8b984334ef7af70cb7c6ba"
+    },
+    "review_plan": {
+      "artifact_id": "w6_annotation_review_plan_v1",
+      "path": "review_plan.json",
+      "sha256": "74dfdd11b71baef895ccee6f5486e17da55b354175b331302eaf464e959c8594"
+    },
+    "benchmark_manifest": {
+      "artifact_id": "w6_query_relevance_v0.2_alpha_manifest_v1",
+      "path": "benchmark_manifest.json",
+      "sha256": "aa7b32bdcb1f690e43019d1dc8bee202743ff325fbba01cda9415f47f4129515"
+    }
+  },
+  "generation": {
+    "git_revision": "4f9d636cc4cae5986f91a21c27a535db1b4e04c6",
+    "git_worktree_clean": true,
+    "labels_used_for_generation": false
+  },
+  "package_identity": "w6-benchmark-package:sha256:cccb0c0058afaf93f9f93f6333993ef3408da9927d4f1bf84cba4eb2172a63a6"
+}

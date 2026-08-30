@@ -1,0 +1,1523 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "w6_openalex_query_runs",
+  "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+  "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+  "acquisition_started_at": "2026-08-26T09:20:53+00:00",
+  "acquisition_completed_at": "2026-08-26T09:22:38+00:00",
+  "query_count": 54,
+  "runs": [
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:1df2778ba70c57436aa7bd099c8139bd6052a574e2ae79805dce2504250dde2c",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "query_variant_id": "21cm_foreground_aq01",
+      "query_text": "neural network foreground removal 21 cm signal",
+      "query_started_at": "2026-08-26T09:22:26+00:00",
+      "query_completed_at": "2026-08-26T09:22:28+00:00",
+      "api_hit_count": 1669,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.15,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:f6deb5c6925aa2720bc7bf03c720394df7081bbede6cc015c222059a69014ebb",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "query_variant_id": "21cm_foreground_aq02",
+      "query_text": "deep learning 21cm intensity mapping foreground separation",
+      "query_started_at": "2026-08-26T09:22:28+00:00",
+      "query_completed_at": "2026-08-26T09:22:30+00:00",
+      "api_hit_count": 63,
+      "retrieved_work_count": 63,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 63,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.919,
+        "stopped_reason": "cursor_exhausted",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:aac8c0890c23ece8047ceab6ff24d12627543bf6f780c3f49a6addf87cfbb85e",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "query_variant_id": "21cm_foreground_aq03",
+      "query_text": "machine learning cosmological 21 cm foreground subtraction",
+      "query_started_at": "2026-08-26T09:22:30+00:00",
+      "query_completed_at": "2026-08-26T09:22:32+00:00",
+      "api_hit_count": 278,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.13,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:41f15bedfcb91555566202831c909bb442f790dc14ca1c4b17b81db7f2285abe",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "query_variant_id": "21cm_foreground_aq04",
+      "query_text": "neural network component separation radio 21cm spectra",
+      "query_started_at": "2026-08-26T09:22:32+00:00",
+      "query_completed_at": "2026-08-26T09:22:34+00:00",
+      "api_hit_count": 71,
+      "retrieved_work_count": 71,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 71,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.832,
+        "stopped_reason": "cursor_exhausted",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:d6a53a2c4cc4788d7e463fcdd38c20ede80311622c281e7ab1619cfcee470342",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "query_variant_id": "21cm_foreground_aq05",
+      "query_text": "deep learning epoch reionization foreground removal",
+      "query_started_at": "2026-08-26T09:22:34+00:00",
+      "query_completed_at": "2026-08-26T09:22:36+00:00",
+      "api_hit_count": 192,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.865,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:e0fbe7cf6af4bb51897b1ea05fd9531c1d9809d0f61e69694478eca4e90c9913",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "query_variant_id": "21cm_foreground_aq06",
+      "query_text": "machine learning HI intensity mapping foreground cleaning",
+      "query_started_at": "2026-08-26T09:22:36+00:00",
+      "query_completed_at": "2026-08-26T09:22:38+00:00",
+      "api_hit_count": 470,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.723,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:a72303cfa1d60a53e72c70433eefe3f087650632427c98be9d73baca92440301",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "query_variant_id": "exoplanet_retrieval_aq01",
+      "query_text": "machine learning exoplanet transmission spectra atmospheric retrieval",
+      "query_started_at": "2026-08-26T09:21:19+00:00",
+      "query_completed_at": "2026-08-26T09:21:21+00:00",
+      "api_hit_count": 296,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.879,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:57e2739cacfa6c7dd6cf6d48b6fe2cc086ab80ed6247a4b508660b581dd7873c",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "query_variant_id": "exoplanet_retrieval_aq02",
+      "query_text": "neural network exoplanet emission spectrum abundance inference",
+      "query_started_at": "2026-08-26T09:21:21+00:00",
+      "query_completed_at": "2026-08-26T09:21:23+00:00",
+      "api_hit_count": 133,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.886,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:111f445719a1218746e08209a2fc6240b2ca471c3e7c08e5eb16f16d7e966f96",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "query_variant_id": "exoplanet_retrieval_aq03",
+      "query_text": "deep learning exoplanet atmospheric retrieval spectroscopy",
+      "query_started_at": "2026-08-26T09:21:23+00:00",
+      "query_completed_at": "2026-08-26T09:21:24+00:00",
+      "api_hit_count": 313,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.866,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:8ebe5df8caba4d4e593b55ddfd5e3eedac5be12db05cf4c44eadf330331d6a75",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "query_variant_id": "exoplanet_retrieval_aq04",
+      "query_text": "machine learning molecular abundance retrieval exoplanet spectra",
+      "query_started_at": "2026-08-26T09:21:24+00:00",
+      "query_completed_at": "2026-08-26T09:21:26+00:00",
+      "api_hit_count": 241,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.842,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:dcfbecfa2b99d37d22af49390eca49289a58b59ad8b335798359dde91ab3328a",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "query_variant_id": "exoplanet_retrieval_aq05",
+      "query_text": "neural posterior estimation exoplanet transmission spectrum",
+      "query_started_at": "2026-08-26T09:21:26+00:00",
+      "query_completed_at": "2026-08-26T09:21:28+00:00",
+      "api_hit_count": 136,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.734,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:85480a981793dfe05a156a29403f6f444c689ba1450799aefb8da22f67ccdac8",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "query_variant_id": "exoplanet_retrieval_aq06",
+      "query_text": "surrogate inverse model exoplanet atmospheric spectrum",
+      "query_started_at": "2026-08-26T09:21:28+00:00",
+      "query_completed_at": "2026-08-26T09:21:30+00:00",
+      "api_hit_count": 62,
+      "retrieved_work_count": 62,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 62,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.549,
+        "stopped_reason": "cursor_exhausted",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:5942c4d633276c6dc00755c5c15d850b12e3b3aa84bbf026c49960dde8a967af",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_galaxy_activity_spectra",
+      "query_variant_id": "galaxy_activity_aq01",
+      "query_text": "machine learning optical galaxy spectra activity classification",
+      "query_started_at": "2026-08-26T09:20:53+00:00",
+      "query_completed_at": "2026-08-26T09:20:56+00:00",
+      "api_hit_count": 1624,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.394,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:f669317bc610fe57b47803d7a739b5140bd040704b4f45fc3d51c0386961d315",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_galaxy_activity_spectra",
+      "query_variant_id": "galaxy_activity_aq02",
+      "query_text": "automated AGN LINER star forming classification galaxy spectra",
+      "query_started_at": "2026-08-26T09:20:56+00:00",
+      "query_completed_at": "2026-08-26T09:20:58+00:00",
+      "api_hit_count": 225,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.845,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:32bd9efc0df4a52b0de3888a235286cfefa031e4951c398d680f9f1f49d1fa2e",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_galaxy_activity_spectra",
+      "query_variant_id": "galaxy_activity_aq03",
+      "query_text": "neural network BPT activity classification galaxy spectra",
+      "query_started_at": "2026-08-26T09:20:58+00:00",
+      "query_completed_at": "2026-08-26T09:21:00+00:00",
+      "api_hit_count": 69,
+      "retrieved_work_count": 69,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 69,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.029,
+        "stopped_reason": "cursor_exhausted",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:1dafd7225a91e1d51795b48f3f71c4ea52541ffe262b092a713d40622c6a1244",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_galaxy_activity_spectra",
+      "query_variant_id": "galaxy_activity_aq04",
+      "query_text": "deep learning emission line galaxy nuclear activity classification",
+      "query_started_at": "2026-08-26T09:21:00+00:00",
+      "query_completed_at": "2026-08-26T09:21:02+00:00",
+      "api_hit_count": 1064,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.153,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:dafe33d748b73f62831b82d5b46e3e6c74c41d372d487ed9f13c4c9ffd88d7c0",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_galaxy_activity_spectra",
+      "query_variant_id": "galaxy_activity_aq05",
+      "query_text": "spectroscopic galaxy AGN classification machine learning",
+      "query_started_at": "2026-08-26T09:21:02+00:00",
+      "query_completed_at": "2026-08-26T09:21:04+00:00",
+      "api_hit_count": 1508,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.902,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:ea000e1e379d259aa6d8fc24b46a9ddbe03b2bf423caa46d8e3acea3d02375ab",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_galaxy_activity_spectra",
+      "query_variant_id": "galaxy_activity_aq06",
+      "query_text": "artificial intelligence galaxy spectra ionization class",
+      "query_started_at": "2026-08-26T09:21:04+00:00",
+      "query_completed_at": "2026-08-26T09:21:05+00:00",
+      "api_hit_count": 618,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.732,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:4feb4fb5a6fc8ee1bc94d1f5695e8d4f957d6530ad37c62ff24264d937da4f9a",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "query_variant_id": "solar_inversion_aq01",
+      "query_text": "machine learning solar spectropolarimetric inversion",
+      "query_started_at": "2026-08-26T09:22:15+00:00",
+      "query_completed_at": "2026-08-26T09:22:17+00:00",
+      "api_hit_count": 207,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.631,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:c83849fe3bc010b0448313d534219c21e83b2560cf31bebe2d40849b21bf7e37",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "query_variant_id": "solar_inversion_aq02",
+      "query_text": "deep learning Stokes profiles magnetic field inversion",
+      "query_started_at": "2026-08-26T09:22:17+00:00",
+      "query_completed_at": "2026-08-26T09:22:19+00:00",
+      "api_hit_count": 1350,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.882,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:0d8f75afa2238f745ee929523d64ba93684c77a5056733b5e45ee07f04dc64a2",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "query_variant_id": "solar_inversion_aq03",
+      "query_text": "neural network solar Stokes inversion atmosphere",
+      "query_started_at": "2026-08-26T09:22:19+00:00",
+      "query_completed_at": "2026-08-26T09:22:20+00:00",
+      "api_hit_count": 899,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.576,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:c44115fb9fe39ee05dad70c1deffe776c77f01868a9188037ccfdfefb1b20373",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "query_variant_id": "solar_inversion_aq04",
+      "query_text": "machine learning solar magnetic field spectropolarimetry",
+      "query_started_at": "2026-08-26T09:22:20+00:00",
+      "query_completed_at": "2026-08-26T09:22:22+00:00",
+      "api_hit_count": 148,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.703,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:4ec677df5591a548dee72d443f638ec2ba9612b45055c80b74b95fa1b858048c",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "query_variant_id": "solar_inversion_aq05",
+      "query_text": "physics informed neural network solar spectral inversion",
+      "query_started_at": "2026-08-26T09:22:22+00:00",
+      "query_completed_at": "2026-08-26T09:22:24+00:00",
+      "api_hit_count": 737,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.743,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:947bf5c49b98b4bbc1fd4c23cb988a023353a1a490c1b5890004c643186fc889",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "query_variant_id": "solar_inversion_aq06",
+      "query_text": "deep learning solar atmosphere inversion polarized spectra",
+      "query_started_at": "2026-08-26T09:22:24+00:00",
+      "query_completed_at": "2026-08-26T09:22:26+00:00",
+      "api_hit_count": 419,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.368,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:90249a02aef9cdd40a7b3d1352674be613e1d62d35ca542e2979150c503cb3fd",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "query_variant_id": "spectral_anomaly_aq01",
+      "query_text": "machine learning rare objects astronomical spectra anomaly detection",
+      "query_started_at": "2026-08-26T09:21:43+00:00",
+      "query_completed_at": "2026-08-26T09:21:45+00:00",
+      "api_hit_count": 461,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.055,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:fb36abe842ca01d7ba019788e927024797481deb1ea2006a957a80557ef305ee",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "query_variant_id": "spectral_anomaly_aq02",
+      "query_text": "unsupervised outlier discovery spectroscopic survey",
+      "query_started_at": "2026-08-26T09:21:45+00:00",
+      "query_completed_at": "2026-08-26T09:21:46+00:00",
+      "api_hit_count": 724,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.46,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:82d7bd9718c77cf45fcdc86cf621191996e08363f093523e6d9f10f3058fd0e9",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "query_variant_id": "spectral_anomaly_aq03",
+      "query_text": "anomaly detection stellar spectra machine learning",
+      "query_started_at": "2026-08-26T09:21:46+00:00",
+      "query_completed_at": "2026-08-26T09:21:48+00:00",
+      "api_hit_count": 989,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.812,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:c4d2fef5c817ac6f125b522c5320532185583e33f80d4e9933db14e285280133",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "query_variant_id": "spectral_anomaly_aq04",
+      "query_text": "unusual galaxy spectra unsupervised learning",
+      "query_started_at": "2026-08-26T09:21:48+00:00",
+      "query_completed_at": "2026-08-26T09:21:50+00:00",
+      "api_hit_count": 207,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.719,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:879075880bd838b6660fd59fb065b452215e6050b47b2ed39ee863d28278978b",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "query_variant_id": "spectral_anomaly_aq05",
+      "query_text": "novelty detection astronomical spectroscopy survey",
+      "query_started_at": "2026-08-26T09:21:50+00:00",
+      "query_completed_at": "2026-08-26T09:21:52+00:00",
+      "api_hit_count": 363,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.235,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:8c597a8ee794aa595b77410afc6085575dcfbad8795feb414362ef46b8dc88f7",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "query_variant_id": "spectral_anomaly_aq06",
+      "query_text": "active learning rare spectral objects astronomy",
+      "query_started_at": "2026-08-26T09:21:52+00:00",
+      "query_completed_at": "2026-08-26T09:21:54+00:00",
+      "api_hit_count": 2144,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.007,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:3d79a5599479e7fe6907b29e5724823a6c46d96eb7e50f3343ef9cf1d6c7c123",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_radial_velocity",
+      "query_variant_id": "stellar_rv_aq01",
+      "query_text": "data driven time series stellar spectra radial velocity",
+      "query_started_at": "2026-08-26T09:21:30+00:00",
+      "query_completed_at": "2026-08-26T09:21:32+00:00",
+      "api_hit_count": 11727,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.279,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:5079c42771dd9e5d48703fd3bfdf460144f5e4015c9f488a6df54693d386f6cc",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_radial_velocity",
+      "query_variant_id": "stellar_rv_aq02",
+      "query_text": "machine learning high resolution stellar spectrum Doppler velocity",
+      "query_started_at": "2026-08-26T09:21:32+00:00",
+      "query_completed_at": "2026-08-26T09:21:34+00:00",
+      "api_hit_count": 915,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.19,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:04599acc69fe1e4806264852509e334aee5df13dcb8afd8c7a21b5e5dacff730",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_radial_velocity",
+      "query_variant_id": "stellar_rv_aq03",
+      "query_text": "neural network stellar radial velocity spectroscopy",
+      "query_started_at": "2026-08-26T09:21:34+00:00",
+      "query_completed_at": "2026-08-26T09:21:36+00:00",
+      "api_hit_count": 1111,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.211,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:84ca4ee7289d8395680e3a7c81cf13d8bba402f0fbf7510f705b652bdb9524c2",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_radial_velocity",
+      "query_variant_id": "stellar_rv_aq04",
+      "query_text": "data driven spectral disentangling radial velocities stars",
+      "query_started_at": "2026-08-26T09:21:36+00:00",
+      "query_completed_at": "2026-08-26T09:21:39+00:00",
+      "api_hit_count": 3564,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.409,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:a4d868c14cf5d165586f2328fa9e8e97e7338e7d527eddd6394796a478f0052d",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_radial_velocity",
+      "query_variant_id": "stellar_rv_aq05",
+      "query_text": "machine learning precise radial velocity stellar activity spectra",
+      "query_started_at": "2026-08-26T09:21:39+00:00",
+      "query_completed_at": "2026-08-26T09:21:41+00:00",
+      "api_hit_count": 990,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.066,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:802cd0484e2e1d39b2b420d482b4092231e846cc17f26f805c88cf0cb235e30e",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_radial_velocity",
+      "query_variant_id": "stellar_rv_aq06",
+      "query_text": "learned template stellar spectra Doppler shift",
+      "query_started_at": "2026-08-26T09:21:41+00:00",
+      "query_completed_at": "2026-08-26T09:21:43+00:00",
+      "api_hit_count": 239,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.771,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:d90a0eb6ba89ff181b43ba493eccdd7d48c93f6b5bf6f2273710bd93463dc79b",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_spectral_denoising",
+      "query_variant_id": "stellar_denoising_aq01",
+      "query_text": "neural network stellar spectra denoising",
+      "query_started_at": "2026-08-26T09:21:54+00:00",
+      "query_completed_at": "2026-08-26T09:21:56+00:00",
+      "api_hit_count": 322,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.839,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:d8bc8d7ce8d17f039cab719cecd60a94659d847dee5d15c1fc11aec979b9df02",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_spectral_denoising",
+      "query_variant_id": "stellar_denoising_aq02",
+      "query_text": "deep learning low signal stellar spectrum restoration",
+      "query_started_at": "2026-08-26T09:21:56+00:00",
+      "query_completed_at": "2026-08-26T09:21:57+00:00",
+      "api_hit_count": 451,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.765,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:28efd3b0bf1ab0c38a1b24375c84c631d686b90f1d05eef80f0a83994b956f96",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_spectral_denoising",
+      "query_variant_id": "stellar_denoising_aq03",
+      "query_text": "machine learning low signal to noise stellar spectra",
+      "query_started_at": "2026-08-26T09:21:57+00:00",
+      "query_completed_at": "2026-08-26T09:22:00+00:00",
+      "api_hit_count": 4389,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.172,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:358ee0e4a5c7aee04ee61716800094dec74013ccd3e82e0e19919db16e74be77",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_spectral_denoising",
+      "query_variant_id": "stellar_denoising_aq04",
+      "query_text": "autoencoder denoising astronomical spectra",
+      "query_started_at": "2026-08-26T09:22:00+00:00",
+      "query_completed_at": "2026-08-26T09:22:01+00:00",
+      "api_hit_count": 266,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.69,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:b3eeb47ea9e3139fef9ee0d169570cd94f7eeb90151729a40b2587316c84ddea",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_spectral_denoising",
+      "query_variant_id": "stellar_denoising_aq05",
+      "query_text": "generative adversarial network stellar spectral denoising",
+      "query_started_at": "2026-08-26T09:22:01+00:00",
+      "query_completed_at": "2026-08-26T09:22:03+00:00",
+      "api_hit_count": 114,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.608,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:8a3d836c2be03838b398109ded2e1a16b055fcf658f07405a510b69a54f4317c",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_spectral_denoising",
+      "query_variant_id": "stellar_denoising_aq06",
+      "query_text": "learned noise removal optical stellar spectrum line preservation",
+      "query_started_at": "2026-08-26T09:22:03+00:00",
+      "query_completed_at": "2026-08-26T09:22:05+00:00",
+      "api_hit_count": 293,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.606,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:dea96b4898a7b0bf550c3b4525c0903f24a28d3691aaab11937eb98aef458b90",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_spectral_emulation",
+      "query_variant_id": "stellar_emulation_aq01",
+      "query_text": "stellar spectra machine learning interpolation emulator",
+      "query_started_at": "2026-08-26T09:22:05+00:00",
+      "query_completed_at": "2026-08-26T09:22:06+00:00",
+      "api_hit_count": 243,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.858,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:37a696740d57394d13f20f8d381037aa5be224e814cb7df58eb920560eadca68",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_spectral_emulation",
+      "query_variant_id": "stellar_emulation_aq02",
+      "query_text": "neural network stellar spectral synthesis surrogate",
+      "query_started_at": "2026-08-26T09:22:06+00:00",
+      "query_completed_at": "2026-08-26T09:22:08+00:00",
+      "api_hit_count": 132,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.817,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:a6341ea2383abb8ee09b4b562065a5ed3f63b265c5a54e9727d83df4bd600e9e",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_spectral_emulation",
+      "query_variant_id": "stellar_emulation_aq03",
+      "query_text": "data driven stellar spectrum generator physical parameters",
+      "query_started_at": "2026-08-26T09:22:08+00:00",
+      "query_completed_at": "2026-08-26T09:22:10+00:00",
+      "api_hit_count": 2082,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.902,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:bf807769f6ae71d7ff11e13a727a3028eb53d01338e415e5b9ed5961be873e6a",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_spectral_emulation",
+      "query_variant_id": "stellar_emulation_aq04",
+      "query_text": "machine learning emulator stellar atmosphere spectra",
+      "query_started_at": "2026-08-26T09:22:10+00:00",
+      "query_completed_at": "2026-08-26T09:22:12+00:00",
+      "api_hit_count": 213,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.736,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:7363ce9ed88ee64ce65841292a90330117251ca1c14b5f0447318cf817423f39",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_spectral_emulation",
+      "query_variant_id": "stellar_emulation_aq05",
+      "query_text": "neural spectral interpolation stellar model grid",
+      "query_started_at": "2026-08-26T09:22:12+00:00",
+      "query_completed_at": "2026-08-26T09:22:14+00:00",
+      "api_hit_count": 875,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.831,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:f462c2ad4e71696673d409bbb3b320d46571ae17bbaff5a8ebf89fa31f162879",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_stellar_spectral_emulation",
+      "query_variant_id": "stellar_emulation_aq06",
+      "query_text": "generative model synthetic stellar spectra conditioned parameters",
+      "query_started_at": "2026-08-26T09:22:14+00:00",
+      "query_completed_at": "2026-08-26T09:22:15+00:00",
+      "api_hit_count": 202,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.602,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:71782a8c679062cecd98500a72ae9a5a063aea10cc6713a31ebaaadfe6167e59",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_supernova_spectral_typing",
+      "query_variant_id": "supernova_typing_aq01",
+      "query_text": "deep learning supernova spectral classification",
+      "query_started_at": "2026-08-26T09:21:05+00:00",
+      "query_completed_at": "2026-08-26T09:21:08+00:00",
+      "api_hit_count": 1534,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.814,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:beb94582677d4145533e8381419c59bee3f84617963abfde66cc1f28b03a50f0",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_supernova_spectral_typing",
+      "query_variant_id": "supernova_typing_aq02",
+      "query_text": "machine learning transient spectra automated typing",
+      "query_started_at": "2026-08-26T09:21:08+00:00",
+      "query_completed_at": "2026-08-26T09:21:10+00:00",
+      "api_hit_count": 9746,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.896,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:38236e5b951d65cd9a39568171a405ac7edb38343e7e0542f5ff0dcc2ad7a729",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_supernova_spectral_typing",
+      "query_variant_id": "supernova_typing_aq03",
+      "query_text": "automated supernova spectrum classification",
+      "query_started_at": "2026-08-26T09:21:10+00:00",
+      "query_completed_at": "2026-08-26T09:21:12+00:00",
+      "api_hit_count": 2080,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.109,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:e1f2785cd59817457537e45b4bd394dca1baf8055d3613cbbe230ad36b27858d",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_supernova_spectral_typing",
+      "query_variant_id": "supernova_typing_aq04",
+      "query_text": "neural network supernova spectra type identification",
+      "query_started_at": "2026-08-26T09:21:12+00:00",
+      "query_completed_at": "2026-08-26T09:21:14+00:00",
+      "api_hit_count": 823,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 1.953,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:25f6d622d6d12d95345e28e5d798c55d6f512360c3106aac733dcaac35014359",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_supernova_spectral_typing",
+      "query_variant_id": "supernova_typing_aq05",
+      "query_text": "low signal supernova spectral typing machine learning",
+      "query_started_at": "2026-08-26T09:21:14+00:00",
+      "query_completed_at": "2026-08-26T09:21:16+00:00",
+      "api_hit_count": 1794,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.208,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    },
+    {
+      "query_run_id": "w6-openalex-query-run:sha256:2a439970015ba117cc7719a554039ce491760e586062d2406c8d8a2696202119",
+      "acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "topic_id": "w6_topic_supernova_spectral_typing",
+      "query_variant_id": "supernova_typing_aq06",
+      "query_text": "phase varying transient spectral classification",
+      "query_started_at": "2026-08-26T09:21:16+00:00",
+      "query_completed_at": "2026-08-26T09:21:19+00:00",
+      "api_hit_count": 45904,
+      "retrieved_work_count": 80,
+      "missing_openalex_id_skipped": 0,
+      "client_stats": {
+        "requested_max_results": 80,
+        "actual_result_count": 80,
+        "page_count": 1,
+        "request_count": 1,
+        "retry_count": 0,
+        "applied_filters": {
+          "from_year": 2000,
+          "to_year": 2026
+        },
+        "elapsed_seconds": 2.419,
+        "stopped_reason": "max_results_reached",
+        "status": "success",
+        "duplicate_records_skipped": 0,
+        "output_duplicate_id_count": 0
+      }
+    }
+  ]
+}

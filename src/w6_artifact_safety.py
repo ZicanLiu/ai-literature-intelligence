@@ -1,30 +1,58 @@
-"""W6 generation 输出目录的共享路径安全策略。
+"""Shared resolved-path safety helpers for W6 artifact generation.
 
-Fusion 与 Synthesis 两个 generation 入口必须使用**完全一致**的
-resolved-path overlap policy，避免两套安全逻辑漂移（曾出现一边修好、
-另一边漏掉的问题）。策略：
-
-- 对 resolved 路径做对称检查：``output == protected``、``output`` 在
-  ``protected`` 内、``protected`` 在 ``output`` 内，全部拒绝；
-- ``protected`` 必须覆盖整个 frozen bundle 目录与相关 frozen method package 目录，
-  防止 generation 输出污染冻结证据树；
-- 已存在且非空的输出目录拒绝覆盖。
+The public helpers intentionally preserve their caller-specific contracts:
+PR #71 workflows declare individual frozen input paths and receive the resolved
+output path, while the merged Fusion/Synthesis workflows also reject an existing
+non-empty output directory. Both use the same symmetric tree-overlap predicate.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Iterable
+
+
+def _paths_overlap(left: Path, right: Path) -> bool:
+    return left == right or left.is_relative_to(right) or right.is_relative_to(left)
+
+
+def ensure_output_separate_from_inputs(
+    output_dir: str | Path,
+    *,
+    input_paths: Iterable[str | Path],
+) -> Path:
+    """Resolve paths and reject any output/input tree overlap.
+
+    Callers declare the intended protection granularity: a package/evidence tree
+    is passed as its root directory, while a standalone frozen config is passed
+    as the file itself. Resolving both sides also covers existing symlink/junction
+    aliases without forbidding harmless sibling paths beside standalone files.
+    """
+
+    output = Path(output_dir).resolve()
+    protected_roots: set[Path] = set()
+    for raw_path in input_paths:
+        path = Path(raw_path).resolve()
+        if not path.exists():
+            raise ValueError(f"frozen input path 不存在：{path}")
+        protected_roots.add(path)
+
+    for root in sorted(protected_roots, key=str):
+        if _paths_overlap(output, root):
+            raise ValueError(
+                "output 与 frozen input tree 重合，拒绝污染输入 artifact："
+                f"output={output}, input_root={root}"
+            )
+    return output
 
 
 def check_output_dir_safe(output_dir: Path, protected_dirs: list[Path]) -> None:
+    """Reject overlap with protected directories and non-empty output reuse."""
+
     resolved = Path(output_dir).resolve()
     for protected in protected_dirs:
         frozen_dir = Path(protected).resolve()
-        if (
-            resolved == frozen_dir
-            or resolved.is_relative_to(frozen_dir)
-            or frozen_dir.is_relative_to(resolved)
-        ):
+        if _paths_overlap(resolved, frozen_dir):
             raise ValueError(
                 f"输出目录与冻结输入 artifact 目录重合，禁止写入：{frozen_dir}"
             )

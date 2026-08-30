@@ -1,0 +1,413 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_topic_set",
+  "artifact_id": "w6_research_topics_v0.2_alpha",
+  "status": "frozen",
+  "is_fixture": false,
+  "version": "v0.2-alpha",
+  "created_at": "2026-08-24T14:18:30+08:00",
+  "provenance": {
+    "kind": "issue64_topic_freeze",
+    "created_by": "issue64_leader",
+    "created_at": "2026-08-24T14:18:30+08:00",
+    "git_revision": "90811052194801263708627c1eda39a2765e9037"
+  },
+  "topics": [
+    {
+      "topic_id": "w6_topic_galaxy_activity_spectra",
+      "research_question": "How can machine-learning models classify star-forming, composite, AGN, and LINER activity directly from integrated optical galaxy spectra?",
+      "scientific_object": "integrated galaxies and their nuclear activity",
+      "data_modality": "optical galaxy spectra with continuum and emission-line information",
+      "target_task": "galaxy activity classification",
+      "method_role": "machine learning is the primary activity-class prediction method",
+      "scientific_role": "separate physical ionization regimes in spectroscopic surveys",
+      "scope_in": [
+        "integrated optical galaxy spectra are direct model inputs",
+        "the primary output is a star-forming composite AGN or LINER activity class"
+      ],
+      "scope_out": [
+        "photometry-only or morphology-only galaxy classification",
+        "redshift estimation without an activity-class output",
+        "unsupervised clustering without activity interpretation"
+      ],
+      "boundary_cases": [
+        "color-based AGN selection that uses no spectrum",
+        "emission-line measurement tools that do not predict an activity class"
+      ],
+      "acquisition_query_variants": [
+        {
+          "query_variant_id": "galaxy_activity_qv1",
+          "query_text": "machine learning optical galaxy spectra activity classification",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "galaxy_activity_qv2",
+          "query_text": "automated AGN LINER star forming classification galaxy spectra",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        }
+      ],
+      "version": "v0.2-alpha",
+      "lifecycle_status": "frozen",
+      "provenance": {
+        "kind": "issue64_topic_freeze",
+        "created_by": "issue64_leader",
+        "created_at": "2026-08-24T14:18:30+08:00",
+        "git_revision": "90811052194801263708627c1eda39a2765e9037"
+      }
+    },
+    {
+      "topic_id": "w6_topic_supernova_spectral_typing",
+      "research_question": "How can machine learning assign supernova types from observed optical spectra, including low-signal or phase-varying cases?",
+      "scientific_object": "supernovae and related explosive transients",
+      "data_modality": "observed optical transient spectra with optional phase metadata",
+      "target_task": "supernova spectral type classification",
+      "method_role": "machine learning produces the primary spectral-type prediction",
+      "scientific_role": "support rapid and reproducible transient identification",
+      "scope_in": [
+        "an observed transient spectrum is a required model input",
+        "the primary output is a supernova or transient spectral class"
+      ],
+      "scope_out": [
+        "photometric light-curve classification without spectra",
+        "host-galaxy classification without transient spectral typing",
+        "forward spectral synthesis without a class prediction"
+      ],
+      "boundary_cases": [
+        "multimodal classifiers where spectral input is optional",
+        "redshift or phase estimation without supernova typing"
+      ],
+      "acquisition_query_variants": [
+        {
+          "query_variant_id": "supernova_typing_qv1",
+          "query_text": "deep learning supernova spectral classification",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "supernova_typing_qv2",
+          "query_text": "machine learning transient spectra automated typing",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        }
+      ],
+      "version": "v0.2-alpha",
+      "lifecycle_status": "frozen",
+      "provenance": {
+        "kind": "issue64_topic_freeze",
+        "created_by": "issue64_leader",
+        "created_at": "2026-08-24T14:18:30+08:00",
+        "git_revision": "90811052194801263708627c1eda39a2765e9037"
+      }
+    },
+    {
+      "topic_id": "w6_topic_exoplanet_atmospheric_retrieval",
+      "research_question": "How can machine learning retrieve atmospheric composition and physical parameters from exoplanet transmission or emission spectra?",
+      "scientific_object": "exoplanet atmospheres",
+      "data_modality": "exoplanet transmission or emission spectra",
+      "target_task": "atmospheric composition and parameter retrieval",
+      "method_role": "machine learning is the primary inverse model or retrieval surrogate",
+      "scientific_role": "infer molecular abundances clouds and thermal properties",
+      "scope_in": [
+        "transmission or emission spectra are direct inference inputs",
+        "the output includes atmospheric composition or physical parameters"
+      ],
+      "scope_out": [
+        "transit detection from light curves without spectra",
+        "forward spectral simulation without an inverse retrieval",
+        "stellar atmosphere parameter estimation"
+      ],
+      "boundary_cases": [
+        "surrogate forward models used only to generate spectra",
+        "molecule detection that does not retrieve atmospheric properties"
+      ],
+      "acquisition_query_variants": [
+        {
+          "query_variant_id": "exoplanet_retrieval_qv1",
+          "query_text": "machine learning exoplanet transmission spectra atmospheric retrieval",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "exoplanet_retrieval_qv2",
+          "query_text": "neural network exoplanet emission spectrum abundance inference",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        }
+      ],
+      "version": "v0.2-alpha",
+      "lifecycle_status": "frozen",
+      "provenance": {
+        "kind": "issue64_topic_freeze",
+        "created_by": "issue64_leader",
+        "created_at": "2026-08-24T14:18:30+08:00",
+        "git_revision": "90811052194801263708627c1eda39a2765e9037"
+      }
+    },
+    {
+      "topic_id": "w6_topic_stellar_radial_velocity",
+      "research_question": "How can data-driven methods estimate precise stellar radial velocities from high-resolution or time-series spectra while separating spectral variability?",
+      "scientific_object": "stars and exoplanet host stars",
+      "data_modality": "high-resolution or time-series stellar spectra",
+      "target_task": "stellar radial-velocity estimation",
+      "method_role": "a data-driven model is the primary Doppler-shift estimator or disentangler",
+      "scientific_role": "measure line-of-sight motion for stellar and exoplanet studies",
+      "scope_in": [
+        "stellar spectra are direct inputs to a radial-velocity estimate",
+        "the method models Doppler shifts or separates velocity from spectral variability"
+      ],
+      "scope_out": [
+        "stellar atmospheric parameter estimation without radial velocity",
+        "stellar spectral classification",
+        "photometric variability analysis"
+      ],
+      "boundary_cases": [
+        "pipelines that use a fixed cross-correlation template without a learned component",
+        "activity prediction that reports no radial velocity"
+      ],
+      "acquisition_query_variants": [
+        {
+          "query_variant_id": "stellar_rv_qv1",
+          "query_text": "data driven time series stellar spectra radial velocity",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "stellar_rv_qv2",
+          "query_text": "machine learning high resolution stellar spectrum Doppler velocity",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        }
+      ],
+      "version": "v0.2-alpha",
+      "lifecycle_status": "frozen",
+      "provenance": {
+        "kind": "issue64_topic_freeze",
+        "created_by": "issue64_leader",
+        "created_at": "2026-08-24T14:18:30+08:00",
+        "git_revision": "90811052194801263708627c1eda39a2765e9037"
+      }
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "research_question": "How can unsupervised or active-learning methods discover rare and anomalous objects in large astronomical spectroscopic surveys?",
+      "scientific_object": "rare or previously unmodelled objects in spectroscopic surveys",
+      "data_modality": "large collections of optical or infrared astronomical spectra",
+      "target_task": "spectral anomaly and outlier discovery",
+      "method_role": "machine learning provides the primary anomaly representation or score",
+      "scientific_role": "prioritize unusual spectra for scientific follow-up",
+      "scope_in": [
+        "astronomical spectra are direct inputs to an anomaly score or novelty ranking",
+        "the task is discovery beyond a fixed known-class classifier"
+      ],
+      "scope_out": [
+        "supervised classification limited to known spectral classes",
+        "image-only or light-curve-only anomaly detection",
+        "follow-up studies with no spectral anomaly method"
+      ],
+      "boundary_cases": [
+        "rare-class classification with fully predefined labels",
+        "generic dimensionality reduction without an anomaly output"
+      ],
+      "acquisition_query_variants": [
+        {
+          "query_variant_id": "spectral_anomaly_qv1",
+          "query_text": "machine learning rare objects astronomical spectra anomaly detection",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "spectral_anomaly_qv2",
+          "query_text": "unsupervised outlier discovery spectroscopic survey",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        }
+      ],
+      "version": "v0.2-alpha",
+      "lifecycle_status": "frozen",
+      "provenance": {
+        "kind": "issue64_topic_freeze",
+        "created_by": "issue64_leader",
+        "created_at": "2026-08-24T14:18:30+08:00",
+        "git_revision": "90811052194801263708627c1eda39a2765e9037"
+      }
+    },
+    {
+      "topic_id": "w6_topic_stellar_spectral_denoising",
+      "research_question": "How can learned denoisers restore low-signal stellar spectra while preserving scientifically meaningful line profiles?",
+      "scientific_object": "low-signal stellar spectra",
+      "data_modality": "one-dimensional optical or infrared stellar spectra",
+      "target_task": "spectral denoising and artifact restoration",
+      "method_role": "a learned model is the primary denoising or restoration component",
+      "scientific_role": "improve spectral quality without corrupting downstream line measurements",
+      "scope_in": [
+        "stellar spectra are direct inputs to a learned denoiser",
+        "noise or artifact removal is a primary evaluated task"
+      ],
+      "scope_out": [
+        "continuum normalization without denoising",
+        "parameter estimation where denoising is only incidental",
+        "generation of synthetic model spectra"
+      ],
+      "boundary_cases": [
+        "autoencoder reconstruction evaluated only by parameter accuracy",
+        "generic preprocessing pipelines with no learned restoration component"
+      ],
+      "acquisition_query_variants": [
+        {
+          "query_variant_id": "stellar_denoising_qv1",
+          "query_text": "neural network stellar spectra denoising",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "stellar_denoising_qv2",
+          "query_text": "deep learning low signal stellar spectrum restoration",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        }
+      ],
+      "version": "v0.2-alpha",
+      "lifecycle_status": "frozen",
+      "provenance": {
+        "kind": "issue64_topic_freeze",
+        "created_by": "issue64_leader",
+        "created_at": "2026-08-24T14:18:30+08:00",
+        "git_revision": "90811052194801263708627c1eda39a2765e9037"
+      }
+    },
+    {
+      "topic_id": "w6_topic_stellar_spectral_emulation",
+      "research_question": "How can machine-learning emulators interpolate or generate stellar spectra across physical parameter grids as surrogates for spectral synthesis?",
+      "scientific_object": "synthetic stellar atmosphere and spectral model grids",
+      "data_modality": "parameter-conditioned synthetic stellar spectra",
+      "target_task": "spectral interpolation emulation or generation",
+      "method_role": "machine learning is the primary forward surrogate for spectral synthesis",
+      "scientific_role": "accelerate physically conditioned spectrum generation",
+      "scope_in": [
+        "the model maps physical parameters to a stellar spectrum",
+        "interpolation or forward spectrum generation is the primary task"
+      ],
+      "scope_out": [
+        "inferring stellar parameters from observed spectra",
+        "denoising observed spectra",
+        "continuum normalization or spectral classification"
+      ],
+      "boundary_cases": [
+        "inverse models trained on synthetic spectra but producing only parameters",
+        "data augmentation where the spectral generator is not evaluated"
+      ],
+      "acquisition_query_variants": [
+        {
+          "query_variant_id": "stellar_emulation_qv1",
+          "query_text": "stellar spectra machine learning interpolation emulator",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "stellar_emulation_qv2",
+          "query_text": "neural network stellar spectral synthesis surrogate",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        }
+      ],
+      "version": "v0.2-alpha",
+      "lifecycle_status": "frozen",
+      "provenance": {
+        "kind": "issue64_topic_freeze",
+        "created_by": "issue64_leader",
+        "created_at": "2026-08-24T14:18:30+08:00",
+        "git_revision": "90811052194801263708627c1eda39a2765e9037"
+      }
+    },
+    {
+      "topic_id": "w6_topic_solar_spectropolarimetric_inversion",
+      "research_question": "How can machine learning invert solar spectropolarimetric Stokes profiles into magnetic-field and atmospheric stratification estimates?",
+      "scientific_object": "the solar photosphere and chromosphere",
+      "data_modality": "solar spectropolarimetric Stokes profiles",
+      "target_task": "magnetic and atmospheric inversion",
+      "method_role": "machine learning is the primary inversion model or inversion surrogate",
+      "scientific_role": "reconstruct solar magnetic fields and atmospheric structure",
+      "scope_in": [
+        "Stokes spectral profiles are direct model inputs",
+        "the output includes magnetic or atmospheric stratification parameters"
+      ],
+      "scope_out": [
+        "intensity-image flare classification",
+        "forward radiative-transfer synthesis without inversion",
+        "non-solar stellar parameter estimation"
+      ],
+      "boundary_cases": [
+        "feature extraction from Stokes profiles without physical inversion",
+        "solar image segmentation with no spectropolarimetric input"
+      ],
+      "acquisition_query_variants": [
+        {
+          "query_variant_id": "solar_inversion_qv1",
+          "query_text": "machine learning solar spectropolarimetric inversion",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "solar_inversion_qv2",
+          "query_text": "deep learning Stokes profiles magnetic field inversion",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        }
+      ],
+      "version": "v0.2-alpha",
+      "lifecycle_status": "frozen",
+      "provenance": {
+        "kind": "issue64_topic_freeze",
+        "created_by": "issue64_leader",
+        "created_at": "2026-08-24T14:18:30+08:00",
+        "git_revision": "90811052194801263708627c1eda39a2765e9037"
+      }
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "research_question": "How can machine learning separate astrophysical foregrounds and instrumental contamination from cosmological 21-cm spectral data?",
+      "scientific_object": "cosmological 21-cm emission and its foreground sky",
+      "data_modality": "radio-frequency 21-cm spectra or frequency-resolved intensity maps",
+      "target_task": "foreground removal and component separation",
+      "method_role": "machine learning is the primary foreground separator or restoration model",
+      "scientific_role": "recover the cosmological 21-cm signal for reionization or intensity-mapping studies",
+      "scope_in": [
+        "frequency-resolved 21-cm data are direct inputs",
+        "foreground or contamination removal is a primary evaluated output"
+      ],
+      "scope_out": [
+        "cosmological parameter inference from already-clean data",
+        "radio-frequency-interference classification without foreground separation",
+        "continuum radio imaging without spectral component separation"
+      ],
+      "boundary_cases": [
+        "methods that identify HII regions but do not remove foregrounds",
+        "simulations used only to train a downstream parameter estimator"
+      ],
+      "acquisition_query_variants": [
+        {
+          "query_variant_id": "21cm_foreground_qv1",
+          "query_text": "neural network foreground removal 21 cm signal",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "21cm_foreground_qv2",
+          "query_text": "deep learning 21cm intensity mapping foreground separation",
+          "version": "v0.2-alpha",
+          "status": "frozen"
+        }
+      ],
+      "version": "v0.2-alpha",
+      "lifecycle_status": "frozen",
+      "provenance": {
+        "kind": "issue64_topic_freeze",
+        "created_by": "issue64_leader",
+        "created_at": "2026-08-24T14:18:30+08:00",
+        "git_revision": "90811052194801263708627c1eda39a2765e9037"
+      }
+    }
+  ]
+}

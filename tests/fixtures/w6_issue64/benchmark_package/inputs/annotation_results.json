@@ -1,0 +1,111 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_ai_assisted_annotations",
+  "artifact_id": "w6_fixture_annotations_v1",
+  "is_fixture": true,
+  "label_scheme_version": "query_relevance_0_1_2_v1",
+  "split": {"artifact_id": "w6_fixture_split_v1", "sha256": "60a9e6bca37762fe4c20d150ff94df4d2e855fb9f2fb21062475204317acb0e7"},
+  "annotation_started_at": "2026-08-24T08:44:00+08:00",
+  "created_at": "2026-08-24T08:50:00+08:00",
+  "provenance": {
+    "kind": "synthetic_ai_assisted_fixture",
+    "created_by": "w6_bootstrap",
+    "created_at": "2026-08-24T08:50:00+08:00",
+    "git_revision": "6b9eb12f898bf880c297902463e48f2ff3e0388b"
+  },
+  "annotations": [
+    {
+      "annotation_id": "annotation_denoise_001",
+      "annotation_task_id": "annot:blind_e589c6c3221434b8c5d1e0db",
+      "topic_id": "w6_fixture_topic_denoising",
+      "pool_item_id": "pool_denoise_001",
+      "record_id": "rec_001",
+      "relevance_label": 2,
+      "confidence": "high",
+      "evidence_sources": [
+        {"source_type": "title_abstract", "source_reference": "record:rec_001", "checked_at": "2026-08-24T08:45:00+08:00"}
+      ],
+      "justification_summary": "The abstract directly states stellar-spectrum denoising and preservation of absorption-line measurements.",
+      "uncertainty": "",
+      "review_status": "pending_human_review",
+      "annotation_provenance": {
+        "actor_type": "ai_assistant",
+        "actor_id": "fixture_ai_annotator",
+        "model_or_tool": {"name": "synthetic_annotation_assistant", "version": "fixture-v1"},
+        "prompt_or_protocol_version": "w6_annotation_fixture_v1",
+        "created_at": "2026-08-24T08:45:00+08:00",
+        "evidence_lookup_performed": false
+      }
+    },
+    {
+      "annotation_id": "annotation_denoise_002",
+      "annotation_task_id": "annot:blind_c0d8699dfc5bfd3c24f56928",
+      "topic_id": "w6_fixture_topic_denoising",
+      "pool_item_id": "pool_denoise_002",
+      "record_id": "rec_002",
+      "relevance_label": 1,
+      "confidence": "medium",
+      "evidence_sources": [
+        {"source_type": "title_abstract", "source_reference": "record:rec_002", "checked_at": "2026-08-24T08:46:00+08:00"}
+      ],
+      "justification_summary": "Denoising is a real component, but it is not the sole or primary evaluated contribution.",
+      "uncertainty": "The fixture abstract does not quantify the denoising component separately.",
+      "review_status": "pending_human_review",
+      "annotation_provenance": {
+        "actor_type": "ai_assisted_human",
+        "actor_id": "fixture_primary_reviewer",
+        "model_or_tool": {"name": "synthetic_annotation_assistant", "version": "fixture-v1"},
+        "prompt_or_protocol_version": "w6_annotation_fixture_v1",
+        "created_at": "2026-08-24T08:46:00+08:00",
+        "evidence_lookup_performed": false
+      }
+    },
+    {
+      "annotation_id": "annotation_denoise_004",
+      "annotation_task_id": "annot:blind_e185b7c428feee4172fd24ea",
+      "topic_id": "w6_fixture_topic_denoising",
+      "pool_item_id": "pool_denoise_004",
+      "record_id": "rec_004",
+      "relevance_label": 0,
+      "confidence": "high",
+      "evidence_sources": [
+        {"source_type": "title_abstract", "source_reference": "record:rec_004", "checked_at": "2026-08-24T08:47:00+08:00"},
+        {"source_type": "public_landing_page", "source_reference": "https://example.test/papers/rec-004", "checked_at": "2026-08-24T08:47:30+08:00"}
+      ],
+      "justification_summary": "The paper is a hard negative because its spectra are clinical rather than stellar.",
+      "uncertainty": "",
+      "review_status": "pending_human_review",
+      "annotation_provenance": {
+        "actor_type": "ai_assistant",
+        "actor_id": "fixture_ai_annotator",
+        "model_or_tool": {"name": "synthetic_annotation_assistant", "version": "fixture-v1"},
+        "prompt_or_protocol_version": "w6_annotation_fixture_v1",
+        "created_at": "2026-08-24T08:47:00+08:00",
+        "evidence_lookup_performed": true
+      }
+    },
+    {
+      "annotation_id": "annotation_denoise_005",
+      "annotation_task_id": "annot:blind_571b00ab87d8aae04318dafd",
+      "topic_id": "w6_fixture_topic_denoising",
+      "pool_item_id": "pool_denoise_005",
+      "record_id": "rec_005",
+      "relevance_label": 0,
+      "confidence": "medium",
+      "evidence_sources": [
+        {"source_type": "title_abstract", "source_reference": "record:rec_005", "checked_at": "2026-08-24T08:48:00+08:00"}
+      ],
+      "justification_summary": "Reconstruction serves parameter inference, not an evaluated denoising objective.",
+      "uncertainty": "A full method description could clarify whether denoising is measured independently.",
+      "review_status": "ai_proposed",
+      "annotation_provenance": {
+        "actor_type": "ai_assistant",
+        "actor_id": "fixture_ai_annotator",
+        "model_or_tool": {"name": "synthetic_annotation_assistant", "version": "fixture-v1"},
+        "prompt_or_protocol_version": "w6_annotation_fixture_v1",
+        "created_at": "2026-08-24T08:48:00+08:00",
+        "evidence_lookup_performed": false
+      }
+    }
+  ]
+}

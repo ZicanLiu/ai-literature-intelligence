@@ -1,0 +1,22 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_second_annotations",
+  "artifact_id": "w6_second_annotations_v1",
+  "is_fixture": true,
+  "primary_annotations": {
+    "artifact_id": "w6_fixture_annotations_v1",
+    "sha256": "a429ba5eae44f5418fffb757ca2047075784a045f7f56d6f6ec6a9fda6069c15"
+  },
+  "annotation_protocol": {
+    "artifact_id": "w6_fixture_annotation_protocol_v1",
+    "sha256": "b8622ca820def223579a9133bf6b9223a39a6614cb3e53d3a3a5b5c8722cd220"
+  },
+  "created_at": "2026-08-24T16:21:51+08:00",
+  "provenance": {
+    "kind": "independent_second_annotation_extension",
+    "created_by": "w6_benchmark_workflow",
+    "created_at": "2026-08-24T16:21:51+08:00",
+    "git_revision": "4f9d636cc4cae5986f91a21c27a535db1b4e04c6"
+  },
+  "annotations": []
+}
