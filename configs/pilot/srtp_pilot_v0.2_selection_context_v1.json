@@ -19,10 +19,10 @@
     ],
     "tokenizer": "src.text_relevance.tokenize_text:v1"
   },
-  "config_identity": "srtp-pilot-selection-context-config:sha256:5697148eb21a4e1f3afa37c9b9f50cd7baed2048a06a8ba69f66869b28a4d082",
+  "config_identity": "srtp-pilot-selection-context-config:sha256:eda8667b014186a22e46e1ae944b35dbde24111a7e4299ff34413dbc5a51a921",
   "context_policy": {
-    "config_identity": "srtp-pilot-context-policy:sha256:16bcd120da3c52e82bbdbf6f72b7f85893f13235aa042a4e309d1881111e0655",
-    "field_template": "[PAPER {position:02d}]\nCanonical ID: {canonical_entity_id}\nTitle: {title}\nAbstract: {abstract}",
+    "config_identity": "srtp-pilot-context-policy:sha256:81515ea47a45e7e01421969b22803406b3abab51ae4144683b21af5fac2a4feb",
+    "field_template": "Title: {title}\nAbstract: {abstract}",
     "generator_compatibility_requirement": "consume_exact_rendered_utf8_context_unchanged_and_record_provider_token_counts_separately",
     "global_tail_truncation": false,
     "maximum_context_tokens": 2400,

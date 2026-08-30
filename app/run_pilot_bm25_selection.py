@@ -20,10 +20,7 @@ from src.w6_contracts import load_json_object
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = (
-    PROJECT_ROOT
-    / "configs"
-    / "pilot"
-    / "srtp_pilot_v0.2_selection_context_v1.json"
+    PROJECT_ROOT / "configs" / "pilot" / "srtp_pilot_v0.2_selection_context_v1.json"
 )
 
 
@@ -37,10 +34,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--topic-id", required=True)
     parser.add_argument(
-        "--human-selection-attestation",
+        "--human-selection-freeze",
         type=Path,
         required=True,
-        help="Validated final non-fixture Dual-Curator selection for this Topic.",
+        help=(
+            "Final non-fixture Dual-Curator selection whose artifact ID, identity, "
+            "SHA-256, and frozen_at will be embedded in the BM25 artifact."
+        ),
     )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--created-at")
@@ -51,11 +51,11 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         inputs = load_pilot_selection_inputs(args.config, project_root=PROJECT_ROOT)
-        attestation = load_json_object(
-            args.human_selection_attestation,
-            label="final human selection attestation",
+        human_freeze = load_json_object(
+            args.human_selection_freeze,
+            label="final human selection freeze",
         )
-        validated = validate_selection_artifact(attestation, inputs=inputs)
+        validated = validate_selection_artifact(human_freeze, inputs=inputs)
         if (
             validated["method_id"] != HUMAN_METHOD_ID
             or validated["is_fixture"]
@@ -77,6 +77,7 @@ def main(argv: list[str] | None = None) -> int:
         selection = build_bm25_selection(
             inputs,
             topic_id=args.topic_id,
+            human_selection_freeze=human_freeze,
             created_at=created_at,
             git_revision=git_state["git_revision"],
         )

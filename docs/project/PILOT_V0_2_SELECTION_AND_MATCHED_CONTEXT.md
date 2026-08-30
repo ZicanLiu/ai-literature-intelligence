@@ -74,24 +74,51 @@ K                      8
 The implementation, configuration, deterministic reconstruction validator, and
 synthetic determinism tests are frozen now. The real U80 BM25 Top-8 is
 intentionally not generated in this stage so that neither curator can encounter
-its ranks, scores, or selected set. The formal CLI requires a validated final
-non-fixture Dual-Curator selection for the same Topic as an explicit blinding
-checkpoint:
+its ranks, scores, or selected set. The formal CLI requires the validated final
+non-fixture Dual-Curator selection for the same Topic. The resulting BM25
+artifact embeds that exact Human artifact's ID, selection identity, SHA-256,
+and frozen timestamp; validation requires the Human artifact again and rejects
+any hash or time-order drift:
 
 ```powershell
 python -m app.run_pilot_bm25_selection `
   --topic-id <topic_id> `
-  --human-selection-attestation <final_human_selection.json> `
+  --human-selection-freeze <final_human_selection.json> `
   --output <new_bm25_selection.json>
 ```
 
 ## 4. Dual-Curator preparation and visibility boundary
 
 The committed preparation package is
-`data/research/pilot/v0.2/selection-preparation-v1/`. It contains two Topic tasks
-for each of `curator_a` and `curator_b`, readable Markdown views, and blank JSON
-response templates. It contains no prefilled selection and records both
-`human_selection_status=not_started` and deferred BM25 execution.
+`data/research/pilot/v0.2/selection-preparation-v1/`. It is the immutable,
+coordinator-side source package: do not fill or edit its committed blank
+responses. It contains two Topic tasks for each of `curator_a` and `curator_b`,
+private mappings, readable views, and blank templates. It contains no prefilled
+selection and records both `human_selection_status=not_started` and deferred
+BM25 execution.
+
+Export one fillable bundle per person to directories outside the repository.
+For example on Windows PowerShell (choose any suitable external root; these
+paths are examples, not artifact fields):
+
+```powershell
+$workspaceRoot = "D:\pilot_curator_workspaces"
+
+python -m app.export_pilot_curator_bundle `
+  --curator-slot curator_a `
+  --output-dir "$workspaceRoot\curator_a"
+
+python -m app.export_pilot_curator_bundle `
+  --curator-slot curator_b `
+  --output-dir "$workspaceRoot\curator_b"
+```
+
+An export contains only the instructions, that slot's two task Markdown files,
+two blank response JSON files, and non-secret task/package identity metadata.
+It contains no coordinator mapping, canonical IDs, BM25 data, query support,
+source rank, authors, venue, or information about the other curator. Export to
+any path under the repository fails closed. Filling the external response files
+there does not change `git status`.
 
 Each curator sees:
 
@@ -109,7 +136,14 @@ Each response must select exactly eight unique candidate IDs, give one short
 reason per selection, record start/end or elapsed time, keep
 `external_lookup=false`, and acknowledge an independent submission. The
 validator rejects unknown/duplicate IDs, wrong count, missing reasons/timing,
-external lookup, or a missing acknowledgement.
+external lookup, or a missing acknowledgement. If an abstract contains a URL,
+leave its scientific text unchanged but do not click it; do not search a DOI,
+title, author, or paper page.
+
+Curator A and B receive the same 80 canonical papers and the same title and
+abstract snapshots, but each slot has a different deterministic order and a
+different opaque-ID namespace. Rebuilding a slot is stable; the slot affects
+presentation only and never changes U80.
 
 The package itself is validated by file closure, SHA-256, source binding, task
 blindness, and deterministic reconstruction:
@@ -118,17 +152,33 @@ blindness, and deterministic reconstruction:
 python -m app.validate_pilot_curator_preparation
 ```
 
-After completed forms are returned, `app.pilot_curator_workflow` provides
-`validate-response`, `import-response`, `compare`,
-`build-adjudication-task`, `import-adjudication`, and
-`build-final-selection` subcommands. Human operators edit response JSON only;
-they do not edit Python.
+After completed forms are returned, validate and import each external JSON
+against the trusted committed package, not against caller-supplied mappings:
+
+```powershell
+python -m app.pilot_curator_workflow validate-response `
+  --curator-slot curator_a `
+  --response "D:\pilot_curator_workspaces\curator_a\responses\<topic>_response.json"
+
+python -m app.pilot_curator_workflow import-response `
+  --curator-slot curator_a `
+  --response "D:\pilot_curator_workspaces\curator_a\responses\<topic>_response.json" `
+  --output <new_curator_a_submission.json>
+```
+
+Repeat for both Topics and both slots. Import reconstructs the committed
+manifest → task → visible roster → private map → U80 → canonical entity →
+title/abstract source snapshot chain before decoding submitted opaque IDs. The
+workflow then provides `compare`, `build-adjudication-task`,
+`import-adjudication`, and `build-final-selection`; human operators edit only
+external response JSON and never Python or committed package files.
 
 ## 5. Overlap and adjudication protocol
 
 Original Curator A and Curator B imports are immutable and remain separately
-hash-bound. The comparison artifact records both original selected sets,
-intersection, symmetric difference, overlap count, and Jaccard.
+hash-bound to their tasks, maps, source snapshots, and preparation package. The
+comparison artifact hash-binds both full submissions and records both original
+selected sets, intersection, symmetric difference, overlap count, and Jaccard.
 
 ```text
 overlap < 4/8
@@ -142,11 +192,13 @@ overlap >= 4/8
   from the symmetric difference
 ```
 
-The adjudicator task does not reopen the full U80 and does not reveal which
-curator selected which symmetric-difference item. The final human selection is
-exactly the intersection plus the validated additions. Fixture comparisons can
-only produce a fixture generic selection; they cannot masquerade as the formal
-human arm.
+The adjudicator task hash-binds the comparison and exposes only a reconstructed
+symmetric-difference roster. It does not reopen the full U80 and does not reveal
+which curator selected which item. Its imported response binds the task,
+comparison, both original submissions, preparation package, and mapping. Final
+selection revalidates that complete chain and is exactly the intersection plus
+the validated additions. Fixture comparisons can only produce a fixture
+generic selection; they cannot masquerade as the formal human arm.
 
 ## 6. Frozen context policy
 
@@ -171,6 +223,9 @@ The policy is:
 - maximum rendered context: 2400 counting tokens; overflow fails closed;
 - no global tail truncation and no padding;
 - separator: `\n\n---\n\n` and a frozen field template;
+- generator-visible blocks contain only `Title: ...` and `Abstract: ...`;
+  canonical IDs, method, condition, rank, and score remain metadata and never
+  enter `exact_rendered_context`;
 - every paper records its exposed title/abstract, source snapshot SHA-256,
   truncation flags, and actual counting-token count;
 - the artifact stores exact rendered UTF-8 text, rendered SHA-256, actual total
@@ -200,9 +255,12 @@ selection rank/priority, score, repeat number, and model do not enter the key.
 Therefore the same selected set yields the same rendered order regardless of
 whether it came from BM25, human curation, or a fixture.
 
-The pairwise validator requires equal Pilot, Topic, Question, U80, K, config,
-context policy, tokenizer, representation, ordering algorithm/seed, and fixture
-status. It allows only the treatment variable (selected canonical set) and the
+The generic pairwise helper requires equal Pilot, Topic, Question, U80, K,
+config, context policy, tokenizer, representation, ordering algorithm/seed, and
+fixture status. The formal Pilot validator additionally requires the method
+roster to be exactly one `pilot_bm25_lexical_v1` artifact and one
+`pilot_dual_curator_v1` artifact; BM25/BM25, Human/Human, and fixtures fail
+closed. It allows only the treatment variable (selected canonical set) and the
 natural content consequences (actual token count and per-paper truncation). It
 records signed and absolute token deltas and never pads to equality.
 
@@ -220,6 +278,7 @@ python -m app.validate_pilot_matched_context_pair `
   --left-context <bm25_context.json> `
   --right-selection <human_selection.json> `
   --right-context <human_context.json> `
+  --human-selection-freeze <human_selection.json> `
   --report <new_pair_report.json>
 ```
 
@@ -228,31 +287,36 @@ python -m app.validate_pilot_matched_context_pair `
 1. **People needed:** two independent curators now. A third adjudicator is
    needed later only for a Topic whose overlap is 4–7; overlap below 4 stops the
    Topic workflow.
-2. **Files each person opens:** first
-   `selection-preparation-v1/CURATOR_INSTRUCTIONS.md`, then their two readable
-   files under `curator_tasks/curator_a/` or `curator_tasks/curator_b/`, and the
-   two matching JSON files under `responses/<their slot>/`.
-3. **What each person does:** review all 80 candidates for each Topic,
+2. **Coordinator action:** keep the committed `selection-preparation-v1/`
+   package read-only. Run the export command twice into repository-external
+   directories. Give Curator A only the `curator_a` export and Curator B only
+   the `curator_b` export. Never share `coordinator/`.
+3. **Files each person opens:** their exported `CURATOR_INSTRUCTIONS.md`, both
+   Markdown files under `tasks/`, and both blank JSON files under `responses/`.
+4. **What each person does:** review all 80 candidates for each Topic,
    independently choose exactly eight, enter the eight opaque candidate IDs and
    one short reason each, record time, and return the completed response JSONs.
-4. **What they can see:** frozen Question and Topic guidance plus opaque ID,
+5. **What they can see:** frozen Question and Topic guidance plus opaque ID,
    title, and abstract for each candidate.
-5. **What they cannot see:** `coordinator/`, canonical IDs, BM25 output, source
-   rank/score, query support, citations, authors, venue, or the other curator's
-   work. No external lookup is allowed.
-6. **How many to select:** exactly 8 of 80 for each Topic; each person completes
+6. **What they cannot see:** the coordinator mapping, canonical IDs, BM25
+   output, source rank/score, query support, citations, authors, venue, or the
+   other curator's work. They must not click embedded URLs, search DOI/title, or
+   use any other external lookup.
+7. **How many to select:** exactly 8 of 80 for each Topic; each person completes
    both Topics.
-7. **Work estimate:** plan about 2–3 hours per Topic, or 4–6 hours per curator;
+8. **Work estimate:** plan about 2–3 hours per Topic, or 4–6 hours per curator;
    record actual elapsed time.
-8. **Files produced:** initially four completed response JSONs (two people × two
-   Topics). The tools then preserve two original imports and one overlap report
-   per Topic; if required, they create one restricted adjudication task/response
-   and then one final human selection per Topic.
-9. **What to return to Codex:** only the four completed files under
-   `responses/curator_a/` and `responses/curator_b/`. Do not return edited task
-   files or change Python.
-10. **What Codex does next:** validate and import the four responses, calculate
-    overlap/Jaccard, stop if overlap is below four, or prepare restricted third-
-    person adjudication when needed. Only after final human selections are
-    frozen will Codex execute formal BM25, build the two real matched contexts
-    per Topic, and stop before LLM generation until that next stage is approved.
+9. **Files produced:** initially four completed external response JSONs (two
+   people × two Topics). The tools then preserve two original imports and one
+   overlap report per Topic; if required, they create one restricted
+   adjudication task/response and then one final human selection per Topic.
+10. **What to return to Codex:** only the four completed response JSONs from the
+    two external bundles. Do not return edited task files, the bundle manifest,
+    or any coordinator mapping; do not change Python.
+11. **What Codex does next:** validate each response against the immutable
+    committed package, import and preserve the four originals, calculate
+    overlap/Jaccard, stop if overlap is below four, or prepare restricted
+    third-person adjudication when needed. Only after final human selections
+    are frozen will Codex execute formal BM25, build the two real matched
+    contexts per Topic, and stop before LLM generation until that next stage is
+    approved.

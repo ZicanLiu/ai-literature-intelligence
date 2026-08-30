@@ -13,10 +13,7 @@ from src.pilot_selection import build_curator_preparation_package
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = (
-    PROJECT_ROOT
-    / "configs"
-    / "pilot"
-    / "srtp_pilot_v0.2_selection_context_v1.json"
+    PROJECT_ROOT / "configs" / "pilot" / "srtp_pilot_v0.2_selection_context_v1.json"
 )
 
 
@@ -29,6 +26,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--replace-not-started",
+        action="store_true",
+        help="Safely replace only an intact prepared_not_started package.",
+    )
     return parser
 
 
@@ -39,6 +41,7 @@ def main(argv: list[str] | None = None) -> int:
             config_path=args.config,
             output_dir=args.output_dir,
             project_root=PROJECT_ROOT,
+            replace_not_started=args.replace_not_started,
         )
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (OSError, RuntimeError, subprocess.SubprocessError, ValueError) as error:

@@ -12,10 +12,7 @@ from src.w6_contracts import load_json_object
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = (
-    PROJECT_ROOT
-    / "configs"
-    / "pilot"
-    / "srtp_pilot_v0.2_selection_context_v1.json"
+    PROJECT_ROOT / "configs" / "pilot" / "srtp_pilot_v0.2_selection_context_v1.json"
 )
 
 
@@ -28,6 +25,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--selection", type=Path, required=True)
+    parser.add_argument(
+        "--human-selection-freeze",
+        type=Path,
+        help="Required when validating a formal BM25 selection artifact.",
+    )
     return parser
 
 
@@ -36,7 +38,18 @@ def main(argv: list[str] | None = None) -> int:
     try:
         inputs = load_pilot_selection_inputs(args.config, project_root=PROJECT_ROOT)
         selection = load_json_object(args.selection, label="Pilot selection")
-        validated = validate_selection_artifact(selection, inputs=inputs)
+        human_freeze = (
+            load_json_object(
+                args.human_selection_freeze, label="Human selection freeze"
+            )
+            if args.human_selection_freeze
+            else None
+        )
+        validated = validate_selection_artifact(
+            selection,
+            inputs=inputs,
+            human_selection_freeze=human_freeze,
+        )
     except (OSError, RuntimeError, ValueError) as error:
         print(f"Pilot selection validation FAILED: {error}", file=sys.stderr)
         return 1

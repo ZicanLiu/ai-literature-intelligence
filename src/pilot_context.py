@@ -15,6 +15,8 @@ from typing import Any, Mapping
 
 from src.annotation_tasks import sha256_file
 from src.pilot_selection import (
+    BM25_METHOD_ID,
+    HUMAN_METHOD_ID,
     PILOT_VERSION,
     SCHEMA_VERSION,
     SELECTION_K,
@@ -111,9 +113,7 @@ def truncate_paper_fields(
         exposed_abstract, abstract_truncated = _truncate_to_token_count(
             abstract_value, cap - title_count, policy=policy
         )
-    token_count = count_context_tokens(
-        f"{exposed_title}\n{exposed_abstract}", policy
-    )
+    token_count = count_context_tokens(f"{exposed_title}\n{exposed_abstract}", policy)
     if token_count > cap:
         raise ValueError("per-paper token cap 实现漂移。")
     return {
@@ -165,10 +165,15 @@ def _build_matched_context_payload(
     *,
     inputs: PilotSelectionInputs,
     selection: Mapping[str, Any],
+    human_selection_freeze: Mapping[str, Any] | None,
     created_at: str,
     git_revision: str,
 ) -> dict[str, Any]:
-    validated = validate_selection_artifact(selection, inputs=inputs)
+    validated = validate_selection_artifact(
+        selection,
+        inputs=inputs,
+        human_selection_freeze=human_selection_freeze,
+    )
     topic = topic_config(inputs, validated["topic_id"])
     policy = copy.deepcopy(inputs.config["context_policy"])
     selected_ids = list(validated["selected_canonical_entity_ids"])
@@ -193,10 +198,7 @@ def _build_matched_context_payload(
             source["title"], source["abstract"], policy=policy
         )
         block = policy["field_template"].format(
-            position=position,
-            canonical_entity_id=entity_id,
-            title=exposed["title"],
-            abstract=exposed["abstract"],
+            title=exposed["title"], abstract=exposed["abstract"]
         )
         blocks.append(block)
         snapshots.append(
@@ -260,9 +262,7 @@ def _build_matched_context_payload(
         },
         "context_policy": policy,
         "exact_rendered_context": rendered,
-        "rendered_context_sha256": hashlib.sha256(
-            rendered.encode("utf-8")
-        ).hexdigest(),
+        "rendered_context_sha256": hashlib.sha256(rendered.encode("utf-8")).hexdigest(),
         "actual_total_token_count": total_tokens,
         "created_at": created,
         "provenance": {
@@ -282,9 +282,7 @@ def _build_matched_context_payload(
         CONTEXT_IDENTITY_PREFIX, _context_identity_payload(payload)
     )
     payload["context_identity"] = identity
-    payload["artifact_id"] = (
-        f"srtp_pilot_context_{identity.rsplit(':', 1)[-1][:24]}"
-    )
+    payload["artifact_id"] = f"srtp_pilot_context_{identity.rsplit(':', 1)[-1][:24]}"
     return payload
 
 
@@ -292,6 +290,7 @@ def build_matched_context(
     *,
     inputs: PilotSelectionInputs,
     selection: Mapping[str, Any],
+    human_selection_freeze: Mapping[str, Any] | None = None,
     created_at: str,
     git_revision: str,
 ) -> dict[str, Any]:
@@ -300,10 +299,16 @@ def build_matched_context(
     payload = _build_matched_context_payload(
         inputs=inputs,
         selection=selection,
+        human_selection_freeze=human_selection_freeze,
         created_at=created_at,
         git_revision=git_revision,
     )
-    validate_matched_context(payload, selection=selection, inputs=inputs)
+    validate_matched_context(
+        payload,
+        selection=selection,
+        inputs=inputs,
+        human_selection_freeze=human_selection_freeze,
+    )
     return payload
 
 
@@ -312,6 +317,7 @@ def validate_matched_context(
     *,
     selection: Mapping[str, Any],
     inputs: PilotSelectionInputs,
+    human_selection_freeze: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Reconstruct and compare the complete context artifact fail-closed."""
 
@@ -350,6 +356,7 @@ def validate_matched_context(
     reconstructed = _build_matched_context_payload(
         inputs=inputs,
         selection=selection,
+        human_selection_freeze=human_selection_freeze,
         created_at=artifact.get("created_at"),
         git_revision=provenance.get("git_revision"),
     )
@@ -365,9 +372,7 @@ def validate_matched_context(
         "question_id": artifact["topic"]["question_id"],
         "u80": copy.deepcopy(artifact["u80"]),
         "k": artifact["k"],
-        "ordered_canonical_entity_ids": tuple(
-            artifact["ordered_canonical_entity_ids"]
-        ),
+        "ordered_canonical_entity_ids": tuple(artifact["ordered_canonical_entity_ids"]),
         "context_policy_identity": artifact["context_policy"]["config_identity"],
         "actual_total_token_count": artifact["actual_total_token_count"],
         "is_fixture": artifact["is_fixture"],
@@ -381,11 +386,23 @@ def validate_matched_context_pair(
     left_selection: Mapping[str, Any],
     right_selection: Mapping[str, Any],
     inputs: PilotSelectionInputs,
+    left_human_selection_freeze: Mapping[str, Any] | None = None,
+    right_human_selection_freeze: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Validate BM25/Human fairness while allowing natural content differences."""
 
-    validate_matched_context(left, selection=left_selection, inputs=inputs)
-    validate_matched_context(right, selection=right_selection, inputs=inputs)
+    validate_matched_context(
+        left,
+        selection=left_selection,
+        inputs=inputs,
+        human_selection_freeze=left_human_selection_freeze,
+    )
+    validate_matched_context(
+        right,
+        selection=right_selection,
+        inputs=inputs,
+        human_selection_freeze=right_human_selection_freeze,
+    )
     required_equal = {
         "pilot_version": (left["pilot_version"], right["pilot_version"]),
         "topic": (left["topic"], right["topic"]),
@@ -395,7 +412,9 @@ def validate_matched_context_pair(
         "config": (left["config"], right["config"]),
         "fixture_status": (left["is_fixture"], right["is_fixture"]),
     }
-    mismatches = [name for name, values in required_equal.items() if values[0] != values[1]]
+    mismatches = [
+        name for name, values in required_equal.items() if values[0] != values[1]
+    ]
     if mismatches:
         raise ValueError(
             "matched-context fairness mismatch：" + ", ".join(sorted(mismatches)) + "。"
@@ -448,12 +467,62 @@ def validate_matched_context_pair(
     return report
 
 
+def validate_formal_pair_method_roster(
+    left_method_id: str,
+    right_method_id: str,
+    *,
+    left_is_fixture: bool,
+    right_is_fixture: bool,
+) -> None:
+    if left_is_fixture or right_is_fixture:
+        raise ValueError("formal Pilot pair 不得包含 fixture context。")
+    if {left_method_id, right_method_id} != {BM25_METHOD_ID, HUMAN_METHOD_ID}:
+        raise ValueError(
+            "formal Pilot pair method roster 必须精确为 BM25 Lexical + Dual-Curator。"
+        )
+
+
+def validate_formal_matched_context_pair(
+    left: Mapping[str, Any],
+    right: Mapping[str, Any],
+    *,
+    left_selection: Mapping[str, Any],
+    right_selection: Mapping[str, Any],
+    inputs: PilotSelectionInputs,
+    left_human_selection_freeze: Mapping[str, Any] | None = None,
+    right_human_selection_freeze: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    validate_formal_pair_method_roster(
+        left["selection"]["method_id"],
+        right["selection"]["method_id"],
+        left_is_fixture=bool(left["is_fixture"]),
+        right_is_fixture=bool(right["is_fixture"]),
+    )
+    report = validate_matched_context_pair(
+        left,
+        right,
+        left_selection=left_selection,
+        right_selection=right_selection,
+        inputs=inputs,
+        left_human_selection_freeze=left_human_selection_freeze,
+        right_human_selection_freeze=right_human_selection_freeze,
+    )
+    report["validation_mode"] = "formal_bm25_vs_dual_curator"
+    report["validation_identity"] = deterministic_identity(
+        CONTEXT_PAIR_IDENTITY_PREFIX,
+        {key: value for key, value in report.items() if key != "validation_identity"},
+    )
+    return report
+
+
 __all__ = [
     "build_matched_context",
     "count_context_tokens",
     "neutral_order_key",
     "tokenize_context_text",
     "truncate_paper_fields",
+    "validate_formal_matched_context_pair",
+    "validate_formal_pair_method_roster",
     "validate_matched_context",
     "validate_matched_context_pair",
 ]

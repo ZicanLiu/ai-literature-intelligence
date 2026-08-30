@@ -50,12 +50,14 @@ HUMAN_CONFIG_IDENTITY_PREFIX = "srtp-pilot-dual-curator-config"
 CONTEXT_POLICY_IDENTITY_PREFIX = "srtp-pilot-context-policy"
 SELECTION_IDENTITY_PREFIX = "srtp-pilot-selection"
 CURATOR_TASK_IDENTITY_PREFIX = "srtp-pilot-curator-task"
+CURATOR_ROSTER_IDENTITY_PREFIX = "srtp-pilot-curator-roster"
 CURATOR_MAP_IDENTITY_PREFIX = "srtp-pilot-curator-map"
 CURATOR_SUBMISSION_IDENTITY_PREFIX = "srtp-pilot-curator-submission"
 CURATOR_COMPARISON_IDENTITY_PREFIX = "srtp-pilot-curator-comparison"
 ADJUDICATION_TASK_IDENTITY_PREFIX = "srtp-pilot-adjudication-task"
 ADJUDICATION_SUBMISSION_IDENTITY_PREFIX = "srtp-pilot-adjudication-submission"
 CURATOR_PACKAGE_IDENTITY_PREFIX = "srtp-pilot-curator-preparation"
+CURATOR_EXPORT_IDENTITY_PREFIX = "srtp-pilot-curator-export"
 
 CURATOR_VISIBLE_CANDIDATE_FIELDS = {"candidate_id", "title", "abstract"}
 CURATOR_FORBIDDEN_KEYS = {
@@ -182,6 +184,13 @@ def _require_git_revision(value: Any, label: str) -> str:
     return revision
 
 
+def _require_sha256(value: Any, label: str) -> str:
+    digest = _require_text(value, label)
+    if not re.fullmatch(r"[0-9a-f]{64}", digest):
+        raise ValueError(f"{label} 必须是 64 位 lowercase SHA-256。")
+    return digest
+
+
 def _require_string_list(
     value: Any, label: str, *, count: int | None = None, unique: bool = True
 ) -> list[str]:
@@ -287,7 +296,10 @@ def _validate_config(config: dict[str, Any]) -> None:
         },
         "selection_policy",
     )
-    if _require_int(selection_policy["k_per_topic"], "k_per_topic", minimum=1) != SELECTION_K:
+    if (
+        _require_int(selection_policy["k_per_topic"], "k_per_topic", minimum=1)
+        != SELECTION_K
+    ):
         raise ValueError("Pilot selection K 必须冻结为 8。")
     _require_bool(
         selection_policy["canonical_entity_one_slot"],
@@ -426,10 +438,7 @@ def _validate_config(config: dict[str, Any]) -> None:
     )
     if per_paper_cap != 256 or maximum != 2400:
         raise ValueError("Pilot context token caps drift。")
-    if context["field_template"] != (
-        "[PAPER {position:02d}]\nCanonical ID: {canonical_entity_id}\n"
-        "Title: {title}\nAbstract: {abstract}"
-    ):
+    if context["field_template"] != "Title: {title}\nAbstract: {abstract}":
         raise ValueError("Pilot context field template drift。")
     if context["separator"] != "\n\n---\n\n":
         raise ValueError("Pilot context separator drift。")
@@ -437,9 +446,7 @@ def _validate_config(config: dict[str, Any]) -> None:
         raise ValueError("Pilot context truncation marker drift。")
     if context["truncation_allocation"] != "title_first_then_abstract":
         raise ValueError("Pilot context truncation allocation drift。")
-    _require_bool(
-        context["global_tail_truncation"], False, "global tail truncation"
-    )
+    _require_bool(context["global_tail_truncation"], False, "global tail truncation")
     _require_bool(context["padding"], False, "context padding")
     ordering = _require_mapping(context["ordering"], "context ordering")
     _require_exact_fields(
@@ -531,9 +538,13 @@ def load_pilot_selection_inputs(
 
     foundation = _require_mapping(inputs["foundation_package"], "foundation_package")
     _require_exact_fields(
-        foundation, {"path", "package_identity", "manifest_sha256"}, "foundation_package"
+        foundation,
+        {"path", "package_identity", "manifest_sha256"},
+        "foundation_package",
     )
-    package_dir = _resolve_repo_path(root, foundation["path"], "foundation package path")
+    package_dir = _resolve_repo_path(
+        root, foundation["path"], "foundation package path"
+    )
     manifest_path = package_dir / "manifest.json"
     manifest = load_json_object(manifest_path, label="Pilot foundation manifest")
     if sha256_file(manifest_path) != foundation["manifest_sha256"]:
@@ -565,11 +576,14 @@ def load_pilot_selection_inputs(
     topics_path, topics_payload = load_bound("topic_set", "W6 frozen Topic set")
     if u80.get("u80_identity") != inputs["u80"]["u80_identity"]:
         raise ValueError("Pilot U80 identity drift。")
-    if selection_view.get("view_identity") != inputs["canonical_selection_view"][
-        "view_identity"
-    ]:
+    if (
+        selection_view.get("view_identity")
+        != inputs["canonical_selection_view"]["view_identity"]
+    ):
         raise ValueError("Pilot canonical selection view identity drift。")
-    manifest_files = _require_mapping(manifest.get("files"), "foundation manifest files")
+    manifest_files = _require_mapping(
+        manifest.get("files"), "foundation manifest files"
+    )
     if manifest_files.get(u80_path.name) != sha256_file(u80_path):
         raise ValueError("foundation manifest/U80 hash binding drift。")
     if manifest_files.get(view_path.name) != sha256_file(view_path):
@@ -577,7 +591,9 @@ def load_pilot_selection_inputs(
     if topics_path.name != "topics.json":
         raise ValueError("Pilot topic_set 必须绑定 frozen topics.json。")
 
-    topic_rows = _require_list(topics_payload.get("topics"), "frozen topics", nonempty=True)
+    topic_rows = _require_list(
+        topics_payload.get("topics"), "frozen topics", nonempty=True
+    )
     topics = {
         _require_text(row.get("topic_id"), "frozen topic_id"): row
         for row in topic_rows
@@ -622,7 +638,9 @@ def load_pilot_selection_inputs(
         for entity_id in entity_ids:
             item = view_by_topic_entity.get((topic_id, entity_id))
             if item is None:
-                raise ValueError(f"U80 entity 缺少 canonical selection snapshot：{entity_id}。")
+                raise ValueError(
+                    f"U80 entity 缺少 canonical selection snapshot：{entity_id}。"
+                )
             _require_text(item.get("title"), f"{entity_id} title")
             _require_text(item.get("abstract"), f"{entity_id} abstract")
 
@@ -706,6 +724,7 @@ def build_selection_artifact(
     git_revision: str,
     is_fixture: bool,
     purpose: str,
+    human_selection_freeze: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     topic = topic_config(inputs, topic_id)
     payload: dict[str, Any] = {
@@ -729,7 +748,9 @@ def build_selection_artifact(
             "kind": "pilot_generic_selection_import",
             "created_by": "src.pilot_selection",
             "created_at": created_at,
-            "git_revision": _require_git_revision(git_revision, "selection git_revision"),
+            "git_revision": _require_git_revision(
+                git_revision, "selection git_revision"
+            ),
         },
         "is_fixture": is_fixture,
         "purpose": purpose,
@@ -739,18 +760,79 @@ def build_selection_artifact(
     )
     payload["selection_identity"] = identity
     payload["artifact_id"] = f"srtp_pilot_selection_{identity.rsplit(':', 1)[-1][:24]}"
-    validate_selection_artifact(payload, inputs=inputs)
+    validate_selection_artifact(
+        payload, inputs=inputs, human_selection_freeze=human_selection_freeze
+    )
     return payload
+
+
+def build_human_selection_freeze_reference(
+    human_selection: Mapping[str, Any],
+) -> dict[str, str]:
+    """Build the explicit content-addressed dependency stored by formal BM25."""
+
+    selection = _require_mapping(dict(human_selection), "Human selection freeze")
+    return {
+        "human_selection_artifact_id": _require_text(
+            selection.get("artifact_id"), "Human selection artifact_id"
+        ),
+        "human_selection_identity": _require_text(
+            selection.get("selection_identity"), "Human selection identity"
+        ),
+        "human_selection_sha256": payload_sha256(selection),
+        "human_selection_frozen_at": _require_datetime(
+            selection.get("created_at"), "Human selection frozen_at"
+        ),
+    }
+
+
+def validate_human_selection_freeze_reference(
+    reference: Mapping[str, Any], human_selection: Mapping[str, Any]
+) -> dict[str, str]:
+    """Reject a formal BM25 dependency that does not bind the exact Human artifact."""
+
+    supplied = _require_mapping(dict(reference), "BM25 Human-freeze reference")
+    _require_exact_fields(
+        supplied,
+        {
+            "human_selection_artifact_id",
+            "human_selection_identity",
+            "human_selection_sha256",
+            "human_selection_frozen_at",
+        },
+        "BM25 Human-freeze reference",
+    )
+    expected = build_human_selection_freeze_reference(human_selection)
+    if supplied != expected:
+        raise ValueError("BM25/Human selection freeze hash binding drift。")
+    return expected
 
 
 def build_bm25_selection(
     inputs: PilotSelectionInputs,
     *,
     topic_id: str,
+    human_selection_freeze: Mapping[str, Any],
     created_at: str,
     git_revision: str,
 ) -> dict[str, Any]:
     topic = topic_config(inputs, topic_id)
+    validated_human = validate_selection_artifact(human_selection_freeze, inputs=inputs)
+    if (
+        validated_human["method_id"] != HUMAN_METHOD_ID
+        or validated_human["is_fixture"]
+        or validated_human["topic_id"] != topic_id
+    ):
+        raise ValueError(
+            "formal BM25 requires same-Topic frozen non-fixture Dual-Curator selection。"
+        )
+    freeze_reference = build_human_selection_freeze_reference(human_selection_freeze)
+    human_frozen_at = freeze_reference["human_selection_frozen_at"]
+    bm25_created_at = _require_datetime(created_at, "BM25 created_at")
+    if datetime.fromisoformat(
+        bm25_created_at.replace("Z", "+00:00")
+    ) < datetime.fromisoformat(human_frozen_at.replace("Z", "+00:00")):
+        raise ValueError("BM25 created_at 不得早于 Human selection freeze。")
     candidates = {
         entity_id: inputs.view_by_topic_entity[(topic_id, entity_id)]
         for entity_id in inputs.u80_by_topic[topic_id]
@@ -782,16 +864,21 @@ def build_bm25_selection(
             "corpus_document_count": len(candidates),
             "ranking": ranked,
             "bm25_config_identity": bm25["config_identity"],
+            "human_selection_freeze": freeze_reference,
         },
         created_at=created_at,
         git_revision=git_revision,
         is_fixture=False,
         purpose="formal_bm25_condition_after_human_selection_freeze",
+        human_selection_freeze=human_selection_freeze,
     )
 
 
 def validate_selection_artifact(
-    payload: Mapping[str, Any], *, inputs: PilotSelectionInputs
+    payload: Mapping[str, Any],
+    *,
+    inputs: PilotSelectionInputs,
+    human_selection_freeze: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     selection = _require_mapping(dict(payload), "selection artifact")
     _require_exact_fields(
@@ -846,11 +933,15 @@ def validate_selection_artifact(
     allowed = set(inputs.u80_by_topic[topic["topic_id"]])
     unknown = sorted(set(selected) - allowed)
     if unknown:
-        raise ValueError("selection 含 U80 外 canonical ID：" + ", ".join(unknown) + "。")
+        raise ValueError(
+            "selection 含 U80 外 canonical ID：" + ", ".join(unknown) + "。"
+        )
     _require_datetime(selection["created_at"], "selection created_at")
     provenance = _require_mapping(selection["provenance"], "selection provenance")
     _require_exact_fields(
-        provenance, {"kind", "created_by", "created_at", "git_revision"}, "selection provenance"
+        provenance,
+        {"kind", "created_by", "created_at", "git_revision"},
+        "selection provenance",
     )
     _require_text(provenance["kind"], "selection provenance kind")
     _require_text(provenance["created_by"], "selection provenance created_by")
@@ -885,6 +976,8 @@ def validate_selection_artifact(
             bm25,
             inputs=inputs,
             topic_id=topic["topic_id"],
+            bm25_created_at=selection["created_at"],
+            human_selection_freeze=human_selection_freeze,
         )
     elif method_id == HUMAN_METHOD_ID:
         if is_fixture:
@@ -899,7 +992,9 @@ def validate_selection_artifact(
         _validate_human_selection_provenance(details, selected)
     elif method_id == FIXTURE_METHOD_ID:
         if not is_fixture or purpose != "plumbing_only":
-            raise ValueError("mock selection 只能用于 is_fixture=true / plumbing_only。")
+            raise ValueError(
+                "mock selection 只能用于 is_fixture=true / plumbing_only。"
+            )
         if method["family"] != "testing_only" or method["config_identity"] != "fixture":
             raise ValueError("mock selection method fields drift。")
         if set(details) != {"fixture_strategy"}:
@@ -941,6 +1036,8 @@ def _validate_bm25_provenance(
     *,
     inputs: PilotSelectionInputs,
     topic_id: str,
+    bm25_created_at: str,
+    human_selection_freeze: Mapping[str, Any] | None,
 ) -> None:
     _require_exact_fields(
         details,
@@ -954,6 +1051,7 @@ def _validate_bm25_provenance(
             "corpus_document_count",
             "ranking",
             "bm25_config_identity",
+            "human_selection_freeze",
         },
         "BM25 provenance",
     )
@@ -966,6 +1064,26 @@ def _validate_bm25_provenance(
         raise ValueError("BM25 corpus 必须是完整 U80。")
     if details["bm25_config_identity"] != bm25["config_identity"]:
         raise ValueError("BM25 config identity drift。")
+    if human_selection_freeze is None:
+        raise ValueError("BM25 validation 缺少 frozen Human selection artifact。")
+    validated_human = validate_selection_artifact(human_selection_freeze, inputs=inputs)
+    if (
+        validated_human["method_id"] != HUMAN_METHOD_ID
+        or validated_human["is_fixture"]
+        or validated_human["topic_id"] != topic_id
+    ):
+        raise ValueError("BM25 Human-freeze artifact method/topic/fixture drift。")
+    expected_freeze = validate_human_selection_freeze_reference(
+        details["human_selection_freeze"], human_selection_freeze
+    )
+    if datetime.fromisoformat(
+        _require_datetime(bm25_created_at, "BM25 created_at").replace("Z", "+00:00")
+    ) < datetime.fromisoformat(
+        _require_datetime(
+            expected_freeze["human_selection_frozen_at"], "Human frozen_at"
+        ).replace("Z", "+00:00")
+    ):
+        raise ValueError("BM25 artifact 早于 Human selection freeze。")
     ranking = _require_list(details["ranking"], "BM25 ranking", nonempty=True)
     if len(ranking) != SELECTION_K:
         raise ValueError("BM25 selection ranking 必须精确为 Top-8。")
@@ -996,7 +1114,9 @@ def _validate_bm25_provenance(
         b=float(bm25["b"]),
     )
     if ranking != expected_ranking:
-        raise ValueError("BM25 ranking 与 frozen U80 deterministic reconstruction 不一致。")
+        raise ValueError(
+            "BM25 ranking 与 frozen U80 deterministic reconstruction 不一致。"
+        )
 
 
 def _validate_human_selection_provenance(
@@ -1034,7 +1154,8 @@ def _validate_human_selection_provenance(
         details["intersection_canonical_entity_ids"], "human intersection"
     )
     symmetric = _require_string_list(
-        details["symmetric_difference_canonical_entity_ids"], "human symmetric difference"
+        details["symmetric_difference_canonical_entity_ids"],
+        "human symmetric difference",
     )
     if details["overlap_count"] != len(intersection) or len(intersection) < 4:
         raise ValueError("final human selection 要求 curator overlap >= 4。")
@@ -1071,28 +1192,98 @@ def _validate_human_selection_provenance(
             raise ValueError("adjudication SHA-256 非法。")
         _require_text(adjudication["adjudicator_id"], "adjudicator_id")
     elif any(
-        adjudication[key] is not None for key in ("artifact_id", "sha256", "adjudicator_id")
+        adjudication[key] is not None
+        for key in ("artifact_id", "sha256", "adjudicator_id")
     ):
         raise ValueError("full intersection 不应伪造 adjudication。")
     if set(selected) != set(intersection) | set(additions):
-        raise ValueError("final human selection 不等于 intersection + adjudicated additions。")
+        raise ValueError(
+            "final human selection 不等于 intersection + adjudicated additions。"
+        )
 
 
-def _opaque_candidate_id(inputs: PilotSelectionInputs, topic_id: str, entity_id: str) -> str:
+def _opaque_candidate_id(
+    inputs: PilotSelectionInputs,
+    topic_id: str,
+    curator_slot: str,
+    entity_id: str,
+) -> str:
     human = inputs.config["dual_curator"]
     digest = hashlib.sha256(
         "|".join(
-            [human["opaque_candidate_seed"], topic_id, entity_id]
+            [human["opaque_candidate_seed"], curator_slot, topic_id, entity_id]
         ).encode("utf-8")
     ).hexdigest()
     return f"candidate_{digest[:16]}"
 
 
 def _candidate_order_key(
-    inputs: PilotSelectionInputs, topic_id: str, entity_id: str
+    inputs: PilotSelectionInputs,
+    topic_id: str,
+    curator_slot: str,
+    entity_id: str,
 ) -> tuple[str, str]:
     seed = inputs.config["dual_curator"]["candidate_order_seed"]
-    return hashlib.sha256(f"{seed}|{topic_id}|{entity_id}".encode("utf-8")).hexdigest(), entity_id
+    return (
+        hashlib.sha256(
+            f"{seed}|{curator_slot}|{topic_id}|{entity_id}".encode("utf-8")
+        ).hexdigest(),
+        entity_id,
+    )
+
+
+def _source_snapshot_payload(item: Mapping[str, Any], entity_id: str) -> dict[str, str]:
+    return {
+        "canonical_entity_id": entity_id,
+        "source_selection_item_id": _require_text(
+            item.get("selection_item_id"), "source selection_item_id"
+        ),
+        "title": _require_text(item.get("title"), "source title"),
+        "abstract": _require_text(item.get("abstract"), "source abstract"),
+    }
+
+
+def _expected_curator_roster(
+    inputs: PilotSelectionInputs, *, topic_id: str, curator_slot: str
+) -> tuple[list[dict[str, str]], list[dict[str, str]], str]:
+    ordered_entities = sorted(
+        inputs.u80_by_topic[topic_id],
+        key=lambda entity_id: _candidate_order_key(
+            inputs, topic_id, curator_slot, entity_id
+        ),
+    )
+    candidates: list[dict[str, str]] = []
+    mapping_rows: list[dict[str, str]] = []
+    for entity_id in ordered_entities:
+        item = inputs.view_by_topic_entity[(topic_id, entity_id)]
+        candidate_id = _opaque_candidate_id(inputs, topic_id, curator_slot, entity_id)
+        snapshot = _source_snapshot_payload(item, entity_id)
+        candidates.append(
+            {
+                "candidate_id": candidate_id,
+                "title": snapshot["title"],
+                "abstract": snapshot["abstract"],
+            }
+        )
+        mapping_rows.append(
+            {
+                "candidate_id": candidate_id,
+                "canonical_entity_id": entity_id,
+                "source_selection_item_id": snapshot["source_selection_item_id"],
+                "source_snapshot_sha256": payload_sha256(snapshot),
+            }
+        )
+    roster_identity = deterministic_identity(
+        CURATOR_ROSTER_IDENTITY_PREFIX,
+        {
+            "pilot_version": PILOT_VERSION,
+            "topic_id": topic_id,
+            "curator_slot": curator_slot,
+            "u80": _u80_reference(inputs),
+            "candidates": candidates,
+        },
+    )
+    return candidates, mapping_rows, roster_identity
 
 
 def _topic_guidance(inputs: PilotSelectionInputs, topic_id: str) -> dict[str, Any]:
@@ -1108,7 +1299,9 @@ def _topic_guidance(inputs: PilotSelectionInputs, topic_id: str) -> dict[str, An
     }
 
 
-def _task_identity_payload(payload: Mapping[str, Any], identity_field: str) -> dict[str, Any]:
+def _task_identity_payload(
+    payload: Mapping[str, Any], identity_field: str
+) -> dict[str, Any]:
     body = copy.deepcopy(dict(payload))
     body.pop("artifact_id", None)
     body.pop(identity_field, None)
@@ -1127,33 +1320,9 @@ def build_curator_task_and_map(
     if curator_slot not in CURATOR_SLOTS:
         raise ValueError("curator_slot 必须是 curator_a 或 curator_b。")
     topic = topic_config(inputs, topic_id)
-    ordered_entities = sorted(
-        inputs.u80_by_topic[topic_id],
-        key=lambda entity_id: _candidate_order_key(inputs, topic_id, entity_id),
+    candidates, mapping_rows, roster_identity = _expected_curator_roster(
+        inputs, topic_id=topic_id, curator_slot=curator_slot
     )
-    candidates = []
-    mapping_rows = []
-    for entity_id in ordered_entities:
-        item = inputs.view_by_topic_entity[(topic_id, entity_id)]
-        candidate_id = _opaque_candidate_id(inputs, topic_id, entity_id)
-        snapshot = {
-            "canonical_entity_id": entity_id,
-            "title": item["title"],
-            "abstract": item["abstract"],
-        }
-        candidates.append(
-            {"candidate_id": candidate_id, "title": item["title"], "abstract": item["abstract"]}
-        )
-        mapping_rows.append(
-            {
-                "candidate_id": candidate_id,
-                "canonical_entity_id": entity_id,
-                "source_selection_item_id": item["selection_item_id"],
-                "source_snapshot_sha256": deterministic_identity(
-                    "srtp-pilot-source-snapshot", snapshot
-                ).rsplit(":", 1)[-1],
-            }
-        )
     task: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "artifact_type": "srtp_pilot_curator_task",
@@ -1162,6 +1331,7 @@ def build_curator_task_and_map(
         "pilot_version": PILOT_VERSION,
         "task_id": f"pilot_{curator_slot}_{topic['question_id']}",
         "curator_slot": curator_slot,
+        "candidate_roster_identity": roster_identity,
         "topic": {
             "topic_id": topic_id,
             "question_id": topic["question_id"],
@@ -1202,7 +1372,9 @@ def build_curator_task_and_map(
         CURATOR_TASK_IDENTITY_PREFIX, _task_identity_payload(task, "task_identity")
     )
     task["task_identity"] = task_identity
-    task["artifact_id"] = f"srtp_pilot_curator_task_{task_identity.rsplit(':', 1)[-1][:24]}"
+    task["artifact_id"] = (
+        f"srtp_pilot_curator_task_{task_identity.rsplit(':', 1)[-1][:24]}"
+    )
 
     mapping: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -1218,6 +1390,7 @@ def build_curator_task_and_map(
         },
         "topic_id": topic_id,
         "u80": _u80_reference(inputs),
+        "candidate_roster_identity": roster_identity,
         "candidate_map": mapping_rows,
         "access_policy": "coordinator_private_do_not_share_with_curators",
         "created_at": created_at,
@@ -1228,7 +1401,9 @@ def build_curator_task_and_map(
         CURATOR_MAP_IDENTITY_PREFIX, _task_identity_payload(mapping, "map_identity")
     )
     mapping["map_identity"] = map_identity
-    mapping["artifact_id"] = f"srtp_pilot_curator_map_{map_identity.rsplit(':', 1)[-1][:24]}"
+    mapping["artifact_id"] = (
+        f"srtp_pilot_curator_map_{map_identity.rsplit(':', 1)[-1][:24]}"
+    )
     validate_curator_task(task, mapping=mapping, inputs=inputs)
     return task, mapping
 
@@ -1266,6 +1441,7 @@ def validate_curator_task(
             "pilot_version",
             "task_id",
             "curator_slot",
+            "candidate_roster_identity",
             "topic",
             "u80",
             "selection_policy",
@@ -1287,9 +1463,7 @@ def validate_curator_task(
     if task.get("curator_slot") not in CURATOR_SLOTS:
         raise ValueError("curator task slot drift。")
     expected_purpose = (
-        "plumbing_only"
-        if task["is_fixture"]
-        else "future_independent_human_selection"
+        "plumbing_only" if task["is_fixture"] else "future_independent_human_selection"
     )
     if task.get("purpose") != expected_purpose:
         raise ValueError("curator task purpose/fixture separation drift。")
@@ -1312,12 +1486,24 @@ def validate_curator_task(
         raise ValueError("curator task question identity drift。")
     if topic.get("research_question") != expected_topic["research_question"]:
         raise ValueError("curator task research question drift。")
-    if topic.get("research_question_identity") != expected_topic["research_question_identity"]:
+    if (
+        topic.get("research_question_identity")
+        != expected_topic["research_question_identity"]
+    ):
         raise ValueError("curator task research question hash drift。")
     if topic.get("guidance") != _topic_guidance(inputs, expected_topic["topic_id"]):
         raise ValueError("curator task frozen guidance drift。")
     if task.get("u80") != _u80_reference(inputs):
         raise ValueError("curator task U80 binding drift。")
+    expected_candidates, expected_rows, expected_roster_identity = (
+        _expected_curator_roster(
+            inputs,
+            topic_id=topic["topic_id"],
+            curator_slot=task["curator_slot"],
+        )
+    )
+    if task.get("candidate_roster_identity") != expected_roster_identity:
+        raise ValueError("curator candidate roster identity drift。")
     selection_policy = _require_mapping(
         task.get("selection_policy"), "curator selection policy"
     )
@@ -1329,22 +1515,34 @@ def validate_curator_task(
         "reason_requirement": "one_short_reason_per_selected_candidate",
     }:
         raise ValueError("curator task selection policy drift。")
-    candidates = _require_list(task.get("candidates"), "curator candidates", nonempty=True)
+    candidates = _require_list(
+        task.get("candidates"), "curator candidates", nonempty=True
+    )
     if len(candidates) != U80_COUNT:
         raise ValueError("curator task 必须包含完整 80 candidates。")
+    if candidates != expected_candidates:
+        raise ValueError(
+            "curator-visible candidate roster/order/content 与 frozen source drift。"
+        )
     candidate_ids = []
     for raw in candidates:
         candidate = _require_mapping(raw, "curator candidate")
         if set(candidate) != CURATOR_VISIBLE_CANDIDATE_FIELDS:
-            raise ValueError("curator candidate 暴露字段超出 candidate_id/title/abstract。")
-        candidate_ids.append(_require_text(candidate["candidate_id"], "opaque candidate_id"))
+            raise ValueError(
+                "curator candidate 暴露字段超出 candidate_id/title/abstract。"
+            )
+        candidate_ids.append(
+            _require_text(candidate["candidate_id"], "opaque candidate_id")
+        )
         _require_text(candidate["title"], "curator candidate title")
         _require_text(candidate["abstract"], "curator candidate abstract")
     if len(candidate_ids) != len(set(candidate_ids)):
         raise ValueError("curator opaque candidate IDs 重复。")
     forbidden = _find_forbidden_task_keys({"candidates": candidates})
     if forbidden:
-        raise ValueError("curator task 泄漏 forbidden candidate fields：" + ", ".join(forbidden))
+        raise ValueError(
+            "curator task 泄漏 forbidden candidate fields：" + ", ".join(forbidden)
+        )
     blindness = _require_mapping(task.get("blindness"), "task blindness")
     _require_exact_fields(
         blindness,
@@ -1366,7 +1564,10 @@ def validate_curator_task(
         raise ValueError("curator task 不得声明已生成 BM25 output。")
     if blindness.get("other_curator_submission_visible") is not False:
         raise ValueError("curator task 不得暴露另一 curator submission。")
-    if blindness.get("authors_hidden") is not True or blindness.get("venue_hidden") is not True:
+    if (
+        blindness.get("authors_hidden") is not True
+        or blindness.get("venue_hidden") is not True
+    ):
         raise ValueError("curator task 必须隐藏 authors/venue。")
     expected_task_identity = deterministic_identity(
         CURATOR_TASK_IDENTITY_PREFIX, _task_identity_payload(task, "task_identity")
@@ -1394,6 +1595,7 @@ def validate_curator_task(
             "task",
             "topic_id",
             "u80",
+            "candidate_roster_identity",
             "candidate_map",
             "access_policy",
             "created_at",
@@ -1408,8 +1610,13 @@ def validate_curator_task(
         raise ValueError("candidate map/task fixture status drift。")
     if mapping.get("access_policy") != "coordinator_private_do_not_share_with_curators":
         raise ValueError("candidate map access policy drift。")
-    if mapping.get("u80") != _u80_reference(inputs) or mapping.get("topic_id") != topic["topic_id"]:
+    if (
+        mapping.get("u80") != _u80_reference(inputs)
+        or mapping.get("topic_id") != topic["topic_id"]
+    ):
         raise ValueError("candidate map Topic/U80 binding drift。")
+    if mapping.get("candidate_roster_identity") != expected_roster_identity:
+        raise ValueError("candidate map/visible roster identity drift。")
     if mapping.get("task") != {
         "task_id": task["task_id"],
         "artifact_id": task["artifact_id"],
@@ -1417,7 +1624,9 @@ def validate_curator_task(
         "sha256": payload_sha256(task),
     }:
         raise ValueError("candidate map/task binding drift。")
-    rows = _require_list(mapping.get("candidate_map"), "candidate map rows", nonempty=True)
+    rows = _require_list(
+        mapping.get("candidate_map"), "candidate map rows", nonempty=True
+    )
     for raw in rows:
         row = _require_mapping(raw, "candidate map row")
         _require_exact_fields(
@@ -1429,6 +1638,10 @@ def validate_curator_task(
                 "source_snapshot_sha256",
             },
             "candidate map row",
+        )
+    if rows != expected_rows:
+        raise ValueError(
+            "candidate map opaque→canonical/source snapshot reconstruction drift。"
         )
     mapped_ids = _require_string_list(
         [row.get("candidate_id") for row in rows if isinstance(row, dict)],
@@ -1449,9 +1662,10 @@ def validate_curator_task(
     )
     if mapping.get("map_identity") != expected_map_identity:
         raise ValueError("candidate map identity drift。")
-    if mapping.get("created_at") != task["created_at"] or mapping.get(
-        "provenance"
-    ) != task["provenance"]:
+    if (
+        mapping.get("created_at") != task["created_at"]
+        or mapping.get("provenance") != task["provenance"]
+    ):
         raise ValueError("candidate map/task provenance drift。")
 
 
@@ -1537,13 +1751,16 @@ def render_curator_task_markdown(task: Mapping[str, Any]) -> str:
 def render_curator_instructions_markdown() -> str:
     return """# SRTP Pilot v0.2 · Independent Curator Instructions
 
-This package prepares, but does not contain, a human selection result.
+The committed preparation package is immutable and read-only. Curators work only
+inside a repository-external exported bundle; this package contains no human
+selection result.
 
 ## Coordinator
 
 1. Assign `curator_a` and `curator_b` to two different people.
-2. Give each person only their matching `curator_tasks/<slot>/` and
-   `responses/<slot>/` files plus this instruction file.
+2. Use `python -m app.export_pilot_curator_bundle` to create one repository-
+   external bundle for each slot. Give each person only their own exported
+   bundle.
 3. Never share the `coordinator/` directory with a curator.
 4. Do not show either curator BM25 output, the other curator's response, OpenAlex
    source rank, query support, citation counts, authors, or venue.
@@ -1554,6 +1771,9 @@ For each of the two Topic Markdown files:
 
 1. Read the frozen Research Question and Topic guidance.
 2. Review all 80 opaque candidates using only title and abstract.
+   If an abstract contains a URL, do not click or open it. Do not search a DOI,
+   title, author, or paper page. Use only the Question, Topic guidance, Title,
+   and Abstract text already present in the exported bundle.
 3. Independently select exactly 8 candidates.
 4. In the matching response JSON, set `status` to `completed`, fill a stable
    `curator_id`, enter the 8 candidate IDs and one short reason for each, and
@@ -1561,16 +1781,19 @@ For each of the two Topic Markdown files:
 5. Keep `external_lookup` false, set
    `independent_submission_acknowledged` true, and record `submitted_at` with a
    timezone.
-6. Return only the two completed response JSON files to the coordinator.
+6. Return only the two completed response JSON files from the external bundle to
+   the coordinator.
 
-Do not edit Python, task JSON, task Markdown, or coordinator mappings. A planning
-estimate is 2–3 hours per Topic (4–6 hours per curator); actual elapsed time must
-be recorded.
+Do not edit the committed preparation package, Python, task Markdown, bundle
+manifest, or coordinator mappings. A planning estimate is 2–3 hours per Topic
+(4–6 hours per curator); actual elapsed time must be recorded.
 """
 
 
 def _candidate_map_index(mapping: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
-    rows = _require_list(mapping.get("candidate_map"), "candidate map rows", nonempty=True)
+    rows = _require_list(
+        mapping.get("candidate_map"), "candidate map rows", nonempty=True
+    )
     index: dict[str, dict[str, Any]] = {}
     for raw in rows:
         row = _require_mapping(raw, "candidate map row")
@@ -1688,7 +1911,10 @@ def validate_completed_curator_response(
     )
     submitted_at = _require_datetime(response["submitted_at"], "submitted_at")
     timing = _validate_human_timing(response["timing"], "curator timing")
-    canonical_ids = [mapping_index[candidate_id]["canonical_entity_id"] for candidate_id in candidate_ids]
+    canonical_ids = [
+        mapping_index[candidate_id]["canonical_entity_id"]
+        for candidate_id in candidate_ids
+    ]
     return {
         "curator_id": curator_id,
         "curator_slot": response["curator_slot"],
@@ -1703,26 +1929,145 @@ def validate_completed_curator_response(
     }
 
 
+def _preparation_package_reference(
+    manifest: Mapping[str, Any], manifest_sha256: str
+) -> dict[str, str]:
+    return {
+        "artifact_id": _require_text(
+            manifest.get("artifact_id"), "preparation artifact_id"
+        ),
+        "package_identity": _require_text(
+            manifest.get("package_identity"), "preparation package_identity"
+        ),
+        "manifest_sha256": _require_sha256(
+            manifest_sha256, "preparation manifest SHA-256"
+        ),
+    }
+
+
+def _manifest_task_summary(
+    manifest: Mapping[str, Any], *, curator_slot: str, task_id: str
+) -> dict[str, Any]:
+    matches = [
+        _require_mapping(row, "preparation task summary")
+        for row in _require_list(manifest.get("tasks"), "preparation manifest tasks")
+        if isinstance(row, dict)
+        and row.get("curator_slot") == curator_slot
+        and row.get("task_artifact_id") is not None
+    ]
+    for row in matches:
+        if row.get("task_artifact_id") and row.get("task_identity"):
+            expected_task_id = f"pilot_{curator_slot}_{row.get('question_id')}"
+            if expected_task_id == task_id:
+                return row
+    raise ValueError("response task/slot 不属于 trusted preparation manifest。")
+
+
+def validate_curator_import_chain(
+    *,
+    manifest: Mapping[str, Any],
+    manifest_sha256: str,
+    task: Mapping[str, Any],
+    mapping: Mapping[str, Any],
+    inputs: PilotSelectionInputs,
+    expected_curator_slot: str,
+) -> dict[str, Any]:
+    """Close manifest → task → visible roster → map → U80/source snapshot."""
+
+    if payload_sha256(manifest) != _require_sha256(
+        manifest_sha256, "preparation manifest SHA-256"
+    ):
+        raise ValueError("preparation manifest content/SHA-256 drift。")
+    manifest_provenance = _require_mapping(
+        manifest.get("provenance"), "preparation manifest provenance"
+    )
+    is_fixture = _require_bool(
+        manifest.get("is_fixture"), None, "preparation manifest is_fixture"
+    )
+    _, expected_manifest = assemble_curator_preparation_payloads(
+        inputs,
+        created_at=manifest.get("created_at"),
+        git_revision=manifest_provenance.get("git_revision"),
+        is_fixture=is_fixture,
+    )
+    if dict(manifest) != expected_manifest:
+        raise ValueError("preparation manifest deterministic reconstruction drift。")
+    if manifest.get("pilot_version") != PILOT_VERSION:
+        raise ValueError("preparation manifest Pilot version drift。")
+    if manifest.get("u80") != _u80_reference(inputs):
+        raise ValueError("preparation manifest U80 identity/hash drift。")
+    if expected_curator_slot not in CURATOR_SLOTS:
+        raise ValueError("expected curator slot 非法。")
+    if task.get("curator_slot") != expected_curator_slot:
+        raise ValueError("cross-slot response/task import 被拒绝。")
+    validate_curator_task(task, mapping=mapping, inputs=inputs)
+    summary = _manifest_task_summary(
+        manifest,
+        curator_slot=expected_curator_slot,
+        task_id=_require_text(task.get("task_id"), "curator task_id"),
+    )
+    expected_summary_fields = {
+        "curator_slot": expected_curator_slot,
+        "topic_id": task["topic"]["topic_id"],
+        "question_id": task["topic"]["question_id"],
+        "task_artifact_id": task["artifact_id"],
+        "task_identity": task["task_identity"],
+        "task_sha256": payload_sha256(task),
+        "candidate_roster_identity": task["candidate_roster_identity"],
+        "map_artifact_id": mapping["artifact_id"],
+        "map_identity": mapping["map_identity"],
+        "map_sha256": payload_sha256(mapping),
+    }
+    for key, expected in expected_summary_fields.items():
+        if summary.get(key) != expected:
+            raise ValueError(f"preparation manifest task closure drift：{key}。")
+    package_reference = _preparation_package_reference(manifest, manifest_sha256)
+    return {
+        "preparation_package": package_reference,
+        "topic_id": task["topic"]["topic_id"],
+        "question_id": task["topic"]["question_id"],
+        "candidate_roster_identity": task["candidate_roster_identity"],
+        "task_sha256": payload_sha256(task),
+        "map_sha256": payload_sha256(mapping),
+    }
+
+
 def import_curator_submission(
     form: Mapping[str, Any],
     *,
     task: Mapping[str, Any],
     mapping: Mapping[str, Any],
+    preparation_manifest: Mapping[str, Any],
+    preparation_manifest_sha256: str,
+    inputs: PilotSelectionInputs,
+    expected_curator_slot: str,
     imported_at: str,
     git_revision: str,
 ) -> dict[str, Any]:
+    closure = validate_curator_import_chain(
+        manifest=preparation_manifest,
+        manifest_sha256=preparation_manifest_sha256,
+        task=task,
+        mapping=mapping,
+        inputs=inputs,
+        expected_curator_slot=expected_curator_slot,
+    )
     validated = validate_completed_curator_response(form, task=task, mapping=mapping)
+    if validated["curator_slot"] != expected_curator_slot:
+        raise ValueError("cross-slot curator response import 被拒绝。")
     payload: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "artifact_type": "srtp_pilot_curator_submission",
         "artifact_id": "pending",
         "submission_identity": "pending",
         "pilot_version": PILOT_VERSION,
+        "preparation_package": closure["preparation_package"],
         "task": {
             "task_id": task["task_id"],
             "artifact_id": task["artifact_id"],
             "task_identity": task["task_identity"],
             "sha256": payload_sha256(task),
+            "candidate_roster_identity": task["candidate_roster_identity"],
         },
         "candidate_map": {
             "artifact_id": mapping["artifact_id"],
@@ -1740,7 +2085,9 @@ def import_curator_submission(
                 "selection_reason": validated["reasons"][candidate_id],
             }
             for candidate_id, canonical_id in zip(
-                validated["candidate_ids"], validated["canonical_entity_ids"], strict=True
+                validated["candidate_ids"],
+                validated["canonical_entity_ids"],
+                strict=True,
             )
         ],
         "timing": validated["timing"],
@@ -1754,7 +2101,9 @@ def import_curator_submission(
             "kind": "immutable_human_curator_submission_import",
             "created_by": "src.pilot_selection",
             "created_at": imported_at,
-            "git_revision": _require_git_revision(git_revision, "submission git revision"),
+            "git_revision": _require_git_revision(
+                git_revision, "submission git revision"
+            ),
         },
         "is_fixture": bool(form["is_fixture"]),
     }
@@ -1763,12 +2112,25 @@ def import_curator_submission(
         _task_identity_payload(payload, "submission_identity"),
     )
     payload["submission_identity"] = identity
-    payload["artifact_id"] = f"srtp_pilot_curator_submission_{identity.rsplit(':', 1)[-1][:24]}"
-    validate_curator_submission(payload)
+    payload["artifact_id"] = (
+        f"srtp_pilot_curator_submission_{identity.rsplit(':', 1)[-1][:24]}"
+    )
+    validate_curator_submission(
+        payload,
+        inputs=inputs,
+        preparation_manifest=preparation_manifest,
+        preparation_manifest_sha256=preparation_manifest_sha256,
+    )
     return payload
 
 
-def validate_curator_submission(payload: Mapping[str, Any]) -> dict[str, Any]:
+def validate_curator_submission(
+    payload: Mapping[str, Any],
+    *,
+    inputs: PilotSelectionInputs | None = None,
+    preparation_manifest: Mapping[str, Any] | None = None,
+    preparation_manifest_sha256: str | None = None,
+) -> dict[str, Any]:
     submission = _require_mapping(dict(payload), "curator submission")
     _require_exact_fields(
         submission,
@@ -1778,6 +2140,7 @@ def validate_curator_submission(payload: Mapping[str, Any]) -> dict[str, Any]:
             "artifact_id",
             "submission_identity",
             "pilot_version",
+            "preparation_package",
             "task",
             "candidate_map",
             "topic_id",
@@ -1803,9 +2166,26 @@ def validate_curator_submission(payload: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError("curator submission artifact_type drift。")
     if submission["pilot_version"] != PILOT_VERSION:
         raise ValueError("curator submission Pilot version drift。")
+    preparation = _require_mapping(
+        submission["preparation_package"], "submission preparation package"
+    )
+    _require_exact_fields(
+        preparation,
+        {"artifact_id", "package_identity", "manifest_sha256"},
+        "submission preparation package",
+    )
+    _require_sha256(preparation["manifest_sha256"], "preparation manifest SHA-256")
     task = _require_mapping(submission["task"], "submission task reference")
     _require_exact_fields(
-        task, {"task_id", "artifact_id", "task_identity", "sha256"}, "task reference"
+        task,
+        {
+            "task_id",
+            "artifact_id",
+            "task_identity",
+            "sha256",
+            "candidate_roster_identity",
+        },
+        "task reference",
     )
     candidate_map = _require_mapping(
         submission["candidate_map"], "submission candidate map reference"
@@ -1822,7 +2202,7 @@ def validate_curator_submission(payload: Mapping[str, Any]) -> dict[str, Any]:
         if not re.fullmatch(r"[0-9a-f]{64}", str(value)):
             raise ValueError(f"{label} 非法。")
     _require_text(submission["topic_id"], "submission topic_id")
-    _require_mapping(submission["u80"], "submission U80")
+    submission_u80 = _require_mapping(submission["u80"], "submission U80")
     curator_id = _require_text(submission["curator_id"], "submission curator_id")
     if submission["curator_slot"] not in CURATOR_SLOTS:
         raise ValueError("submission curator_slot 非法。")
@@ -1858,7 +2238,9 @@ def validate_curator_submission(payload: Mapping[str, Any]) -> dict[str, Any]:
         True,
         "submission independent acknowledgement",
     )
-    submitted_at = _require_datetime(submission["submitted_at"], "submission submitted_at")
+    submitted_at = _require_datetime(
+        submission["submitted_at"], "submission submitted_at"
+    )
     imported_at = _require_datetime(submission["imported_at"], "submission imported_at")
     is_fixture = _require_bool(submission["is_fixture"], None, "submission is_fixture")
     original = _require_mapping(submission["original_response"], "original response")
@@ -1901,11 +2283,48 @@ def validate_curator_submission(payload: Mapping[str, Any]) -> dict[str, Any]:
         f"srtp_pilot_curator_submission_{expected_identity.rsplit(':', 1)[-1][:24]}"
     ):
         raise ValueError("curator submission artifact_id drift。")
+    if inputs is not None:
+        topic = topic_config(inputs, submission["topic_id"])
+        if submission_u80 != _u80_reference(inputs):
+            raise ValueError("curator submission U80 binding drift。")
+        allowed = set(inputs.u80_by_topic[submission["topic_id"]])
+        if not set(canonical_ids) <= allowed:
+            raise ValueError("curator submission 含 U80 外 canonical ID。")
+        if (
+            task["task_id"]
+            != f"pilot_{submission['curator_slot']}_{topic['question_id']}"
+        ):
+            raise ValueError("curator submission task/topic/question binding drift。")
+    if (preparation_manifest is None) != (preparation_manifest_sha256 is None):
+        raise ValueError("preparation manifest 与 SHA-256 必须同时提供。")
+    if preparation_manifest is not None and preparation_manifest_sha256 is not None:
+        expected_preparation = _preparation_package_reference(
+            preparation_manifest, preparation_manifest_sha256
+        )
+        if preparation != expected_preparation:
+            raise ValueError("curator submission preparation package binding drift。")
+        summary = _manifest_task_summary(
+            preparation_manifest,
+            curator_slot=submission["curator_slot"],
+            task_id=task["task_id"],
+        )
+        for key, expected in {
+            "task_artifact_id": task["artifact_id"],
+            "task_identity": task["task_identity"],
+            "task_sha256": task["sha256"],
+            "candidate_roster_identity": task["candidate_roster_identity"],
+            "map_artifact_id": candidate_map["artifact_id"],
+            "map_identity": candidate_map["map_identity"],
+            "map_sha256": candidate_map["sha256"],
+        }.items():
+            if summary.get(key) != expected:
+                raise ValueError(f"curator submission/manifest closure drift：{key}。")
     return {
         "topic_id": submission["topic_id"],
         "u80": copy.deepcopy(submission["u80"]),
         "curator_id": curator_id,
         "curator_slot": submission["curator_slot"],
+        "preparation_package": copy.deepcopy(preparation),
         "canonical_entity_ids": tuple(canonical_ids),
         "is_fixture": is_fixture,
     }
@@ -1919,11 +2338,24 @@ def build_curator_comparison(
     submission_a: Mapping[str, Any],
     submission_b: Mapping[str, Any],
     *,
+    inputs: PilotSelectionInputs,
+    preparation_manifest: Mapping[str, Any],
+    preparation_manifest_sha256: str,
     created_at: str,
     git_revision: str,
 ) -> dict[str, Any]:
-    validate_curator_submission(submission_a)
-    validate_curator_submission(submission_b)
+    validate_curator_submission(
+        submission_a,
+        inputs=inputs,
+        preparation_manifest=preparation_manifest,
+        preparation_manifest_sha256=preparation_manifest_sha256,
+    )
+    validate_curator_submission(
+        submission_b,
+        inputs=inputs,
+        preparation_manifest=preparation_manifest,
+        preparation_manifest_sha256=preparation_manifest_sha256,
+    )
     if submission_a["curator_slot"] == submission_b["curator_slot"]:
         raise ValueError("comparison 要求 curator_a 与 curator_b 两个独立 slot。")
     if submission_a["curator_id"] == submission_b["curator_id"]:
@@ -1933,6 +2365,8 @@ def build_curator_comparison(
     for key in ("topic_id", "u80"):
         if submission_a[key] != submission_b[key]:
             raise ValueError(f"curator submissions {key} 不一致。")
+    if submission_a["preparation_package"] != submission_b["preparation_package"]:
+        raise ValueError("curator submissions 来自不同 preparation package。")
     selected_a = set(_submission_selected(submission_a))
     selected_b = set(_submission_selected(submission_b))
     if len(selected_a) != SELECTION_K or len(selected_b) != SELECTION_K:
@@ -1941,7 +2375,11 @@ def build_curator_comparison(
     symmetric = sorted(selected_a ^ selected_b)
     union = selected_a | selected_b
     overlap = len(intersection)
-    status = "ready_for_adjudication" if overlap >= MINIMUM_CURATOR_OVERLAP else "curation_stability_failure"
+    status = (
+        "ready_for_adjudication"
+        if overlap >= MINIMUM_CURATOR_OVERLAP
+        else "curation_stability_failure"
+    )
     if overlap == SELECTION_K:
         status = "ready_without_adjudication"
     payload: dict[str, Any] = {
@@ -1950,6 +2388,7 @@ def build_curator_comparison(
         "artifact_id": "pending",
         "comparison_identity": "pending",
         "pilot_version": PILOT_VERSION,
+        "preparation_package": copy.deepcopy(submission_a["preparation_package"]),
         "topic_id": submission_a["topic_id"],
         "u80": copy.deepcopy(submission_a["u80"]),
         "original_submissions": [
@@ -1971,13 +2410,17 @@ def build_curator_comparison(
         "jaccard": overlap / len(union),
         "minimum_overlap_count": MINIMUM_CURATOR_OVERLAP,
         "status": status,
-        "failure_action": "fail_closed_do_not_auto_replace_topic" if overlap < 4 else None,
+        "failure_action": "fail_closed_do_not_auto_replace_topic"
+        if overlap < 4
+        else None,
         "created_at": _require_datetime(created_at, "comparison created_at"),
         "provenance": {
             "kind": "deterministic_dual_curator_comparison",
             "created_by": "src.pilot_selection",
             "created_at": created_at,
-            "git_revision": _require_git_revision(git_revision, "comparison git revision"),
+            "git_revision": _require_git_revision(
+                git_revision, "comparison git revision"
+            ),
         },
         "is_fixture": bool(submission_a["is_fixture"]),
     }
@@ -1986,13 +2429,28 @@ def build_curator_comparison(
         _task_identity_payload(payload, "comparison_identity"),
     )
     payload["comparison_identity"] = identity
-    payload["artifact_id"] = f"srtp_pilot_curator_comparison_{identity.rsplit(':', 1)[-1][:24]}"
-    validate_curator_comparison(payload)
+    payload["artifact_id"] = (
+        f"srtp_pilot_curator_comparison_{identity.rsplit(':', 1)[-1][:24]}"
+    )
+    validate_curator_comparison(
+        payload,
+        inputs=inputs,
+        submission_a=submission_a,
+        submission_b=submission_b,
+        preparation_manifest=preparation_manifest,
+        preparation_manifest_sha256=preparation_manifest_sha256,
+    )
     return payload
 
 
 def validate_curator_comparison(
-    payload: Mapping[str, Any], *, inputs: PilotSelectionInputs | None = None
+    payload: Mapping[str, Any],
+    *,
+    inputs: PilotSelectionInputs | None = None,
+    submission_a: Mapping[str, Any] | None = None,
+    submission_b: Mapping[str, Any] | None = None,
+    preparation_manifest: Mapping[str, Any] | None = None,
+    preparation_manifest_sha256: str | None = None,
 ) -> dict[str, Any]:
     comparison = _require_mapping(dict(payload), "curator comparison")
     _require_exact_fields(
@@ -2003,6 +2461,7 @@ def validate_curator_comparison(
             "artifact_id",
             "comparison_identity",
             "pilot_version",
+            "preparation_package",
             "topic_id",
             "u80",
             "original_submissions",
@@ -2025,6 +2484,9 @@ def validate_curator_comparison(
         raise ValueError("curator comparison artifact_type drift。")
     if comparison["pilot_version"] != PILOT_VERSION:
         raise ValueError("curator comparison Pilot version drift。")
+    preparation = _require_mapping(
+        comparison["preparation_package"], "comparison preparation package"
+    )
     topic_id = _require_text(comparison["topic_id"], "comparison topic_id")
     originals = _require_list(
         comparison["original_submissions"], "comparison original submissions"
@@ -2113,6 +2575,44 @@ def validate_curator_comparison(
         allowed = set(inputs.u80_by_topic[topic_id])
         if any(not selected <= allowed for selected in selected_sets):
             raise ValueError("comparison 含 U80 外 canonical ID。")
+    if (submission_a is None) != (submission_b is None):
+        raise ValueError("comparison validation 必须同时提供 A/B submissions。")
+    if submission_a is not None and submission_b is not None:
+        supplied = sorted(
+            (submission_a, submission_b), key=lambda item: item["curator_slot"]
+        )
+        expected_originals = [
+            {
+                "curator_slot": submission["curator_slot"],
+                "curator_id": submission["curator_id"],
+                "artifact_id": submission["artifact_id"],
+                "submission_identity": submission["submission_identity"],
+                "sha256": payload_sha256(submission),
+                "selected_canonical_entity_ids": _submission_selected(submission),
+            }
+            for submission in supplied
+        ]
+        if originals != expected_originals:
+            raise ValueError("comparison/A+B frozen submission hash closure drift。")
+        if any(
+            submission["preparation_package"] != preparation for submission in supplied
+        ):
+            raise ValueError("comparison/A+B preparation package closure drift。")
+        if inputs is not None:
+            for submission in supplied:
+                validate_curator_submission(
+                    submission,
+                    inputs=inputs,
+                    preparation_manifest=preparation_manifest,
+                    preparation_manifest_sha256=preparation_manifest_sha256,
+                )
+    if (preparation_manifest is None) != (preparation_manifest_sha256 is None):
+        raise ValueError("comparison preparation manifest/SHA 必须同时提供。")
+    if preparation_manifest is not None and preparation_manifest_sha256 is not None:
+        if preparation != _preparation_package_reference(
+            preparation_manifest, preparation_manifest_sha256
+        ):
+            raise ValueError("comparison preparation package identity/hash drift。")
     expected_identity = deterministic_identity(
         CURATOR_COMPARISON_IDENTITY_PREFIX,
         _task_identity_payload(comparison, "comparison_identity"),
@@ -2132,23 +2632,50 @@ def validate_curator_comparison(
 
 
 def _canonical_to_opaque(mapping: Mapping[str, Any]) -> dict[str, str]:
-    return {row["canonical_entity_id"]: row["candidate_id"] for row in mapping["candidate_map"]}
+    return {
+        row["canonical_entity_id"]: row["candidate_id"]
+        for row in mapping["candidate_map"]
+    }
 
 
 def build_adjudication_task(
     comparison: Mapping[str, Any],
     *,
+    submission_a: Mapping[str, Any],
+    submission_b: Mapping[str, Any],
+    source_task: Mapping[str, Any],
     mapping: Mapping[str, Any],
     inputs: PilotSelectionInputs,
+    preparation_manifest: Mapping[str, Any],
+    preparation_manifest_sha256: str,
     created_at: str,
     git_revision: str,
 ) -> dict[str, Any]:
-    validate_curator_comparison(comparison, inputs=inputs)
+    validate_curator_comparison(
+        comparison,
+        inputs=inputs,
+        submission_a=submission_a,
+        submission_b=submission_b,
+        preparation_manifest=preparation_manifest,
+        preparation_manifest_sha256=preparation_manifest_sha256,
+    )
     if comparison.get("status") == "curation_stability_failure":
-        raise ValueError("curator overlap < 4/8；curation stability failure，fail closed。")
+        raise ValueError(
+            "curator overlap < 4/8；curation stability failure，fail closed。"
+        )
     if comparison.get("status") != "ready_for_adjudication":
         raise ValueError("当前 comparison 不需要或不能生成 adjudication task。")
     topic_id = comparison["topic_id"]
+    if source_task.get("topic", {}).get("topic_id") != topic_id:
+        raise ValueError("adjudication source task Topic drift。")
+    validate_curator_import_chain(
+        manifest=preparation_manifest,
+        manifest_sha256=preparation_manifest_sha256,
+        task=source_task,
+        mapping=mapping,
+        inputs=inputs,
+        expected_curator_slot=source_task.get("curator_slot"),
+    )
     canonical_to_opaque = _canonical_to_opaque(mapping)
     symmetric = comparison["symmetric_difference_canonical_entity_ids"]
     candidates = []
@@ -2158,10 +2685,13 @@ def build_adjudication_task(
             raise ValueError("adjudication symmetric difference 缺少 opaque mapping。")
         item = inputs.view_by_topic_entity[(topic_id, entity_id)]
         candidates.append(
-            {"candidate_id": candidate_id, "title": item["title"], "abstract": item["abstract"]}
+            {
+                "candidate_id": candidate_id,
+                "title": item["title"],
+                "abstract": item["abstract"],
+            }
         )
     candidates.sort(key=lambda row: row["candidate_id"])
-    locked_ids = [canonical_to_opaque[entity_id] for entity_id in comparison["intersection_canonical_entity_ids"]]
     payload: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "artifact_type": "srtp_pilot_adjudication_task",
@@ -2170,12 +2700,21 @@ def build_adjudication_task(
         "pilot_version": PILOT_VERSION,
         "topic_id": topic_id,
         "u80": copy.deepcopy(comparison["u80"]),
+        "preparation_package": copy.deepcopy(comparison["preparation_package"]),
         "comparison": {
             "artifact_id": comparison["artifact_id"],
             "comparison_identity": comparison["comparison_identity"],
             "sha256": payload_sha256(comparison),
         },
-        "locked_intersection_candidate_ids": sorted(locked_ids),
+        "locked_intersection_count": comparison["overlap_count"],
+        "adjudication_roster_identity": deterministic_identity(
+            "srtp-pilot-adjudication-roster",
+            {
+                "comparison_identity": comparison["comparison_identity"],
+                "candidate_scope": "symmetric_difference_only",
+                "candidates": candidates,
+            },
+        ),
         "candidate_scope": "symmetric_difference_only",
         "required_additional_count": SELECTION_K - comparison["overlap_count"],
         "candidates": candidates,
@@ -2191,7 +2730,9 @@ def build_adjudication_task(
             "kind": "restricted_symmetric_difference_adjudication_task",
             "created_by": "src.pilot_selection",
             "created_at": created_at,
-            "git_revision": _require_git_revision(git_revision, "adjudication task git revision"),
+            "git_revision": _require_git_revision(
+                git_revision, "adjudication task git revision"
+            ),
         },
         "is_fixture": comparison["is_fixture"],
     }
@@ -2200,7 +2741,9 @@ def build_adjudication_task(
         _task_identity_payload(payload, "task_identity"),
     )
     payload["task_identity"] = identity
-    payload["artifact_id"] = f"srtp_pilot_adjudication_task_{identity.rsplit(':', 1)[-1][:24]}"
+    payload["artifact_id"] = (
+        f"srtp_pilot_adjudication_task_{identity.rsplit(':', 1)[-1][:24]}"
+    )
     return payload
 
 
@@ -2223,14 +2766,72 @@ def build_blank_adjudication_response(task: Mapping[str, Any]) -> dict[str, Any]
     }
 
 
+def validate_adjudication_task(
+    task: Mapping[str, Any],
+    *,
+    comparison: Mapping[str, Any],
+    submission_a: Mapping[str, Any],
+    submission_b: Mapping[str, Any],
+    source_task: Mapping[str, Any],
+    mapping: Mapping[str, Any],
+    inputs: PilotSelectionInputs,
+    preparation_manifest: Mapping[str, Any],
+    preparation_manifest_sha256: str,
+) -> dict[str, Any]:
+    artifact = _require_mapping(dict(task), "adjudication task")
+    provenance = _require_mapping(
+        artifact.get("provenance"), "adjudication task provenance"
+    )
+    expected = build_adjudication_task(
+        comparison,
+        submission_a=submission_a,
+        submission_b=submission_b,
+        source_task=source_task,
+        mapping=mapping,
+        inputs=inputs,
+        preparation_manifest=preparation_manifest,
+        preparation_manifest_sha256=preparation_manifest_sha256,
+        created_at=artifact.get("created_at"),
+        git_revision=provenance.get("git_revision"),
+    )
+    if artifact != expected:
+        raise ValueError(
+            "adjudication task/comparison/symmetric-difference reconstruction drift。"
+        )
+    return {
+        "topic_id": artifact["topic_id"],
+        "required_additional_count": artifact["required_additional_count"],
+        "adjudication_roster_identity": artifact["adjudication_roster_identity"],
+        "is_fixture": artifact["is_fixture"],
+    }
+
+
 def import_adjudication_submission(
     form: Mapping[str, Any],
     *,
     task: Mapping[str, Any],
+    comparison: Mapping[str, Any],
+    submission_a: Mapping[str, Any],
+    submission_b: Mapping[str, Any],
+    source_task: Mapping[str, Any],
     mapping: Mapping[str, Any],
+    inputs: PilotSelectionInputs,
+    preparation_manifest: Mapping[str, Any],
+    preparation_manifest_sha256: str,
     imported_at: str,
     git_revision: str,
 ) -> dict[str, Any]:
+    validate_adjudication_task(
+        task,
+        comparison=comparison,
+        submission_a=submission_a,
+        submission_b=submission_b,
+        source_task=source_task,
+        mapping=mapping,
+        inputs=inputs,
+        preparation_manifest=preparation_manifest,
+        preparation_manifest_sha256=preparation_manifest_sha256,
+    )
     response = _require_mapping(dict(form), "adjudication response")
     _require_exact_fields(
         response,
@@ -2253,7 +2854,10 @@ def import_adjudication_submission(
         raise ValueError("adjudication response schema drift。")
     if response.get("artifact_type") != "srtp_pilot_adjudication_response_form":
         raise ValueError("adjudication response artifact_type drift。")
-    if response.get("status") != "completed" or response.get("task_identity") != task["task_identity"]:
+    if (
+        response.get("status") != "completed"
+        or response.get("task_identity") != task["task_identity"]
+    ):
         raise ValueError("adjudication response status/task binding drift。")
     if response["is_fixture"] != task["is_fixture"]:
         raise ValueError("adjudication response fixture status drift。")
@@ -2298,10 +2902,23 @@ def import_adjudication_submission(
         "artifact_id": "pending",
         "submission_identity": "pending",
         "pilot_version": PILOT_VERSION,
+        "preparation_package": copy.deepcopy(comparison["preparation_package"]),
+        "comparison": {
+            "artifact_id": comparison["artifact_id"],
+            "comparison_identity": comparison["comparison_identity"],
+            "sha256": payload_sha256(comparison),
+        },
+        "original_submissions": copy.deepcopy(comparison["original_submissions"]),
         "task": {
             "artifact_id": task["artifact_id"],
             "task_identity": task["task_identity"],
             "sha256": payload_sha256(task),
+            "adjudication_roster_identity": task["adjudication_roster_identity"],
+        },
+        "candidate_map": {
+            "artifact_id": mapping["artifact_id"],
+            "map_identity": mapping["map_identity"],
+            "sha256": payload_sha256(mapping),
         },
         "adjudicator_id": adjudicator_id,
         "selected_candidates": normalized,
@@ -2315,7 +2932,9 @@ def import_adjudication_submission(
             "kind": "immutable_restricted_adjudication_import",
             "created_by": "src.pilot_selection",
             "created_at": imported_at,
-            "git_revision": _require_git_revision(git_revision, "adjudication git revision"),
+            "git_revision": _require_git_revision(
+                git_revision, "adjudication git revision"
+            ),
         },
         "is_fixture": task["is_fixture"],
     }
@@ -2324,41 +2943,301 @@ def import_adjudication_submission(
         _task_identity_payload(payload, "submission_identity"),
     )
     payload["submission_identity"] = identity
-    payload["artifact_id"] = f"srtp_pilot_adjudication_submission_{identity.rsplit(':', 1)[-1][:24]}"
+    payload["artifact_id"] = (
+        f"srtp_pilot_adjudication_submission_{identity.rsplit(':', 1)[-1][:24]}"
+    )
+    validate_adjudication_submission(
+        payload,
+        task=task,
+        comparison=comparison,
+        submission_a=submission_a,
+        submission_b=submission_b,
+        source_task=source_task,
+        mapping=mapping,
+        inputs=inputs,
+        preparation_manifest=preparation_manifest,
+        preparation_manifest_sha256=preparation_manifest_sha256,
+    )
     return payload
+
+
+def validate_adjudication_submission(
+    payload: Mapping[str, Any],
+    *,
+    task: Mapping[str, Any],
+    comparison: Mapping[str, Any],
+    submission_a: Mapping[str, Any],
+    submission_b: Mapping[str, Any],
+    source_task: Mapping[str, Any],
+    mapping: Mapping[str, Any],
+    inputs: PilotSelectionInputs,
+    preparation_manifest: Mapping[str, Any],
+    preparation_manifest_sha256: str,
+) -> dict[str, Any]:
+    validate_adjudication_task(
+        task,
+        comparison=comparison,
+        submission_a=submission_a,
+        submission_b=submission_b,
+        source_task=source_task,
+        mapping=mapping,
+        inputs=inputs,
+        preparation_manifest=preparation_manifest,
+        preparation_manifest_sha256=preparation_manifest_sha256,
+    )
+    submission = _require_mapping(dict(payload), "adjudication submission")
+    _require_exact_fields(
+        submission,
+        {
+            "schema_version",
+            "artifact_type",
+            "artifact_id",
+            "submission_identity",
+            "pilot_version",
+            "preparation_package",
+            "comparison",
+            "original_submissions",
+            "task",
+            "candidate_map",
+            "adjudicator_id",
+            "selected_candidates",
+            "timing",
+            "external_lookup",
+            "submitted_at",
+            "notes",
+            "original_response",
+            "imported_at",
+            "provenance",
+            "is_fixture",
+        },
+        "adjudication submission",
+    )
+    if (
+        submission["schema_version"] != SCHEMA_VERSION
+        or submission["artifact_type"] != "srtp_pilot_adjudication_submission"
+    ):
+        raise ValueError("adjudication submission header drift。")
+    if submission["pilot_version"] != PILOT_VERSION:
+        raise ValueError("adjudication submission Pilot version drift。")
+    if submission["preparation_package"] != comparison["preparation_package"]:
+        raise ValueError("adjudication/preparation package closure drift。")
+    if submission["comparison"] != {
+        "artifact_id": comparison["artifact_id"],
+        "comparison_identity": comparison["comparison_identity"],
+        "sha256": payload_sha256(comparison),
+    }:
+        raise ValueError("adjudication/comparison hash closure drift。")
+    if submission["original_submissions"] != comparison["original_submissions"]:
+        raise ValueError("adjudication/A+B original submission closure drift。")
+    if submission["task"] != {
+        "artifact_id": task["artifact_id"],
+        "task_identity": task["task_identity"],
+        "sha256": payload_sha256(task),
+        "adjudication_roster_identity": task["adjudication_roster_identity"],
+    }:
+        raise ValueError("adjudication submission/task roster closure drift。")
+    if submission["candidate_map"] != {
+        "artifact_id": mapping["artifact_id"],
+        "map_identity": mapping["map_identity"],
+        "sha256": payload_sha256(mapping),
+    }:
+        raise ValueError("adjudication submission/mapping closure drift。")
+    rows = _require_list(
+        submission["selected_candidates"], "adjudication selected candidates"
+    )
+    if len(rows) != task["required_additional_count"]:
+        raise ValueError("adjudication selected count drift。")
+    allowed = {row["candidate_id"] for row in task["candidates"]}
+    map_index = _candidate_map_index(mapping)
+    candidate_ids: list[str] = []
+    canonical_ids: list[str] = []
+    for raw in rows:
+        row = _require_mapping(raw, "adjudication selected row")
+        _require_exact_fields(
+            row,
+            {"candidate_id", "canonical_entity_id", "selection_reason"},
+            "adjudication selected row",
+        )
+        candidate_id = _require_text(
+            row.get("candidate_id"), "adjudication candidate_id"
+        )
+        canonical_id = _require_text(
+            row.get("canonical_entity_id"), "adjudication canonical_entity_id"
+        )
+        _require_text(row.get("selection_reason"), "adjudication selection reason")
+        if (
+            candidate_id not in allowed
+            or map_index.get(candidate_id, {}).get("canonical_entity_id")
+            != canonical_id
+        ):
+            raise ValueError("adjudication opaque→canonical mapping drift。")
+        candidate_ids.append(candidate_id)
+        canonical_ids.append(canonical_id)
+    if len(candidate_ids) != len(set(candidate_ids)) or len(canonical_ids) != len(
+        set(canonical_ids)
+    ):
+        raise ValueError("adjudication selected candidate/canonical IDs 重复。")
+    if not set(canonical_ids) <= set(
+        comparison["symmetric_difference_canonical_entity_ids"]
+    ):
+        raise ValueError("adjudication selection 超出 symmetric difference。")
+    _require_bool(submission["external_lookup"], False, "adjudication external_lookup")
+    _validate_human_timing(submission["timing"], "adjudication timing")
+    _require_datetime(submission["submitted_at"], "adjudication submitted_at")
+    _require_datetime(submission["imported_at"], "adjudication imported_at")
+    if submission["is_fixture"] != task["is_fixture"]:
+        raise ValueError("adjudication fixture status drift。")
+    original = _require_mapping(
+        submission["original_response"], "original adjudication response"
+    )
+    _require_exact_fields(
+        original,
+        {
+            "schema_version",
+            "artifact_type",
+            "status",
+            "task_identity",
+            "adjudicator_id",
+            "selected_candidates",
+            "timing",
+            "external_lookup",
+            "submitted_at",
+            "notes",
+            "is_fixture",
+        },
+        "original adjudication response",
+    )
+    expected_original_rows = [
+        {
+            "candidate_id": row["candidate_id"],
+            "selection_reason": row["selection_reason"],
+        }
+        for row in rows
+    ]
+    if (
+        original["schema_version"] != SCHEMA_VERSION
+        or original["artifact_type"] != "srtp_pilot_adjudication_response_form"
+        or original["status"] != "completed"
+        or original["task_identity"] != task["task_identity"]
+        or original["adjudicator_id"] != submission["adjudicator_id"]
+        or original["selected_candidates"] != expected_original_rows
+        or original["timing"] != submission["timing"]
+        or original["external_lookup"] is not False
+        or original["submitted_at"] != submission["submitted_at"]
+        or str(original["notes"] or "") != submission["notes"]
+        or original["is_fixture"] != submission["is_fixture"]
+    ):
+        raise ValueError("adjudication submission/original response closure drift。")
+    provenance = _require_mapping(
+        submission["provenance"], "adjudication submission provenance"
+    )
+    _require_exact_fields(
+        provenance,
+        {"kind", "created_by", "created_at", "git_revision"},
+        "adjudication submission provenance",
+    )
+    if (
+        provenance["kind"] != "immutable_restricted_adjudication_import"
+        or provenance["created_by"] != "src.pilot_selection"
+        or provenance["created_at"] != submission["imported_at"]
+    ):
+        raise ValueError("adjudication submission provenance drift。")
+    _require_git_revision(
+        provenance["git_revision"], "adjudication submission git revision"
+    )
+    expected_identity = deterministic_identity(
+        ADJUDICATION_SUBMISSION_IDENTITY_PREFIX,
+        _task_identity_payload(submission, "submission_identity"),
+    )
+    if submission["submission_identity"] != expected_identity:
+        raise ValueError("adjudication submission identity drift。")
+    if submission["artifact_id"] != (
+        f"srtp_pilot_adjudication_submission_{expected_identity.rsplit(':', 1)[-1][:24]}"
+    ):
+        raise ValueError("adjudication submission artifact_id drift。")
+    return {
+        "canonical_entity_ids": tuple(canonical_ids),
+        "is_fixture": submission["is_fixture"],
+    }
 
 
 def build_final_human_selection(
     comparison: Mapping[str, Any],
     *,
     inputs: PilotSelectionInputs,
-    comparison_sha256: str,
+    submission_a: Mapping[str, Any],
+    submission_b: Mapping[str, Any],
+    preparation_manifest: Mapping[str, Any],
+    preparation_manifest_sha256: str,
+    adjudication_task: Mapping[str, Any] | None,
+    adjudication_source_task: Mapping[str, Any] | None,
+    adjudication_mapping: Mapping[str, Any] | None,
     adjudication: Mapping[str, Any] | None,
-    adjudication_sha256: str | None,
     created_at: str,
     git_revision: str,
 ) -> dict[str, Any]:
-    validate_curator_comparison(comparison, inputs=inputs)
+    validate_curator_comparison(
+        comparison,
+        inputs=inputs,
+        submission_a=submission_a,
+        submission_b=submission_b,
+        preparation_manifest=preparation_manifest,
+        preparation_manifest_sha256=preparation_manifest_sha256,
+    )
     if comparison.get("status") == "curation_stability_failure":
         raise ValueError("curator overlap < 4/8；不得生成 final human selection。")
     intersection = list(comparison["intersection_canonical_entity_ids"])
     symmetric = list(comparison["symmetric_difference_canonical_entity_ids"])
     required = SELECTION_K - len(intersection)
     if required:
-        if adjudication is None or adjudication_sha256 is None:
+        if any(
+            value is None
+            for value in (
+                adjudication_task,
+                adjudication_source_task,
+                adjudication_mapping,
+                adjudication,
+            )
+        ):
             raise ValueError("final human selection 缺少 required adjudication。")
-        additions = [row["canonical_entity_id"] for row in adjudication["selected_candidates"]]
+        assert adjudication_task is not None
+        assert adjudication_source_task is not None
+        assert adjudication_mapping is not None
+        assert adjudication is not None
+        validate_adjudication_submission(
+            adjudication,
+            task=adjudication_task,
+            comparison=comparison,
+            submission_a=submission_a,
+            submission_b=submission_b,
+            source_task=adjudication_source_task,
+            mapping=adjudication_mapping,
+            inputs=inputs,
+            preparation_manifest=preparation_manifest,
+            preparation_manifest_sha256=preparation_manifest_sha256,
+        )
+        additions = [
+            row["canonical_entity_id"] for row in adjudication["selected_candidates"]
+        ]
         if len(additions) != required or not set(additions) <= set(symmetric):
             raise ValueError("final adjudication additions 非法。")
         adjudication_details = {
             "required": True,
             "artifact_id": adjudication["artifact_id"],
-            "sha256": adjudication_sha256,
+            "sha256": payload_sha256(adjudication),
             "adjudicator_id": adjudication["adjudicator_id"],
             "selected_from_symmetric_difference_canonical_entity_ids": additions,
         }
     else:
-        if adjudication is not None or adjudication_sha256 is not None:
+        if any(
+            value is not None
+            for value in (
+                adjudication_task,
+                adjudication_source_task,
+                adjudication_mapping,
+                adjudication,
+            )
+        ):
             raise ValueError("8/8 intersection 不得附加 adjudication。")
         additions = []
         adjudication_details = {
@@ -2399,8 +3278,10 @@ def build_final_human_selection(
         selected_canonical_entity_ids=selected,
         method_specific_provenance={
             "comparison_artifact_id": comparison["artifact_id"],
-            "comparison_sha256": comparison_sha256,
-            "curator_submission_artifact_ids": [row["artifact_id"] for row in originals],
+            "comparison_sha256": payload_sha256(comparison),
+            "curator_submission_artifact_ids": [
+                row["artifact_id"] for row in originals
+            ],
             "curator_submission_sha256s": [row["sha256"] for row in originals],
             "intersection_canonical_entity_ids": intersection,
             "symmetric_difference_canonical_entity_ids": symmetric,
@@ -2440,7 +3321,11 @@ def capture_git_state(project_root: str | Path) -> dict[str, Any]:
 
 
 def assemble_curator_preparation_payloads(
-    inputs: PilotSelectionInputs, *, created_at: str, git_revision: str
+    inputs: PilotSelectionInputs,
+    *,
+    created_at: str,
+    git_revision: str,
+    is_fixture: bool = False,
 ) -> tuple[dict[str, dict[str, Any] | str], dict[str, Any]]:
     payloads: dict[str, dict[str, Any] | str] = {
         "CURATOR_INSTRUCTIONS.md": render_curator_instructions_markdown()
@@ -2454,6 +3339,7 @@ def assemble_curator_preparation_payloads(
                 curator_slot=curator_slot,
                 created_at=created_at,
                 git_revision=git_revision,
+                is_fixture=is_fixture,
             )
             task_name = f"curator_tasks/{curator_slot}/{topic_id}.json"
             readable_name = f"curator_tasks/{curator_slot}/{topic_id}.md"
@@ -2467,11 +3353,18 @@ def assemble_curator_preparation_payloads(
                 {
                     "curator_slot": curator_slot,
                     "topic_id": topic_id,
+                    "question_id": task["topic"]["question_id"],
                     "task_path": task_name,
                     "readable_task_path": readable_name,
                     "response_template_path": response_name,
                     "coordinator_map_path": map_name,
+                    "task_artifact_id": task["artifact_id"],
                     "task_identity": task["task_identity"],
+                    "task_sha256": payload_sha256(task),
+                    "candidate_roster_identity": task["candidate_roster_identity"],
+                    "map_artifact_id": mapping["artifact_id"],
+                    "map_identity": mapping["map_identity"],
+                    "map_sha256": payload_sha256(mapping),
                 }
             )
     file_hashes = {
@@ -2488,9 +3381,13 @@ def assemble_curator_preparation_payloads(
         "artifact_id": "pending",
         "package_identity": "pending",
         "pilot_version": PILOT_VERSION,
-        "status": "prepared_not_started",
-        "is_fixture": False,
-        "purpose": "prepare_real_independent_human_selection_without_prefilling_answers",
+        "status": "fixture_plumbing" if is_fixture else "prepared_not_started",
+        "is_fixture": is_fixture,
+        "purpose": (
+            "plumbing_only"
+            if is_fixture
+            else "prepare_real_independent_human_selection_without_prefilling_answers"
+        ),
         "config": {
             "artifact_id": inputs.config["artifact_id"],
             "config_identity": inputs.config["config_identity"],
@@ -2517,12 +3414,47 @@ def assemble_curator_preparation_payloads(
         _task_identity_payload(manifest, "package_identity"),
     )
     manifest["package_identity"] = identity
-    manifest["artifact_id"] = f"srtp_pilot_curator_preparation_{identity.rsplit(':', 1)[-1][:24]}"
+    manifest["artifact_id"] = (
+        f"srtp_pilot_curator_preparation_{identity.rsplit(':', 1)[-1][:24]}"
+    )
     return payloads, manifest
 
 
+def _validate_replaceable_not_started_package(output: Path) -> None:
+    manifest_path = output / "manifest.json"
+    manifest = load_json_object(
+        manifest_path, label="existing curator package manifest"
+    )
+    if (
+        manifest.get("artifact_type") != "srtp_pilot_curator_preparation_manifest"
+        or manifest.get("status") != "prepared_not_started"
+        or manifest.get("human_selection_status") != "not_started"
+        or manifest.get("is_fixture") is not False
+    ):
+        raise ValueError("existing package 不是可安全替换的 not-started preparation。")
+    files = _require_mapping(manifest.get("files"), "existing package files")
+    actual = {
+        path.relative_to(output).as_posix()
+        for path in output.rglob("*")
+        if path.is_file()
+    }
+    if actual != set(files) | {"manifest.json"}:
+        raise ValueError("existing not-started package file closure drift；拒绝替换。")
+    for relative, expected_hash in files.items():
+        if sha256_file(output / relative) != expected_hash:
+            raise ValueError(f"existing package hash drift；拒绝替换：{relative}。")
+        if relative.startswith("responses/"):
+            response = load_json_object(output / relative, label=relative)
+            if response.get("status") != "blank_template":
+                raise ValueError("existing package 已含非空 human response；拒绝替换。")
+
+
 def build_curator_preparation_package(
-    *, config_path: str | Path, output_dir: str | Path, project_root: str | Path
+    *,
+    config_path: str | Path,
+    output_dir: str | Path,
+    project_root: str | Path,
+    replace_not_started: bool = False,
 ) -> Path:
     root = Path(project_root).resolve()
     git_state = capture_git_state(root)
@@ -2532,15 +3464,30 @@ def build_curator_preparation_package(
     output = Path(output_dir)
     if not output.is_absolute():
         output = (root / output).resolve()
-    if output.exists() and (not output.is_dir() or any(output.iterdir())):
-        raise ValueError("curator preparation output 必须不存在或为空。")
+    replacing = output.exists() and output.is_dir() and any(output.iterdir())
+    if replacing:
+        if not replace_not_started:
+            raise ValueError("curator preparation output 必须不存在或为空。")
+        try:
+            relative_output = output.relative_to(root)
+        except ValueError as error:
+            raise ValueError(
+                "replace-not-started 只允许仓库内明确 package path。"
+            ) from error
+        if not relative_output.parts or relative_output == Path("."):
+            raise ValueError("replace-not-started 禁止以 repository root 为目标。")
+        _validate_replaceable_not_started_package(output)
+    elif output.exists() and not output.is_dir():
+        raise ValueError("curator preparation output 必须是目录。")
     payloads, manifest = assemble_curator_preparation_payloads(
         inputs,
         created_at=inputs.config["created_at"],
         git_revision=git_state["git_revision"],
     )
     output.parent.mkdir(parents=True, exist_ok=True)
-    staging = Path(tempfile.mkdtemp(prefix=f".{output.name}.publish_", dir=output.parent))
+    staging = Path(
+        tempfile.mkdtemp(prefix=f".{output.name}.publish_", dir=output.parent)
+    )
     try:
         for relative, payload in payloads.items():
             if isinstance(payload, dict):
@@ -2553,9 +3500,23 @@ def build_curator_preparation_package(
         validate_curator_preparation_package(
             staging, config_path=inputs.config_path, project_root=root
         )
-        if output.exists():
-            output.rmdir()
-        staging.replace(output)
+        if replacing:
+            backup = output.parent / f".{output.name}.previous_not_started"
+            if backup.exists():
+                raise ValueError("stale preparation replacement backup 已存在。")
+            output.replace(backup)
+            try:
+                staging.replace(output)
+            except Exception:
+                if not output.exists() and backup.exists():
+                    backup.replace(output)
+                raise
+            else:
+                shutil.rmtree(backup)
+        else:
+            if output.exists():
+                output.rmdir()
+            staging.replace(output)
     finally:
         if staging.exists():
             shutil.rmtree(staging)
@@ -2569,19 +3530,30 @@ def validate_curator_preparation_package(
     if not package.is_dir():
         raise ValueError("curator preparation package 不存在。")
     inputs = load_pilot_selection_inputs(config_path, project_root=project_root)
-    manifest = load_json_object(package / "manifest.json", label="curator package manifest")
-    if manifest.get("status") != "prepared_not_started":
-        raise ValueError("curator package status 必须是 prepared_not_started。")
-    provenance = _require_mapping(manifest.get("provenance"), "curator package provenance")
+    manifest = load_json_object(
+        package / "manifest.json", label="curator package manifest"
+    )
+    is_fixture = _require_bool(
+        manifest.get("is_fixture"), None, "curator package is_fixture"
+    )
+    expected_status = "fixture_plumbing" if is_fixture else "prepared_not_started"
+    if manifest.get("status") != expected_status:
+        raise ValueError(f"curator package status 必须是 {expected_status}。")
+    provenance = _require_mapping(
+        manifest.get("provenance"), "curator package provenance"
+    )
     expected_payloads, expected_manifest = assemble_curator_preparation_payloads(
         inputs,
         created_at=manifest.get("created_at"),
         git_revision=provenance.get("git_revision"),
+        is_fixture=is_fixture,
     )
     manifest_files = _require_mapping(manifest.get("files"), "curator manifest files")
     expected_files = set(expected_payloads) | {"manifest.json"}
     actual_files = {
-        path.relative_to(package).as_posix() for path in package.rglob("*") if path.is_file()
+        path.relative_to(package).as_posix()
+        for path in package.rglob("*")
+        if path.is_file()
     }
     if actual_files != expected_files:
         raise ValueError(
@@ -2598,10 +3570,298 @@ def validate_curator_preparation_package(
             else path.read_text(encoding="utf-8")
         )
         if actual != expected:
-            raise ValueError(f"curator package semantic reconstruction drift：{relative}。")
+            raise ValueError(
+                f"curator package semantic reconstruction drift：{relative}。"
+            )
     if manifest != expected_manifest:
         raise ValueError("curator package manifest reconstruction drift。")
     return manifest
+
+
+def _require_trusted_committed_package(package: Path, *, project_root: Path) -> None:
+    root = project_root.resolve()
+    try:
+        relative = package.resolve().relative_to(root).as_posix()
+    except ValueError as error:
+        raise ValueError("trusted preparation package 必须位于当前仓库内。") from error
+    status = subprocess.run(
+        [
+            "git",
+            "status",
+            "--porcelain",
+            "--untracked-files=all",
+            "--",
+            relative,
+        ],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    if status.strip():
+        raise ValueError("preparation package 必须是 committed 且相对 HEAD 未修改。")
+    tracked_output = subprocess.run(
+        ["git", "ls-files", "--", relative],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    tracked = {line.strip() for line in tracked_output.splitlines() if line.strip()}
+    actual = {
+        path.relative_to(root).as_posix()
+        for path in package.rglob("*")
+        if path.is_file()
+    }
+    if tracked != actual:
+        raise ValueError("preparation package file closure 未全部 Git tracked。")
+
+
+def _package_member(package: Path, relative: Any, label: str) -> Path:
+    member = (package / _require_text(relative, label)).resolve()
+    try:
+        member.relative_to(package.resolve())
+    except ValueError as error:
+        raise ValueError(f"{label} 逃逸 preparation package。") from error
+    if not member.is_file():
+        raise ValueError(f"{label} 不存在。")
+    return member
+
+
+def load_curator_import_chain_from_package(
+    *,
+    package_dir: str | Path,
+    response: Mapping[str, Any],
+    inputs: PilotSelectionInputs,
+    expected_curator_slot: str,
+    require_committed: bool = True,
+) -> dict[str, Any]:
+    package = Path(package_dir).resolve()
+    manifest = validate_curator_preparation_package(
+        package,
+        config_path=inputs.config_path,
+        project_root=inputs.project_root,
+    )
+    if require_committed:
+        _require_trusted_committed_package(package, project_root=inputs.project_root)
+    manifest_path = package / "manifest.json"
+    manifest_sha256 = sha256_file(manifest_path)
+    task_id = _require_text(response.get("task_id"), "external response task_id")
+    if response.get("curator_slot") != expected_curator_slot:
+        raise ValueError("cross-slot external curator response 被拒绝。")
+    summary = _manifest_task_summary(
+        manifest, curator_slot=expected_curator_slot, task_id=task_id
+    )
+    task_path = _package_member(package, summary.get("task_path"), "task path")
+    map_path = _package_member(
+        package, summary.get("coordinator_map_path"), "coordinator map path"
+    )
+    task = load_json_object(task_path, label="trusted curator task")
+    mapping = load_json_object(map_path, label="trusted coordinator map")
+    closure = validate_curator_import_chain(
+        manifest=manifest,
+        manifest_sha256=manifest_sha256,
+        task=task,
+        mapping=mapping,
+        inputs=inputs,
+        expected_curator_slot=expected_curator_slot,
+    )
+    return {
+        "manifest": manifest,
+        "manifest_sha256": manifest_sha256,
+        "task": task,
+        "mapping": mapping,
+        "closure": closure,
+    }
+
+
+def validate_curator_submission_against_package(
+    submission: Mapping[str, Any],
+    *,
+    package_dir: str | Path,
+    inputs: PilotSelectionInputs,
+    require_committed: bool = True,
+) -> dict[str, Any]:
+    chain = load_curator_import_chain_from_package(
+        package_dir=package_dir,
+        response={
+            "task_id": submission.get("task", {}).get("task_id"),
+            "curator_slot": submission.get("curator_slot"),
+        },
+        inputs=inputs,
+        expected_curator_slot=submission.get("curator_slot"),
+        require_committed=require_committed,
+    )
+    validated = validate_curator_submission(
+        submission,
+        inputs=inputs,
+        preparation_manifest=chain["manifest"],
+        preparation_manifest_sha256=chain["manifest_sha256"],
+    )
+    if submission["task"]["sha256"] != payload_sha256(chain["task"]):
+        raise ValueError("submission/trusted task content hash drift。")
+    if submission["candidate_map"]["sha256"] != payload_sha256(chain["mapping"]):
+        raise ValueError("submission/trusted mapping content hash drift。")
+    return {**chain, "validated_submission": validated}
+
+
+def _curator_export_identity_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
+    body = copy.deepcopy(dict(payload))
+    body.pop("artifact_id", None)
+    body.pop("bundle_identity", None)
+    return body
+
+
+def export_curator_bundle(
+    *,
+    package_dir: str | Path,
+    curator_slot: str,
+    output_dir: str | Path,
+    config_path: str | Path,
+    project_root: str | Path,
+    exported_at: str,
+    git_revision: str,
+    require_committed: bool = True,
+) -> Path:
+    """Export one fillable bundle outside the repository without private maps."""
+
+    root = Path(project_root).resolve()
+    output = Path(output_dir).resolve()
+    try:
+        output.relative_to(root)
+    except ValueError:
+        pass
+    else:
+        raise ValueError("curator workspace 必须位于 repository root 之外。")
+    if curator_slot not in CURATOR_SLOTS:
+        raise ValueError("curator export slot 必须是 curator_a 或 curator_b。")
+    if output.exists() and (not output.is_dir() or any(output.iterdir())):
+        raise ValueError("curator export output 必须不存在或为空。")
+    inputs = load_pilot_selection_inputs(config_path, project_root=root)
+    package = Path(package_dir).resolve()
+    manifest = validate_curator_preparation_package(
+        package, config_path=inputs.config_path, project_root=root
+    )
+    if manifest.get("is_fixture"):
+        purpose = "plumbing_only"
+    else:
+        purpose = "repository_external_independent_human_curation"
+    if require_committed:
+        _require_trusted_committed_package(package, project_root=root)
+    package_reference = _preparation_package_reference(
+        manifest, sha256_file(package / "manifest.json")
+    )
+    selected_summaries = sorted(
+        [row for row in manifest["tasks"] if row["curator_slot"] == curator_slot],
+        key=lambda row: row["topic_id"],
+    )
+    if len(selected_summaries) != 2:
+        raise ValueError("curator export 必须精确包含两个 Topic tasks。")
+    text_files: dict[str, str] = {
+        "CURATOR_INSTRUCTIONS.md": (package / "CURATOR_INSTRUCTIONS.md").read_text(
+            encoding="utf-8"
+        )
+    }
+    json_files: dict[str, dict[str, Any]] = {}
+    bundle_tasks = []
+    for summary in selected_summaries:
+        topic_id = summary["topic_id"]
+        readable = _package_member(
+            package, summary["readable_task_path"], "readable task path"
+        )
+        response_path = _package_member(
+            package, summary["response_template_path"], "response template path"
+        )
+        task_name = f"tasks/{topic_id}.md"
+        response_name = f"responses/{topic_id}_response.json"
+        text_files[task_name] = readable.read_text(encoding="utf-8")
+        response = load_json_object(response_path, label="blank response template")
+        if (
+            response.get("status") != "blank_template"
+            or response.get("curator_slot") != curator_slot
+        ):
+            raise ValueError("curator export response template status/slot drift。")
+        json_files[response_name] = response
+        bundle_tasks.append(
+            {
+                "topic_id": topic_id,
+                "question_id": summary["question_id"],
+                "task_artifact_id": summary["task_artifact_id"],
+                "task_identity": summary["task_identity"],
+                "task_sha256": summary["task_sha256"],
+                "candidate_roster_identity": summary["candidate_roster_identity"],
+                "readable_task_path": task_name,
+                "response_path": response_name,
+                "u80": copy.deepcopy(manifest["u80"]),
+            }
+        )
+    files = {
+        **{
+            name: hashlib.sha256(value.encode("utf-8")).hexdigest()
+            for name, value in text_files.items()
+        },
+        **{name: payload_sha256(value) for name, value in json_files.items()},
+    }
+    bundle_manifest: dict[str, Any] = {
+        "schema_version": SCHEMA_VERSION,
+        "artifact_type": "srtp_pilot_curator_export_bundle",
+        "artifact_id": "pending",
+        "bundle_identity": "pending",
+        "pilot_version": PILOT_VERSION,
+        "curator_slot": curator_slot,
+        "source_preparation_package": package_reference,
+        "tasks": bundle_tasks,
+        "files": files,
+        "contains_coordinator_mapping": False,
+        "workspace_policy": "repository_external_fillable_copy",
+        "exported_at": _require_datetime(exported_at, "curator export time"),
+        "provenance": {
+            "kind": "pilot_repository_external_curator_export",
+            "created_by": "src.pilot_selection",
+            "created_at": exported_at,
+            "git_revision": _require_git_revision(
+                git_revision, "curator export git revision"
+            ),
+        },
+        "is_fixture": manifest["is_fixture"],
+        "purpose": purpose,
+    }
+    identity = deterministic_identity(
+        CURATOR_EXPORT_IDENTITY_PREFIX,
+        _curator_export_identity_payload(bundle_manifest),
+    )
+    bundle_manifest["bundle_identity"] = identity
+    bundle_manifest["artifact_id"] = (
+        f"srtp_pilot_curator_export_{identity.rsplit(':', 1)[-1][:24]}"
+    )
+    output.parent.mkdir(parents=True, exist_ok=True)
+    staging = Path(
+        tempfile.mkdtemp(prefix=f".{output.name}.export_", dir=output.parent)
+    )
+    try:
+        for relative, content in text_files.items():
+            path = staging / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8", newline="\n")
+        for relative, payload in json_files.items():
+            write_json(staging / relative, payload)
+        write_json(staging / "bundle_manifest.json", bundle_manifest)
+        actual = {
+            path.relative_to(staging).as_posix()
+            for path in staging.rglob("*")
+            if path.is_file()
+        }
+        if actual != set(files) | {"bundle_manifest.json"}:
+            raise ValueError("curator export file closure drift。")
+        if any("coordinator" in path.casefold() for path in actual):
+            raise ValueError("curator export 不得包含 coordinator mapping。")
+        if output.exists():
+            output.rmdir()
+        staging.replace(output)
+    finally:
+        if staging.exists():
+            shutil.rmtree(staging)
+    return output / "bundle_manifest.json"
 
 
 __all__ = [
@@ -2624,6 +3884,7 @@ __all__ = [
     "build_curator_preparation_package",
     "build_curator_task_and_map",
     "build_final_human_selection",
+    "build_human_selection_freeze_reference",
     "build_selection_artifact",
     "capture_git_state",
     "compute_bm25_config_identity",
@@ -2631,19 +3892,26 @@ __all__ = [
     "compute_human_config_identity",
     "compute_question_identity",
     "compute_selection_context_config_identity",
+    "export_curator_bundle",
     "import_adjudication_submission",
     "import_curator_submission",
+    "load_curator_import_chain_from_package",
     "load_pilot_selection_inputs",
     "payload_sha256",
     "rank_pilot_bm25_candidates",
     "render_curator_instructions_markdown",
     "render_curator_task_markdown",
     "topic_config",
+    "validate_adjudication_submission",
+    "validate_adjudication_task",
     "validate_completed_curator_response",
+    "validate_curator_import_chain",
     "validate_curator_preparation_package",
     "validate_curator_comparison",
     "validate_curator_submission",
+    "validate_curator_submission_against_package",
     "validate_curator_task",
+    "validate_human_selection_freeze_reference",
     "validate_selection_artifact",
     "write_json",
 ]
