@@ -17,6 +17,9 @@ committed OpenAlex audit package
 
 It does not run OpenAlex live acquisition, BM25, curator selection, labels, Hidden evaluation, an LLM, synthesis, or factual evaluation. `U80` is an **OpenAlex-query-conditioned, metadata-filtered, canonicalized, query-balanced, multi-query-support-tilted, deterministic calibration sample**. It is not a uniform canonical sample, representative astronomy corpus, complete scientific universe, gold corpus, or retrieval benchmark.
 
+The downstream selection and evidence-context contract is documented separately
+in [`PILOT_V0_2_SELECTION_AND_MATCHED_CONTEXT.md`](PILOT_V0_2_SELECTION_AND_MATCHED_CONTEXT.md).
+
 The frozen Pilot config is [`configs/pilot/srtp_pilot_v0.2_real_data_foundation_v1.json`](../../configs/pilot/srtp_pilot_v0.2_real_data_foundation_v1.json). It fixes the two Dev Topics, all 12 acquisition runs, metadata policy, full-roster pooling policy, canonical selection policy, sampling algorithm, seed, and `N=80` before generating U80.
 
 ## 2. Frozen inputs and immutability

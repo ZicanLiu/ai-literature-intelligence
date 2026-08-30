@@ -1,0 +1,131 @@
+{
+  "artifact_id": "srtp_pilot_selection_context_config_v1",
+  "artifact_type": "srtp_pilot_selection_context_config",
+  "bm25": {
+    "b": 0.75,
+    "config_identity": "srtp-pilot-bm25-config:sha256:7bf4d8271d1c3d88471badb60f1de565edce7f8fa24835ae6e4d38711509a8be",
+    "formal_execution_policy": "after_dual_curator_final_selection_freeze",
+    "k": 8,
+    "k1": 1.5,
+    "method_id": "pilot_bm25_lexical_v1",
+    "paper_representation": [
+      "title",
+      "abstract"
+    ],
+    "query_field": "frozen_topic_research_question",
+    "ranking": [
+      "score_desc",
+      "canonical_entity_id_asc"
+    ],
+    "tokenizer": "src.text_relevance.tokenize_text:v1"
+  },
+  "config_identity": "srtp-pilot-selection-context-config:sha256:5697148eb21a4e1f3afa37c9b9f50cd7baed2048a06a8ba69f66869b28a4d082",
+  "context_policy": {
+    "config_identity": "srtp-pilot-context-policy:sha256:16bcd120da3c52e82bbdbf6f72b7f85893f13235aa042a4e309d1881111e0655",
+    "field_template": "[PAPER {position:02d}]\nCanonical ID: {canonical_entity_id}\nTitle: {title}\nAbstract: {abstract}",
+    "generator_compatibility_requirement": "consume_exact_rendered_utf8_context_unchanged_and_record_provider_token_counts_separately",
+    "global_tail_truncation": false,
+    "maximum_context_tokens": 2400,
+    "ordering": {
+      "algorithm": "sha256_seed_question_canonical_v1",
+      "condition_name_included": false,
+      "hash_input_format": "seed|question_id|canonical_entity_id",
+      "repeat_number_included": false,
+      "seed": "srtp-pilot-v0.2-context-order-v1",
+      "selection_rank_included": false
+    },
+    "padding": false,
+    "per_paper_token_cap": 256,
+    "policy_id": "pilot_title_abstract_context_v1",
+    "representation": [
+      "title",
+      "abstract"
+    ],
+    "separator": "\n\n---\n\n",
+    "tokenizer": {
+      "implementation": "python_re_unicode_finditer",
+      "normalization": "none_counting_only_exact_text_preserved",
+      "pattern": "[^\\W_]+(?:[-'’][^\\W_]+)*",
+      "tokenizer_id": "pilot_unicode_word_v1"
+    },
+    "truncation_allocation": "title_first_then_abstract",
+    "truncation_marker": " …"
+  },
+  "created_at": "2026-08-30T21:10:54+08:00",
+  "dual_curator": {
+    "adjudicator_candidate_scope": "symmetric_difference_only",
+    "candidate_order_seed": "srtp-pilot-v0.2-curator-candidate-order-v1",
+    "config_identity": "srtp-pilot-dual-curator-config:sha256:7f6191c0c313d84216ad7346ead41aa235e0a243e2fcf4594100eadc2e9c9c68",
+    "curator_slots": [
+      "curator_a",
+      "curator_b"
+    ],
+    "external_lookup": false,
+    "independent_submission_required": true,
+    "method_id": "pilot_dual_curator_v1",
+    "minimum_overlap_count": 4,
+    "opaque_candidate_seed": "srtp-pilot-v0.2-opaque-candidate-id-v1",
+    "preserve_original_submissions": true,
+    "selection_count": 8
+  },
+  "input_boundary": {
+    "bm25_results_visible_to_curators": false,
+    "hidden_labels_allowed": false,
+    "hidden_topics_allowed": false,
+    "live_api_allowed": false,
+    "llm_allowed": false,
+    "other_curator_selection_visible": false,
+    "relevance_labels_allowed": false
+  },
+  "inputs": {
+    "canonical_selection_view": {
+      "artifact_id": "srtp_pilot_canonical_selection_55dcae7fe9d1acd1e1f9f2fd",
+      "path": "data/research/pilot/v0.2/real-data-foundation-v1/canonical_selection_view.json",
+      "sha256": "9ac6db1f703fc7b0cad7b2a9bc0c47a549db08a1fa2266763bf8a9dab4a05a9a",
+      "view_identity": "srtp-pilot-canonical-selection-view:sha256:55dcae7fe9d1acd1e1f9f2fd49cec2c625a643dd77754205e0b38790d52c5605"
+    },
+    "foundation_package": {
+      "manifest_sha256": "cd0b7daaa0899a0b9940784d874ca3497de4dce0ed20ba6328e849d90f85b268",
+      "package_identity": "srtp-pilot-real-data-foundation:sha256:7359f33cc404af6b71e5ee03a61d57192edb8f42e31adfe12ce9e526ff24a133",
+      "path": "data/research/pilot/v0.2/real-data-foundation-v1"
+    },
+    "topic_set": {
+      "artifact_id": "w6_research_topics_v0.2_alpha",
+      "path": "data/research/w6/v0.2-alpha/topics.json",
+      "sha256": "6e2f6e6b8fea56cef6e245dcf37fa97a46ba5efc6703fb47e9863840e3a06ca4"
+    },
+    "u80": {
+      "artifact_id": "srtp_pilot_u80_bfbb0ff51856fd877d84c8a9",
+      "path": "data/research/pilot/v0.2/real-data-foundation-v1/u80_calibration_universe.json",
+      "sha256": "6d1e268b398e0266ed68902799e331fa256c913c037b0ebe8dfff4aacfc12739",
+      "u80_identity": "srtp-pilot-u80:sha256:bfbb0ff51856fd877d84c8a9dfc0ee07d3c617723a318f8b5f8cd8a45002e5c9"
+    }
+  },
+  "is_fixture": false,
+  "pilot_version": "srtp-pilot-v0.2",
+  "schema_version": "1.0",
+  "selection_policy": {
+    "canonical_entity_one_slot": true,
+    "k_per_topic": 8,
+    "shared_paper_representation": [
+      "title",
+      "abstract"
+    ],
+    "shared_u80_required": true
+  },
+  "status": "frozen",
+  "topics": [
+    {
+      "question_id": "srtp_pilot_q_21cm_foreground_removal",
+      "research_question": "How can machine learning separate astrophysical foregrounds and instrumental contamination from cosmological 21-cm spectral data?",
+      "research_question_identity": "srtp-pilot-question:sha256:9f88d215339264f1cdaf36f2e0da74b38dea89365232c868bc653e619598d344",
+      "topic_id": "w6_topic_21cm_foreground_removal"
+    },
+    {
+      "question_id": "srtp_pilot_q_spectral_anomaly_detection",
+      "research_question": "How can unsupervised or active-learning methods discover rare and anomalous objects in large astronomical spectroscopic surveys?",
+      "research_question_identity": "srtp-pilot-question:sha256:9b6be20d7445c72643142b37c5fe43ed7984ad8330a7eaf2c6252d5a5870f925",
+      "topic_id": "w6_topic_spectral_anomaly_detection"
+    }
+  ]
+}
