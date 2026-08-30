@@ -1,0 +1,53 @@
+{
+  "artifact_type": "srtp_pilot_curator_response_form",
+  "curator_id": "",
+  "curator_slot": "curator_a",
+  "external_lookup": false,
+  "independent_submission_acknowledged": false,
+  "is_fixture": false,
+  "notes": "",
+  "schema_version": "1.0",
+  "selected_candidates": [
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    },
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    },
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    },
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    },
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    },
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    },
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    },
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    }
+  ],
+  "status": "blank_template",
+  "submitted_at": "",
+  "task_id": "pilot_curator_a_srtp_pilot_q_21cm_foreground_removal",
+  "task_identity": "srtp-pilot-curator-task:sha256:87ae77365af6f93f6228a3ea41085786317d47b338cc4b4f1bef4888081f1f59",
+  "timing": {
+    "completed_at": "",
+    "elapsed_minutes": null,
+    "started_at": ""
+  }
+}

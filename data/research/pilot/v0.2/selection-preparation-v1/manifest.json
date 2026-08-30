@@ -1,0 +1,89 @@
+{
+  "artifact_id": "srtp_pilot_curator_preparation_cebb48b5e06785d3db2fbdbe",
+  "artifact_type": "srtp_pilot_curator_preparation_manifest",
+  "bm25_execution_status": "deferred_until_dual_curator_final_selection_freeze",
+  "config": {
+    "artifact_id": "srtp_pilot_selection_context_config_v1",
+    "config_identity": "srtp-pilot-selection-context-config:sha256:5697148eb21a4e1f3afa37c9b9f50cd7baed2048a06a8ba69f66869b28a4d082",
+    "sha256": "19b7de9e9298837d26c06f98d976bff76554a83f44a25035a4b61ccb9a5e35a6"
+  },
+  "created_at": "2026-08-30T21:10:54+08:00",
+  "curator_count": 2,
+  "files": {
+    "CURATOR_INSTRUCTIONS.md": "35d327b81c4270f2c327e4ed38e7c2785402be98baecebc6ef22efe8dec07ec5",
+    "coordinator/curator_a/w6_topic_21cm_foreground_removal_candidate_map.json": "c3e0efc44d5463c7ea7a32a72276432c56bd5dc0a7a9d44f4ec833b32dec2f35",
+    "coordinator/curator_a/w6_topic_spectral_anomaly_detection_candidate_map.json": "d668a4c2bb4280891812585aee874ccf94894707b9cd561f12119cb3cafc697d",
+    "coordinator/curator_b/w6_topic_21cm_foreground_removal_candidate_map.json": "6730d13bb0915c0666004e0bad44c099e755ed8c9340a493118ac73e9a8147f1",
+    "coordinator/curator_b/w6_topic_spectral_anomaly_detection_candidate_map.json": "ea29511a627d03300ffd36cc0407ac5ea94efdc0ebd0808230206d2fad989e98",
+    "curator_tasks/curator_a/w6_topic_21cm_foreground_removal.json": "f5baa764c1cd75e89d78573f4c69e23f2f8d9c6e85d44536c40fa1a38427b0cf",
+    "curator_tasks/curator_a/w6_topic_21cm_foreground_removal.md": "537d040cf6a74973fbe201ffcd9d5edd024013389e0c9c845378de66ad613a0a",
+    "curator_tasks/curator_a/w6_topic_spectral_anomaly_detection.json": "63ff555feaf3dcb83fd4c378cf939505297174a33ddd7d888af2d8f098d97b28",
+    "curator_tasks/curator_a/w6_topic_spectral_anomaly_detection.md": "c4b6674a8dc70bf77d2f3cf448554ee9ef397aa8f2b73fb858e4fc2ab6ef7eb6",
+    "curator_tasks/curator_b/w6_topic_21cm_foreground_removal.json": "a821395921a201b8eca445a81d4a278f12cdb70a898cf12c897c52ae537a55f4",
+    "curator_tasks/curator_b/w6_topic_21cm_foreground_removal.md": "ec36d813cc81242c6f91dcf8307c9986e56e56b7040d54281c2339be2267003b",
+    "curator_tasks/curator_b/w6_topic_spectral_anomaly_detection.json": "ce3fc89008c228bc952779166e180f70e0bf1ef47676fc586e0f13a67f2dc2e4",
+    "curator_tasks/curator_b/w6_topic_spectral_anomaly_detection.md": "ab4c61017934f01844d9727e11e05d0d035f4604d7e389796238650d76fcfe0d",
+    "responses/curator_a/w6_topic_21cm_foreground_removal_response.json": "85874f1d6569bb4b472aef5f253a3b75306a580765023efef232a0a5856f06ca",
+    "responses/curator_a/w6_topic_spectral_anomaly_detection_response.json": "e4b7e036d498acc5f3cb106542c60a653e3249c61f1369497f405effc607ff09",
+    "responses/curator_b/w6_topic_21cm_foreground_removal_response.json": "f1824e74cd09ae362c6849ffd921a222ddebde31844dbccee8e0bbb4eee6d2cf",
+    "responses/curator_b/w6_topic_spectral_anomaly_detection_response.json": "6ba08cedd80c5aa9a6a7671268d10ef027b83c528bbe2c8413ccac7cf919843e"
+  },
+  "human_selection_status": "not_started",
+  "is_fixture": false,
+  "package_identity": "srtp-pilot-curator-preparation:sha256:cebb48b5e06785d3db2fbdbedd3fbfd8370fc5ece2b860fbdf8ee03ffc0e51b0",
+  "pilot_version": "srtp-pilot-v0.2",
+  "provenance": {
+    "created_at": "2026-08-30T21:10:54+08:00",
+    "created_by": "src.pilot_selection",
+    "git_revision": "4db571d25a30a164efe523328d9cc8cee49c8201",
+    "kind": "deterministic_curator_task_preparation"
+  },
+  "purpose": "prepare_real_independent_human_selection_without_prefilling_answers",
+  "schema_version": "1.0",
+  "status": "prepared_not_started",
+  "task_count": 4,
+  "tasks": [
+    {
+      "coordinator_map_path": "coordinator/curator_a/w6_topic_21cm_foreground_removal_candidate_map.json",
+      "curator_slot": "curator_a",
+      "readable_task_path": "curator_tasks/curator_a/w6_topic_21cm_foreground_removal.md",
+      "response_template_path": "responses/curator_a/w6_topic_21cm_foreground_removal_response.json",
+      "task_identity": "srtp-pilot-curator-task:sha256:87ae77365af6f93f6228a3ea41085786317d47b338cc4b4f1bef4888081f1f59",
+      "task_path": "curator_tasks/curator_a/w6_topic_21cm_foreground_removal.json",
+      "topic_id": "w6_topic_21cm_foreground_removal"
+    },
+    {
+      "coordinator_map_path": "coordinator/curator_a/w6_topic_spectral_anomaly_detection_candidate_map.json",
+      "curator_slot": "curator_a",
+      "readable_task_path": "curator_tasks/curator_a/w6_topic_spectral_anomaly_detection.md",
+      "response_template_path": "responses/curator_a/w6_topic_spectral_anomaly_detection_response.json",
+      "task_identity": "srtp-pilot-curator-task:sha256:af5e2903b026405235fdf42daf897121569d0735209ccd5de194b62df1d4c5ca",
+      "task_path": "curator_tasks/curator_a/w6_topic_spectral_anomaly_detection.json",
+      "topic_id": "w6_topic_spectral_anomaly_detection"
+    },
+    {
+      "coordinator_map_path": "coordinator/curator_b/w6_topic_21cm_foreground_removal_candidate_map.json",
+      "curator_slot": "curator_b",
+      "readable_task_path": "curator_tasks/curator_b/w6_topic_21cm_foreground_removal.md",
+      "response_template_path": "responses/curator_b/w6_topic_21cm_foreground_removal_response.json",
+      "task_identity": "srtp-pilot-curator-task:sha256:aac5f9c22ad4314b6680c5a52646ee0304d37b152eb2f06dfecdb970775f7021",
+      "task_path": "curator_tasks/curator_b/w6_topic_21cm_foreground_removal.json",
+      "topic_id": "w6_topic_21cm_foreground_removal"
+    },
+    {
+      "coordinator_map_path": "coordinator/curator_b/w6_topic_spectral_anomaly_detection_candidate_map.json",
+      "curator_slot": "curator_b",
+      "readable_task_path": "curator_tasks/curator_b/w6_topic_spectral_anomaly_detection.md",
+      "response_template_path": "responses/curator_b/w6_topic_spectral_anomaly_detection_response.json",
+      "task_identity": "srtp-pilot-curator-task:sha256:1307e13dc00ed61a2c035b369aef661dd569f5f5eec1a943e323e7e33fe9d89c",
+      "task_path": "curator_tasks/curator_b/w6_topic_spectral_anomaly_detection.json",
+      "topic_id": "w6_topic_spectral_anomaly_detection"
+    }
+  ],
+  "topic_count": 2,
+  "u80": {
+    "artifact_id": "srtp_pilot_u80_bfbb0ff51856fd877d84c8a9",
+    "sha256": "6d1e268b398e0266ed68902799e331fa256c913c037b0ebe8dfff4aacfc12739",
+    "u80_identity": "srtp-pilot-u80:sha256:bfbb0ff51856fd877d84c8a9dfc0ee07d3c617723a318f8b5f8cd8a45002e5c9"
+  }
+}

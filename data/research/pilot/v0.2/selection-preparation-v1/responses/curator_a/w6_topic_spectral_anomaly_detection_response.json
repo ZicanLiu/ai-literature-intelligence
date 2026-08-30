@@ -1,0 +1,53 @@
+{
+  "artifact_type": "srtp_pilot_curator_response_form",
+  "curator_id": "",
+  "curator_slot": "curator_a",
+  "external_lookup": false,
+  "independent_submission_acknowledged": false,
+  "is_fixture": false,
+  "notes": "",
+  "schema_version": "1.0",
+  "selected_candidates": [
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    },
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    },
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    },
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    },
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    },
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    },
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    },
+    {
+      "candidate_id": "",
+      "selection_reason": ""
+    }
+  ],
+  "status": "blank_template",
+  "submitted_at": "",
+  "task_id": "pilot_curator_a_srtp_pilot_q_spectral_anomaly_detection",
+  "task_identity": "srtp-pilot-curator-task:sha256:af5e2903b026405235fdf42daf897121569d0735209ccd5de194b62df1d4c5ca",
+  "timing": {
+    "completed_at": "",
+    "elapsed_minutes": null,
+    "started_at": ""
+  }
+}

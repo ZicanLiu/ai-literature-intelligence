@@ -55,6 +55,14 @@ CONFIG_PATH = (
     / "pilot"
     / "srtp_pilot_v0.2_selection_context_v1.json"
 )
+COMMITTED_CURATOR_PACKAGE = (
+    PROJECT_ROOT
+    / "data"
+    / "research"
+    / "pilot"
+    / "v0.2"
+    / "selection-preparation-v1"
+)
 TOPIC_ID = "w6_topic_21cm_foreground_removal"
 CREATED_AT = "2026-08-30T21:10:54+08:00"
 GIT_REVISION = "1" * 40
@@ -595,6 +603,17 @@ class CuratorPackageTests(PilotSelectionContextFixture):
                 package, config_path=CONFIG_PATH, project_root=PROJECT_ROOT
             )
             self.assertEqual(validated["package_identity"], manifest["package_identity"])
+
+    def test_committed_curator_preparation_package_validates(self) -> None:
+        manifest = validate_curator_preparation_package(
+            COMMITTED_CURATOR_PACKAGE,
+            config_path=CONFIG_PATH,
+            project_root=PROJECT_ROOT,
+        )
+        self.assertEqual(manifest["status"], "prepared_not_started")
+        self.assertEqual(manifest["human_selection_status"], "not_started")
+        self.assertEqual(manifest["task_count"], 4)
+
 
 if __name__ == "__main__":
     unittest.main()
