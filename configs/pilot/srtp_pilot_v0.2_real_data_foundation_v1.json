@@ -1,0 +1,202 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "srtp_pilot_real_data_foundation_config",
+  "artifact_id": "srtp_pilot_v0_2_real_data_foundation_v1",
+  "config_identity": "srtp-pilot-real-data-config:sha256:6fc2d1d5a4a6da53a0314e7a6e310c6cbe83422f2778655a6f82f54ed6a94296",
+  "status": "frozen",
+  "is_fixture": false,
+  "protocol_version": "srtp-pilot-v0.2",
+  "artifact_created_at": "2026-08-30T18:19:26+08:00",
+  "topic_ids": [
+    "w6_topic_21cm_foreground_removal",
+    "w6_topic_spectral_anomaly_detection"
+  ],
+  "topic_set_reference": {
+    "path": "data/research/w6/v0.2-alpha/topics.json",
+    "artifact_id": "w6_research_topics_v0.2_alpha",
+    "sha256": "6e2f6e6b8fea56cef6e245dcf37fa97a46ba5efc6703fb47e9863840e3a06ca4"
+  },
+  "dev_split_reference": {
+    "path": "data/research/w6/v0.2-alpha/split_manifest.json",
+    "artifact_id": "w6_topic_split_v0.2_alpha",
+    "split_identity": "w6-topic-split:sha256:8391d14987a15982b5afa2ae3760f029824909353f51056360d79fe9b85202bc",
+    "sha256": "bb57448288f122406d195cbec09dde80f76f78a7a0a1d0ef9bc85c052aea69ad"
+  },
+  "source_openalex_package": {
+    "path": "data/research/w6/v0.2-alpha/openalex-audit-v1",
+    "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+    "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+    "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+  },
+  "source_acquisition_config": {
+    "path": "configs/w6/openalex_topic_query_audit_v1.json",
+    "artifact_id": "w6_openalex_topic_query_audit_v1",
+    "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+    "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+  },
+  "source_revision_provenance": {
+    "source_package_introduction_commit": "7c9ac5e30b005c661b5dd70d2100eeffe871d202",
+    "source_package_parent_commit": "4a98c33cba3131de581a540584331e67f66dd07f",
+    "w6_compatibility_git_revision": "4a98c33cba3131de581a540584331e67f66dd07f",
+    "w6_git_revision_semantics": "nearest_pre_acquisition_repository_revision_and_source_package_parent_anchor_not_a_claim_of_captured_execution_head",
+    "exact_acquisition_execution_revision_captured": false
+  },
+  "query_roster": [
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq01",
+      "source_query_run_id": "w6-openalex-query-run:sha256:1df2778ba70c57436aa7bd099c8139bd6052a574e2ae79805dce2504250dde2c"
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq02",
+      "source_query_run_id": "w6-openalex-query-run:sha256:f6deb5c6925aa2720bc7bf03c720394df7081bbede6cc015c222059a69014ebb"
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq03",
+      "source_query_run_id": "w6-openalex-query-run:sha256:aac8c0890c23ece8047ceab6ff24d12627543bf6f780c3f49a6addf87cfbb85e"
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq04",
+      "source_query_run_id": "w6-openalex-query-run:sha256:41f15bedfcb91555566202831c909bb442f790dc14ca1c4b17b81db7f2285abe"
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq05",
+      "source_query_run_id": "w6-openalex-query-run:sha256:d6a53a2c4cc4788d7e463fcdd38c20ede80311622c281e7ab1619cfcee470342"
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq06",
+      "source_query_run_id": "w6-openalex-query-run:sha256:e0fbe7cf6af4bb51897b1ea05fd9531c1d9809d0f61e69694478eca4e90c9913"
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq01",
+      "source_query_run_id": "w6-openalex-query-run:sha256:90249a02aef9cdd40a7b3d1352674be613e1d62d35ca542e2979150c503cb3fd"
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq02",
+      "source_query_run_id": "w6-openalex-query-run:sha256:fb36abe842ca01d7ba019788e927024797481deb1ea2006a957a80557ef305ee"
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq03",
+      "source_query_run_id": "w6-openalex-query-run:sha256:82d7bd9718c77cf45fcdc86cf621191996e08363f093523e6d9f10f3058fd0e9"
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq04",
+      "source_query_run_id": "w6-openalex-query-run:sha256:c4d2fef5c817ac6f125b522c5320532185583e33f80d4e9933db14e285280133"
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq05",
+      "source_query_run_id": "w6-openalex-query-run:sha256:879075880bd838b6660fd59fb065b452215e6050b47b2ed39ee863d28278978b"
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq06",
+      "source_query_run_id": "w6-openalex-query-run:sha256:8c597a8ee794aa595b77410afc6085575dcfbad8795feb414362ef46b8dc88f7"
+    }
+  ],
+  "query_identity_policy": {
+    "name": "pilot_aq_registry_with_exact_text_historical_lineage",
+    "version": "v1",
+    "preserve_acquisition_query_ids": true,
+    "historical_lineage_rule": "exact_topic_and_query_text_match_only",
+    "unmatched_aq_behavior": "retain_as_independent_acquisition_identity",
+    "mutate_frozen_topic_artifact": false
+  },
+  "metadata_eligibility_policy": {
+    "name": "w6_representability_then_canonical_preferred_text",
+    "version": "v1",
+    "w6_required_source_fields": [
+      "title",
+      "publication_year",
+      "authors",
+      "venue",
+      "landing_page_url"
+    ],
+    "w6_partial_fields": [
+      "abstract",
+      "openalex_id",
+      "doi"
+    ],
+    "canonical_selection_required_preferred_fields": [
+      "title",
+      "abstract"
+    ],
+    "source_exclusion_reason_codes": [
+      "missing_title",
+      "missing_publication_year",
+      "missing_authors",
+      "missing_venue",
+      "missing_landing_page_url",
+      "invalid_doi_for_w6_contract"
+    ],
+    "enrichment_enabled": false,
+    "unknown_placeholder_allowed": false,
+    "relevance_based_filtering_allowed": false
+  },
+  "pooling_policy": {
+    "name": "pilot_all_twelve_openalex_runs_full_captured_roster",
+    "version": "v1",
+    "parameters": {
+      "depth_by_system": {
+        "openalex_native": 80
+      },
+      "depth_overrides_by_run": {},
+      "target_size_per_topic": 80,
+      "minimum_size_per_topic": 80,
+      "deterministic_random_seed": 0,
+      "random_fill_enabled": false,
+      "target_overflow_policy": "retain_all_depth_qualified_candidates",
+      "duplicate_hit_handling": "deduplicate_topic_record_keep_all_hit_refs"
+    },
+    "included_run_policy": "all_query_roster_runs_sorted_by_machine_id",
+    "source_rank_semantics": "all_committed_hits_are_admitted_because_frozen_depth_equals_the_source_capture_cap"
+  },
+  "canonical_selection_policy": {
+    "name": "w6_canonical_entity_one_selection_slot",
+    "version": "v1",
+    "selection_unit": "canonical_paper",
+    "preferred_record_policy": "reuse_w6_identity_mapper_v1",
+    "confirmed_alias_handling": "one_slot_keep_all_alias_provenance",
+    "suspected_duplicate_handling": "retain_separate_entities_with_explicit_status"
+  },
+  "sampling": {
+    "method": "query_balanced_deterministic_hash_round_robin",
+    "version": "v1",
+    "hash_algorithm": "sha256",
+    "seed": "srtp-pilot-v0.2-u80",
+    "n_per_topic": 80,
+    "query_iteration_order": "seeded_hash_order",
+    "within_query_order": "seed_topic_query_canonical_entity_hash_order",
+    "duplicate_entity_handling": "first_admission_only_keep_all_query_support"
+  },
+  "input_boundary": {
+    "dev_topics_only": true,
+    "hidden_topics_allowed": false,
+    "hidden_labels_allowed": false,
+    "relevance_labels_allowed": false,
+    "bm25_allowed": false,
+    "human_selection_allowed": false,
+    "citation_count_allowed": false,
+    "source_rank_allowed_for_u80": false,
+    "downstream_synthesis_allowed": false,
+    "live_api_allowed": false
+  },
+  "provenance": {
+    "kind": "srtp_pilot_v0_2_preregistered_real_data_foundation",
+    "created_by": "pilot_real_data_foundation",
+    "frozen_at": "2026-08-30T18:19:26+08:00",
+    "baseline_git_revision": "a8d9b1f95001e74e1e96328db401dd55fc7df5e6",
+    "labels_used": false,
+    "ranking_metrics_used": false,
+    "sampling_results_used": false
+  }
+}
