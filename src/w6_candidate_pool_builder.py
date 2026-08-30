@@ -23,10 +23,11 @@ import platform
 import random
 import re
 import subprocess
+import tempfile
 import time
 from collections import Counter
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Mapping, Protocol, Sequence
 
@@ -74,10 +75,11 @@ class RetrievalArtifactBackend(Protocol):
 
 @dataclass(frozen=True)
 class LoadedArtifact:
-    """A parsed JSON artifact paired with its exact file SHA-256."""
+    """A parsed JSON artifact paired with its exact file hash and optional origin."""
 
     payload: dict[str, Any]
     sha256: str
+    source_path: Path | None = None
 
 
 @dataclass(frozen=True)
@@ -111,7 +113,11 @@ def load_json_artifact(path: str | Path, *, label: str) -> LoadedArtifact:
         raise ValueError(f"{label} 不是合法 JSON：{error}") from error
     if not isinstance(payload, dict):
         raise ValueError(f"{label} 顶层必须是 JSON object。")
-    return LoadedArtifact(payload=payload, sha256=sha256_file(artifact_path))
+    return LoadedArtifact(
+        payload=payload,
+        sha256=sha256_file(artifact_path),
+        source_path=artifact_path.resolve(),
+    )
 
 
 def load_frozen_pool_policy(
@@ -259,9 +265,8 @@ def merge_retrieval_provenance(
         raise ValueError("不得混合 fixture 与非 fixture retrieval artifacts。")
 
     input_identities.sort(key=lambda row: row["artifact_id"])
-    merged_created_at = max(
-        (artifact.payload["created_at"] for artifact in artifacts),
-        key=_parse_datetime,
+    merged_created_at = _canonical_utc_datetime(
+        max(_parse_datetime(artifact.payload["created_at"]) for artifact in artifacts)
     )
     merged_identity = canonical_json_sha256(
         {"input_artifacts": input_identities, "run_ids": sorted(runs), "hit_ids": sorted(hits)}
@@ -343,6 +348,7 @@ def build_pool_artifacts(
     generated_at: str,
     git_revision: str,
     status: str = "candidate",
+    git_worktree_clean: bool | None = None,
 ) -> PoolBuildArtifacts:
     """Build and cross-validate merged retrieval, pre-canonical pool and stats."""
 
@@ -351,6 +357,11 @@ def build_pool_artifacts(
     _require_sha256(policy.sha256, "policy SHA-256")
     if status not in {"candidate", "frozen"}:
         raise ValueError("candidate pool status 必须是 candidate/frozen。")
+    _validate_frozen_git_invariant(
+        status=status,
+        git_worktree_clean=git_worktree_clean,
+        context="candidate pool build",
+    )
 
     topics = validate_topic_set(topic_set.payload)
     merged = merge_retrieval_provenance(
@@ -545,6 +556,7 @@ def build_pool_from_backend(
     generated_at: str,
     git_revision: str,
     status: str = "candidate",
+    git_worktree_clean: bool | None = None,
 ) -> PoolBuildArtifacts:
     """Backend-injected entry point used by the CLI and offline fake tests."""
 
@@ -557,7 +569,109 @@ def build_pool_from_backend(
         generated_at=generated_at,
         git_revision=git_revision,
         status=status,
+        git_worktree_clean=git_worktree_clean,
     )
+
+
+def _validate_output_path_safety(
+    *,
+    output_dir: str | Path,
+    declared_input_paths: Sequence[str | Path],
+    project_root: str | Path,
+    status: str,
+) -> Path:
+    """Resolve paths and reject output/input or frozen-evidence overlap."""
+
+    if status not in {"candidate", "frozen"}:
+        raise ValueError("candidate pool status 必须是 candidate/frozen。")
+    target = Path(output_dir).resolve()
+    root = Path(project_root).resolve()
+    if not declared_input_paths:
+        raise ValueError("output path safety 必须声明全部输入文件。")
+
+    for raw_path in declared_input_paths:
+        input_path = Path(raw_path).resolve()
+        if not input_path.is_file():
+            raise ValueError(f"声明输入不是现有文件：{input_path}")
+        input_root = input_path.parent
+        if (
+            target == input_path
+            or target.is_relative_to(input_root)
+            or input_path.is_relative_to(target)
+        ):
+            raise ValueError(
+                f"输出目录与声明输入树重合，禁止覆盖输入 artifact：{input_path}"
+            )
+
+    protected_roots = [
+        root / "configs" / "w4",
+        root / "data" / "annotation_tasks" / "w4",
+        root / "data" / "benchmarks",
+        root / "data" / "samples" / "w2",
+        root / "tests" / "fixtures" / "w6_bootstrap",
+        root / "tests" / "fixtures" / "w6_pool_builder",
+    ]
+    w5_analysis_root = root / "data" / "analysis"
+    if w5_analysis_root.is_dir():
+        protected_roots.extend(
+            child
+            for child in w5_analysis_root.iterdir()
+            if child.is_dir() and child.name.startswith("w5_")
+        )
+    for protected_root in protected_roots:
+        protected = protected_root.resolve()
+        if target == protected or target.is_relative_to(
+            protected
+        ) or protected.is_relative_to(target):
+            raise ValueError(
+                f"output directory 与仓库冻结 evidence tree 重合：{protected}"
+            )
+    try:
+        analysis_relative = target.relative_to(w5_analysis_root.resolve())
+    except ValueError:
+        analysis_relative = None
+    if (
+        analysis_relative is not None
+        and analysis_relative.parts
+        and analysis_relative.parts[0].startswith("w5_")
+    ):
+        raise ValueError("output directory 不得位于 W5 evidence tree。")
+    return target
+
+
+def _artifact_reference(artifact: LoadedArtifact) -> dict[str, str]:
+    _require_sha256(artifact.sha256, "artifact SHA-256")
+    return {
+        "artifact_id": _require_id(artifact.payload.get("artifact_id"), "artifact_id"),
+        "sha256": artifact.sha256,
+    }
+
+
+def _reload_file_backed_artifact(
+    artifact: LoadedArtifact, *, label: str
+) -> LoadedArtifact:
+    if artifact.source_path is None:
+        return artifact
+    reloaded = load_json_artifact(artifact.source_path, label=label)
+    if reloaded.sha256 != artifact.sha256 or reloaded.payload != artifact.payload:
+        raise ValueError(f"{label} 在加载后发生 bytes/payload drift。")
+    return reloaded
+
+
+def _pool_build_manifest_artifact_id(
+    *,
+    pool_identity: str,
+    policy_sha256: str,
+    output_hashes: Mapping[str, str],
+) -> str:
+    identity = canonical_json_sha256(
+        {
+            "pool_identity": pool_identity,
+            "policy_sha256": policy_sha256,
+            "outputs": dict(output_hashes),
+        }
+    )
+    return f"w6_pool_build_{identity[:24]}"
 
 
 def write_pool_build_outputs(
@@ -572,17 +686,46 @@ def write_pool_build_outputs(
     git_revision: str,
     git_worktree_clean: bool,
     duration_seconds: float,
+    declared_input_paths: Sequence[str | Path] | None = None,
+    project_root: str | Path | None = None,
 ) -> Path:
-    """Write a validated build and return the build-manifest path."""
+    """Stage, semantically validate, and atomically publish a build package."""
 
     if not isinstance(git_worktree_clean, bool):
         raise ValueError("git_worktree_clean 必须是 boolean。")
     if not isinstance(duration_seconds, (int, float)) or not math.isfinite(duration_seconds) or duration_seconds < 0:
         raise ValueError("duration_seconds 必须是非负有限数值。")
-    target = Path(output_dir)
-    if target.exists() and any(target.iterdir()):
-        raise ValueError("output directory 必须不存在或为空，避免覆盖既有 artifact。")
-    target.mkdir(parents=True, exist_ok=True)
+    status = artifacts.candidate_pool.get("status")
+    _validate_frozen_git_invariant(
+        status=status,
+        git_worktree_clean=git_worktree_clean,
+        context="pool package publication",
+    )
+    if (declared_input_paths is None) != (project_root is None):
+        raise ValueError("declared_input_paths 与 project_root 必须同时提供。")
+    if declared_input_paths is not None and project_root is not None:
+        build_inputs = [topic_set, *retrieval_inputs, source_records, policy]
+        source_paths = [artifact.source_path for artifact in build_inputs]
+        if status == "frozen" and any(path is None for path in source_paths):
+            raise ValueError("frozen package publication 的全部输入必须有 file-backed origin。")
+        if all(path is not None for path in source_paths):
+            actual_paths = Counter(Path(path).resolve() for path in source_paths)
+            declared_paths = Counter(Path(path).resolve() for path in declared_input_paths)
+            if actual_paths != declared_paths:
+                raise ValueError("declared input paths 与实际 LoadedArtifact origins 不一致。")
+        target = _validate_output_path_safety(
+            output_dir=output_dir,
+            declared_input_paths=declared_input_paths,
+            project_root=project_root,
+            status=status,
+        )
+    else:
+        if status == "frozen":
+            raise ValueError("frozen package publication 必须提供 real-path safety anchors。")
+        target = Path(output_dir).resolve()
+    if target.exists():
+        if not target.is_dir() or any(target.iterdir()):
+            raise ValueError("output directory 必须不存在或为空，避免覆盖既有 artifact。")
 
     payloads = {
         MERGED_RETRIEVAL_FILENAME: artifacts.retrieval_provenance,
@@ -595,23 +738,18 @@ def write_pool_build_outputs(
     }
 
     input_refs = sorted(
-        (
-            {"artifact_id": artifact.payload["artifact_id"], "sha256": artifact.sha256}
-            for artifact in retrieval_inputs
-        ),
+        (_artifact_reference(artifact) for artifact in retrieval_inputs),
         key=lambda row: row["artifact_id"],
     )
-    manifest_identity = canonical_json_sha256(
-        {
-            "pool_identity": artifacts.candidate_pool["pool_identity"],
-            "policy_sha256": policy.sha256,
-            "outputs": output_hashes,
-        }
+    manifest_artifact_id = _pool_build_manifest_artifact_id(
+        pool_identity=artifacts.candidate_pool["pool_identity"],
+        policy_sha256=policy.sha256,
+        output_hashes=output_hashes,
     )
     manifest = {
         "schema_version": W6_SCHEMA_VERSION,
         "artifact_type": "w6_pool_build_manifest",
-        "artifact_id": f"w6_pool_build_{manifest_identity[:24]}",
+        "artifact_id": manifest_artifact_id,
         "is_fixture": artifacts.candidate_pool["is_fixture"],
         "created_at": generated_at,
         "provenance": _build_provenance(
@@ -621,15 +759,9 @@ def write_pool_build_outputs(
         ),
         "policy": {"sha256": policy.sha256},
         "inputs": {
-            "topic_set": {
-                "artifact_id": topic_set.payload["artifact_id"],
-                "sha256": topic_set.sha256,
-            },
+            "topic_set": _artifact_reference(topic_set),
             "retrieval_provenance_inputs": input_refs,
-            "source_records": {
-                "artifact_id": source_records.payload["artifact_id"],
-                "sha256": source_records.sha256,
-            },
+            "source_records": _artifact_reference(source_records),
         },
         "outputs": {
             "retrieval_provenance": {
@@ -670,17 +802,47 @@ def write_pool_build_outputs(
     }
     manifest_bytes = _json_bytes(manifest)
 
-    for filename, content in encoded.items():
-        (target / filename).write_bytes(content)
-    manifest_path = target / BUILD_MANIFEST_FILENAME
-    manifest_path.write_bytes(manifest_bytes)
-    validate_pool_build_manifest(manifest_path)
-    return manifest_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(
+        prefix=f".{target.name}.publish_", dir=target.parent
+    ) as publish_tmp:
+        publish_dir = Path(publish_tmp)
+        for filename, content in encoded.items():
+            (publish_dir / filename).write_bytes(content)
+        staged_manifest_path = publish_dir / BUILD_MANIFEST_FILENAME
+        staged_manifest_path.write_bytes(manifest_bytes)
+        validate_pool_build_manifest(
+            staged_manifest_path,
+            topic_set=topic_set,
+            retrieval_inputs=retrieval_inputs,
+            source_records=source_records,
+            policy=policy,
+        )
+        if target.exists():
+            target.rmdir()
+        publish_dir.replace(target)
+    return target / BUILD_MANIFEST_FILENAME
 
 
-def validate_pool_build_manifest(path: str | Path) -> dict[str, Any]:
-    """Validate build metadata and all output file hashes without live access."""
+def validate_pool_build_manifest(
+    path: str | Path,
+    *,
+    topic_set: LoadedArtifact,
+    retrieval_inputs: Sequence[LoadedArtifact],
+    source_records: LoadedArtifact,
+    policy: LoadedArtifact,
+) -> dict[str, Any]:
+    """Validate the complete input→retrieval→pool→statistics package closure."""
 
+    topic_set = _reload_file_backed_artifact(topic_set, label="topic set")
+    retrieval_inputs = [
+        _reload_file_backed_artifact(artifact, label="retrieval artifact")
+        for artifact in retrieval_inputs
+    ]
+    source_records = _reload_file_backed_artifact(
+        source_records, label="source records"
+    )
+    policy = _reload_file_backed_artifact(policy, label="pool policy")
     manifest_path = Path(path).resolve()
     loaded = load_json_artifact(manifest_path, label="pool build manifest")
     payload = loaded.payload
@@ -709,9 +871,11 @@ def validate_pool_build_manifest(path: str | Path) -> dict[str, Any]:
     _require_datetime(payload["created_at"], "pool build created_at")
     _validate_builder_provenance(payload["provenance"], "pool build provenance")
 
-    policy = _require_mapping(payload["policy"], "manifest policy")
-    _require_exact_fields(policy, {"sha256"}, "manifest policy")
-    _require_sha256(policy["sha256"], "manifest policy sha256")
+    policy_reference = _require_mapping(payload["policy"], "manifest policy")
+    _require_exact_fields(policy_reference, {"sha256"}, "manifest policy")
+    _require_sha256(policy_reference["sha256"], "manifest policy sha256")
+    if policy_reference != {"sha256": policy.sha256}:
+        raise ValueError("manifest policy input binding drift。")
     inputs = _require_mapping(payload["inputs"], "manifest inputs")
     _require_exact_fields(
         inputs,
@@ -720,11 +884,21 @@ def validate_pool_build_manifest(path: str | Path) -> dict[str, Any]:
     )
     _validate_artifact_reference(inputs["topic_set"], "manifest topic_set")
     _validate_artifact_reference(inputs["source_records"], "manifest source_records")
-    retrieval_inputs = inputs["retrieval_provenance_inputs"]
-    if not isinstance(retrieval_inputs, list) or not retrieval_inputs:
+    if inputs["topic_set"] != _artifact_reference(topic_set):
+        raise ValueError("manifest topic_set input binding drift。")
+    if inputs["source_records"] != _artifact_reference(source_records):
+        raise ValueError("manifest source_records input binding drift。")
+    manifest_retrieval_inputs = inputs["retrieval_provenance_inputs"]
+    if not isinstance(manifest_retrieval_inputs, list) or not manifest_retrieval_inputs:
         raise ValueError("manifest retrieval inputs 必须是非空 array。")
-    for reference in retrieval_inputs:
+    for reference in manifest_retrieval_inputs:
         _validate_artifact_reference(reference, "manifest retrieval input")
+    expected_retrieval_inputs = sorted(
+        (_artifact_reference(artifact) for artifact in retrieval_inputs),
+        key=lambda row: row["artifact_id"],
+    )
+    if manifest_retrieval_inputs != expected_retrieval_inputs:
+        raise ValueError("manifest retrieval input binding/roster drift。")
 
     outputs = _require_mapping(payload["outputs"], "manifest outputs")
     _require_exact_fields(
@@ -737,6 +911,8 @@ def validate_pool_build_manifest(path: str | Path) -> dict[str, Any]:
         "candidate_pool": PRECANONICAL_POOL_FILENAME,
         "pool_statistics": STATISTICS_FILENAME,
     }
+    output_payloads: dict[str, dict[str, Any]] = {}
+    output_hashes: dict[str, str] = {}
     for name, expected_filename in expected_filenames.items():
         reference = _require_mapping(outputs[name], f"manifest outputs.{name}")
         fields = {"artifact_id", "path", "sha256"}
@@ -748,11 +924,16 @@ def validate_pool_build_manifest(path: str | Path) -> dict[str, Any]:
             raise ValueError(f"manifest outputs.{name}.path 非法。")
         _require_sha256(reference["sha256"], f"manifest outputs.{name}.sha256")
         output_path = manifest_path.parent / expected_filename
-        if not output_path.is_file() or sha256_file(output_path) != reference["sha256"]:
+        if not output_path.is_file():
+            raise ValueError(f"manifest output 缺失：{name}。")
+        actual_sha256 = sha256_file(output_path)
+        if actual_sha256 != reference["sha256"]:
             raise ValueError(f"manifest output hash drift：{name}。")
         output_payload = load_json_artifact(
             output_path, label=f"manifest output {name}"
         ).payload
+        output_payloads[name] = output_payload
+        output_hashes[expected_filename] = actual_sha256
         if output_payload.get("artifact_id") != reference["artifact_id"]:
             raise ValueError(f"manifest output artifact identity drift：{name}。")
         if name == "candidate_pool" and output_payload.get("pool_identity") != reference["pool_identity"]:
@@ -776,6 +957,13 @@ def validate_pool_build_manifest(path: str | Path) -> dict[str, Any]:
         if not isinstance(generation[key], dict) or not generation[key]:
             raise ValueError(f"manifest generation.{key} 必须是非空 object。")
 
+    pool_status = output_payloads["candidate_pool"].get("status")
+    _validate_frozen_git_invariant(
+        status=pool_status,
+        git_worktree_clean=generation["git_worktree_clean"],
+        context="pool build manifest",
+    )
+
     label_access = _require_mapping(payload["label_access"], "manifest label_access")
     _require_exact_fields(
         label_access, {"benchmark_labels_read", "declaration"}, "manifest label_access"
@@ -783,6 +971,42 @@ def validate_pool_build_manifest(path: str | Path) -> dict[str, Any]:
     if label_access["benchmark_labels_read"] is not False:
         raise ValueError("pool generation 不得读取 benchmark labels。")
     _require_nonempty_string(label_access["declaration"], "manifest label declaration")
+
+    expected_artifacts = build_pool_artifacts(
+        topic_set=topic_set,
+        retrieval_artifacts=retrieval_inputs,
+        source_records=source_records,
+        policy=policy,
+        generated_at=payload["created_at"],
+        git_revision=generation["git_revision"],
+        status=pool_status,
+        git_worktree_clean=generation["git_worktree_clean"],
+    )
+    expected_output_payloads = {
+        "retrieval_provenance": expected_artifacts.retrieval_provenance,
+        "candidate_pool": expected_artifacts.candidate_pool,
+        "pool_statistics": expected_artifacts.statistics,
+    }
+    for name, expected_payload in expected_output_payloads.items():
+        if output_payloads[name] != expected_payload:
+            raise ValueError(f"pool package semantic closure drift：{name}。")
+
+    if payload["is_fixture"] != expected_artifacts.candidate_pool["is_fixture"]:
+        raise ValueError("pool build manifest is_fixture drift。")
+    expected_provenance = _build_provenance(
+        is_fixture=payload["is_fixture"],
+        generated_at=payload["created_at"],
+        git_revision=generation["git_revision"],
+    )
+    if payload["provenance"] != expected_provenance:
+        raise ValueError("pool build manifest provenance drift。")
+    expected_manifest_artifact_id = _pool_build_manifest_artifact_id(
+        pool_identity=expected_artifacts.candidate_pool["pool_identity"],
+        policy_sha256=policy.sha256,
+        output_hashes=output_hashes,
+    )
+    if payload["artifact_id"] != expected_manifest_artifact_id:
+        raise ValueError("pool build manifest artifact identity drift。")
     return payload
 
 
@@ -849,6 +1073,7 @@ def run_pool_build(
         generated_at=generated_at,
         git_revision=git_state["git_revision"],
         status=status,
+        git_worktree_clean=git_state["git_worktree_clean"],
     )
     duration = clock() - started
     return write_pool_build_outputs(
@@ -862,6 +1087,13 @@ def run_pool_build(
         git_revision=git_state["git_revision"],
         git_worktree_clean=git_state["git_worktree_clean"],
         duration_seconds=duration,
+        declared_input_paths=[
+            topic_set_path,
+            *retrieval_paths,
+            source_records_path,
+            policy_path,
+        ],
+        project_root=project_root,
     )
 
 
@@ -1179,6 +1411,17 @@ def _require_git_revision(value: Any, label: str) -> str:
     return value
 
 
+def _validate_frozen_git_invariant(
+    *, status: Any, git_worktree_clean: Any, context: str
+) -> None:
+    if status not in {"candidate", "frozen"}:
+        raise ValueError(f"{context} status 必须是 candidate/frozen。")
+    if git_worktree_clean is not None and not isinstance(git_worktree_clean, bool):
+        raise ValueError(f"{context} git_worktree_clean 必须是 boolean/null。")
+    if status == "frozen" and git_worktree_clean is not True:
+        raise ValueError(f"{context}：frozen status 要求 git_worktree_clean=true。")
+
+
 def _require_datetime(value: Any, label: str) -> None:
     clean = _require_nonempty_string(value, label)
     try:
@@ -1191,6 +1434,12 @@ def _require_datetime(value: Any, label: str) -> None:
 
 def _parse_datetime(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def _canonical_utc_datetime(value: datetime) -> str:
+    if value.tzinfo is None:
+        raise ValueError("datetime 必须包含时区。")
+    return value.astimezone(timezone.utc).isoformat()
 
 
 __all__ = [

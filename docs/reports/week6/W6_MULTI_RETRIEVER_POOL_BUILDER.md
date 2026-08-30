@@ -142,13 +142,25 @@ CLI 输出固定为：
 Candidate Pool 通过 input artifact ID/hash、完整 policy、topic counts 和稳定排序 members 计算公共
 `pool_identity`。外部 policy 文件必须同时提供预注册 SHA-256；build manifest 固定全部输入 identity、
 输出文件 hash、Git SHA/clean state、Python/平台、开始时间和耗时，并声明没有读取 benchmark labels。
+package validator 以显式 topic/retrieval/source/policy artifacts 为信任锚；对 file-backed 输入会重新读取
+bytes，再复用同一个 Builder 与公共 W6 validators 重建 expected merged retrieval、Candidate Pool 和
+statistics。因而只重算被篡改输出的 pool identity、artifact ID、statistics ID、文件 SHA 和 manifest
+仍不能让 package 通过。
 
 聚合 retrieval artifact 的时间锚定为冻结输入中最晚的 `created_at`，而不是本次重跑时间。因此在
 相同代码 revision、输入和 policy 下，不同时间重跑仍得到相同 merged retrieval hash 和 pool
-identity。实际运行时间保存在 pool/statistics/build manifest 的 generation provenance 中。
+identity。最晚时间先按绝对 instant 比较，再规范为 UTC ISO-8601；等价的 `Z`/offset 表示及输入顺序
+不会改变输出。实际运行时间保存在 pool/statistics/build manifest 的 generation provenance 中。
 
-`frozen` 状态只能在生成开始前 clean Git worktree 上运行；`candidate` 状态允许开发期临时输出。
-输出目录必须不存在或为空，避免静默覆盖已经冻结的 artifact。
+`frozen` 状态只能在生成开始前 clean Git worktree 上运行；该 invariant 同时在 build、backend、
+write 和 package validation 层执行，不能通过绕开薄 CLI 发布 dirty frozen package。`candidate` 状态
+允许开发期临时输出。
+
+输出路径先解析 real path，并拒绝与任一声明输入目录形成包含关系。W4 trusted inputs/approved
+benchmark、W5 frozen analysis artifacts 以及 W6 Bootstrap/policy fixtures 的仓库树也不能作为输出
+位置；声明路径必须与 file-backed `LoadedArtifact` origins 一致。输出 package 在最终目录同级 staging
+目录中完整写入并通过 semantic validation 后才整体 rename 发布；文件写入或最终校验失败时，不暴露
+半包或外观完整但非法的最终目录。
 
 ## 9. 完全离线测试
 
@@ -161,12 +173,16 @@ identity。实际运行时间保存在 pool/statistics/build manifest 的 genera
 - missing/extra hit、run roster drift、policy/output hash drift；
 - score direction 与 NaN/Infinity；
 - input order、seed、build time 和 pool identity 的确定性；
+- 等价绝对时间的 UTC 规范化与非等价时间的 latest 语义；
 - target overflow、minimum failure 和 random fill；
 - pre-canonical 不依赖 canonical mapping；
 - public W6 Candidate Pool validator；
 - fake backend 不触发 HTTP；
 - CLI 无 label/benchmark/canonical 参数；
-- frozen build 的 clean-worktree 要求。
+- self-consistent pool/statistics/reference tamper 与 input-roster self-blessing；
+- frozen build 的 reusable API clean-worktree invariant；
+- input/frozen-evidence real-path safety（支持时包含 symlink resolve）；
+- 写入失败、semantic validation 失败时的原子 package publication。
 
 运行方式：
 

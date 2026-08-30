@@ -13,9 +13,14 @@ from pathlib import Path
 from unittest import mock
 
 from app.build_w6_candidate_pool import build_parser, main as build_cli_main
+from src import w6_candidate_pool_builder as pool_builder_module
 from src.annotation_tasks import sha256_file
 from src.w6_candidate_pool_builder import (
+    BUILD_MANIFEST_FILENAME,
     DUPLICATE_HIT_POLICY,
+    MERGED_RETRIEVAL_FILENAME,
+    PRECANONICAL_POOL_FILENAME,
+    STATISTICS_FILENAME,
     TARGET_OVERFLOW_POLICY,
     LoadedArtifact,
     build_pool_artifacts,
@@ -23,8 +28,10 @@ from src.w6_candidate_pool_builder import (
     load_frozen_pool_policy,
     load_json_artifact,
     validate_pool_build_manifest,
+    write_pool_build_outputs,
 )
 from src.w6_contracts import (
+    canonical_json_sha256,
     compute_pool_identity,
     validate_candidate_pool,
     validate_retrieval_provenance,
@@ -44,10 +51,56 @@ POLICY_SHA256 = "cdb6508ba7e62ec1daf122901c93abb94e0f5dfdd30d5f5ff5a98a2261b9971
 GENERATED_AT = "2026-08-29T12:00:00+08:00"
 GIT_REVISION = "a" * 40
 
+OUTPUT_FILES = {
+    "retrieval_provenance": MERGED_RETRIEVAL_FILENAME,
+    "candidate_pool": PRECANONICAL_POOL_FILENAME,
+    "pool_statistics": STATISTICS_FILENAME,
+}
+
 
 def loaded_copy(payload: dict) -> LoadedArtifact:
     encoded = (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
     return LoadedArtifact(payload=payload, sha256=hashlib.sha256(encoded).hexdigest())
+
+
+def write_json(path: Path, payload: dict) -> None:
+    path.write_bytes((json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+
+
+def refresh_statistics_artifact_id(statistics: dict) -> None:
+    identity = canonical_json_sha256(
+        {
+            "pool_identity": statistics["candidate_pool"]["pool_identity"],
+            "counts": statistics["counts"],
+            "contribution": statistics["per_system_contribution"],
+        }
+    )
+    statistics["artifact_id"] = f"w6_pool_statistics_{identity[:24]}"
+
+
+def repack_build_manifest(output_dir: Path) -> dict:
+    manifest_path = output_dir / BUILD_MANIFEST_FILENAME
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    output_hashes = {}
+    for logical_name, filename in OUTPUT_FILES.items():
+        output_path = output_dir / filename
+        output_payload = json.loads(output_path.read_text(encoding="utf-8"))
+        reference = manifest["outputs"][logical_name]
+        reference["artifact_id"] = output_payload["artifact_id"]
+        reference["sha256"] = sha256_file(output_path)
+        output_hashes[filename] = reference["sha256"]
+        if logical_name == "candidate_pool":
+            reference["pool_identity"] = output_payload["pool_identity"]
+    identity = canonical_json_sha256(
+        {
+            "pool_identity": manifest["outputs"]["candidate_pool"]["pool_identity"],
+            "policy_sha256": manifest["policy"]["sha256"],
+            "outputs": output_hashes,
+        }
+    )
+    manifest["artifact_id"] = f"w6_pool_build_{identity[:24]}"
+    write_json(manifest_path, manifest)
+    return manifest
 
 
 def split_retrieval_artifact(payload: dict) -> list[LoadedArtifact]:
@@ -106,6 +159,81 @@ class W6PoolBuilderTestCase(unittest.TestCase):
         payload = copy.deepcopy(self.policy.payload)
         mutator(payload)
         return loaded_copy(payload)
+
+    def validator_kwargs(
+        self, retrieval_inputs: list[LoadedArtifact] | None = None
+    ) -> dict:
+        return {
+            "topic_set": self.topics,
+            "retrieval_inputs": retrieval_inputs or [self.retrieval],
+            "source_records": self.source,
+            "policy": self.policy,
+        }
+
+    def write_package(
+        self,
+        output_dir: Path,
+        *,
+        artifacts=None,
+        retrieval_inputs: list[LoadedArtifact] | None = None,
+        status: str = "candidate",
+        git_worktree_clean: bool = False,
+    ) -> Path:
+        inputs = retrieval_inputs or [self.retrieval]
+        if artifacts is None:
+            artifacts = build_pool_artifacts(
+                topic_set=self.topics,
+                retrieval_artifacts=inputs,
+                source_records=self.source,
+                policy=self.policy,
+                generated_at=GENERATED_AT,
+                git_revision=GIT_REVISION,
+                status=status,
+                git_worktree_clean=git_worktree_clean,
+            )
+        return write_pool_build_outputs(
+            output_dir=output_dir,
+            artifacts=artifacts,
+            topic_set=self.topics,
+            retrieval_inputs=inputs,
+            source_records=self.source,
+            policy=self.policy,
+            generated_at=GENERATED_AT,
+            git_revision=GIT_REVISION,
+            git_worktree_clean=git_worktree_clean,
+            duration_seconds=0.25,
+            declared_input_paths=[TOPICS_PATH, RETRIEVAL_PATH, SOURCE_PATH, POLICY_PATH],
+            project_root=PROJECT_ROOT,
+        )
+
+    def rewrite_statistics_for_pool(self, output_dir: Path, pool: dict) -> None:
+        retrieval_payload = json.loads(
+            (output_dir / MERGED_RETRIEVAL_FILENAME).read_text(encoding="utf-8")
+        )
+        topics = validate_topic_set(self.topics.payload)
+        retrieval = validate_retrieval_provenance(retrieval_payload, topics=topics)
+        universe = pool_builder_module.build_broad_candidate_universe(
+            retrieval=retrieval, policy=pool["policy"]
+        )
+        counts, contribution = pool_builder_module._compute_statistics_values(
+            topic_ids=sorted(topics),
+            input_artifact_count=1,
+            retrieval=retrieval,
+            universe=universe,
+            pool=pool,
+        )
+        statistics_path = output_dir / STATISTICS_FILENAME
+        statistics = json.loads(statistics_path.read_text(encoding="utf-8"))
+        pool_path = output_dir / PRECANONICAL_POOL_FILENAME
+        statistics["candidate_pool"] = {
+            "artifact_id": pool["artifact_id"],
+            "sha256": sha256_file(pool_path),
+            "pool_identity": pool["pool_identity"],
+        }
+        statistics["counts"] = counts
+        statistics["per_system_contribution"] = contribution
+        refresh_statistics_artifact_id(statistics)
+        write_json(statistics_path, statistics)
 
 
 class W6PoolHappyPathTests(W6PoolBuilderTestCase):
@@ -251,6 +379,40 @@ class W6PoolDeterminismTests(W6PoolBuilderTestCase):
         )
         self.assertEqual(forward.candidate_pool, reverse.candidate_pool)
         self.assertEqual(forward.statistics, reverse.statistics)
+
+    def test_equal_instant_timestamps_are_canonical_across_input_order(self) -> None:
+        parts = split_retrieval_artifact(self.retrieval.payload)
+        representations = ("2026-08-24T08:00:00+08:00", "2026-08-24T00:00:00Z")
+        normalized_parts = []
+        for part, timestamp in zip(parts, representations, strict=True):
+            payload = copy.deepcopy(part.payload)
+            payload["created_at"] = timestamp
+            payload["provenance"]["created_at"] = timestamp
+            normalized_parts.append(loaded_copy(payload))
+
+        forward = self.build(retrieval_artifacts=normalized_parts)
+        reverse = self.build(retrieval_artifacts=list(reversed(normalized_parts)))
+
+        self.assertEqual(
+            forward.retrieval_provenance["created_at"],
+            "2026-08-24T00:00:00+00:00",
+        )
+        self.assertEqual(forward.retrieval_provenance, reverse.retrieval_provenance)
+        self.assertEqual(forward.candidate_pool, reverse.candidate_pool)
+        self.assertEqual(forward.statistics, reverse.statistics)
+
+    def test_latest_non_equivalent_timestamp_semantics_are_preserved(self) -> None:
+        parts = split_retrieval_artifact(self.retrieval.payload)
+        timestamps = ("2026-08-24T00:00:00Z", "2026-08-24T08:00:01+08:00")
+        normalized_parts = []
+        for part, timestamp in zip(parts, timestamps, strict=True):
+            payload = copy.deepcopy(part.payload)
+            payload["created_at"] = timestamp
+            payload["provenance"]["created_at"] = timestamp
+            normalized_parts.append(loaded_copy(payload))
+
+        merged = self.build(retrieval_artifacts=normalized_parts).retrieval_provenance
+        self.assertEqual(merged["created_at"], "2026-08-24T00:00:01+00:00")
 
     def test_different_seed_changes_only_deterministic_fill(self) -> None:
         baseline = self.build().candidate_pool
@@ -492,7 +654,9 @@ class W6PoolBackendAndCliTests(W6PoolBuilderTestCase):
                     ]
                 )
             self.assertEqual(result, 0)
-            manifest = validate_pool_build_manifest(output / "build_manifest.json")
+            manifest = validate_pool_build_manifest(
+                output / "build_manifest.json", **self.validator_kwargs()
+            )
             self.assertEqual(
                 manifest["outputs"]["candidate_pool"]["sha256"],
                 sha256_file(output / "precanonical_candidate_pool.json"),
@@ -522,7 +686,9 @@ class W6PoolBackendAndCliTests(W6PoolBuilderTestCase):
             statistics = output / "pool_statistics.json"
             statistics.write_text("{}\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "output hash drift"):
-                validate_pool_build_manifest(output / "build_manifest.json")
+                validate_pool_build_manifest(
+                    output / "build_manifest.json", **self.validator_kwargs()
+                )
 
     def test_frozen_cli_requires_clean_worktree(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir, mock.patch(
@@ -549,6 +715,382 @@ class W6PoolBackendAndCliTests(W6PoolBuilderTestCase):
                     ]
                 )
         self.assertEqual(result, 1)
+
+
+class W6PoolPackageClosureTests(W6PoolBuilderTestCase):
+    def assert_package_hashes_are_self_consistent(self, output_dir: Path) -> None:
+        manifest = json.loads(
+            (output_dir / BUILD_MANIFEST_FILENAME).read_text(encoding="utf-8")
+        )
+        output_hashes = {}
+        for logical_name, filename in OUTPUT_FILES.items():
+            reference = manifest["outputs"][logical_name]
+            self.assertEqual(reference["sha256"], sha256_file(output_dir / filename))
+            output_hashes[filename] = reference["sha256"]
+        expected_id = canonical_json_sha256(
+            {
+                "pool_identity": manifest["outputs"]["candidate_pool"]["pool_identity"],
+                "policy_sha256": manifest["policy"]["sha256"],
+                "outputs": output_hashes,
+            }
+        )
+        self.assertEqual(manifest["artifact_id"], f"w6_pool_build_{expected_id[:24]}")
+
+    def test_self_consistent_missing_below_depth_hit_fails_package_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir) / "pool"
+            self.write_package(output)
+            pool_path = output / PRECANONICAL_POOL_FILENAME
+            pool = json.loads(pool_path.read_text(encoding="utf-8"))
+            member = next(
+                row
+                for row in pool["members"]
+                if row["topic_id"] == "w6_fixture_topic_denoising"
+                and row["record_id"] == "rec_003"
+            )
+            member["retrieval_hit_ids"].remove("hit_doa_003")
+            member["source_system_membership"] = ["bm25_fixture"]
+            member["selection_reasons"].remove("multi_system_provenance")
+            pool["pool_identity"] = compute_pool_identity(pool)
+            pool["artifact_id"] = (
+                "w6_precanonical_pool_" + pool["pool_identity"].rsplit(":", 1)[-1][:24]
+            )
+            write_json(pool_path, pool)
+            self.rewrite_statistics_for_pool(output, pool)
+            repack_build_manifest(output)
+
+            self.assert_package_hashes_are_self_consistent(output)
+            with self.assertRaisesRegex(ValueError, "semantic closure drift：candidate_pool"):
+                validate_pool_build_manifest(
+                    output / BUILD_MANIFEST_FILENAME, **self.validator_kwargs()
+                )
+
+    def test_self_consistent_statistics_pool_size_repack_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir) / "pool"
+            self.write_package(output)
+            statistics_path = output / STATISTICS_FILENAME
+            statistics = json.loads(statistics_path.read_text(encoding="utf-8"))
+            statistics["counts"]["pool_size"] = 999
+            refresh_statistics_artifact_id(statistics)
+            write_json(statistics_path, statistics)
+            repack_build_manifest(output)
+
+            self.assert_package_hashes_are_self_consistent(output)
+            with self.assertRaisesRegex(ValueError, "semantic closure drift：pool_statistics"):
+                validate_pool_build_manifest(
+                    output / BUILD_MANIFEST_FILENAME, **self.validator_kwargs()
+                )
+
+    def test_self_consistent_system_contribution_repack_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir) / "pool"
+            self.write_package(output)
+            statistics_path = output / STATISTICS_FILENAME
+            statistics = json.loads(statistics_path.read_text(encoding="utf-8"))
+            statistics["per_system_contribution"]["openalex_native"][
+                "pool_member_count"
+            ] = 999
+            refresh_statistics_artifact_id(statistics)
+            write_json(statistics_path, statistics)
+            repack_build_manifest(output)
+
+            self.assert_package_hashes_are_self_consistent(output)
+            with self.assertRaisesRegex(ValueError, "semantic closure drift：pool_statistics"):
+                validate_pool_build_manifest(
+                    output / BUILD_MANIFEST_FILENAME, **self.validator_kwargs()
+                )
+
+    def test_self_consistent_pool_input_reference_drift_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir) / "pool"
+            self.write_package(output)
+            pool_path = output / PRECANONICAL_POOL_FILENAME
+            pool = json.loads(pool_path.read_text(encoding="utf-8"))
+            pool["inputs"]["source_records"]["artifact_id"] = (
+                "w6_fixture_source_records_drift"
+            )
+            pool["pool_identity"] = compute_pool_identity(pool)
+            pool["artifact_id"] = (
+                "w6_precanonical_pool_" + pool["pool_identity"].rsplit(":", 1)[-1][:24]
+            )
+            write_json(pool_path, pool)
+            self.rewrite_statistics_for_pool(output, pool)
+            repack_build_manifest(output)
+
+            self.assert_package_hashes_are_self_consistent(output)
+            with self.assertRaisesRegex(ValueError, "semantic closure drift：candidate_pool"):
+                validate_pool_build_manifest(
+                    output / BUILD_MANIFEST_FILENAME, **self.validator_kwargs()
+                )
+
+    def test_manifest_cannot_self_bless_changed_input_roster(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir) / "pool"
+            self.write_package(output)
+            manifest_path = output / BUILD_MANIFEST_FILENAME
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["inputs"]["retrieval_provenance_inputs"][0]["artifact_id"] = (
+                "w6_fixture_retrieval_changed"
+            )
+            write_json(manifest_path, manifest)
+
+            with self.assertRaisesRegex(ValueError, "input binding/roster drift"):
+                validate_pool_build_manifest(manifest_path, **self.validator_kwargs())
+
+    def test_removed_retrieval_run_with_repacked_output_hash_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir) / "pool"
+            self.write_package(output)
+            manifest = json.loads(
+                (output / BUILD_MANIFEST_FILENAME).read_text(encoding="utf-8")
+            )
+            retrieval_path = output / MERGED_RETRIEVAL_FILENAME
+            retrieval = json.loads(retrieval_path.read_text(encoding="utf-8"))
+            removed_run = "run_denoise_tail"
+            retrieval["runs"] = [
+                run
+                for run in retrieval["runs"]
+                if run["retrieval_run_id"] != removed_run
+            ]
+            retrieval["hits"] = [
+                hit
+                for hit in retrieval["hits"]
+                if hit["retrieval_run_id"] != removed_run
+            ]
+            identity = canonical_json_sha256(
+                {
+                    "input_artifacts": manifest["inputs"][
+                        "retrieval_provenance_inputs"
+                    ],
+                    "run_ids": sorted(
+                        run["retrieval_run_id"] for run in retrieval["runs"]
+                    ),
+                    "hit_ids": sorted(
+                        hit["retrieval_hit_id"] for hit in retrieval["hits"]
+                    ),
+                }
+            )
+            retrieval["artifact_id"] = f"w6_retrieval_union_{identity[:24]}"
+            write_json(retrieval_path, retrieval)
+            repack_build_manifest(output)
+
+            self.assert_package_hashes_are_self_consistent(output)
+            with self.assertRaisesRegex(
+                ValueError, "semantic closure drift：retrieval_provenance"
+            ):
+                validate_pool_build_manifest(
+                    output / BUILD_MANIFEST_FILENAME, **self.validator_kwargs()
+                )
+
+    def test_file_backed_input_is_reloaded_during_package_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            input_dir = Path(temp_dir) / "inputs"
+            input_dir.mkdir()
+            topic_path = input_dir / "topics.json"
+            topic_path.write_bytes(TOPICS_PATH.read_bytes())
+            topic_set = load_json_artifact(topic_path, label="topics")
+            artifacts = build_pool_artifacts(
+                topic_set=topic_set,
+                retrieval_artifacts=[self.retrieval],
+                source_records=self.source,
+                policy=self.policy,
+                generated_at=GENERATED_AT,
+                git_revision=GIT_REVISION,
+            )
+            output = Path(temp_dir) / "pool"
+            manifest_path = write_pool_build_outputs(
+                output_dir=output,
+                artifacts=artifacts,
+                topic_set=topic_set,
+                retrieval_inputs=[self.retrieval],
+                source_records=self.source,
+                policy=self.policy,
+                generated_at=GENERATED_AT,
+                git_revision=GIT_REVISION,
+                git_worktree_clean=False,
+                duration_seconds=0.25,
+                declared_input_paths=[
+                    topic_path,
+                    RETRIEVAL_PATH,
+                    SOURCE_PATH,
+                    POLICY_PATH,
+                ],
+                project_root=PROJECT_ROOT,
+            )
+            topic_path.write_bytes(topic_path.read_bytes() + b"\n")
+
+            with self.assertRaisesRegex(ValueError, "bytes/payload drift"):
+                validate_pool_build_manifest(
+                    manifest_path,
+                    topic_set=topic_set,
+                    retrieval_inputs=[self.retrieval],
+                    source_records=self.source,
+                    policy=self.policy,
+                )
+
+
+class W6PoolFrozenSafetyTests(W6PoolBuilderTestCase):
+    def test_reusable_build_frozen_requires_clean_and_candidate_allows_dirty(self) -> None:
+        with self.assertRaisesRegex(ValueError, "git_worktree_clean=true"):
+            build_pool_artifacts(
+                topic_set=self.topics,
+                retrieval_artifacts=[self.retrieval],
+                source_records=self.source,
+                policy=self.policy,
+                generated_at=GENERATED_AT,
+                git_revision=GIT_REVISION,
+                status="frozen",
+                git_worktree_clean=False,
+            )
+        frozen = build_pool_artifacts(
+            topic_set=self.topics,
+            retrieval_artifacts=[self.retrieval],
+            source_records=self.source,
+            policy=self.policy,
+            generated_at=GENERATED_AT,
+            git_revision=GIT_REVISION,
+            status="frozen",
+            git_worktree_clean=True,
+        )
+        candidate = build_pool_artifacts(
+            topic_set=self.topics,
+            retrieval_artifacts=[self.retrieval],
+            source_records=self.source,
+            policy=self.policy,
+            generated_at=GENERATED_AT,
+            git_revision=GIT_REVISION,
+            status="candidate",
+            git_worktree_clean=False,
+        )
+        self.assertEqual(frozen.candidate_pool["status"], "frozen")
+        self.assertEqual(candidate.candidate_pool["status"], "candidate")
+
+    def test_reusable_backend_frozen_dirty_fails(self) -> None:
+        backend = FakeRetrievalBackend([self.retrieval])
+        with self.assertRaisesRegex(ValueError, "git_worktree_clean=true"):
+            build_pool_from_backend(
+                backend=backend,
+                topic_set=self.topics,
+                source_records=self.source,
+                policy=self.policy,
+                generated_at=GENERATED_AT,
+                git_revision=GIT_REVISION,
+                status="frozen",
+                git_worktree_clean=False,
+            )
+
+    def test_write_and_manifest_layers_enforce_frozen_clean_invariant(self) -> None:
+        frozen = build_pool_artifacts(
+            topic_set=self.topics,
+            retrieval_artifacts=[self.retrieval],
+            source_records=self.source,
+            policy=self.policy,
+            generated_at=GENERATED_AT,
+            git_revision=GIT_REVISION,
+            status="frozen",
+            git_worktree_clean=True,
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            rejected = Path(temp_dir) / "dirty"
+            with self.assertRaisesRegex(ValueError, "git_worktree_clean=true"):
+                self.write_package(
+                    rejected, artifacts=frozen, git_worktree_clean=False
+                )
+            self.assertFalse(rejected.exists())
+
+            accepted = Path(temp_dir) / "clean"
+            manifest_path = self.write_package(
+                accepted, artifacts=frozen, git_worktree_clean=True
+            )
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["generation"]["git_worktree_clean"] = False
+            write_json(manifest_path, manifest)
+            with self.assertRaisesRegex(ValueError, "git_worktree_clean=true"):
+                validate_pool_build_manifest(manifest_path, **self.validator_kwargs())
+
+    def test_frozen_output_rejects_input_and_repository_evidence_trees(self) -> None:
+        frozen = build_pool_artifacts(
+            topic_set=self.topics,
+            retrieval_artifacts=[self.retrieval],
+            source_records=self.source,
+            policy=self.policy,
+            generated_at=GENERATED_AT,
+            git_revision=GIT_REVISION,
+            status="frozen",
+            git_worktree_clean=True,
+        )
+        unsafe_outputs = (
+            BOOTSTRAP / "new-dir",
+            PROJECT_ROOT,
+            PROJECT_ROOT / "data" / "benchmarks" / "new-w6-output",
+            PROJECT_ROOT / "data" / "analysis" / "w5_methods" / "new-w6-output",
+        )
+        for output in unsafe_outputs:
+            with self.subTest(output=output), self.assertRaisesRegex(
+                ValueError, "重合|evidence tree"
+            ):
+                self.write_package(
+                    output, artifacts=frozen, git_worktree_clean=True
+                )
+
+        candidate = self.build()
+        with self.assertRaisesRegex(ValueError, "evidence tree"):
+            self.write_package(
+                PROJECT_ROOT / "data" / "benchmarks" / "candidate-output",
+                artifacts=candidate,
+                git_worktree_clean=False,
+            )
+
+    def test_frozen_output_resolves_directory_symlink_when_supported(self) -> None:
+        frozen = build_pool_artifacts(
+            topic_set=self.topics,
+            retrieval_artifacts=[self.retrieval],
+            source_records=self.source,
+            policy=self.policy,
+            generated_at=GENERATED_AT,
+            git_revision=GIT_REVISION,
+            status="frozen",
+            git_worktree_clean=True,
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            link = Path(temp_dir) / "bootstrap-link"
+            try:
+                link.symlink_to(BOOTSTRAP, target_is_directory=True)
+            except OSError as error:
+                self.skipTest(f"当前平台不允许创建目录 symlink/junction：{error}")
+            with self.assertRaisesRegex(ValueError, "声明输入树重合"):
+                self.write_package(
+                    link / "new-dir", artifacts=frozen, git_worktree_clean=True
+                )
+
+
+class W6PoolAtomicPublicationTests(W6PoolBuilderTestCase):
+    def test_partial_write_failure_does_not_expose_final_package(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir) / "pool"
+            original_write_bytes = Path.write_bytes
+
+            def fail_on_candidate_pool(path: Path, content: bytes) -> int:
+                if path.name == PRECANONICAL_POOL_FILENAME:
+                    raise OSError("injected second-file failure")
+                return original_write_bytes(path, content)
+
+            with mock.patch.object(Path, "write_bytes", new=fail_on_candidate_pool):
+                with self.assertRaisesRegex(OSError, "second-file failure"):
+                    self.write_package(output)
+            self.assertFalse(output.exists())
+
+    def test_semantic_validation_failure_does_not_expose_final_package(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output = Path(temp_dir) / "pool"
+            with mock.patch(
+                "src.w6_candidate_pool_builder.validate_pool_build_manifest",
+                side_effect=ValueError("injected semantic validation failure"),
+            ):
+                with self.assertRaisesRegex(ValueError, "semantic validation failure"):
+                    self.write_package(output)
+            self.assertFalse(output.exists())
 
 
 class W6PoolPolicyConstantsTests(unittest.TestCase):
