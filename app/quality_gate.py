@@ -96,6 +96,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=PROJECT_ROOT,
         help="待检查项目根目录；默认是当前仓库。",
     )
+    parser.add_argument(
+        "--skip-tests",
+        action="store_true",
+        help="跳过门禁内的 unittest；仅在调用方已独立运行完整测试时使用。",
+    )
     return parser.parse_args(argv)
 
 
@@ -111,7 +116,9 @@ def run_quality_gate(
         raise ValueError("level 必须是 basic 或 full。")
     root = root.resolve()
     files = list_project_files(root)
-    result = ValidationResult(details={"level": level, "root": "."})
+    result = ValidationResult(
+        details={"level": level, "root": ".", "run_tests": run_tests}
+    )
     checks: list[dict[str, object]] = []
 
     def add_check(name: str, check_result: ValidationResult) -> None:
@@ -250,6 +257,8 @@ def print_summary(result: ValidationResult) -> None:
     level = str(result.details.get("level", "unknown")).upper()
     print(f"质量门禁级别：{level}")
     print(f"检查文件：{result.details.get('file_count', 0)}")
+    if result.details.get("run_tests") is False:
+        print("自动测试：SKIPPED（调用方显式跳过）")
     print(f"错误：{len(result.errors)}；警告：{len(result.warnings)}")
     for warning in result.warnings:
         print(f"WARNING: {warning}")
@@ -260,7 +269,11 @@ def print_summary(result: ValidationResult) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    result = run_quality_gate(args.root, args.level)
+    result = run_quality_gate(
+        args.root,
+        args.level,
+        run_tests=not args.skip_tests,
+    )
     print_summary(result)
     return exit_code_for_result(result)
 
