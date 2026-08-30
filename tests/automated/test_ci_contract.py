@@ -50,12 +50,33 @@ class CIWorkflowContractTests(unittest.TestCase):
             "python -m app.validate_w6_bootstrap",
             "python -m app.w6_quality_gate --mode basic --output outputs/quality/w6_ci_report.json",
             'python -m unittest discover -s tests/automated -p "test_*.py" -q',
-            "python -m app.quality_gate --level basic",
+            "python -m app.quality_gate --level basic --skip-tests",
             "python scripts/check_w5_method_artifacts.py",
         ]
         for command in required_commands:
             self.assertIn(command, self.workflow)
         self.assertNotIn("continue-on-error", self.workflow)
+
+    def test_full_unittest_step_precedes_gate_that_skips_only_duplicate_tests(self) -> None:
+        unittest_step = (
+            "- name: Offline Unit Tests\n"
+            '        run: python -m unittest discover -s tests/automated -p "test_*.py" -q'
+        )
+        quality_gate_step = (
+            "- name: Basic Quality Gate\n"
+            "        # 完整 unittest 已由上一独立 blocking step 执行；此处只运行其余门禁检查。\n"
+            "        run: python -m app.quality_gate --level basic --skip-tests"
+        )
+        self.assertIn(unittest_step, self.workflow)
+        self.assertIn(quality_gate_step, self.workflow)
+        self.assertLess(self.workflow.index(unittest_step), self.workflow.index(quality_gate_step))
+        self.assertEqual(
+            self.workflow.count(
+                'python -m unittest discover -s tests/automated -p "test_*.py" -q'
+            ),
+            1,
+        )
+        self.assertNotIn("ASTRO_QUALITY_GATE_RUNNING", self.workflow)
 
     def test_no_secret_or_model_environment_is_required(self) -> None:
         self.assertNotIn("secrets.", self.workflow)

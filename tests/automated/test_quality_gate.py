@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import csv
 import json
 import os
 import tempfile
@@ -12,7 +11,7 @@ from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
-from app.quality_gate import exit_code_for_result, main, run_quality_gate
+from app.quality_gate import exit_code_for_result, main, parse_args, run_quality_gate
 from src.validation import (
     ALLOWED_RELEVANCE_LABELS,
     ValidationResult,
@@ -301,6 +300,48 @@ class SecurityAndOrchestrationTests(unittest.TestCase):
                 root, "basic", run_tests=False, check_imports=False
             )
         self.assertEqual(result.status, "passed")
+
+    def test_quality_gate_defaults_to_tests_and_can_explicitly_skip(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            make_minimal_project(root)
+            with patch(
+                "app.quality_gate.run_unittest_suite",
+                return_value=ValidationResult(),
+            ) as test_runner:
+                included = run_quality_gate(root, "basic", check_imports=False)
+                test_runner.assert_called_once_with(root.resolve())
+                test_runner.reset_mock()
+                skipped = run_quality_gate(
+                    root,
+                    "basic",
+                    run_tests=False,
+                    check_imports=False,
+                )
+                test_runner.assert_not_called()
+        self.assertTrue(included.details["run_tests"])
+        self.assertFalse(skipped.details["run_tests"])
+        self.assertIn(
+            "automated_tests",
+            {check["name"] for check in included.details["checks"]},
+        )
+        self.assertNotIn(
+            "automated_tests",
+            {check["name"] for check in skipped.details["checks"]},
+        )
+
+    def test_cli_skip_tests_is_opt_in_and_forwarded(self) -> None:
+        self.assertFalse(parse_args([]).skip_tests)
+        self.assertTrue(parse_args(["--skip-tests"]).skip_tests)
+        passed = ValidationResult(details={"level": "basic", "file_count": 1})
+        with patch("app.quality_gate.run_quality_gate", return_value=passed) as gate:
+            with redirect_stdout(StringIO()):
+                self.assertEqual(main([]), 0)
+            gate.assert_called_once_with(PROJECT_ROOT, "basic", run_tests=True)
+        with patch("app.quality_gate.run_quality_gate", return_value=passed) as gate:
+            with redirect_stdout(StringIO()):
+                self.assertEqual(main(["--skip-tests"]), 0)
+            gate.assert_called_once_with(PROJECT_ROOT, "basic", run_tests=False)
 
     def test_test_runner_uses_environment_guard_against_recursion(self) -> None:
         with patch.dict(os.environ, {"ASTRO_QUALITY_GATE_RUNNING": "1"}):

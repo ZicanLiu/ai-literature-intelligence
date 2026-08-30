@@ -50,7 +50,8 @@ jobs:
         run: python -m unittest discover -s tests/automated -p "test_*.py" -q
 
       - name: Basic Quality Gate
-        run: python -m app.quality_gate --level basic
+        # 完整 unittest 已由上一独立 blocking step 执行；此处只运行其余门禁检查。
+        run: python -m app.quality_gate --level basic --skip-tests
 
       - name: W5 Artifact Reproducibility Check
         run: python scripts/check_w5_method_artifacts.py
