@@ -3320,6 +3320,23 @@ def capture_git_state(project_root: str | Path) -> dict[str, Any]:
     }
 
 
+def validate_external_output_path(
+    output_path: str | Path,
+    *,
+    project_root: str | Path,
+    label: str = "human workflow output",
+) -> Path:
+    """Require Human-workflow outputs to live outside the trusted repository."""
+
+    root = Path(project_root).resolve()
+    output = Path(output_path).resolve()
+    try:
+        output.relative_to(root)
+    except ValueError:
+        return output
+    raise ValueError(f"{label} 必须位于 repository root 之外。")
+
+
 def assemble_curator_preparation_payloads(
     inputs: PilotSelectionInputs,
     *,
@@ -3726,13 +3743,9 @@ def export_curator_bundle(
     """Export one fillable bundle outside the repository without private maps."""
 
     root = Path(project_root).resolve()
-    output = Path(output_dir).resolve()
-    try:
-        output.relative_to(root)
-    except ValueError:
-        pass
-    else:
-        raise ValueError("curator workspace 必须位于 repository root 之外。")
+    output = validate_external_output_path(
+        output_dir, project_root=root, label="curator workspace"
+    )
     if curator_slot not in CURATOR_SLOTS:
         raise ValueError("curator export slot 必须是 curator_a 或 curator_b。")
     if output.exists() and (not output.is_dir() or any(output.iterdir())):
@@ -3911,6 +3924,7 @@ __all__ = [
     "validate_curator_submission",
     "validate_curator_submission_against_package",
     "validate_curator_task",
+    "validate_external_output_path",
     "validate_human_selection_freeze_reference",
     "validate_selection_artifact",
     "write_json",

@@ -8,9 +8,11 @@ import hashlib
 import io
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from app.run_pilot_bm25_selection import build_parser as build_bm25_cli_parser
 from app.run_pilot_bm25_selection import main as run_bm25_cli
@@ -21,6 +23,7 @@ from src.pilot_context import (
     neutral_order_key,
     truncate_paper_fields,
     validate_formal_pair_method_roster,
+    validate_formal_pair_selection_binding,
     validate_matched_context,
     validate_matched_context_pair,
 )
@@ -968,6 +971,425 @@ class MatchedContextTests(PilotSelectionContextFixture):
                 left_is_fixture=True,
                 right_is_fixture=False,
             )
+
+    def test_formal_pair_rejects_human_other_than_bm25_bound_human(self) -> None:
+        """Exercise pair binding without executing the real frozen BM25 ranking."""
+
+        topic = self.inputs.config["topics"][0]
+        common = {
+            "topic": {
+                "topic_id": topic["topic_id"],
+                "question_id": topic["question_id"],
+                "research_question_identity": topic["research_question_identity"],
+            },
+            "u80": copy.deepcopy(self.inputs.config["inputs"]["u80"]),
+            "k": SELECTION_K,
+            "created_at": CREATED_AT,
+            "is_fixture": False,
+        }
+        human_a = {
+            **copy.deepcopy(common),
+            "artifact_id": "synthetic_contract_human_a",
+            "selection_identity": "synthetic-contract-human-a",
+            "selection_method": {"method_id": HUMAN_METHOD_ID},
+            "contract_test_marker": "A",
+        }
+        human_b = {
+            **copy.deepcopy(common),
+            "artifact_id": "synthetic_contract_human_b",
+            "selection_identity": "synthetic-contract-human-b",
+            "selection_method": {"method_id": HUMAN_METHOD_ID},
+            "contract_test_marker": "B",
+        }
+        bm25 = {
+            **copy.deepcopy(common),
+            "artifact_id": "synthetic_contract_bm25",
+            "selection_identity": "synthetic-contract-bm25",
+            "selection_method": {"method_id": BM25_METHOD_ID},
+            "method_specific_provenance": {
+                "human_selection_freeze": (
+                    build_human_selection_freeze_reference(human_a)
+                )
+            },
+        }
+
+        def validated(selection, **_kwargs):
+            method_id = selection["selection_method"]["method_id"]
+            return {
+                "topic_id": selection["topic"]["topic_id"],
+                "question_id": selection["topic"]["question_id"],
+                "u80": copy.deepcopy(selection["u80"]),
+                "k": selection["k"],
+                "method_id": method_id,
+                "selection_identity": selection["selection_identity"],
+                "artifact_id": selection["artifact_id"],
+                "is_fixture": selection["is_fixture"],
+            }
+
+        with patch(
+            "src.pilot_context.validate_selection_artifact",
+            side_effect=validated,
+        ):
+            bound = validate_formal_pair_selection_binding(
+                bm25, human_a, inputs=self.inputs
+            )
+            self.assertEqual(bound["bm25_side"], "left")
+            self.assertEqual(bound["human_artifact_id"], human_a["artifact_id"])
+            self.assertEqual(bound["human_selection_sha256"], payload_sha256(human_a))
+            with self.assertRaisesRegex(ValueError, "hash binding drift"):
+                validate_formal_pair_selection_binding(
+                    bm25, human_b, inputs=self.inputs
+                )
+
+
+class ExternalCoordinatorCliSequenceTests(PilotSelectionContextFixture):
+    @staticmethod
+    def git_status() -> str:
+        return subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=all"],
+            cwd=PROJECT_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+
+    def run_cli(self, module: str, *arguments: str) -> subprocess.CompletedProcess:
+        result = subprocess.run(
+            [sys.executable, "-m", module, *arguments],
+            cwd=PROJECT_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            self.fail(
+                f"CLI failed ({module} {' '.join(arguments)}):\n"
+                f"stdout={result.stdout}\nstderr={result.stderr}"
+            )
+        self.assertEqual(self.git_status(), "")
+        return result
+
+    def assert_repo_output_rejected(self, label: str, arguments: list[str]) -> None:
+        forbidden = PROJECT_ROOT / f".pilot_v02_forbidden_{label}.json"
+        self.assertFalse(forbidden.exists())
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "app.pilot_curator_workflow",
+                *arguments,
+                "--output",
+                str(forbidden),
+            ],
+            cwd=PROJECT_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        dirty_after_command = self.git_status()
+        created = forbidden.exists()
+        if created:
+            forbidden.unlink()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("repository root 之外", result.stderr)
+        self.assertFalse(created)
+        self.assertEqual(dirty_after_command, "")
+        self.assertEqual(self.git_status(), "")
+
+    def test_real_cli_sequence_stays_external_and_git_clean(self) -> None:
+        self.assertEqual(self.git_status(), "")
+        topic_id = TOPIC_ID
+        task_a = load_json_object(
+            COMMITTED_CURATOR_PACKAGE
+            / "curator_tasks"
+            / "curator_a"
+            / f"{topic_id}.json",
+            label="committed curator A task",
+        )
+        task_b = load_json_object(
+            COMMITTED_CURATOR_PACKAGE
+            / "curator_tasks"
+            / "curator_b"
+            / f"{topic_id}.json",
+            label="committed curator B task",
+        )
+        map_a = load_json_object(
+            COMMITTED_CURATOR_PACKAGE
+            / "coordinator"
+            / "curator_a"
+            / f"{topic_id}_candidate_map.json",
+            label="committed curator A map",
+        )
+        map_b = load_json_object(
+            COMMITTED_CURATOR_PACKAGE
+            / "coordinator"
+            / "curator_b"
+            / f"{topic_id}_candidate_map.json",
+            label="committed curator B map",
+        )
+        u80 = list(self.inputs.u80_by_topic[topic_id])
+        opaque_a = {
+            row["canonical_entity_id"]: row["candidate_id"]
+            for row in map_a["candidate_map"]
+        }
+        opaque_b = {
+            row["canonical_entity_id"]: row["candidate_id"]
+            for row in map_b["candidate_map"]
+        }
+
+        with tempfile.TemporaryDirectory(
+            prefix="srtp-pilot-external-cli-sequence-"
+        ) as temp_dir:
+            external_root = Path(temp_dir).resolve()
+            with self.assertRaises(ValueError):
+                external_root.relative_to(PROJECT_ROOT)
+            bundle_a = external_root / "curator_a"
+            bundle_b = external_root / "curator_b"
+            coordinator = external_root / "coordinator"
+
+            self.run_cli(
+                "app.export_pilot_curator_bundle",
+                "--curator-slot",
+                "curator_a",
+                "--output-dir",
+                str(bundle_a),
+                "--exported-at",
+                CREATED_AT,
+            )
+            self.run_cli(
+                "app.export_pilot_curator_bundle",
+                "--curator-slot",
+                "curator_b",
+                "--output-dir",
+                str(bundle_b),
+                "--exported-at",
+                CREATED_AT,
+            )
+
+            response_a = self.completed_response(
+                task_a,
+                [opaque_a[entity_id] for entity_id in u80[:8]],
+                "plumbing_cli_curator_a",
+            )
+            response_b = self.completed_response(
+                task_b,
+                [opaque_b[entity_id] for entity_id in u80[4:12]],
+                "plumbing_cli_curator_b",
+            )
+            for response in (response_a, response_b):
+                response["notes"] = (
+                    "PLUMBING-ONLY MOCK CLI REGRESSION; NOT EXPERIMENT DATA."
+                )
+            response_a_path = bundle_a / "responses" / f"{topic_id}_response.json"
+            response_b_path = bundle_b / "responses" / f"{topic_id}_response.json"
+            write_json(response_a_path, response_a)
+            write_json(response_b_path, response_b)
+            self.assertEqual(self.git_status(), "")
+
+            submission_a = coordinator / "curator_a_submission.json"
+            submission_b = coordinator / "curator_b_submission.json"
+            comparison = coordinator / "comparison.json"
+            adjudication_task = coordinator / "adjudication_task.json"
+            adjudication_response = coordinator / "adjudication_response.json"
+            adjudication_submission = coordinator / "adjudication_submission.json"
+            final_selection = coordinator / "final_dual_curator_selection.json"
+
+            self.run_cli(
+                "app.pilot_curator_workflow",
+                "import-response",
+                "--curator-slot",
+                "curator_a",
+                "--response",
+                str(response_a_path),
+                "--output",
+                str(submission_a),
+                "--imported-at",
+                CREATED_AT,
+            )
+            self.run_cli(
+                "app.pilot_curator_workflow",
+                "import-response",
+                "--curator-slot",
+                "curator_b",
+                "--response",
+                str(response_b_path),
+                "--output",
+                str(submission_b),
+                "--imported-at",
+                CREATED_AT,
+            )
+            self.run_cli(
+                "app.pilot_curator_workflow",
+                "compare",
+                "--submission-a",
+                str(submission_a),
+                "--submission-b",
+                str(submission_b),
+                "--output",
+                str(comparison),
+                "--created-at",
+                CREATED_AT,
+            )
+            self.run_cli(
+                "app.pilot_curator_workflow",
+                "build-adjudication-task",
+                "--submission-a",
+                str(submission_a),
+                "--submission-b",
+                str(submission_b),
+                "--comparison",
+                str(comparison),
+                "--source-curator-slot",
+                "curator_a",
+                "--output",
+                str(adjudication_task),
+                "--created-at",
+                CREATED_AT,
+            )
+            task = load_json_object(
+                adjudication_task, label="external adjudication task"
+            )
+            adjudication_form = build_blank_adjudication_response(task)
+            adjudication_form.update(
+                {
+                    "status": "completed",
+                    "adjudicator_id": "plumbing_cli_adjudicator",
+                    "selected_candidates": [
+                        {
+                            "candidate_id": row["candidate_id"],
+                            "selection_reason": (
+                                "PLUMBING-ONLY mock adjudication reason."
+                            ),
+                        }
+                        for row in task["candidates"][
+                            : task["required_additional_count"]
+                        ]
+                    ],
+                    "timing": {
+                        "started_at": "",
+                        "completed_at": "",
+                        "elapsed_minutes": 1.0,
+                    },
+                    "external_lookup": False,
+                    "submitted_at": CREATED_AT,
+                    "notes": "PLUMBING-ONLY; NOT EXPERIMENT DATA.",
+                }
+            )
+            write_json(adjudication_response, adjudication_form)
+            self.assertEqual(self.git_status(), "")
+            self.run_cli(
+                "app.pilot_curator_workflow",
+                "import-adjudication",
+                "--submission-a",
+                str(submission_a),
+                "--submission-b",
+                str(submission_b),
+                "--comparison",
+                str(comparison),
+                "--source-curator-slot",
+                "curator_a",
+                "--task",
+                str(adjudication_task),
+                "--response",
+                str(adjudication_response),
+                "--output",
+                str(adjudication_submission),
+                "--imported-at",
+                CREATED_AT,
+            )
+            self.run_cli(
+                "app.pilot_curator_workflow",
+                "build-final-selection",
+                "--submission-a",
+                str(submission_a),
+                "--submission-b",
+                str(submission_b),
+                "--comparison",
+                str(comparison),
+                "--source-curator-slot",
+                "curator_a",
+                "--adjudication-task",
+                str(adjudication_task),
+                "--adjudication",
+                str(adjudication_submission),
+                "--output",
+                str(final_selection),
+                "--created-at",
+                CREATED_AT,
+            )
+            final = load_json_object(
+                final_selection, label="external final Human selection"
+            )
+            validated = validate_selection_artifact(final, inputs=self.inputs)
+            self.assertEqual(validated["method_id"], HUMAN_METHOD_ID)
+            self.assertEqual(validated["k"], SELECTION_K)
+
+            rejection_cases = {
+                "import": [
+                    "import-response",
+                    "--curator-slot",
+                    "curator_a",
+                    "--response",
+                    str(response_a_path),
+                    "--imported-at",
+                    CREATED_AT,
+                ],
+                "compare": [
+                    "compare",
+                    "--submission-a",
+                    str(submission_a),
+                    "--submission-b",
+                    str(submission_b),
+                    "--created-at",
+                    CREATED_AT,
+                ],
+                "adjudication_task": [
+                    "build-adjudication-task",
+                    "--submission-a",
+                    str(submission_a),
+                    "--submission-b",
+                    str(submission_b),
+                    "--comparison",
+                    str(comparison),
+                    "--created-at",
+                    CREATED_AT,
+                ],
+                "adjudication_import": [
+                    "import-adjudication",
+                    "--submission-a",
+                    str(submission_a),
+                    "--submission-b",
+                    str(submission_b),
+                    "--comparison",
+                    str(comparison),
+                    "--task",
+                    str(adjudication_task),
+                    "--response",
+                    str(adjudication_response),
+                    "--imported-at",
+                    CREATED_AT,
+                ],
+                "final": [
+                    "build-final-selection",
+                    "--submission-a",
+                    str(submission_a),
+                    "--submission-b",
+                    str(submission_b),
+                    "--comparison",
+                    str(comparison),
+                    "--adjudication-task",
+                    str(adjudication_task),
+                    "--adjudication",
+                    str(adjudication_submission),
+                    "--created-at",
+                    CREATED_AT,
+                ],
+            }
+            for label, arguments in rejection_cases.items():
+                with self.subTest(label=label):
+                    self.assert_repo_output_rejected(label, arguments)
+
+        self.assertEqual(self.git_status(), "")
 
 
 class CuratorPackageTests(PilotSelectionContextFixture):

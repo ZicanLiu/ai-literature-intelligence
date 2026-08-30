@@ -29,12 +29,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--left-context", type=Path, required=True)
     parser.add_argument("--right-selection", type=Path, required=True)
     parser.add_argument("--right-context", type=Path, required=True)
-    parser.add_argument(
-        "--human-selection-freeze",
-        type=Path,
-        required=True,
-        help="Final Dual-Curator artifact hash-bound by the BM25 selection.",
-    )
     parser.add_argument("--report", type=Path)
     return parser
 
@@ -51,17 +45,12 @@ def main(argv: list[str] | None = None) -> int:
             args.right_selection, label="right Pilot selection"
         )
         right_context = load_json_object(args.right_context, label="right context")
-        human_freeze = load_json_object(
-            args.human_selection_freeze, label="Human selection freeze"
-        )
         report = validate_formal_matched_context_pair(
             left_context,
             right_context,
             left_selection=left_selection,
             right_selection=right_selection,
             inputs=inputs,
-            left_human_selection_freeze=human_freeze,
-            right_human_selection_freeze=human_freeze,
         )
         if args.report:
             if args.report.exists():

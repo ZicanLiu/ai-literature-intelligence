@@ -23,6 +23,7 @@ from src.pilot_selection import (
     PilotSelectionInputs,
     payload_sha256,
     topic_config,
+    validate_human_selection_freeze_reference,
     validate_selection_artifact,
 )
 from src.w6_contracts import deterministic_identity
@@ -482,6 +483,74 @@ def validate_formal_pair_method_roster(
         )
 
 
+def validate_formal_pair_selection_binding(
+    left_selection: Mapping[str, Any],
+    right_selection: Mapping[str, Any],
+    *,
+    inputs: PilotSelectionInputs,
+) -> dict[str, Any]:
+    """Bind formal BM25 provenance to the Human artifact in this exact pair."""
+
+    left_method = _require_mapping(
+        left_selection.get("selection_method"), "left selection method"
+    ).get("method_id")
+    right_method = _require_mapping(
+        right_selection.get("selection_method"), "right selection method"
+    ).get("method_id")
+    validate_formal_pair_method_roster(
+        left_method,
+        right_method,
+        left_is_fixture=left_selection.get("is_fixture") is not False,
+        right_is_fixture=right_selection.get("is_fixture") is not False,
+    )
+    if left_method == BM25_METHOD_ID:
+        bm25_side = "left"
+        human_side = "right"
+        bm25_selection = left_selection
+        human_selection = right_selection
+    else:
+        bm25_side = "right"
+        human_side = "left"
+        bm25_selection = right_selection
+        human_selection = left_selection
+
+    bm25_details = _require_mapping(
+        bm25_selection.get("method_specific_provenance"),
+        "formal BM25 provenance",
+    )
+    validate_human_selection_freeze_reference(
+        _require_mapping(
+            bm25_details.get("human_selection_freeze"),
+            "formal BM25 Human-freeze reference",
+        ),
+        human_selection,
+    )
+    validated_human = validate_selection_artifact(human_selection, inputs=inputs)
+    validated_bm25 = validate_selection_artifact(
+        bm25_selection,
+        inputs=inputs,
+        human_selection_freeze=human_selection,
+    )
+    if (
+        validated_human["method_id"] != HUMAN_METHOD_ID
+        or validated_bm25["method_id"] != BM25_METHOD_ID
+        or validated_human["is_fixture"]
+        or validated_bm25["is_fixture"]
+    ):
+        raise ValueError("formal pair selection method/fixture validation drift。")
+    for key in ("topic_id", "question_id", "u80", "k"):
+        if validated_bm25[key] != validated_human[key]:
+            raise ValueError(f"formal pair BM25/Human {key} binding drift。")
+    return {
+        "bm25_side": bm25_side,
+        "human_side": human_side,
+        "human_artifact_id": validated_human["artifact_id"],
+        "human_selection_identity": validated_human["selection_identity"],
+        "human_selection_sha256": payload_sha256(human_selection),
+        "human_selection_frozen_at": human_selection["created_at"],
+    }
+
+
 def validate_formal_matched_context_pair(
     left: Mapping[str, Any],
     right: Mapping[str, Any],
@@ -489,25 +558,23 @@ def validate_formal_matched_context_pair(
     left_selection: Mapping[str, Any],
     right_selection: Mapping[str, Any],
     inputs: PilotSelectionInputs,
-    left_human_selection_freeze: Mapping[str, Any] | None = None,
-    right_human_selection_freeze: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    validate_formal_pair_method_roster(
-        left["selection"]["method_id"],
-        right["selection"]["method_id"],
-        left_is_fixture=bool(left["is_fixture"]),
-        right_is_fixture=bool(right["is_fixture"]),
+    binding = validate_formal_pair_selection_binding(
+        left_selection, right_selection, inputs=inputs
     )
+    left_freeze = right_selection if binding["bm25_side"] == "left" else None
+    right_freeze = left_selection if binding["bm25_side"] == "right" else None
     report = validate_matched_context_pair(
         left,
         right,
         left_selection=left_selection,
         right_selection=right_selection,
         inputs=inputs,
-        left_human_selection_freeze=left_human_selection_freeze,
-        right_human_selection_freeze=right_human_selection_freeze,
+        left_human_selection_freeze=left_freeze,
+        right_human_selection_freeze=right_freeze,
     )
     report["validation_mode"] = "formal_bm25_vs_dual_curator"
+    report["human_freeze_binding"] = binding
     report["validation_identity"] = deterministic_identity(
         CONTEXT_PAIR_IDENTITY_PREFIX,
         {key: value for key, value in report.items() if key != "validation_identity"},
@@ -523,6 +590,7 @@ __all__ = [
     "truncate_paper_fields",
     "validate_formal_matched_context_pair",
     "validate_formal_pair_method_roster",
+    "validate_formal_pair_selection_binding",
     "validate_matched_context",
     "validate_matched_context_pair",
 ]

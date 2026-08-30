@@ -20,6 +20,7 @@ from src.pilot_selection import (
     load_pilot_selection_inputs,
     validate_completed_curator_response,
     validate_curator_submission_against_package,
+    validate_external_output_path,
     write_json,
 )
 from src.w6_contracts import load_json_object
@@ -127,10 +128,12 @@ def _provenance_revision() -> str:
     return state["git_revision"]
 
 
-def _write_new(path: Path, payload: dict[str, Any]) -> None:
-    if path.exists():
-        raise ValueError(f"output 已存在；禁止覆盖：{path}")
-    write_json(path, payload)
+def _write_new(path: Path, payload: dict[str, Any]) -> Path:
+    output = validate_external_output_path(path, project_root=PROJECT_ROOT)
+    if output.exists():
+        raise ValueError(f"output 已存在；禁止覆盖：{output}")
+    write_json(output, payload)
+    return output
 
 
 def _load_originals(args, inputs):
@@ -159,6 +162,11 @@ def _source_chain(args, submission_a, submission_b, inputs):
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
+        external_output = (
+            validate_external_output_path(args.output, project_root=PROJECT_ROOT)
+            if hasattr(args, "output")
+            else None
+        )
         inputs = load_pilot_selection_inputs(args.config, project_root=PROJECT_ROOT)
         if args.command in {"validate-response", "import-response"}:
             response = _load(args.response, "repository-external curator response")
@@ -264,13 +272,15 @@ def main(argv: list[str] | None = None) -> int:
                         created_at=_now(args.created_at),
                         git_revision=revision,
                     )
-        _write_new(args.output, payload)
+        assert external_output is not None
+        written_output = _write_new(external_output, payload)
     except (OSError, RuntimeError, subprocess.SubprocessError, ValueError) as error:
         print(f"Pilot curator workflow FAILED: {error}", file=sys.stderr)
         return 1
     print(
         "Pilot curator workflow PASSED: "
-        f"command={args.command}, artifact={payload['artifact_id']}, output={args.output}"
+        f"command={args.command}, artifact={payload['artifact_id']}, "
+        f"output={written_output}"
     )
     return 0
 
