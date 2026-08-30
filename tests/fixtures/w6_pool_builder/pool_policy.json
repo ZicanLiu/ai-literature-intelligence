@@ -1,0 +1,27 @@
+{
+  "name": "fixture_multi_retriever_union_with_tail",
+  "version": "fixture-v1",
+  "parameters": {
+    "depth_by_system": {
+      "bm25_fixture": 2,
+      "dense_fixture": 2,
+      "deterministic_random_tail": 1,
+      "openalex_native": 2
+    },
+    "depth_overrides_by_run": {},
+    "target_size_per_topic": 6,
+    "minimum_size_per_topic": 4,
+    "deterministic_random_seed": 20260829,
+    "random_fill_enabled": true,
+    "target_overflow_policy": "retain_all_depth_qualified_candidates",
+    "duplicate_hit_handling": "deduplicate_topic_record_keep_all_hit_refs"
+  },
+  "included_retrieval_run_ids": [
+    "run_denoise_bm25",
+    "run_denoise_openalex",
+    "run_denoise_tail",
+    "run_transient_dense",
+    "run_transient_openalex",
+    "run_transient_tail"
+  ]
+}
