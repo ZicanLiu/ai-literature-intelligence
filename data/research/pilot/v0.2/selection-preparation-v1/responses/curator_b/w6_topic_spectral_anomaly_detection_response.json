@@ -44,7 +44,7 @@
   "status": "blank_template",
   "submitted_at": "",
   "task_id": "pilot_curator_b_srtp_pilot_q_spectral_anomaly_detection",
-  "task_identity": "srtp-pilot-curator-task:sha256:1307e13dc00ed61a2c035b369aef661dd569f5f5eec1a943e323e7e33fe9d89c",
+  "task_identity": "srtp-pilot-curator-task:sha256:6bd6debefe23d16137bc6d362ced72de3614ed34d656288b4da6d7eefd9770a2",
   "timing": {
     "completed_at": "",
     "elapsed_minutes": null,
