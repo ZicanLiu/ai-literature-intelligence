@@ -1,0 +1,153 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_topic_set",
+  "artifact_id": "srtp_pilot_topic_adapter_190241b56a66347b16ed53b1",
+  "status": "frozen",
+  "is_fixture": false,
+  "version": "srtp-pilot-v0.2-query-adapter-v1",
+  "created_at": "2026-08-30T18:19:26+08:00",
+  "provenance": {
+    "kind": "pilot_query_identity_adapter",
+    "created_by": "pilot_real_data_foundation",
+    "created_at": "2026-08-30T18:19:26+08:00",
+    "git_revision": "fb4e0d70156c83435a8ba054ff8f1607e61b58f6"
+  },
+  "topics": [
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "research_question": "How can machine learning separate astrophysical foregrounds and instrumental contamination from cosmological 21-cm spectral data?",
+      "scientific_object": "cosmological 21-cm emission and its foreground sky",
+      "data_modality": "radio-frequency 21-cm spectra or frequency-resolved intensity maps",
+      "target_task": "foreground removal and component separation",
+      "method_role": "machine learning is the primary foreground separator or restoration model",
+      "scientific_role": "recover the cosmological 21-cm signal for reionization or intensity-mapping studies",
+      "scope_in": [
+        "frequency-resolved 21-cm data are direct inputs",
+        "foreground or contamination removal is a primary evaluated output"
+      ],
+      "scope_out": [
+        "cosmological parameter inference from already-clean data",
+        "radio-frequency-interference classification without foreground separation",
+        "continuum radio imaging without spectral component separation"
+      ],
+      "boundary_cases": [
+        "methods that identify HII regions but do not remove foregrounds",
+        "simulations used only to train a downstream parameter estimator"
+      ],
+      "version": "v0.2-alpha",
+      "lifecycle_status": "frozen",
+      "acquisition_query_variants": [
+        {
+          "query_variant_id": "21cm_foreground_aq01",
+          "query_text": "neural network foreground removal 21 cm signal",
+          "version": "pilot-v0.2-aq-registry-v1",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "21cm_foreground_aq02",
+          "query_text": "deep learning 21cm intensity mapping foreground separation",
+          "version": "pilot-v0.2-aq-registry-v1",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "21cm_foreground_aq03",
+          "query_text": "machine learning cosmological 21 cm foreground subtraction",
+          "version": "pilot-v0.2-aq-registry-v1",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "21cm_foreground_aq04",
+          "query_text": "neural network component separation radio 21cm spectra",
+          "version": "pilot-v0.2-aq-registry-v1",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "21cm_foreground_aq05",
+          "query_text": "deep learning epoch reionization foreground removal",
+          "version": "pilot-v0.2-aq-registry-v1",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "21cm_foreground_aq06",
+          "query_text": "machine learning HI intensity mapping foreground cleaning",
+          "version": "pilot-v0.2-aq-registry-v1",
+          "status": "frozen"
+        }
+      ],
+      "provenance": {
+        "kind": "pilot_query_identity_adapter",
+        "created_by": "pilot_real_data_foundation",
+        "created_at": "2026-08-30T18:19:26+08:00",
+        "git_revision": "fb4e0d70156c83435a8ba054ff8f1607e61b58f6"
+      }
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "research_question": "How can unsupervised or active-learning methods discover rare and anomalous objects in large astronomical spectroscopic surveys?",
+      "scientific_object": "rare or previously unmodelled objects in spectroscopic surveys",
+      "data_modality": "large collections of optical or infrared astronomical spectra",
+      "target_task": "spectral anomaly and outlier discovery",
+      "method_role": "machine learning provides the primary anomaly representation or score",
+      "scientific_role": "prioritize unusual spectra for scientific follow-up",
+      "scope_in": [
+        "astronomical spectra are direct inputs to an anomaly score or novelty ranking",
+        "the task is discovery beyond a fixed known-class classifier"
+      ],
+      "scope_out": [
+        "supervised classification limited to known spectral classes",
+        "image-only or light-curve-only anomaly detection",
+        "follow-up studies with no spectral anomaly method"
+      ],
+      "boundary_cases": [
+        "rare-class classification with fully predefined labels",
+        "generic dimensionality reduction without an anomaly output"
+      ],
+      "version": "v0.2-alpha",
+      "lifecycle_status": "frozen",
+      "acquisition_query_variants": [
+        {
+          "query_variant_id": "spectral_anomaly_aq01",
+          "query_text": "machine learning rare objects astronomical spectra anomaly detection",
+          "version": "pilot-v0.2-aq-registry-v1",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "spectral_anomaly_aq02",
+          "query_text": "unsupervised outlier discovery spectroscopic survey",
+          "version": "pilot-v0.2-aq-registry-v1",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "spectral_anomaly_aq03",
+          "query_text": "anomaly detection stellar spectra machine learning",
+          "version": "pilot-v0.2-aq-registry-v1",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "spectral_anomaly_aq04",
+          "query_text": "unusual galaxy spectra unsupervised learning",
+          "version": "pilot-v0.2-aq-registry-v1",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "spectral_anomaly_aq05",
+          "query_text": "novelty detection astronomical spectroscopy survey",
+          "version": "pilot-v0.2-aq-registry-v1",
+          "status": "frozen"
+        },
+        {
+          "query_variant_id": "spectral_anomaly_aq06",
+          "query_text": "active learning rare spectral objects astronomy",
+          "version": "pilot-v0.2-aq-registry-v1",
+          "status": "frozen"
+        }
+      ],
+      "provenance": {
+        "kind": "pilot_query_identity_adapter",
+        "created_by": "pilot_real_data_foundation",
+        "created_at": "2026-08-30T18:19:26+08:00",
+        "git_revision": "fb4e0d70156c83435a8ba054ff8f1607e61b58f6"
+      }
+    }
+  ]
+}

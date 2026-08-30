@@ -1,0 +1,278 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "srtp_pilot_query_registry",
+  "artifact_id": "srtp_pilot_query_registry_257f996c78bfdd8e0ec0367d",
+  "registry_identity": "srtp-pilot-query-registry:sha256:257f996c78bfdd8e0ec0367d3841e612e85b9ed04b1f1ae5806ed42d2aefcd37",
+  "protocol_version": "srtp-pilot-v0.2",
+  "is_fixture": false,
+  "created_at": "2026-08-30T18:19:26+08:00",
+  "policy": {
+    "name": "pilot_aq_registry_with_exact_text_historical_lineage",
+    "version": "v1",
+    "preserve_acquisition_query_ids": true,
+    "historical_lineage_rule": "exact_topic_and_query_text_match_only",
+    "unmatched_aq_behavior": "retain_as_independent_acquisition_identity",
+    "mutate_frozen_topic_artifact": false
+  },
+  "topic_set_reference": {
+    "path": "data/research/w6/v0.2-alpha/topics.json",
+    "artifact_id": "w6_research_topics_v0.2_alpha",
+    "sha256": "6e2f6e6b8fea56cef6e245dcf37fa97a46ba5efc6703fb47e9863840e3a06ca4"
+  },
+  "source_acquisition_config": {
+    "path": "configs/w6/openalex_topic_query_audit_v1.json",
+    "artifact_id": "w6_openalex_topic_query_audit_v1",
+    "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+    "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+  },
+  "source_openalex_package": {
+    "path": "data/research/w6/v0.2-alpha/openalex-audit-v1",
+    "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+    "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+    "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+  },
+  "queries": [
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq01",
+      "exact_query_text": "neural network foreground removal 21 cm signal",
+      "source_query_run_id": "w6-openalex-query-run:sha256:1df2778ba70c57436aa7bd099c8139bd6052a574e2ae79805dce2504250dde2c",
+      "source_acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "acquisition_config_reference": {
+        "artifact_id": "w6_openalex_topic_query_audit_v1",
+        "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+        "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+      },
+      "source_package_reference": {
+        "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+        "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+        "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+      },
+      "historical_topic_query_lineage": {
+        "lineage_type": "exact_topic_and_query_text_match",
+        "historical_query_variant_id": "21cm_foreground_qv1",
+        "historical_query_text": "neural network foreground removal 21 cm signal",
+        "historical_query_version": "v0.2-alpha"
+      }
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq02",
+      "exact_query_text": "deep learning 21cm intensity mapping foreground separation",
+      "source_query_run_id": "w6-openalex-query-run:sha256:f6deb5c6925aa2720bc7bf03c720394df7081bbede6cc015c222059a69014ebb",
+      "source_acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "acquisition_config_reference": {
+        "artifact_id": "w6_openalex_topic_query_audit_v1",
+        "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+        "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+      },
+      "source_package_reference": {
+        "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+        "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+        "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+      },
+      "historical_topic_query_lineage": {
+        "lineage_type": "exact_topic_and_query_text_match",
+        "historical_query_variant_id": "21cm_foreground_qv2",
+        "historical_query_text": "deep learning 21cm intensity mapping foreground separation",
+        "historical_query_version": "v0.2-alpha"
+      }
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq03",
+      "exact_query_text": "machine learning cosmological 21 cm foreground subtraction",
+      "source_query_run_id": "w6-openalex-query-run:sha256:aac8c0890c23ece8047ceab6ff24d12627543bf6f780c3f49a6addf87cfbb85e",
+      "source_acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "acquisition_config_reference": {
+        "artifact_id": "w6_openalex_topic_query_audit_v1",
+        "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+        "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+      },
+      "source_package_reference": {
+        "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+        "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+        "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+      },
+      "historical_topic_query_lineage": null
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq04",
+      "exact_query_text": "neural network component separation radio 21cm spectra",
+      "source_query_run_id": "w6-openalex-query-run:sha256:41f15bedfcb91555566202831c909bb442f790dc14ca1c4b17b81db7f2285abe",
+      "source_acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "acquisition_config_reference": {
+        "artifact_id": "w6_openalex_topic_query_audit_v1",
+        "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+        "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+      },
+      "source_package_reference": {
+        "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+        "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+        "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+      },
+      "historical_topic_query_lineage": null
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq05",
+      "exact_query_text": "deep learning epoch reionization foreground removal",
+      "source_query_run_id": "w6-openalex-query-run:sha256:d6a53a2c4cc4788d7e463fcdd38c20ede80311622c281e7ab1619cfcee470342",
+      "source_acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "acquisition_config_reference": {
+        "artifact_id": "w6_openalex_topic_query_audit_v1",
+        "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+        "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+      },
+      "source_package_reference": {
+        "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+        "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+        "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+      },
+      "historical_topic_query_lineage": null
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq06",
+      "exact_query_text": "machine learning HI intensity mapping foreground cleaning",
+      "source_query_run_id": "w6-openalex-query-run:sha256:e0fbe7cf6af4bb51897b1ea05fd9531c1d9809d0f61e69694478eca4e90c9913",
+      "source_acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "acquisition_config_reference": {
+        "artifact_id": "w6_openalex_topic_query_audit_v1",
+        "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+        "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+      },
+      "source_package_reference": {
+        "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+        "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+        "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+      },
+      "historical_topic_query_lineage": null
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq01",
+      "exact_query_text": "machine learning rare objects astronomical spectra anomaly detection",
+      "source_query_run_id": "w6-openalex-query-run:sha256:90249a02aef9cdd40a7b3d1352674be613e1d62d35ca542e2979150c503cb3fd",
+      "source_acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "acquisition_config_reference": {
+        "artifact_id": "w6_openalex_topic_query_audit_v1",
+        "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+        "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+      },
+      "source_package_reference": {
+        "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+        "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+        "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+      },
+      "historical_topic_query_lineage": {
+        "lineage_type": "exact_topic_and_query_text_match",
+        "historical_query_variant_id": "spectral_anomaly_qv1",
+        "historical_query_text": "machine learning rare objects astronomical spectra anomaly detection",
+        "historical_query_version": "v0.2-alpha"
+      }
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq02",
+      "exact_query_text": "unsupervised outlier discovery spectroscopic survey",
+      "source_query_run_id": "w6-openalex-query-run:sha256:fb36abe842ca01d7ba019788e927024797481deb1ea2006a957a80557ef305ee",
+      "source_acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "acquisition_config_reference": {
+        "artifact_id": "w6_openalex_topic_query_audit_v1",
+        "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+        "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+      },
+      "source_package_reference": {
+        "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+        "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+        "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+      },
+      "historical_topic_query_lineage": {
+        "lineage_type": "exact_topic_and_query_text_match",
+        "historical_query_variant_id": "spectral_anomaly_qv2",
+        "historical_query_text": "unsupervised outlier discovery spectroscopic survey",
+        "historical_query_version": "v0.2-alpha"
+      }
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq03",
+      "exact_query_text": "anomaly detection stellar spectra machine learning",
+      "source_query_run_id": "w6-openalex-query-run:sha256:82d7bd9718c77cf45fcdc86cf621191996e08363f093523e6d9f10f3058fd0e9",
+      "source_acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "acquisition_config_reference": {
+        "artifact_id": "w6_openalex_topic_query_audit_v1",
+        "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+        "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+      },
+      "source_package_reference": {
+        "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+        "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+        "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+      },
+      "historical_topic_query_lineage": null
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq04",
+      "exact_query_text": "unusual galaxy spectra unsupervised learning",
+      "source_query_run_id": "w6-openalex-query-run:sha256:c4d2fef5c817ac6f125b522c5320532185583e33f80d4e9933db14e285280133",
+      "source_acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "acquisition_config_reference": {
+        "artifact_id": "w6_openalex_topic_query_audit_v1",
+        "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+        "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+      },
+      "source_package_reference": {
+        "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+        "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+        "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+      },
+      "historical_topic_query_lineage": null
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq05",
+      "exact_query_text": "novelty detection astronomical spectroscopy survey",
+      "source_query_run_id": "w6-openalex-query-run:sha256:879075880bd838b6660fd59fb065b452215e6050b47b2ed39ee863d28278978b",
+      "source_acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "acquisition_config_reference": {
+        "artifact_id": "w6_openalex_topic_query_audit_v1",
+        "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+        "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+      },
+      "source_package_reference": {
+        "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+        "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+        "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+      },
+      "historical_topic_query_lineage": null
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq06",
+      "exact_query_text": "active learning rare spectral objects astronomy",
+      "source_query_run_id": "w6-openalex-query-run:sha256:8c597a8ee794aa595b77410afc6085575dcfbad8795feb414362ef46b8dc88f7",
+      "source_acquisition_run_id": "w6-openalex-live-run:sha256:7e78d6ea8ad53616b6095b5e4315ef37315c21f7bb0dc8aa33c8e7feef386f13",
+      "acquisition_config_reference": {
+        "artifact_id": "w6_openalex_topic_query_audit_v1",
+        "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+        "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+      },
+      "source_package_reference": {
+        "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+        "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+        "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+      },
+      "historical_topic_query_lineage": null
+    }
+  ],
+  "provenance": {
+    "kind": "pilot_query_identity_adapter",
+    "created_by": "pilot_real_data_foundation",
+    "created_at": "2026-08-30T18:19:26+08:00",
+    "git_revision": "fb4e0d70156c83435a8ba054ff8f1607e61b58f6"
+  }
+}

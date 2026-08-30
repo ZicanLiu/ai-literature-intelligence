@@ -1,0 +1,283 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "srtp_pilot_real_data_foundation_manifest",
+  "artifact_id": "srtp_pilot_real_data_foundation_7359f33cc404af6b71e5ee03",
+  "package_identity": "srtp-pilot-real-data-foundation:sha256:7359f33cc404af6b71e5ee03a61d57192edb8f42e31adfe12ce9e526ff24a133",
+  "protocol_version": "srtp-pilot-v0.2",
+  "status": "frozen",
+  "is_fixture": false,
+  "created_at": "2026-08-30T18:19:26+08:00",
+  "config": {
+    "artifact_id": "srtp_pilot_v0_2_real_data_foundation_v1",
+    "config_identity": "srtp-pilot-real-data-config:sha256:6fc2d1d5a4a6da53a0314e7a6e310c6cbe83422f2778655a6f82f54ed6a94296",
+    "sha256": "cb01f754ab94bd6c4a36bb868fa03fa9e3103e5ed426c6cbeb73924b65a9bb4f"
+  },
+  "source_inputs": {
+    "frozen_topic_set": {
+      "path": "data/research/w6/v0.2-alpha/topics.json",
+      "artifact_id": "w6_research_topics_v0.2_alpha",
+      "sha256": "6e2f6e6b8fea56cef6e245dcf37fa97a46ba5efc6703fb47e9863840e3a06ca4"
+    },
+    "dev_split": {
+      "path": "data/research/w6/v0.2-alpha/split_manifest.json",
+      "artifact_id": "w6_topic_split_v0.2_alpha",
+      "split_identity": "w6-topic-split:sha256:8391d14987a15982b5afa2ae3760f029824909353f51056360d79fe9b85202bc",
+      "sha256": "bb57448288f122406d195cbec09dde80f76f78a7a0a1d0ef9bc85c052aea69ad"
+    },
+    "source_acquisition_config": {
+      "path": "configs/w6/openalex_topic_query_audit_v1.json",
+      "artifact_id": "w6_openalex_topic_query_audit_v1",
+      "config_identity": "w6-openalex-query-audit-config:sha256:9f312e242f3b9bed2d65da651a85620d38ece58b2ffa9e8fe7425a66f11926a4",
+      "sha256": "e678c048cb8a967845787e9eca7b5536bdec45fa96b83302c5064f65dc608fa1"
+    },
+    "source_openalex_package": {
+      "path": "data/research/w6/v0.2-alpha/openalex-audit-v1",
+      "artifact_id": "w6_openalex_topic_robustness_audit_v1",
+      "acquisition_identity": "w6-openalex-acquisition:sha256:1ae6a8045d7e22be9989203b17a060259288fc8d42f7ade345b3782a853ce73c",
+      "manifest_sha256": "c6a45a9e26fbcf09aae3c80dcc9625ea2f74c69a76a48b8588b66802c1e59e68"
+    },
+    "source_revision_provenance": {
+      "source_package_introduction_commit": "7c9ac5e30b005c661b5dd70d2100eeffe871d202",
+      "source_package_parent_commit": "4a98c33cba3131de581a540584331e67f66dd07f",
+      "w6_compatibility_git_revision": "4a98c33cba3131de581a540584331e67f66dd07f",
+      "w6_git_revision_semantics": "nearest_pre_acquisition_repository_revision_and_source_package_parent_anchor_not_a_claim_of_captured_execution_head",
+      "exact_acquisition_execution_revision_captured": false
+    },
+    "query_roster": [
+      {
+        "topic_id": "w6_topic_21cm_foreground_removal",
+        "acquisition_query_id": "21cm_foreground_aq01",
+        "source_query_run_id": "w6-openalex-query-run:sha256:1df2778ba70c57436aa7bd099c8139bd6052a574e2ae79805dce2504250dde2c"
+      },
+      {
+        "topic_id": "w6_topic_21cm_foreground_removal",
+        "acquisition_query_id": "21cm_foreground_aq02",
+        "source_query_run_id": "w6-openalex-query-run:sha256:f6deb5c6925aa2720bc7bf03c720394df7081bbede6cc015c222059a69014ebb"
+      },
+      {
+        "topic_id": "w6_topic_21cm_foreground_removal",
+        "acquisition_query_id": "21cm_foreground_aq03",
+        "source_query_run_id": "w6-openalex-query-run:sha256:aac8c0890c23ece8047ceab6ff24d12627543bf6f780c3f49a6addf87cfbb85e"
+      },
+      {
+        "topic_id": "w6_topic_21cm_foreground_removal",
+        "acquisition_query_id": "21cm_foreground_aq04",
+        "source_query_run_id": "w6-openalex-query-run:sha256:41f15bedfcb91555566202831c909bb442f790dc14ca1c4b17b81db7f2285abe"
+      },
+      {
+        "topic_id": "w6_topic_21cm_foreground_removal",
+        "acquisition_query_id": "21cm_foreground_aq05",
+        "source_query_run_id": "w6-openalex-query-run:sha256:d6a53a2c4cc4788d7e463fcdd38c20ede80311622c281e7ab1619cfcee470342"
+      },
+      {
+        "topic_id": "w6_topic_21cm_foreground_removal",
+        "acquisition_query_id": "21cm_foreground_aq06",
+        "source_query_run_id": "w6-openalex-query-run:sha256:e0fbe7cf6af4bb51897b1ea05fd9531c1d9809d0f61e69694478eca4e90c9913"
+      },
+      {
+        "topic_id": "w6_topic_spectral_anomaly_detection",
+        "acquisition_query_id": "spectral_anomaly_aq01",
+        "source_query_run_id": "w6-openalex-query-run:sha256:90249a02aef9cdd40a7b3d1352674be613e1d62d35ca542e2979150c503cb3fd"
+      },
+      {
+        "topic_id": "w6_topic_spectral_anomaly_detection",
+        "acquisition_query_id": "spectral_anomaly_aq02",
+        "source_query_run_id": "w6-openalex-query-run:sha256:fb36abe842ca01d7ba019788e927024797481deb1ea2006a957a80557ef305ee"
+      },
+      {
+        "topic_id": "w6_topic_spectral_anomaly_detection",
+        "acquisition_query_id": "spectral_anomaly_aq03",
+        "source_query_run_id": "w6-openalex-query-run:sha256:82d7bd9718c77cf45fcdc86cf621191996e08363f093523e6d9f10f3058fd0e9"
+      },
+      {
+        "topic_id": "w6_topic_spectral_anomaly_detection",
+        "acquisition_query_id": "spectral_anomaly_aq04",
+        "source_query_run_id": "w6-openalex-query-run:sha256:c4d2fef5c817ac6f125b522c5320532185583e33f80d4e9933db14e285280133"
+      },
+      {
+        "topic_id": "w6_topic_spectral_anomaly_detection",
+        "acquisition_query_id": "spectral_anomaly_aq05",
+        "source_query_run_id": "w6-openalex-query-run:sha256:879075880bd838b6660fd59fb065b452215e6050b47b2ed39ee863d28278978b"
+      },
+      {
+        "topic_id": "w6_topic_spectral_anomaly_detection",
+        "acquisition_query_id": "spectral_anomaly_aq06",
+        "source_query_run_id": "w6-openalex-query-run:sha256:8c597a8ee794aa595b77410afc6085575dcfbad8795feb414362ef46b8dc88f7"
+      }
+    ]
+  },
+  "identities": {
+    "config_identity": "srtp-pilot-real-data-config:sha256:6fc2d1d5a4a6da53a0314e7a6e310c6cbe83422f2778655a6f82f54ed6a94296",
+    "query_registry_identity": "srtp-pilot-query-registry:sha256:257f996c78bfdd8e0ec0367d3841e612e85b9ed04b1f1ae5806ed42d2aefcd37",
+    "adapter_identity": "srtp-pilot-openalex-w6-adapter:sha256:e3988c947662772e10bc65bcd1ff0f9acb8177e2f5ba131b5952d819f75340a1",
+    "exclusion_policy_sha256": "696695e31b816edd6cd73c0cd95604aa539f20837e19fcbcaf0e0934115c2d49",
+    "candidate_pool_identity": "w6-pool:sha256:332cfbd5b0f00649bdca9421df1fe735388e81e369025d911475f79ecb5d07cb",
+    "postcanonical_pool_identity": "w6-pool:sha256:53476011731a98d9fb5152c57fb65c343cfee2d0b50ba711b8f4dff4c501429b",
+    "canonicalization_identity": "srtp-pilot-canonicalization:sha256:213e3649d980db311847d122df685d5637a22c195a7fb03be2c0f67f42b0c09b",
+    "canonical_selection_view_identity": "srtp-pilot-canonical-selection-view:sha256:55dcae7fe9d1acd1e1f9f2fd49cec2c625a643dd77754205e0b38790d52c5605",
+    "u80_identity": "srtp-pilot-u80:sha256:bfbb0ff51856fd877d84c8a9dfc0ee07d3c617723a318f8b5f8cd8a45002e5c9"
+  },
+  "counts": {
+    "topic_count": 2,
+    "query_run_count": 12,
+    "raw_unique_source_work_count": 725,
+    "raw_topic_work_assignment_count": 738,
+    "w6_source_record_count": 702,
+    "source_record_exclusion_count": 23,
+    "precanonical_pool_item_count": 714,
+    "canonical_entity_count": 693,
+    "suspected_relationship_count": 36,
+    "canonical_selection_item_count": 678,
+    "u80_total_count": 160,
+    "per_topic": [
+      {
+        "topic_id": "w6_topic_21cm_foreground_removal",
+        "raw_unique_source_work_count": 352,
+        "w6_representable_source_record_count": 334,
+        "source_record_exclusion_count": 18,
+        "precanonical_pool_record_count": 334,
+        "canonical_entity_count": 329,
+        "eligible_canonical_entity_count": 322,
+        "canonical_selection_exclusion_count": 7,
+        "confirmed_alias_record_collapse_count": 5,
+        "suspected_duplicate_entity_count": 38,
+        "source_exclusion_reason_counts": {
+          "missing_authors": 2,
+          "missing_title": 2,
+          "missing_venue": 14
+        },
+        "u80_count": 80,
+        "query_contribution_diagnostics": [
+          {
+            "acquisition_query_id": "21cm_foreground_aq01",
+            "eligible_roster_count": 74,
+            "first_selection_contribution_count": 13,
+            "support_count_in_u80": 20
+          },
+          {
+            "acquisition_query_id": "21cm_foreground_aq02",
+            "eligible_roster_count": 55,
+            "first_selection_contribution_count": 14,
+            "support_count_in_u80": 18
+          },
+          {
+            "acquisition_query_id": "21cm_foreground_aq03",
+            "eligible_roster_count": 73,
+            "first_selection_contribution_count": 13,
+            "support_count_in_u80": 24
+          },
+          {
+            "acquisition_query_id": "21cm_foreground_aq04",
+            "eligible_roster_count": 62,
+            "first_selection_contribution_count": 13,
+            "support_count_in_u80": 23
+          },
+          {
+            "acquisition_query_id": "21cm_foreground_aq05",
+            "eligible_roster_count": 76,
+            "first_selection_contribution_count": 14,
+            "support_count_in_u80": 28
+          },
+          {
+            "acquisition_query_id": "21cm_foreground_aq06",
+            "eligible_roster_count": 75,
+            "first_selection_contribution_count": 13,
+            "support_count_in_u80": 18
+          }
+        ]
+      },
+      {
+        "topic_id": "w6_topic_spectral_anomaly_detection",
+        "raw_unique_source_work_count": 386,
+        "w6_representable_source_record_count": 380,
+        "source_record_exclusion_count": 6,
+        "precanonical_pool_record_count": 380,
+        "canonical_entity_count": 375,
+        "eligible_canonical_entity_count": 356,
+        "canonical_selection_exclusion_count": 19,
+        "confirmed_alias_record_collapse_count": 5,
+        "suspected_duplicate_entity_count": 30,
+        "source_exclusion_reason_counts": {
+          "missing_title": 2,
+          "missing_venue": 4
+        },
+        "u80_count": 80,
+        "query_contribution_diagnostics": [
+          {
+            "acquisition_query_id": "spectral_anomaly_aq01",
+            "eligible_roster_count": 73,
+            "first_selection_contribution_count": 13,
+            "support_count_in_u80": 26
+          },
+          {
+            "acquisition_query_id": "spectral_anomaly_aq02",
+            "eligible_roster_count": 76,
+            "first_selection_contribution_count": 14,
+            "support_count_in_u80": 22
+          },
+          {
+            "acquisition_query_id": "spectral_anomaly_aq03",
+            "eligible_roster_count": 76,
+            "first_selection_contribution_count": 13,
+            "support_count_in_u80": 20
+          },
+          {
+            "acquisition_query_id": "spectral_anomaly_aq04",
+            "eligible_roster_count": 73,
+            "first_selection_contribution_count": 14,
+            "support_count_in_u80": 20
+          },
+          {
+            "acquisition_query_id": "spectral_anomaly_aq05",
+            "eligible_roster_count": 75,
+            "first_selection_contribution_count": 13,
+            "support_count_in_u80": 15
+          },
+          {
+            "acquisition_query_id": "spectral_anomaly_aq06",
+            "eligible_roster_count": 73,
+            "first_selection_contribution_count": 13,
+            "support_count_in_u80": 20
+          }
+        ]
+      }
+    ]
+  },
+  "files": {
+    "query_registry.json": "42c1493040dc4e19248277450e0802c6ed4dcedca6500d8159dd05d689cb85d9",
+    "topic_adapter.json": "abafe8b5bf0b7bb0ee32f86e1758939ea4ce186ac319f4d09cd676366d6550c6",
+    "retrieval_provenance.json": "1e4488081537f337c64c16e6a8fcd631e575509151ed43aef3062cddcd0fd480",
+    "source_records.json": "c6ea1faadf2d2d5f1a623ac17ca5d8d48f0d2f354711b69620b774500aa6afc1",
+    "pooling_policy.json": "bf27b475c62d66c39556cefeeff2950b5ea06516c5552f226cda5fe8f97d360f",
+    "pool_statistics.json": "7e6052f41c2ce82046c3e3e9e27279f1d856f07c02f9258ad4827927db20bf7c",
+    "precanonical_candidate_pool.json": "24db785ab56342c133b8b970645d59f551201407c05eee18b0ac63185fe7edf5",
+    "canonical_entities.json": "b4248d26f9ac49db38cae28ed6a1b39cda713004d14f95a0498ee8a8f1942280",
+    "postcanonical_candidate_pool.json": "fc6ba2f39c50227a38e6bff30fbe04fd0de700af264cc2197fd643ab4e4ba0a7",
+    "canonical_selection_view.json": "9ac6db1f703fc7b0cad7b2a9bc0c47a549db08a1fa2266763bf8a9dab4a05a9a",
+    "eligibility_report.json": "8b832a572daa44a7d9774c1b27a64dafe08e4bbee353dc8215d3f22c7385ade4",
+    "u80_calibration_universe.json": "6d1e268b398e0266ed68902799e331fa256c913c037b0ebe8dfff4aacfc12739"
+  },
+  "generation": {
+    "git_revision": "fb4e0d70156c83435a8ba054ff8f1607e61b58f6",
+    "git_worktree_clean": true,
+    "created_at": "2026-08-30T18:19:26+08:00"
+  },
+  "reproducibility": {
+    "command": "python -m app.build_pilot_real_data_foundation --config configs/pilot/srtp_pilot_v0.2_real_data_foundation_v1.json --output-dir data/research/pilot/v0.2/real-data-foundation-v1",
+    "offline_only": true,
+    "live_openalex_requests": false,
+    "frozen_inputs_modified": false
+  },
+  "input_boundary": {
+    "dev_topics_only": true,
+    "hidden_topics_allowed": false,
+    "hidden_labels_allowed": false,
+    "relevance_labels_allowed": false,
+    "bm25_allowed": false,
+    "human_selection_allowed": false,
+    "citation_count_allowed": false,
+    "source_rank_allowed_for_u80": false,
+    "downstream_synthesis_allowed": false,
+    "live_api_allowed": false
+  }
+}

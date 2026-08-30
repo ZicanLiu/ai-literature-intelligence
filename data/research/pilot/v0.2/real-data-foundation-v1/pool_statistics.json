@@ -1,0 +1,50 @@
+{
+  "schema_version": "0.2-alpha",
+  "artifact_type": "w6_pool_statistics",
+  "artifact_id": "w6_pool_statistics_c37a3bc29b455d57a7006f15",
+  "is_fixture": false,
+  "candidate_pool": {
+    "artifact_id": "w6_precanonical_pool_332cfbd5b0f00649bdca9421",
+    "sha256": "24db785ab56342c133b8b970645d59f551201407c05eee18b0ac63185fe7edf5",
+    "pool_identity": "w6-pool:sha256:332cfbd5b0f00649bdca9421df1fe735388e81e369025d911475f79ecb5d07cb"
+  },
+  "policy_sha256": "bf27b475c62d66c39556cefeeff2950b5ea06516c5552f226cda5fe8f97d360f",
+  "counts": {
+    "input_artifact_count": 1,
+    "input_run_count": 12,
+    "included_run_count": 12,
+    "raw_hit_count": 903,
+    "depth_eligible_hit_count": 903,
+    "unique_record_count": 702,
+    "unique_topic_record_count": 714,
+    "multi_system_hit_count": 0,
+    "single_system_only_count": 714,
+    "pool_size": 714,
+    "topic_counts": {
+      "w6_topic_21cm_foreground_removal": 334,
+      "w6_topic_spectral_anomaly_detection": 380
+    },
+    "target_overflow_by_topic": {
+      "w6_topic_21cm_foreground_removal": 254,
+      "w6_topic_spectral_anomaly_detection": 300
+    },
+    "minimum_satisfied_by_topic": {
+      "w6_topic_21cm_foreground_removal": true,
+      "w6_topic_spectral_anomaly_detection": true
+    }
+  },
+  "per_system_contribution": {
+    "openalex_native": {
+      "raw_hit_count": 903,
+      "pool_member_count": 714,
+      "single_system_only_count": 714
+    }
+  },
+  "created_at": "2026-08-30T18:19:26+08:00",
+  "provenance": {
+    "kind": "multi_retriever_pool_build",
+    "created_by": "w6_candidate_pool_builder",
+    "created_at": "2026-08-30T18:19:26+08:00",
+    "git_revision": "fb4e0d70156c83435a8ba054ff8f1607e61b58f6"
+  }
+}

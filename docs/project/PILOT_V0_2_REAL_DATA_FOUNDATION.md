@@ -123,3 +123,42 @@ manifest.json
 ```
 
 All JSON is generated atomically and deterministically for the same frozen config, inputs, timestamp, and generation revision.
+
+## 8. Frozen v1 result
+
+The package was generated from clean revision `fb4e0d70156c83435a8ba054ff8f1607e61b58f6` and independently revalidated offline.
+
+| Topic | Raw unique Works | W6-representable records | Canonical entities | Eligible canonical entities | U80 |
+|---|---:|---:|---:|---:|---:|
+| `w6_topic_21cm_foreground_removal` | 352 | 334 | 329 | 322 | 80 |
+| `w6_topic_spectral_anomaly_detection` | 386 | 380 | 375 | 356 | 80 |
+
+Across both Topic projections there are 725 unique raw Works, 702 W6 source records, 714 topic-record pre-canonical pool items, 693 global canonical entities, 36 suspected relationships, and 678 eligible topic-canonical selection items. The representability gate excludes 23 unique source Works: 2 have missing authors, 3 have missing titles, and 18 have missing venues; one Work may carry more than one reason or Topic provenance. The preferred-record text gate excludes 7 Topic entities for 21-cm and 19 for anomaly detection because their deterministic preferred record lacks an abstract. No missing value was enriched or replaced.
+
+First-admission contributions sum to 80 within each Topic:
+
+| AQ | First admissions | U80 support |
+|---|---:|---:|
+| `21cm_foreground_aq01` | 13 | 20 |
+| `21cm_foreground_aq02` | 14 | 18 |
+| `21cm_foreground_aq03` | 13 | 24 |
+| `21cm_foreground_aq04` | 13 | 23 |
+| `21cm_foreground_aq05` | 14 | 28 |
+| `21cm_foreground_aq06` | 13 | 18 |
+| `spectral_anomaly_aq01` | 13 | 26 |
+| `spectral_anomaly_aq02` | 14 | 22 |
+| `spectral_anomaly_aq03` | 13 | 20 |
+| `spectral_anomaly_aq04` | 14 | 20 |
+| `spectral_anomaly_aq05` | 13 | 15 |
+| `spectral_anomaly_aq06` | 13 | 20 |
+
+Frozen identities and file hashes:
+
+```text
+package identity  srtp-pilot-real-data-foundation:sha256:7359f33cc404af6b71e5ee03a61d57192edb8f42e31adfe12ce9e526ff24a133
+U80 identity     srtp-pilot-u80:sha256:bfbb0ff51856fd877d84c8a9dfc0ee07d3c617723a318f8b5f8cd8a45002e5c9
+U80 file SHA-256 6d1e268b398e0266ed68902799e331fa256c913c037b0ebe8dfff4aacfc12739
+manifest SHA-256 cd0b7daaa0899a0b9940784d874ca3497de4dce0ed20ba6328e849d90f85b268
+```
+
+These counts and diagnostics describe provenance, representability, canonical identity, and deterministic sampling only. They do not evaluate scientific relevance or either future selection arm.

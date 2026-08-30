@@ -1,0 +1,913 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "srtp_pilot_metadata_eligibility_report",
+  "artifact_id": "srtp_pilot_eligibility_638a21697744be9b477f12f4",
+  "eligibility_identity": "srtp-pilot-eligibility:sha256:638a21697744be9b477f12f4bfd2ff90d7586fd732af102f1f2af6c742611f8b",
+  "protocol_version": "srtp-pilot-v0.2",
+  "is_fixture": false,
+  "created_at": "2026-08-30T18:19:26+08:00",
+  "inputs": {
+    "frozen_topic_set": {
+      "artifact_id": "w6_research_topics_v0.2_alpha",
+      "sha256": "6e2f6e6b8fea56cef6e245dcf37fa97a46ba5efc6703fb47e9863840e3a06ca4"
+    },
+    "dev_split": {
+      "artifact_id": "w6_topic_split_v0.2_alpha",
+      "sha256": "bb57448288f122406d195cbec09dde80f76f78a7a0a1d0ef9bc85c052aea69ad",
+      "split_identity": "w6-topic-split:sha256:8391d14987a15982b5afa2ae3760f029824909353f51056360d79fe9b85202bc"
+    },
+    "query_registry": {
+      "artifact_id": "srtp_pilot_query_registry_257f996c78bfdd8e0ec0367d",
+      "sha256": "42c1493040dc4e19248277450e0802c6ed4dcedca6500d8159dd05d689cb85d9"
+    },
+    "topic_adapter": {
+      "artifact_id": "srtp_pilot_topic_adapter_190241b56a66347b16ed53b1",
+      "sha256": "abafe8b5bf0b7bb0ee32f86e1758939ea4ce186ac319f4d09cd676366d6550c6"
+    },
+    "retrieval_provenance": {
+      "artifact_id": "w6_retrieval_union_cb8c1ce1225bb977b9a8b363",
+      "sha256": "1e4488081537f337c64c16e6a8fcd631e575509151ed43aef3062cddcd0fd480"
+    },
+    "source_records": {
+      "artifact_id": "srtp_pilot_source_records_f575e35e04b780ea8e17b088",
+      "sha256": "c6ea1faadf2d2d5f1a623ac17ca5d8d48f0d2f354711b69620b774500aa6afc1"
+    },
+    "candidate_pool": {
+      "artifact_id": "srtp_pilot_postcanonical_pool_89d9f26524dd2224f55122c3",
+      "sha256": "fc6ba2f39c50227a38e6bff30fbe04fd0de700af264cc2197fd643ab4e4ba0a7",
+      "pool_identity": "w6-pool:sha256:53476011731a98d9fb5152c57fb65c343cfee2d0b50ba711b8f4dff4c501429b"
+    },
+    "canonical_entities": {
+      "artifact_id": "srtp_pilot_canonical_entities_4f09c253e25968057f5579fe",
+      "sha256": "b4248d26f9ac49db38cae28ed6a1b39cda713004d14f95a0498ee8a8f1942280"
+    },
+    "canonical_selection_view": {
+      "artifact_id": "srtp_pilot_canonical_selection_55dcae7fe9d1acd1e1f9f2fd",
+      "sha256": "9ac6db1f703fc7b0cad7b2a9bc0c47a549db08a1fa2266763bf8a9dab4a05a9a"
+    }
+  },
+  "policy": {
+    "name": "w6_representability_then_canonical_preferred_text",
+    "version": "v1",
+    "w6_required_source_fields": [
+      "title",
+      "publication_year",
+      "authors",
+      "venue",
+      "landing_page_url"
+    ],
+    "w6_partial_fields": [
+      "abstract",
+      "openalex_id",
+      "doi"
+    ],
+    "canonical_selection_required_preferred_fields": [
+      "title",
+      "abstract"
+    ],
+    "source_exclusion_reason_codes": [
+      "missing_title",
+      "missing_publication_year",
+      "missing_authors",
+      "missing_venue",
+      "missing_landing_page_url",
+      "invalid_doi_for_w6_contract"
+    ],
+    "enrichment_enabled": false,
+    "unknown_placeholder_allowed": false,
+    "relevance_based_filtering_allowed": false
+  },
+  "policy_sha256": "696695e31b816edd6cd73c0cd95604aa539f20837e19fcbcaf0e0934115c2d49",
+  "source_record_exclusion_count": 23,
+  "source_exclusion_reason_counts": {
+    "missing_authors": 2,
+    "missing_title": 3,
+    "missing_venue": 18
+  },
+  "source_record_exclusions": [
+    {
+      "source_record_id": "openalex:W1548826346",
+      "openalex_id": "W1548826346",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq02",
+        "21cm_foreground_aq05"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:d6a53a2c4cc4788d7e463fcdd38c20ede80311622c281e7ab1619cfcee470342",
+        "w6-openalex-query-run:sha256:f6deb5c6925aa2720bc7bf03c720394df7081bbede6cc015c222059a69014ebb"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:1f8aafb9730696bffce8c08d0fb6cc3d8ca165c0f4255cfaebf9fd39248734ab",
+        "w6-openalex-hit:sha256:7559bb95bf9f9221e89a07ac89c9fc7d1fa698b073b18f45533e5e85c1e51920"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W1722975882",
+      "openalex_id": "W1722975882",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq01",
+        "21cm_foreground_aq04"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:1df2778ba70c57436aa7bd099c8139bd6052a574e2ae79805dce2504250dde2c",
+        "w6-openalex-query-run:sha256:41f15bedfcb91555566202831c909bb442f790dc14ca1c4b17b81db7f2285abe"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:0f4ff84fc8c7a59edeb7efcd13d2331bae2112bf2bf9ee6e59d49835b3acd191",
+        "w6-openalex-hit:sha256:314b783e347c4d284ce26fbd628da474f5e1af10827e9ab74747d5009e581b52"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W172568348",
+      "openalex_id": "W172568348",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq02"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:f6deb5c6925aa2720bc7bf03c720394df7081bbede6cc015c222059a69014ebb"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:90ed15d71e7638709c121618570b6b2a8f65613201f81ab91df1eafdb89f659f"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W1792863489",
+      "openalex_id": "W1792863489",
+      "topic_ids": [
+        "w6_topic_spectral_anomaly_detection"
+      ],
+      "acquisition_query_ids": [
+        "spectral_anomaly_aq01"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:90249a02aef9cdd40a7b3d1352674be613e1d62d35ca542e2979150c503cb3fd"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:f5d47d20efdd6c46581bc320a01c2331e97d20720e17a308925e5d17c0dce34e"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W1963311772",
+      "openalex_id": "W1963311772",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq03"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:aac8c0890c23ece8047ceab6ff24d12627543bf6f780c3f49a6addf87cfbb85e"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:bf413e28181b95c144e60a1888557f8f8c2befa66985d52616d1facf8156f15a"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W2315719623",
+      "openalex_id": "W2315719623",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq04"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:41f15bedfcb91555566202831c909bb442f790dc14ca1c4b17b81db7f2285abe"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:0a992021026c78a9857f8c2dc907c4a47f7b997ba75ad14feeda600a453f523e"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W2470949450",
+      "openalex_id": "W2470949450",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq01"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:1df2778ba70c57436aa7bd099c8139bd6052a574e2ae79805dce2504250dde2c"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:f4b43bdbf3d978b8a5da3b356c4c9d59cdc959e024c9a3b3644b419cbec6828b"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W2599653512",
+      "openalex_id": "W2599653512",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq06"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:e0fbe7cf6af4bb51897b1ea05fd9531c1d9809d0f61e69694478eca4e90c9913"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:f7aba36ea5ee607f68ff1368304c90ad88d326f32b9ac6f006274f8d747b04ee"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W2884572625",
+      "openalex_id": "W2884572625",
+      "topic_ids": [
+        "w6_topic_spectral_anomaly_detection"
+      ],
+      "acquisition_query_ids": [
+        "spectral_anomaly_aq05"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:879075880bd838b6660fd59fb065b452215e6050b47b2ed39ee863d28278978b"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:18581a4a5fef95fea0c16e9aacf8274f2753a03e566eca63c8836498396742c1"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W2976532001",
+      "openalex_id": "W2976532001",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq02",
+        "21cm_foreground_aq05"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:d6a53a2c4cc4788d7e463fcdd38c20ede80311622c281e7ab1619cfcee470342",
+        "w6-openalex-query-run:sha256:f6deb5c6925aa2720bc7bf03c720394df7081bbede6cc015c222059a69014ebb"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:2bc42cfbdc319de0f55c0ea7964173623bb959d37a21c7f5ea33accbd1020aaf",
+        "w6-openalex-hit:sha256:692d6c9db670649770a36582954891a77c0a370c0a9c55b60741a82622d19d2a"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W2989628531",
+      "openalex_id": "W2989628531",
+      "topic_ids": [
+        "w6_topic_spectral_anomaly_detection"
+      ],
+      "acquisition_query_ids": [
+        "spectral_anomaly_aq02"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:fb36abe842ca01d7ba019788e927024797481deb1ea2006a957a80557ef305ee"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:d1f16036b3f6b7b9adb7b4550a485d4382e7d0e91e7992204fb0289779deec73"
+      ],
+      "reason_codes": [
+        "missing_title"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W3014430595",
+      "openalex_id": "W3014430595",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq05"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:d6a53a2c4cc4788d7e463fcdd38c20ede80311622c281e7ab1619cfcee470342"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:b090b7549b64cb28cf1d65e66827ece0b48cd71b98863f86d7a7f8a066a444a9"
+      ],
+      "reason_codes": [
+        "missing_title"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W3017868578",
+      "openalex_id": "W3017868578",
+      "topic_ids": [
+        "w6_topic_spectral_anomaly_detection"
+      ],
+      "acquisition_query_ids": [
+        "spectral_anomaly_aq04"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:c4d2fef5c817ac6f125b522c5320532185583e33f80d4e9933db14e285280133"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:5fde3d58e825593bb36f18fcd86989e7f04178019d5df8c5b435962d86e0a80e"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W3104662021",
+      "openalex_id": "W3104662021",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal",
+        "w6_topic_spectral_anomaly_detection"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq03",
+        "spectral_anomaly_aq06"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:8c597a8ee794aa595b77410afc6085575dcfbad8795feb414362ef46b8dc88f7",
+        "w6-openalex-query-run:sha256:aac8c0890c23ece8047ceab6ff24d12627543bf6f780c3f49a6addf87cfbb85e"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:199967842590e4c51ef8affbfed23003f3b425d9e60fb127e0e3242b5ed7efba",
+        "w6-openalex-hit:sha256:b8b1ed2d3ff2c64834c80a05e796db3f495ab8cf6572779ec8539771cc92c608"
+      ],
+      "reason_codes": [
+        "missing_title"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W3132561744",
+      "openalex_id": "W3132561744",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq03",
+        "21cm_foreground_aq06"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:aac8c0890c23ece8047ceab6ff24d12627543bf6f780c3f49a6addf87cfbb85e",
+        "w6-openalex-query-run:sha256:e0fbe7cf6af4bb51897b1ea05fd9531c1d9809d0f61e69694478eca4e90c9913"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:26273827ce09bbccb9c0d53f58add9d23ab156eebeb46987187457e7321ce3db",
+        "w6-openalex-hit:sha256:b67de346f574b7b670508cbc6804b4544e96a6e9212ef28496fcdf064df56149"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W3164550725",
+      "openalex_id": "W3164550725",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq02",
+        "21cm_foreground_aq04"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:41f15bedfcb91555566202831c909bb442f790dc14ca1c4b17b81db7f2285abe",
+        "w6-openalex-query-run:sha256:f6deb5c6925aa2720bc7bf03c720394df7081bbede6cc015c222059a69014ebb"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:68d45b39e060e277e7352b8cb2c038312a2f851ec74ec95565939d499f089195",
+        "w6-openalex-hit:sha256:dbff5fecde38f03f8120b8ef8ee00153a8829efd9974cc7927cebbb5501586b5"
+      ],
+      "reason_codes": [
+        "missing_authors"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W3213318884",
+      "openalex_id": "W3213318884",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq06"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:e0fbe7cf6af4bb51897b1ea05fd9531c1d9809d0f61e69694478eca4e90c9913"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:1a908edb8a6238297782d605669fc62180fe76638aa797afb0df9b93bad0ab8f"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W4212980283",
+      "openalex_id": "W4212980283",
+      "topic_ids": [
+        "w6_topic_spectral_anomaly_detection"
+      ],
+      "acquisition_query_ids": [
+        "spectral_anomaly_aq01",
+        "spectral_anomaly_aq04"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:90249a02aef9cdd40a7b3d1352674be613e1d62d35ca542e2979150c503cb3fd",
+        "w6-openalex-query-run:sha256:c4d2fef5c817ac6f125b522c5320532185583e33f80d4e9933db14e285280133"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:2644cce8505e5d80ed6a12af465d20771846bb03ecae97325e690c2e0c7f4a65",
+        "w6-openalex-hit:sha256:39eecc04ecf88899d2f4290ff8acf1502f006158261242a9a719a5e55fd00c26"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W4389271639",
+      "openalex_id": "W4389271639",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq04"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:41f15bedfcb91555566202831c909bb442f790dc14ca1c4b17b81db7f2285abe"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:a67fb73cc4a5a10f166caac8b9073b71a763cbf3dfb2656394d51d496fcee22b"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W4396623183",
+      "openalex_id": "W4396623183",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq02",
+        "21cm_foreground_aq04"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:41f15bedfcb91555566202831c909bb442f790dc14ca1c4b17b81db7f2285abe",
+        "w6-openalex-query-run:sha256:f6deb5c6925aa2720bc7bf03c720394df7081bbede6cc015c222059a69014ebb"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:41f9eca21221843ba089911ab66b41e54db9d8b0ef71b645f4703c9ab49dfd7e",
+        "w6-openalex-hit:sha256:c8b3909d3f07c14849f993971d9f32612c026f54bc0d8c584265b8f5cae96412"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W4409736016",
+      "openalex_id": "W4409736016",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq06"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:e0fbe7cf6af4bb51897b1ea05fd9531c1d9809d0f61e69694478eca4e90c9913"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:68990116a47c9ccd075e29f0069523d6b3d18a93ad147a4af2f757697b808d3b"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W7168275459",
+      "openalex_id": "W7168275459",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq02"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:f6deb5c6925aa2720bc7bf03c720394df7081bbede6cc015c222059a69014ebb"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:8505b0e7935b4912171d2249898313e407aead3871b7c0099143f536a19f4c36"
+      ],
+      "reason_codes": [
+        "missing_authors"
+      ]
+    },
+    {
+      "source_record_id": "openalex:W754703219",
+      "openalex_id": "W754703219",
+      "topic_ids": [
+        "w6_topic_21cm_foreground_removal"
+      ],
+      "acquisition_query_ids": [
+        "21cm_foreground_aq04"
+      ],
+      "source_query_run_ids": [
+        "w6-openalex-query-run:sha256:41f15bedfcb91555566202831c909bb442f790dc14ca1c4b17b81db7f2285abe"
+      ],
+      "source_hit_ids": [
+        "w6-openalex-hit:sha256:27c0f7366c4cc757a8fa091e439c20b2ec4341338007d47d3884304d9a5ca2cf"
+      ],
+      "reason_codes": [
+        "missing_venue"
+      ]
+    }
+  ],
+  "canonical_selection_exclusion_count": 26,
+  "canonical_selection_exclusions": [
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "canonical_entity_id": "entity_pilot_openalex_w2086155425",
+      "preferred_record_id": "pilot_openalex_w2086155425",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "canonical_entity_id": "entity_pilot_openalex_w2111688179",
+      "preferred_record_id": "pilot_openalex_w2111688179",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "canonical_entity_id": "entity_pilot_openalex_w2579264406",
+      "preferred_record_id": "pilot_openalex_w2579264406",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "canonical_entity_id": "entity_pilot_openalex_w3155872716",
+      "preferred_record_id": "pilot_openalex_w3155872716",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "canonical_entity_id": "entity_pilot_openalex_w4288950914",
+      "preferred_record_id": "pilot_openalex_w4288950914",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "canonical_entity_id": "entity_pilot_openalex_w4306908954",
+      "preferred_record_id": "pilot_openalex_w4306908954",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "canonical_entity_id": "entity_pilot_openalex_w4417290353",
+      "preferred_record_id": "pilot_openalex_w4417290353",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w1516039273",
+      "preferred_record_id": "pilot_openalex_w1516039273",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w2027014790",
+      "preferred_record_id": "pilot_openalex_w2027014790",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w2411786938",
+      "preferred_record_id": "pilot_openalex_w2411786938",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w2572150292",
+      "preferred_record_id": "pilot_openalex_w2572150292",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w2588146352",
+      "preferred_record_id": "pilot_openalex_w2588146352",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w2754899469",
+      "preferred_record_id": "pilot_openalex_w2754899469",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w2888353656",
+      "preferred_record_id": "pilot_openalex_w2888353656",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w2908437682",
+      "preferred_record_id": "pilot_openalex_w2908437682",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w2987674769",
+      "preferred_record_id": "pilot_openalex_w2987674769",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w3093761498",
+      "preferred_record_id": "pilot_openalex_w3093761498",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w3131502547",
+      "preferred_record_id": "pilot_openalex_w3131502547",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w3162917764",
+      "preferred_record_id": "pilot_openalex_w3162917764",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w3163559860",
+      "preferred_record_id": "pilot_openalex_w3163559860",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w4281552525",
+      "preferred_record_id": "pilot_openalex_w4281552525",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w4400269321",
+      "preferred_record_id": "pilot_openalex_w4400269321",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w4400890019",
+      "preferred_record_id": "pilot_openalex_w4400890019",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w4401427300",
+      "preferred_record_id": "pilot_openalex_w4401427300",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w4403000513",
+      "preferred_record_id": "pilot_openalex_w4403000513",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "canonical_entity_id": "entity_pilot_openalex_w4410085184",
+      "preferred_record_id": "pilot_openalex_w4410085184",
+      "reason_codes": [
+        "missing_preferred_abstract"
+      ]
+    }
+  ],
+  "query_diagnostics": [
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq01",
+      "source_query_run_id": "w6-openalex-query-run:sha256:1df2778ba70c57436aa7bd099c8139bd6052a574e2ae79805dce2504250dde2c",
+      "source_retrieved_hit_count": 80,
+      "scoped_raw_hit_count": 80,
+      "representable_hit_count": 78,
+      "excluded_hit_count": 2
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq02",
+      "source_query_run_id": "w6-openalex-query-run:sha256:f6deb5c6925aa2720bc7bf03c720394df7081bbede6cc015c222059a69014ebb",
+      "source_retrieved_hit_count": 63,
+      "scoped_raw_hit_count": 63,
+      "representable_hit_count": 57,
+      "excluded_hit_count": 6
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq03",
+      "source_query_run_id": "w6-openalex-query-run:sha256:aac8c0890c23ece8047ceab6ff24d12627543bf6f780c3f49a6addf87cfbb85e",
+      "source_retrieved_hit_count": 80,
+      "scoped_raw_hit_count": 80,
+      "representable_hit_count": 77,
+      "excluded_hit_count": 3
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq04",
+      "source_query_run_id": "w6-openalex-query-run:sha256:41f15bedfcb91555566202831c909bb442f790dc14ca1c4b17b81db7f2285abe",
+      "source_retrieved_hit_count": 71,
+      "scoped_raw_hit_count": 71,
+      "representable_hit_count": 65,
+      "excluded_hit_count": 6
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq05",
+      "source_query_run_id": "w6-openalex-query-run:sha256:d6a53a2c4cc4788d7e463fcdd38c20ede80311622c281e7ab1619cfcee470342",
+      "source_retrieved_hit_count": 80,
+      "scoped_raw_hit_count": 80,
+      "representable_hit_count": 77,
+      "excluded_hit_count": 3
+    },
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "acquisition_query_id": "21cm_foreground_aq06",
+      "source_query_run_id": "w6-openalex-query-run:sha256:e0fbe7cf6af4bb51897b1ea05fd9531c1d9809d0f61e69694478eca4e90c9913",
+      "source_retrieved_hit_count": 80,
+      "scoped_raw_hit_count": 80,
+      "representable_hit_count": 76,
+      "excluded_hit_count": 4
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq01",
+      "source_query_run_id": "w6-openalex-query-run:sha256:90249a02aef9cdd40a7b3d1352674be613e1d62d35ca542e2979150c503cb3fd",
+      "source_retrieved_hit_count": 80,
+      "scoped_raw_hit_count": 80,
+      "representable_hit_count": 78,
+      "excluded_hit_count": 2
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq02",
+      "source_query_run_id": "w6-openalex-query-run:sha256:fb36abe842ca01d7ba019788e927024797481deb1ea2006a957a80557ef305ee",
+      "source_retrieved_hit_count": 80,
+      "scoped_raw_hit_count": 80,
+      "representable_hit_count": 79,
+      "excluded_hit_count": 1
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq03",
+      "source_query_run_id": "w6-openalex-query-run:sha256:82d7bd9718c77cf45fcdc86cf621191996e08363f093523e6d9f10f3058fd0e9",
+      "source_retrieved_hit_count": 80,
+      "scoped_raw_hit_count": 80,
+      "representable_hit_count": 80,
+      "excluded_hit_count": 0
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq04",
+      "source_query_run_id": "w6-openalex-query-run:sha256:c4d2fef5c817ac6f125b522c5320532185583e33f80d4e9933db14e285280133",
+      "source_retrieved_hit_count": 80,
+      "scoped_raw_hit_count": 80,
+      "representable_hit_count": 78,
+      "excluded_hit_count": 2
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq05",
+      "source_query_run_id": "w6-openalex-query-run:sha256:879075880bd838b6660fd59fb065b452215e6050b47b2ed39ee863d28278978b",
+      "source_retrieved_hit_count": 80,
+      "scoped_raw_hit_count": 80,
+      "representable_hit_count": 79,
+      "excluded_hit_count": 1
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "acquisition_query_id": "spectral_anomaly_aq06",
+      "source_query_run_id": "w6-openalex-query-run:sha256:8c597a8ee794aa595b77410afc6085575dcfbad8795feb414362ef46b8dc88f7",
+      "source_retrieved_hit_count": 80,
+      "scoped_raw_hit_count": 80,
+      "representable_hit_count": 79,
+      "excluded_hit_count": 1
+    }
+  ],
+  "topics": [
+    {
+      "topic_id": "w6_topic_21cm_foreground_removal",
+      "raw_unique_source_work_count": 352,
+      "w6_representable_source_record_count": 334,
+      "source_record_exclusion_count": 18,
+      "precanonical_pool_record_count": 334,
+      "canonical_entity_count": 329,
+      "eligible_canonical_entity_count": 322,
+      "canonical_selection_exclusion_count": 7,
+      "confirmed_alias_record_collapse_count": 5,
+      "suspected_duplicate_entity_count": 38,
+      "source_exclusion_reason_counts": {
+        "missing_authors": 2,
+        "missing_title": 2,
+        "missing_venue": 14
+      }
+    },
+    {
+      "topic_id": "w6_topic_spectral_anomaly_detection",
+      "raw_unique_source_work_count": 386,
+      "w6_representable_source_record_count": 380,
+      "source_record_exclusion_count": 6,
+      "precanonical_pool_record_count": 380,
+      "canonical_entity_count": 375,
+      "eligible_canonical_entity_count": 356,
+      "canonical_selection_exclusion_count": 19,
+      "confirmed_alias_record_collapse_count": 5,
+      "suspected_duplicate_entity_count": 30,
+      "source_exclusion_reason_counts": {
+        "missing_title": 2,
+        "missing_venue": 4
+      }
+    }
+  ],
+  "provenance": {
+    "kind": "pilot_arm_neutral_metadata_eligibility",
+    "created_by": "pilot_real_data_foundation",
+    "created_at": "2026-08-30T18:19:26+08:00",
+    "git_revision": "fb4e0d70156c83435a8ba054ff8f1607e61b58f6"
+  }
+}

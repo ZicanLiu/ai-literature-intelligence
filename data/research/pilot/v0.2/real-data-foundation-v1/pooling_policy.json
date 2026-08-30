@@ -1,0 +1,30 @@
+{
+  "name": "pilot_all_twelve_openalex_runs_full_captured_roster",
+  "version": "v1",
+  "parameters": {
+    "depth_by_system": {
+      "openalex_native": 80
+    },
+    "depth_overrides_by_run": {},
+    "target_size_per_topic": 80,
+    "minimum_size_per_topic": 80,
+    "deterministic_random_seed": 0,
+    "random_fill_enabled": false,
+    "target_overflow_policy": "retain_all_depth_qualified_candidates",
+    "duplicate_hit_handling": "deduplicate_topic_record_keep_all_hit_refs"
+  },
+  "included_retrieval_run_ids": [
+    "w6-openalex-query-run:sha256:1df2778ba70c57436aa7bd099c8139bd6052a574e2ae79805dce2504250dde2c",
+    "w6-openalex-query-run:sha256:41f15bedfcb91555566202831c909bb442f790dc14ca1c4b17b81db7f2285abe",
+    "w6-openalex-query-run:sha256:82d7bd9718c77cf45fcdc86cf621191996e08363f093523e6d9f10f3058fd0e9",
+    "w6-openalex-query-run:sha256:879075880bd838b6660fd59fb065b452215e6050b47b2ed39ee863d28278978b",
+    "w6-openalex-query-run:sha256:8c597a8ee794aa595b77410afc6085575dcfbad8795feb414362ef46b8dc88f7",
+    "w6-openalex-query-run:sha256:90249a02aef9cdd40a7b3d1352674be613e1d62d35ca542e2979150c503cb3fd",
+    "w6-openalex-query-run:sha256:aac8c0890c23ece8047ceab6ff24d12627543bf6f780c3f49a6addf87cfbb85e",
+    "w6-openalex-query-run:sha256:c4d2fef5c817ac6f125b522c5320532185583e33f80d4e9933db14e285280133",
+    "w6-openalex-query-run:sha256:d6a53a2c4cc4788d7e463fcdd38c20ede80311622c281e7ab1619cfcee470342",
+    "w6-openalex-query-run:sha256:e0fbe7cf6af4bb51897b1ea05fd9531c1d9809d0f61e69694478eca4e90c9913",
+    "w6-openalex-query-run:sha256:f6deb5c6925aa2720bc7bf03c720394df7081bbede6cc015c222059a69014ebb",
+    "w6-openalex-query-run:sha256:fb36abe842ca01d7ba019788e927024797481deb1ea2006a957a80557ef305ee"
+  ]
+}
