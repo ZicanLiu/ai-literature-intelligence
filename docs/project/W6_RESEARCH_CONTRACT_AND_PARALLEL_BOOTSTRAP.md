@@ -313,11 +313,15 @@ ranking/label 只决定阅读候选，不证明 factual claim correctness。
 
 ```powershell
 python -m app.validate_w6_bootstrap
+python -m app.w6_quality_gate --mode basic
+python -m app.w6_quality_gate --mode full --output outputs/quality/w6_gate_report.json
 python -m unittest tests.automated.test_w6_contracts -v
+python -m unittest tests.automated.test_w6_quality_gate -v
 ```
 
 主要 Python 接口：
 
+- `load_w6_bootstrap_bundle_inventory()`：验证并加载 manifest、artifact roster、路径和文件 hash；
 - `validate_w6_bootstrap_bundle()`：验证公开 hash-pinned bundle 及全部 cross-artifact identity；
 - `validate_topic_set()` / `validate_retrieval_provenance()` / `validate_source_records()`；
 - `validate_canonical_entities()` / `validate_candidate_pool()`；
@@ -331,6 +335,25 @@ python -m unittest tests.automated.test_w6_contracts -v
 
 Validators fail closed，覆盖 duplicate/unknown/mismatch/dangling/hash/leakage 等结构错误；它们不尝试
 判断论文科学事实、annotation 是否“正确”或某算法是否“更好”。
+
+### 7.1 W6 Data Quality / Leakage / Artifact Gate
+
+`app.w6_quality_gate` 是 validators 之上的工程编排入口，不是新的论文评分步骤，也不复制公共
+contract 规则：
+
+- `basic` 依次运行 bundle inventory/hash、Quality Gate 隔离依赖闭包、Topic/retrieval/source/
+  canonical/pre-post pool、opaque task mapping/blind view、topic split 与 hidden-label seal 检查；
+- `full` 先完成全部 Basic 检查，再调用 `validate_w6_bootstrap_bundle()`，增加 annotation/review、
+  method/fusion、synthesis/evidence、benchmark 及六任务完整 dependency matrix；
+- 任一预期 manifest/artifact 输入、读取 I/O 或 validator 错误都会写出本次 invocation 的 `FAIL`
+  report 并返回非零；输出位置不可写或属于其他文件时返回非零且拒绝覆盖；unexpected programming
+  error 不会被吞掉，且 CLI 会在运行前移除同一 Gate 拥有的旧 report，避免 stale `PASS`；
+- report schema `1.0` 区分 artifact 与实际读取文件，记录输入 manifest hash、具名 PASS/FAIL/SKIP
+  checks、errors/warnings 和 failed check roster；不写运行时间，因此相同输入与模式产生相同字节；
+- `--output` 可配置；默认写入已忽略的 `outputs/quality/w6_gate_report.json`，不提交运行产物。
+
+当前 CI 运行轻量、离线、确定的 Basic fixture Gate。Full 用于定向回归、交付前验收及未来 compatible
+真实 W6 bundle integration；它不读取 `.env`、不下载模型、不调用 live API。
 
 ## 8. 六人 Parallel Development Matrix
 
