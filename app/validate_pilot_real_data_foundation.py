@@ -20,7 +20,10 @@ DEFAULT_CONFIG = (
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Validate the canonical U80 package and all input/output hash closure."
+        description=(
+            "Validate the canonical U80 package by deterministic reconstruction and "
+            "input/output hash closure."
+        )
     )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--package-dir", type=Path, required=True)

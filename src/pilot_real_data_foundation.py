@@ -1398,6 +1398,14 @@ def sample_query_balanced_u80(
                     seed, "entity-order", topic_id, query_id, entity_id
                 ),
             )
+        empty_query_ids = [
+            query_id for query_id in query_ids if not rosters[query_id]
+        ]
+        if empty_query_ids:
+            raise ValueError(
+                f"{topic_id} required AQ eligible roster empty: "
+                f"{', '.join(empty_query_ids)}; six-query sampling fail closed。"
+            )
 
         positions = {query_id: 0 for query_id in query_ids}
         selected: list[tuple[str, str]] = []
@@ -2098,7 +2106,7 @@ def validate_pilot_package(
     config_path: str | Path,
     project_root: str | Path,
 ) -> dict[str, Any]:
-    """Validate hashes and regenerate every semantic artifact completely offline."""
+    """Validate closure by deterministic reconstruction with shared assembly semantics."""
 
     package = Path(package_dir).resolve()
     if not package.is_dir():

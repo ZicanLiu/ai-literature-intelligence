@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import copy
 import dataclasses
+import hashlib
+import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -20,9 +23,11 @@ from src.pilot_real_data_foundation import (
     compute_pilot_config_identity,
     load_and_validate_pilot_inputs,
     sample_query_balanced_u80,
+    validate_pilot_package,
     _validate_config_shape,
 )
 from src.w6_contracts import (
+    deterministic_identity,
     validate_retrieval_provenance,
     validate_source_records,
     validate_topic_set,
@@ -35,6 +40,9 @@ CONFIG_PATH = (
     / "configs"
     / "pilot"
     / "srtp_pilot_v0.2_real_data_foundation_v1.json"
+)
+COMMITTED_PACKAGE_DIR = (
+    PROJECT_ROOT / "data" / "research" / "pilot" / "v0.2" / "real-data-foundation-v1"
 )
 CREATED_AT = "2026-08-30T18:19:26+08:00"
 GIT_REVISION = "a8d9b1f95001e74e1e96328db401dd55fc7df5e6"
@@ -54,6 +62,13 @@ def _all_keys(value):
         for child in value:
             keys.update(_all_keys(child))
     return keys
+
+
+def _write_json(path: Path, payload) -> None:
+    path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 class PilotRealDataFixture(unittest.TestCase):
@@ -380,6 +395,23 @@ class PilotCanonicalSelectionAndU80Tests(PilotRealDataFixture):
         with self.assertRaisesRegex(ValueError, "< 80"):
             self._resample(too_small)
 
+    def test_required_aq_empty_roster_fails_closed(self) -> None:
+        empty_roster = copy.deepcopy(self.selection_view)
+        topic_id = TOPIC_IDS[0]
+        empty_query_id = "21cm_foreground_aq06"
+        for item in empty_roster["items"]:
+            if item["topic_id"] == topic_id:
+                item["query_support"] = [
+                    support
+                    for support in item["query_support"]
+                    if support["acquisition_query_id"] != empty_query_id
+                ]
+        with self.assertRaisesRegex(
+            ValueError,
+            rf"{topic_id} required AQ eligible roster empty: {empty_query_id}",
+        ):
+            self._resample(empty_roster)
+
 
 class PilotBuildSafetyTests(PilotRealDataFixture):
     def test_frozen_build_rejects_dirty_worktree_before_writing(self) -> None:
@@ -395,6 +427,91 @@ class PilotBuildSafetyTests(PilotRealDataFixture):
                     project_root=PROJECT_ROOT,
                 )
             self.assertFalse(output.exists())
+
+
+class PilotCommittedPackageRegressionTests(unittest.TestCase):
+    def test_committed_package_passes_deterministic_reconstruction(self) -> None:
+        manifest = validate_pilot_package(
+            COMMITTED_PACKAGE_DIR,
+            config_path=CONFIG_PATH,
+            project_root=PROJECT_ROOT,
+        )
+        self.assertEqual(
+            manifest["package_identity"],
+            "srtp-pilot-real-data-foundation:sha256:"
+            "7359f33cc404af6b71e5ee03a61d57192edb8f42e31adfe12ce9e526ff24a133",
+        )
+        self.assertEqual(manifest["counts"]["u80_total_count"], 160)
+
+    def test_reconstruction_rejects_reordered_u80_with_refreshed_self_report(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tampered_package = Path(temp_dir) / "package"
+            shutil.copytree(COMMITTED_PACKAGE_DIR, tampered_package)
+            u80_path = tampered_package / U80_FILENAME
+            manifest_path = tampered_package / "manifest.json"
+            u80 = json.loads(u80_path.read_text(encoding="utf-8"))
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+            topic = u80["topics"][0]
+            for key in (
+                "ordered_canonical_entity_ids",
+                "preferred_record_ids",
+                "ordered_items",
+            ):
+                topic[key][0], topic[key][1] = topic[key][1], topic[key][0]
+            topic["ordered_items"][0]["sample_order"] = 1
+            topic["ordered_items"][1]["sample_order"] = 2
+            u80_identity = deterministic_identity(
+                "srtp-pilot-u80",
+                {
+                    "protocol_version": u80["protocol_version"],
+                    "name": u80["name"],
+                    "inputs": u80["inputs"],
+                    "sampling": u80["sampling"],
+                    "topics": u80["topics"],
+                },
+            )
+            u80["u80_identity"] = u80_identity
+            u80["artifact_id"] = (
+                f"srtp_pilot_u80_{u80_identity.rsplit(':', 1)[-1][:24]}"
+            )
+            _write_json(u80_path, u80)
+
+            manifest["files"][U80_FILENAME] = hashlib.sha256(
+                u80_path.read_bytes()
+            ).hexdigest()
+            manifest["identities"]["u80_identity"] = u80_identity
+            package_identity = deterministic_identity(
+                "srtp-pilot-real-data-foundation",
+                {
+                    "protocol_version": manifest["protocol_version"],
+                    "config": manifest["config"],
+                    "source_openalex_package": manifest["source_inputs"][
+                        "source_openalex_package"
+                    ],
+                    "query_roster": manifest["source_inputs"]["query_roster"],
+                    "identities": manifest["identities"],
+                    "files": manifest["files"],
+                },
+            )
+            manifest["package_identity"] = package_identity
+            manifest["artifact_id"] = (
+                "srtp_pilot_real_data_foundation_"
+                f"{package_identity.rsplit(':', 1)[-1][:24]}"
+            )
+            _write_json(manifest_path, manifest)
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "semantic closure drift.*u80_calibration_universe.json",
+            ):
+                validate_pilot_package(
+                    tampered_package,
+                    config_path=CONFIG_PATH,
+                    project_root=PROJECT_ROOT,
+                )
 
 
 if __name__ == "__main__":

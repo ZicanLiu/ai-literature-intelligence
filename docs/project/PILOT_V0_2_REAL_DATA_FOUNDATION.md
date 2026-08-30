@@ -15,7 +15,7 @@ committed OpenAlex audit package
 → deterministic U80 per Dev Topic
 ```
 
-It does not run OpenAlex live acquisition, BM25, curator selection, labels, Hidden evaluation, an LLM, synthesis, or factual evaluation. `U80` means an OpenAlex-query-conditioned calibration universe, not a complete or representative scientific corpus and not a gold or retrieval benchmark.
+It does not run OpenAlex live acquisition, BM25, curator selection, labels, Hidden evaluation, an LLM, synthesis, or factual evaluation. `U80` is an **OpenAlex-query-conditioned, metadata-filtered, canonicalized, query-balanced, multi-query-support-tilted, deterministic calibration sample**. It is not a uniform canonical sample, representative astronomy corpus, complete scientific universe, gold corpus, or retrieval benchmark.
 
 The frozen Pilot config is [`configs/pilot/srtp_pilot_v0.2_real_data_foundation_v1.json`](../../configs/pilot/srtp_pilot_v0.2_real_data_foundation_v1.json). It fixes the two Dev Topics, all 12 acquisition runs, metadata policy, full-roster pooling policy, canonical selection policy, sampling algorithm, seed, and `N=80` before generating U80.
 
@@ -76,7 +76,7 @@ It then reuses `src.w6_canonicalization`:
 
 For each Topic, the sampler:
 
-1. builds six canonical-entity rosters from the eligible canonical view;
+1. builds six required canonical-entity rosters from the eligible canonical view and fails closed if any required AQ roster is empty;
 2. orders each roster by SHA-256 of the fixed seed, Topic ID, AQ ID, and canonical entity ID;
 3. orders the six AQ iterators themselves by a separate seeded hash;
 4. round-robins across queries and admits only previously unseen canonical entities;
@@ -86,23 +86,32 @@ For each Topic, the sampler:
 
 Sampling never reads source rank, citation count, BM25, labels, human preference, or synthesis output. Reordering source rows, canonical-view rows, or registry rows does not change the semantic result.
 
+An entity supported by multiple AQs appears in multiple eligible rosters and therefore has structurally more opportunities for inclusion than an entity supported by only one AQ. This `multi-query-support-tilted` inclusion property is intentional for this query-balanced calibration sample. It is shared upstream of both experimental arms and is not leakage between the arms; no claim of uniform inclusion probability is made.
+
 ## 7. Reproduction and validation
 
-Generation requires a clean Git worktree and refuses to overwrite a non-empty output directory:
+Generation requires a clean Git worktree and refuses to overwrite a non-empty output directory. Use a fresh temporary or otherwise new output directory rather than the committed package path:
 
 ```powershell
+$pilotOutput = Join-Path `
+  ([System.IO.Path]::GetTempPath()) `
+  ("srtp-pilot-v0.2-" + [guid]::NewGuid())
 python -m app.build_pilot_real_data_foundation `
   --config configs/pilot/srtp_pilot_v0.2_real_data_foundation_v1.json `
-  --output-dir data/research/pilot/v0.2/real-data-foundation-v1
+  --output-dir $pilotOutput
 ```
 
-Independent offline validation rechecks source package closure, every input/output hash, W6 contracts, metadata exclusions, pool/canonical closure, canonical view, U80 sampling, identities, counts, and manifest:
+This is a semantic reconstruction on the checked-out code revision. For byte-for-byte reproduction of the frozen package, use a separate clean checkout/worktree at the manifest-recorded generation revision `fb4e0d70156c83435a8ba054ff8f1607e61b58f6`, retain the same frozen inputs and config, and build into a fresh directory. A newer HEAD can reconstruct the same U80 membership and order when the frozen inputs and sampling semantics are unchanged, while provenance-bound identities or file hashes can legitimately differ because the Git revision is retained. The manifest's committed-path command records the original generation invocation; it is not an instruction to overwrite the committed directory.
+
+The offline validator is a **deterministic reconstruction validator**. It rechecks source package closure, every input/output hash, W6 contracts, metadata exclusions, pool/canonical closure, canonical view, U80 sampling, identities, counts, and manifest:
 
 ```powershell
 python -m app.validate_pilot_real_data_foundation `
   --config configs/pilot/srtp_pilot_v0.2_real_data_foundation_v1.json `
   --package-dir data/research/pilot/v0.2/real-data-foundation-v1
 ```
+
+It detects source drift, stale artifacts, hash/manifest mismatch, package repacking, and committed outputs inconsistent with the frozen inputs. The builder and reconstruction validator share assembly and contract semantics, so this is not a second fully independent sampling implementation. The independent reviewer separately recomputed U80 ordering and confirmed the committed membership/order.
 
 The output package contains:
 
@@ -126,7 +135,7 @@ All JSON is generated atomically and deterministically for the same frozen confi
 
 ## 8. Frozen v1 result
 
-The package was generated from clean revision `fb4e0d70156c83435a8ba054ff8f1607e61b58f6` and independently revalidated offline.
+The package was generated from clean revision `fb4e0d70156c83435a8ba054ff8f1607e61b58f6` and passed deterministic reconstruction validation. An independent reviewer additionally recomputed U80 ordering outside the builder assembly path.
 
 | Topic | Raw unique Works | W6-representable records | Canonical entities | Eligible canonical entities | U80 |
 |---|---:|---:|---:|---:|---:|
