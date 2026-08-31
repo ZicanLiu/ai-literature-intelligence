@@ -1,5 +1,13 @@
 # SRTP Pilot v0.2 Selection Infrastructure and Matched Context
 
+> Historical status note (2026-08-31): the committed Dual-Curator
+> `selection-preparation-v1` package remains unchanged and valid as a prepared,
+> not-started optional Dual-Human baseline. RCP-v0.3 supersedes it only as the
+> primary Reference protocol; see
+> [`PILOT_V0_3_REFERENCE_CURATION_PROTOCOL.md`](PILOT_V0_3_REFERENCE_CURATION_PROTOCOL.md).
+> Nothing in RCP-v0.3 retroactively changes this document's v0.2 artifact or
+> workflow semantics.
+
 ## 1. Scope and stop boundary
 
 This stage implements the offline infrastructure between the committed canonical
