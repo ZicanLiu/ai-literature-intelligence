@@ -26,7 +26,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--selection", type=Path, required=True)
-    parser.add_argument("--human-selection-freeze", type=Path)
+    freeze_group = parser.add_mutually_exclusive_group()
+    freeze_group.add_argument("--human-selection-freeze", type=Path)
+    freeze_group.add_argument("--reference-selection-freeze", type=Path)
     parser.add_argument("--context", type=Path, required=True)
     return parser
 
@@ -43,12 +45,21 @@ def main(argv: list[str] | None = None) -> int:
             if args.human_selection_freeze
             else None
         )
+        reference_freeze = (
+            load_json_object(
+                args.reference_selection_freeze,
+                label="Reference selection freeze",
+            )
+            if args.reference_selection_freeze
+            else None
+        )
         context = load_json_object(args.context, label="Pilot matched context")
         validated = validate_matched_context(
             context,
             selection=selection,
             inputs=inputs,
             human_selection_freeze=human_freeze,
+            reference_selection_freeze=reference_freeze,
         )
     except (OSError, RuntimeError, ValueError) as error:
         print(f"Pilot matched-context validation FAILED: {error}", file=sys.stderr)

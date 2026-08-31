@@ -39,6 +39,7 @@ SELECTION_K = 8
 U80_COUNT = 80
 BM25_METHOD_ID = "pilot_bm25_lexical_v1"
 HUMAN_METHOD_ID = "pilot_dual_curator_v1"
+REFERENCE_METHOD_ID = "pilot_ai_assisted_reference_abstract_v1"
 FIXTURE_METHOD_ID = "pilot_mock_selection_plumbing_v1"
 CURATOR_SLOTS = ("curator_a", "curator_b")
 MINIMUM_CURATOR_OVERLAP = 4
@@ -725,6 +726,7 @@ def build_selection_artifact(
     is_fixture: bool,
     purpose: str,
     human_selection_freeze: Mapping[str, Any] | None = None,
+    reference_selection_freeze: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     topic = topic_config(inputs, topic_id)
     payload: dict[str, Any] = {
@@ -761,7 +763,10 @@ def build_selection_artifact(
     payload["selection_identity"] = identity
     payload["artifact_id"] = f"srtp_pilot_selection_{identity.rsplit(':', 1)[-1][:24]}"
     validate_selection_artifact(
-        payload, inputs=inputs, human_selection_freeze=human_selection_freeze
+        payload,
+        inputs=inputs,
+        human_selection_freeze=human_selection_freeze,
+        reference_selection_freeze=reference_selection_freeze,
     )
     return payload
 
@@ -879,6 +884,7 @@ def validate_selection_artifact(
     *,
     inputs: PilotSelectionInputs,
     human_selection_freeze: Mapping[str, Any] | None = None,
+    reference_selection_freeze: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     selection = _require_mapping(dict(payload), "selection artifact")
     _require_exact_fields(
@@ -978,6 +984,7 @@ def validate_selection_artifact(
             topic_id=topic["topic_id"],
             bm25_created_at=selection["created_at"],
             human_selection_freeze=human_selection_freeze,
+            reference_selection_freeze=reference_selection_freeze,
         )
     elif method_id == HUMAN_METHOD_ID:
         if is_fixture:
@@ -990,6 +997,24 @@ def validate_selection_artifact(
         }:
             raise ValueError("Human selection method/config identity drift。")
         _validate_human_selection_provenance(details, selected)
+    elif method_id == REFERENCE_METHOD_ID:
+        from src.pilot_reference_selection import (
+            validate_reference_selection_method_provenance,
+        )
+
+        if method != {
+            "method_id": REFERENCE_METHOD_ID,
+            "family": "ai_assisted_human_reference",
+            "config_identity": details.get("protocol_config_identity"),
+        }:
+            raise ValueError("Reference selection method/config identity drift。")
+        validate_reference_selection_method_provenance(
+            details,
+            selected,
+            inputs=inputs,
+            is_fixture=is_fixture,
+            purpose=purpose,
+        )
     elif method_id == FIXTURE_METHOD_ID:
         if not is_fixture or purpose != "plumbing_only":
             raise ValueError(
@@ -1038,23 +1063,30 @@ def _validate_bm25_provenance(
     topic_id: str,
     bm25_created_at: str,
     human_selection_freeze: Mapping[str, Any] | None,
+    reference_selection_freeze: Mapping[str, Any] | None,
 ) -> None:
-    _require_exact_fields(
-        details,
-        {
-            "query",
-            "query_field",
-            "paper_representation",
-            "tokenizer",
-            "k1",
-            "b",
-            "corpus_document_count",
-            "ranking",
-            "bm25_config_identity",
-            "human_selection_freeze",
-        },
-        "BM25 provenance",
-    )
+    legacy_fields = {
+        "query",
+        "query_field",
+        "paper_representation",
+        "tokenizer",
+        "k1",
+        "b",
+        "corpus_document_count",
+        "ranking",
+        "bm25_config_identity",
+        "human_selection_freeze",
+    }
+    reference_fields = (legacy_fields - {"human_selection_freeze"}) | {
+        "formal_execution_policy",
+        "reference_selection_freeze",
+    }
+    actual_fields = set(details)
+    if frozenset(actual_fields) not in {
+        frozenset(legacy_fields),
+        frozenset(reference_fields),
+    }:
+        raise ValueError("BM25 provenance fields drift。")
     if details["query"] != topic["research_question"]:
         raise ValueError("BM25 query 不是 frozen research_question。")
     for key in ("query_field", "paper_representation", "tokenizer", "k1", "b"):
@@ -1064,26 +1096,63 @@ def _validate_bm25_provenance(
         raise ValueError("BM25 corpus 必须是完整 U80。")
     if details["bm25_config_identity"] != bm25["config_identity"]:
         raise ValueError("BM25 config identity drift。")
-    if human_selection_freeze is None:
-        raise ValueError("BM25 validation 缺少 frozen Human selection artifact。")
-    validated_human = validate_selection_artifact(human_selection_freeze, inputs=inputs)
-    if (
-        validated_human["method_id"] != HUMAN_METHOD_ID
-        or validated_human["is_fixture"]
-        or validated_human["topic_id"] != topic_id
-    ):
-        raise ValueError("BM25 Human-freeze artifact method/topic/fixture drift。")
-    expected_freeze = validate_human_selection_freeze_reference(
-        details["human_selection_freeze"], human_selection_freeze
-    )
+    if actual_fields == legacy_fields:
+        if reference_selection_freeze is not None:
+            raise ValueError("legacy BM25 provenance 不得混入 Reference freeze。")
+        if human_selection_freeze is None:
+            raise ValueError("BM25 validation 缺少 frozen Human selection artifact。")
+        validated_dependency = validate_selection_artifact(
+            human_selection_freeze, inputs=inputs
+        )
+        if (
+            validated_dependency["method_id"] != HUMAN_METHOD_ID
+            or validated_dependency["is_fixture"]
+            or validated_dependency["topic_id"] != topic_id
+        ):
+            raise ValueError("BM25 Human-freeze artifact method/topic/fixture drift。")
+        expected_freeze = validate_human_selection_freeze_reference(
+            details["human_selection_freeze"], human_selection_freeze
+        )
+        dependency_frozen_at = expected_freeze["human_selection_frozen_at"]
+    else:
+        if human_selection_freeze is not None:
+            raise ValueError("Reference-bound BM25 provenance 不得混入 Human freeze。")
+        if reference_selection_freeze is None:
+            raise ValueError(
+                "BM25 validation 缺少 frozen Reference selection artifact。"
+            )
+        if details["formal_execution_policy"] != "after_reference_selection_freeze":
+            raise ValueError("BM25 Reference execution policy drift。")
+        from src.pilot_reference_selection import (
+            validate_reference_selection_freeze_reference,
+        )
+
+        validated_dependency = validate_selection_artifact(
+            reference_selection_freeze, inputs=inputs
+        )
+        if (
+            validated_dependency["method_id"] != REFERENCE_METHOD_ID
+            or validated_dependency["is_fixture"]
+            or validated_dependency["topic_id"] != topic_id
+        ):
+            raise ValueError(
+                "BM25 Reference-freeze artifact method/topic/fixture drift。"
+            )
+        expected_freeze = validate_reference_selection_freeze_reference(
+            details["reference_selection_freeze"],
+            reference_selection_freeze,
+            inputs=inputs,
+            require_formal=True,
+        )
+        dependency_frozen_at = expected_freeze["reference_selection_frozen_at"]
     if datetime.fromisoformat(
         _require_datetime(bm25_created_at, "BM25 created_at").replace("Z", "+00:00")
     ) < datetime.fromisoformat(
-        _require_datetime(
-            expected_freeze["human_selection_frozen_at"], "Human frozen_at"
-        ).replace("Z", "+00:00")
+        _require_datetime(dependency_frozen_at, "selection frozen_at").replace(
+            "Z", "+00:00"
+        )
     ):
-        raise ValueError("BM25 artifact 早于 Human selection freeze。")
+        raise ValueError("BM25 artifact 早于 required selection freeze。")
     ranking = _require_list(details["ranking"], "BM25 ranking", nonempty=True)
     if len(ranking) != SELECTION_K:
         raise ValueError("BM25 selection ranking 必须精确为 Top-8。")
@@ -3883,6 +3952,7 @@ __all__ = [
     "CURATOR_SLOTS",
     "FIXTURE_METHOD_ID",
     "HUMAN_METHOD_ID",
+    "REFERENCE_METHOD_ID",
     "MINIMUM_CURATOR_OVERLAP",
     "PILOT_VERSION",
     "PilotSelectionInputs",

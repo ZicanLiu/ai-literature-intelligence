@@ -25,10 +25,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--selection", type=Path, required=True)
-    parser.add_argument(
+    freeze_group = parser.add_mutually_exclusive_group()
+    freeze_group.add_argument(
         "--human-selection-freeze",
         type=Path,
         help="Required when validating a formal BM25 selection artifact.",
+    )
+    freeze_group.add_argument(
+        "--reference-selection-freeze",
+        type=Path,
+        help="Required for a formal BM25 artifact bound to finalized RCP Reference.",
     )
     return parser
 
@@ -45,10 +51,19 @@ def main(argv: list[str] | None = None) -> int:
             if args.human_selection_freeze
             else None
         )
+        reference_freeze = (
+            load_json_object(
+                args.reference_selection_freeze,
+                label="Reference selection freeze",
+            )
+            if args.reference_selection_freeze
+            else None
+        )
         validated = validate_selection_artifact(
             selection,
             inputs=inputs,
             human_selection_freeze=human_freeze,
+            reference_selection_freeze=reference_freeze,
         )
     except (OSError, RuntimeError, ValueError) as error:
         print(f"Pilot selection validation FAILED: {error}", file=sys.stderr)

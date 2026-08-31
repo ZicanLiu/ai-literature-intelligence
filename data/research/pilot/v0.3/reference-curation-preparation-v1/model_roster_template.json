@@ -1,0 +1,100 @@
+{
+  "artifact_type": "srtp_rcp_model_roster_template",
+  "instructions": "Fill this template outside the repository only after the group lead has selected five real cross-family model instances. Do not invent provider/model identities. Freeze provider, model family, requested ID, provider-reported and resolved IDs, snapshot guarantee, independence group, and execution-config hash before screening.",
+  "is_fixture": false,
+  "protocol_id": "srtp_reference_curation_v0.3",
+  "required_slots": [
+    {
+      "fields_to_freeze": [
+        "provider",
+        "model_family",
+        "requested_model_id",
+        "requested_model_id_type",
+        "provider_reported_model_id",
+        "resolved_model_id",
+        "resolved_identity_confirmed",
+        "snapshot_version",
+        "snapshot_guarantee",
+        "independence_group",
+        "execution_config",
+        "execution_config_sha256"
+      ],
+      "role": "core",
+      "slot_id": "core_1"
+    },
+    {
+      "fields_to_freeze": [
+        "provider",
+        "model_family",
+        "requested_model_id",
+        "requested_model_id_type",
+        "provider_reported_model_id",
+        "resolved_model_id",
+        "resolved_identity_confirmed",
+        "snapshot_version",
+        "snapshot_guarantee",
+        "independence_group",
+        "execution_config",
+        "execution_config_sha256"
+      ],
+      "role": "core",
+      "slot_id": "core_2"
+    },
+    {
+      "fields_to_freeze": [
+        "provider",
+        "model_family",
+        "requested_model_id",
+        "requested_model_id_type",
+        "provider_reported_model_id",
+        "resolved_model_id",
+        "resolved_identity_confirmed",
+        "snapshot_version",
+        "snapshot_guarantee",
+        "independence_group",
+        "execution_config",
+        "execution_config_sha256"
+      ],
+      "role": "core",
+      "slot_id": "core_3"
+    },
+    {
+      "fields_to_freeze": [
+        "provider",
+        "model_family",
+        "requested_model_id",
+        "requested_model_id_type",
+        "provider_reported_model_id",
+        "resolved_model_id",
+        "resolved_identity_confirmed",
+        "snapshot_version",
+        "snapshot_guarantee",
+        "independence_group",
+        "execution_config",
+        "execution_config_sha256"
+      ],
+      "role": "sentinel",
+      "slot_id": "sentinel_1"
+    },
+    {
+      "fields_to_freeze": [
+        "provider",
+        "model_family",
+        "requested_model_id",
+        "requested_model_id_type",
+        "provider_reported_model_id",
+        "resolved_model_id",
+        "resolved_identity_confirmed",
+        "snapshot_version",
+        "snapshot_guarantee",
+        "independence_group",
+        "execution_config",
+        "execution_config_sha256"
+      ],
+      "role": "sentinel",
+      "slot_id": "sentinel_2"
+    }
+  ],
+  "schema_version": "1.0",
+  "status": "prepared_template_not_frozen"
+}

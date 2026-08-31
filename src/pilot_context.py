@@ -167,6 +167,7 @@ def _build_matched_context_payload(
     inputs: PilotSelectionInputs,
     selection: Mapping[str, Any],
     human_selection_freeze: Mapping[str, Any] | None,
+    reference_selection_freeze: Mapping[str, Any] | None,
     created_at: str,
     git_revision: str,
 ) -> dict[str, Any]:
@@ -174,6 +175,7 @@ def _build_matched_context_payload(
         selection,
         inputs=inputs,
         human_selection_freeze=human_selection_freeze,
+        reference_selection_freeze=reference_selection_freeze,
     )
     topic = topic_config(inputs, validated["topic_id"])
     policy = copy.deepcopy(inputs.config["context_policy"])
@@ -292,6 +294,7 @@ def build_matched_context(
     inputs: PilotSelectionInputs,
     selection: Mapping[str, Any],
     human_selection_freeze: Mapping[str, Any] | None = None,
+    reference_selection_freeze: Mapping[str, Any] | None = None,
     created_at: str,
     git_revision: str,
 ) -> dict[str, Any]:
@@ -301,6 +304,7 @@ def build_matched_context(
         inputs=inputs,
         selection=selection,
         human_selection_freeze=human_selection_freeze,
+        reference_selection_freeze=reference_selection_freeze,
         created_at=created_at,
         git_revision=git_revision,
     )
@@ -309,6 +313,7 @@ def build_matched_context(
         selection=selection,
         inputs=inputs,
         human_selection_freeze=human_selection_freeze,
+        reference_selection_freeze=reference_selection_freeze,
     )
     return payload
 
@@ -319,6 +324,7 @@ def validate_matched_context(
     selection: Mapping[str, Any],
     inputs: PilotSelectionInputs,
     human_selection_freeze: Mapping[str, Any] | None = None,
+    reference_selection_freeze: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Reconstruct and compare the complete context artifact fail-closed."""
 
@@ -358,6 +364,7 @@ def validate_matched_context(
         inputs=inputs,
         selection=selection,
         human_selection_freeze=human_selection_freeze,
+        reference_selection_freeze=reference_selection_freeze,
         created_at=artifact.get("created_at"),
         git_revision=provenance.get("git_revision"),
     )
@@ -389,6 +396,8 @@ def validate_matched_context_pair(
     inputs: PilotSelectionInputs,
     left_human_selection_freeze: Mapping[str, Any] | None = None,
     right_human_selection_freeze: Mapping[str, Any] | None = None,
+    left_reference_selection_freeze: Mapping[str, Any] | None = None,
+    right_reference_selection_freeze: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Validate BM25/Human fairness while allowing natural content differences."""
 
@@ -397,12 +406,14 @@ def validate_matched_context_pair(
         selection=left_selection,
         inputs=inputs,
         human_selection_freeze=left_human_selection_freeze,
+        reference_selection_freeze=left_reference_selection_freeze,
     )
     validate_matched_context(
         right,
         selection=right_selection,
         inputs=inputs,
         human_selection_freeze=right_human_selection_freeze,
+        reference_selection_freeze=right_reference_selection_freeze,
     )
     required_equal = {
         "pilot_version": (left["pilot_version"], right["pilot_version"]),
@@ -582,6 +593,149 @@ def validate_formal_matched_context_pair(
     return report
 
 
+def validate_formal_reference_pair_method_roster(
+    left_method_id: str,
+    right_method_id: str,
+    *,
+    comparison_policy: Mapping[str, Any],
+    left_is_fixture: bool,
+    right_is_fixture: bool,
+) -> None:
+    """Use the frozen comparison config, never string-family guessing."""
+
+    if left_is_fixture or right_is_fixture:
+        raise ValueError("formal BM25-vs-Reference pair 不得包含 fixture。")
+    expected = {
+        comparison_policy.get("bm25_method_id"),
+        comparison_policy.get("reference_method_id"),
+    }
+    if None in expected or len(expected) != 2:
+        raise ValueError("frozen comparison config method roster 非法。")
+    if {left_method_id, right_method_id} != expected:
+        raise ValueError(
+            "formal pair method roster 必须精确为 configured BM25 + Reference。"
+        )
+
+
+def validate_formal_reference_pair_selection_binding(
+    left_selection: Mapping[str, Any],
+    right_selection: Mapping[str, Any],
+    *,
+    inputs: PilotSelectionInputs,
+    comparison_policy: Mapping[str, Any],
+) -> dict[str, Any]:
+    left_method = _require_mapping(
+        left_selection.get("selection_method"), "left selection method"
+    ).get("method_id")
+    right_method = _require_mapping(
+        right_selection.get("selection_method"), "right selection method"
+    ).get("method_id")
+    validate_formal_reference_pair_method_roster(
+        left_method,
+        right_method,
+        comparison_policy=comparison_policy,
+        left_is_fixture=left_selection.get("is_fixture") is not False,
+        right_is_fixture=right_selection.get("is_fixture") is not False,
+    )
+    bm25_method = comparison_policy["bm25_method_id"]
+    reference_method = comparison_policy["reference_method_id"]
+    if left_method == bm25_method:
+        bm25_side = "left"
+        reference_side = "right"
+        bm25_selection = left_selection
+        reference_selection = right_selection
+    else:
+        bm25_side = "right"
+        reference_side = "left"
+        bm25_selection = right_selection
+        reference_selection = left_selection
+    details = _require_mapping(
+        bm25_selection.get("method_specific_provenance"), "formal BM25 provenance"
+    )
+    if details.get("formal_execution_policy") != comparison_policy.get(
+        "bm25_execution_policy"
+    ):
+        raise ValueError("formal BM25 execution policy/config drift。")
+    from src.pilot_reference_selection import (
+        validate_reference_selection_freeze_reference,
+    )
+
+    freeze = validate_reference_selection_freeze_reference(
+        _require_mapping(
+            details.get("reference_selection_freeze"),
+            "formal BM25 Reference-freeze reference",
+        ),
+        reference_selection,
+        inputs=inputs,
+        require_formal=True,
+    )
+    validated_reference = validate_selection_artifact(
+        reference_selection, inputs=inputs
+    )
+    validated_bm25 = validate_selection_artifact(
+        bm25_selection,
+        inputs=inputs,
+        reference_selection_freeze=reference_selection,
+    )
+    if (
+        validated_reference["method_id"] != reference_method
+        or validated_bm25["method_id"] != bm25_method
+        or validated_reference["is_fixture"]
+        or validated_bm25["is_fixture"]
+    ):
+        raise ValueError("formal BM25/Reference method or fixture validation drift。")
+    for key in ("topic_id", "question_id", "research_question_identity", "u80", "k"):
+        if validated_bm25[key] != validated_reference[key]:
+            raise ValueError(f"formal BM25/Reference {key} binding drift。")
+    return {
+        "bm25_side": bm25_side,
+        "reference_side": reference_side,
+        "reference_artifact_id": validated_reference["artifact_id"],
+        "reference_selection_identity": validated_reference["selection_identity"],
+        "reference_selection_sha256": payload_sha256(reference_selection),
+        "reference_selection_frozen_at": freeze["reference_selection_frozen_at"],
+    }
+
+
+def validate_formal_reference_matched_context_pair(
+    left: Mapping[str, Any],
+    right: Mapping[str, Any],
+    *,
+    left_selection: Mapping[str, Any],
+    right_selection: Mapping[str, Any],
+    inputs: PilotSelectionInputs,
+    comparison_policy: Mapping[str, Any],
+) -> dict[str, Any]:
+    binding = validate_formal_reference_pair_selection_binding(
+        left_selection,
+        right_selection,
+        inputs=inputs,
+        comparison_policy=comparison_policy,
+    )
+    left_freeze = right_selection if binding["bm25_side"] == "left" else None
+    right_freeze = left_selection if binding["bm25_side"] == "right" else None
+    report = validate_matched_context_pair(
+        left,
+        right,
+        left_selection=left_selection,
+        right_selection=right_selection,
+        inputs=inputs,
+        left_reference_selection_freeze=left_freeze,
+        right_reference_selection_freeze=right_freeze,
+    )
+    report["validation_mode"] = "formal_bm25_vs_rcp_reference"
+    report["reference_freeze_binding"] = binding
+    report["configured_method_roster"] = {
+        "bm25_method_id": comparison_policy["bm25_method_id"],
+        "reference_method_id": comparison_policy["reference_method_id"],
+    }
+    report["validation_identity"] = deterministic_identity(
+        CONTEXT_PAIR_IDENTITY_PREFIX,
+        {key: value for key, value in report.items() if key != "validation_identity"},
+    )
+    return report
+
+
 __all__ = [
     "build_matched_context",
     "count_context_tokens",
@@ -589,6 +743,9 @@ __all__ = [
     "tokenize_context_text",
     "truncate_paper_fields",
     "validate_formal_matched_context_pair",
+    "validate_formal_reference_matched_context_pair",
+    "validate_formal_reference_pair_method_roster",
+    "validate_formal_reference_pair_selection_binding",
     "validate_formal_pair_method_roster",
     "validate_formal_pair_selection_binding",
     "validate_matched_context",

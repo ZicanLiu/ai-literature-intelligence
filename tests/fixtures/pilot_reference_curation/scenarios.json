@@ -1,0 +1,13 @@
+{
+  "description": "Deterministic plumbing-only scenario routing by frozen U80 position; not scientific judgements or a candidate recommendation.",
+  "is_fixture": true,
+  "purpose": "plumbing_only",
+  "scenario_by_u80_position": {
+    "0-29": "safe_zero",
+    "30": "sentinel_challenge",
+    "31": "abstain",
+    "32": "boundary_conflict",
+    "33": "invalid_after_schema_repair",
+    "34-79": "label_two"
+  }
+}
