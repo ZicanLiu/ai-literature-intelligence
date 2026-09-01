@@ -1,5 +1,9 @@
 # SRTP Pilot RCP-v0.3 Reference Curation Protocol
 
+> Historical frozen version. New Primary execution through an external agent
+> runner follows the narrowly versioned
+> [`RCP-v0.3.1 addendum`](PILOT_V0_3_1_REFERENCE_CURATION_PROTOCOL.md).
+
 ## 1. Status and scope
 
 RCP-v0.3 is the provider-neutral infrastructure for an AI-assisted, selectively

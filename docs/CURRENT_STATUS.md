@@ -1,14 +1,11 @@
 # 当前项目状态
 
-更新时间：2026-08-31
+更新时间：2026-09-01
 
 本次只读核对的公共 `origin/main` 为
-`ccb75414aa426f82f5e40cfd81f88ba66f0afe77`（PR #78，CI Quality Gate duplicate-test
-hotfix）。PR #71、后续 W6 integration PR、Pilot v0.2 Real-Data Foundation（PR #77）及 CI
-hotfix 均已进入该基线。实时远端状态仍须在每次接手任务时重新 fetch/GitHub 核对。
-
-当前 `codex/pilot-v0.2-selection-context` 工作分支以该公共 main 为 merge-base，包含尚未 push
-的 Pilot selection/context 与 RCP-v0.3 本地实现。不能把这些分支成果表述为已经进入公共 main。
+`d5dc7bfc6b24146dfc64b8452ec8ef7731acf990`（PR #79）。Pilot v0.2
+Selection/Context 与 RCP-v0.3 pre-execution infrastructure 已随 PR #79 进入 `main`；实时远端状态
+仍须在每次接手任务时重新 fetch/GitHub 核对。
 
 W5 Method Ranking Contract v1.1 已建立并向后兼容 v1.0。v1.1 只用于完整声明 B0/B1 的冻结
 source sample 输入；BM25、SPECTER2、Cross-Encoder 与 RRF 的 v1.0 package 继续有效。
@@ -233,10 +230,10 @@ PR #71 没有修改 W4 approved Benchmark、W5 frozen method artifacts/metrics/e
 canonicalization、final pool selection、blind annotation/second annotation/review/adjudication、正式
 method/fusion generation、sealed Hidden evaluation 与 synthesis 均属于后续工作。
 
-## Pilot v0.2 Selection / Context 与 RCP-v0.3 分支状态
+## Pilot v0.2 Selection / Context 与 RCP 当前状态
 
-公共 main 已包含两个 Dev Topic 的 frozen canonical U80 和 CI duplicate-test hotfix。本地
-`codex/pilot-v0.2-selection-context` 分支已准备但尚未 push：
+公共 `main` 已包含两个 Dev Topic 的 frozen canonical U80、Pilot Selection/Context 与
+RCP-v0.3 pre-execution infrastructure（PR #79）：
 
 - BM25 Lexical Selection、Dual-Curator tooling、generic Selection Artifact 和 method-agnostic
   Matched Context Builder；
@@ -247,10 +244,14 @@ method/fusion generation、sealed Hidden evaluation 与 synthesis 均属于后�
   pair validation；
 - committed RCP preparation package，状态为 `prepared_not_started`，真实 roster 尚未冻结。
 
+Versioned RCP-v0.3.1 external-agent-runner package 仍为 `prepared_not_started`；它只放宽诚实声明
+snapshot unavailable 的 Primary runner provenance，不启动真实执行。
+
 当前没有真实模型 judgement、真实人类 review、正式 Reference Top-8、正式 BM25 Top-8、matched
 experimental context 或 synthesis output。RCP 的正确 claim 仅为未来的 **auditable internal
 reference selection**，不是 astronomy expert gold/ground truth。完整边界与真实执行 checkpoint 见
-[`PILOT_V0_3_REFERENCE_CURATION_PROTOCOL.md`](project/PILOT_V0_3_REFERENCE_CURATION_PROTOCOL.md)。
+[`PILOT_V0_3_REFERENCE_CURATION_PROTOCOL.md`](project/PILOT_V0_3_REFERENCE_CURATION_PROTOCOL.md) 与
+[`RCP-v0.3.1 addendum`](project/PILOT_V0_3_1_REFERENCE_CURATION_PROTOCOL.md)。
 
 ## 当前验证
 

@@ -1,4 +1,4 @@
-"""RCP-v0.3 AI-assisted internal Reference curation contracts.
+"""RCP-v0.3 family AI-assisted internal Reference curation contracts.
 
 This module is deliberately provider-neutral and offline.  It exports one-
 candidate Title+Abstract tasks, validates externally produced structured
@@ -41,6 +41,11 @@ from src.w6_contracts import (
 
 RCP_SCHEMA_VERSION = "1.0"
 RCP_PROTOCOL_ID = "srtp_reference_curation_v0.3"
+RCP_PROTOCOL_VERSION_V03 = "RCP-v0.3"
+RCP_PROTOCOL_VERSION_V031 = "RCP-v0.3.1"
+SUPPORTED_RCP_PROTOCOL_VERSIONS = frozenset(
+    {RCP_PROTOCOL_VERSION_V03, RCP_PROTOCOL_VERSION_V031}
+)
 REFERENCE_METHOD_ID = "pilot_ai_assisted_reference_abstract_v1"
 CORE_COUNT = 3
 SENTINEL_COUNT = 2
@@ -56,6 +61,23 @@ BOUNDARY_DIMENSIONS = (
 BOUNDARY_VALUES = frozenset({"match", "mismatch", "unclear", "not_stated"})
 EVIDENCE_SUFFICIENCY_VALUES = frozenset({"sufficient", "insufficient"})
 MODEL_ROLES = frozenset({"core", "sentinel"})
+EXTERNAL_AGENT_RUNNER_ROUTE = "external_agent_runner"
+EXTERNAL_AGENT_RUNNER_EXECUTION_MODES = (
+    "one_candidate_per_session",
+    "sequential_shared_runner_session",
+)
+EXTERNAL_AGENT_RUNNER_REQUIRED_CONFIG_FIELDS = (
+    "execution_route",
+    "runner_name",
+    "runner_version",
+    "displayed_model_label",
+    "execution_mode",
+    "prompt_identity",
+    "protocol_config_identity",
+    "external_lookup",
+    "fulltext_access",
+    "one_candidate_per_judgement",
+)
 HUMAN_REVIEWER_SLOTS = frozenset({"r1", "r2", "r3"})
 HARD_MISMATCH_CODES = {
     f"hard_mismatch_{dimension}": dimension for dimension in BOUNDARY_DIMENSIONS
@@ -385,19 +407,30 @@ def _validate_prompt_package(prompt: Mapping[str, Any]) -> None:
         raise ValueError("RCP prompt artifact_id drift。")
 
 
-def _validate_roster_template(template: Mapping[str, Any]) -> None:
+def _validate_roster_template(
+    template: Mapping[str, Any], *, protocol_version: str
+) -> None:
     artifact = _mapping(dict(template), "RCP model roster template")
+    base_fields = {
+        "schema_version",
+        "artifact_type",
+        "protocol_id",
+        "status",
+        "is_fixture",
+        "instructions",
+        "required_slots",
+    }
     _exact(
         artifact,
-        {
-            "schema_version",
-            "artifact_type",
-            "protocol_id",
-            "status",
-            "is_fixture",
-            "instructions",
-            "required_slots",
-        },
+        base_fields
+        | (
+            {
+                "protocol_version",
+                "external_agent_runner_snapshot_unavailable",
+            }
+            if protocol_version == RCP_PROTOCOL_VERSION_V031
+            else set()
+        ),
         "RCP model roster template",
     )
     if (
@@ -407,6 +440,26 @@ def _validate_roster_template(template: Mapping[str, Any]) -> None:
         or artifact["status"] != "prepared_template_not_frozen"
     ):
         raise ValueError("RCP model roster template identity/status drift。")
+    if protocol_version == RCP_PROTOCOL_VERSION_V031:
+        if artifact["protocol_version"] != RCP_PROTOCOL_VERSION_V031:
+            raise ValueError("RCP-v0.3.1 roster template version drift。")
+        runner_policy = _mapping(
+            artifact["external_agent_runner_snapshot_unavailable"],
+            "external-agent-runner template policy",
+        )
+        if runner_policy != {
+            "execution_route": EXTERNAL_AGENT_RUNNER_ROUTE,
+            "snapshot_guarantee": "unavailable",
+            "snapshot_version": None,
+            "runner_version_nullable": True,
+            "required_execution_config_fields": list(
+                EXTERNAL_AGENT_RUNNER_REQUIRED_CONFIG_FIELDS
+            ),
+            "allowed_execution_modes": list(
+                EXTERNAL_AGENT_RUNNER_EXECUTION_MODES
+            ),
+        }:
+            raise ValueError("RCP-v0.3.1 external-runner template policy drift。")
     _bool(artifact["is_fixture"], "roster template is_fixture", expected=False)
     _text(artifact["instructions"], "roster template instructions")
     slots = _list(artifact["required_slots"], "required roster slots", nonempty=True)
@@ -459,9 +512,10 @@ def _validate_rcp_config(config: Mapping[str, Any]) -> None:
         raise ValueError("RCP config schema_version drift。")
     if artifact["artifact_type"] != "srtp_reference_curation_config":
         raise ValueError("RCP config artifact_type drift。")
+    protocol_version = _text(artifact["protocol_version"], "RCP protocol version")
     if (
         artifact["protocol_id"] != RCP_PROTOCOL_ID
-        or artifact["protocol_version"] != "RCP-v0.3"
+        or protocol_version not in SUPPORTED_RCP_PROTOCOL_VERSIONS
         or artifact["primary_method_id"] != REFERENCE_METHOD_ID
         or artifact["status"] != "prepared_not_started"
     ):
@@ -508,14 +562,27 @@ def _validate_rcp_config(config: Mapping[str, Any]) -> None:
     identity_policy = _mapping(
         artifact["model_identity_policy"], "model identity policy"
     )
-    if identity_policy != {
+    expected_identity_policy = {
         "resolved_identity_required": True,
         "rolling_alias_may_be_requested": True,
         "rolling_alias_may_masquerade_as_snapshot": False,
         "snapshot_unavailable_requires_explicit_exception": True,
         "default_allow_snapshot_unavailable_exception": False,
         "downstream_generator_family_separation": True,
-    }:
+    }
+    if protocol_version == RCP_PROTOCOL_VERSION_V031:
+        expected_identity_policy.update(
+            {
+                "external_agent_runner_snapshot_unavailable_primary_allowed": True,
+                "external_agent_runner_required_execution_config_fields": list(
+                    EXTERNAL_AGENT_RUNNER_REQUIRED_CONFIG_FIELDS
+                ),
+                "external_agent_runner_execution_modes": list(
+                    EXTERNAL_AGENT_RUNNER_EXECUTION_MODES
+                ),
+            }
+        )
+    if identity_policy != expected_identity_policy:
         raise ValueError("RCP model identity policy drift。")
     judgement = _mapping(artifact["judgement_policy"], "judgement policy")
     if judgement != {
@@ -666,7 +733,9 @@ def load_reference_curation_inputs(
         root, template_ref["path"], "roster template path"
     )
     template = load_json_object(template_path, label="RCP roster template")
-    _validate_roster_template(template)
+    _validate_roster_template(
+        template, protocol_version=config["protocol_version"]
+    )
     if sha256_file(template_path) != template_ref["sha256"]:
         raise ValueError("RCP roster template hash drift。")
     return ReferenceCurationInputs(
@@ -693,26 +762,35 @@ def validate_reference_preparation_package(
         package = (root / package).resolve()
     manifest_path = package / "manifest.json"
     manifest = load_json_object(manifest_path, label="RCP preparation manifest")
+    protocol_version = manifest.get("protocol_version", RCP_PROTOCOL_VERSION_V03)
+    if protocol_version not in SUPPORTED_RCP_PROTOCOL_VERSIONS:
+        raise ValueError("RCP preparation protocol_version drift。")
+    base_fields = {
+        "schema_version",
+        "artifact_type",
+        "artifact_id",
+        "package_identity",
+        "protocol_id",
+        "pilot_version",
+        "primary_method_id",
+        "status",
+        "is_fixture",
+        "created_at",
+        "config",
+        "u80",
+        "files",
+        "legacy_dual_curator_preparation",
+        "model_roster_status",
+        "real_execution_status",
+    }
     _exact(
         manifest,
-        {
-            "schema_version",
-            "artifact_type",
-            "artifact_id",
-            "package_identity",
-            "protocol_id",
-            "pilot_version",
-            "primary_method_id",
-            "status",
-            "is_fixture",
-            "created_at",
-            "config",
-            "u80",
-            "files",
-            "legacy_dual_curator_preparation",
-            "model_roster_status",
-            "real_execution_status",
-        },
+        base_fields
+        | (
+            {"protocol_version"}
+            if protocol_version == RCP_PROTOCOL_VERSION_V031
+            else set()
+        ),
         "RCP preparation manifest",
     )
     if (
@@ -728,6 +806,8 @@ def validate_reference_preparation_package(
     _bool(manifest["is_fixture"], "RCP preparation is_fixture", expected=False)
     _datetime(manifest["created_at"], "RCP preparation created_at")
     rcp_inputs = load_reference_curation_inputs(config_path, project_root=root)
+    if rcp_inputs.config["protocol_version"] != protocol_version:
+        raise ValueError("RCP preparation/config protocol_version drift。")
     config_ref = _mapping(manifest["config"], "preparation config reference")
     expected_config_ref = {
         "path": rcp_inputs.config_path.relative_to(root).as_posix(),
@@ -774,6 +854,7 @@ def validate_reference_preparation_package(
         "artifact_id": manifest["artifact_id"],
         "package_identity": identity,
         "manifest_sha256": sha256_file(manifest_path),
+        "protocol_version": protocol_version,
         "status": manifest["status"],
         "real_model_judgements_started": False,
     }
@@ -784,6 +865,54 @@ def compute_model_roster_identity(roster: Mapping[str, Any]) -> str:
         roster,
         prefix=ROSTER_IDENTITY_PREFIX,
         omitted={"artifact_id", "roster_identity"},
+    )
+
+
+def _validate_external_agent_runner_config(
+    execution: Mapping[str, Any],
+    *,
+    inputs: ReferenceCurationInputs,
+    resolved_model_id: str,
+) -> None:
+    missing = set(EXTERNAL_AGENT_RUNNER_REQUIRED_CONFIG_FIELDS) - set(execution)
+    if missing:
+        raise ValueError(
+            "snapshot unavailable external runner 缺少 execution provenance："
+            + ", ".join(sorted(missing))
+        )
+    if execution["execution_route"] != EXTERNAL_AGENT_RUNNER_ROUTE:
+        raise ValueError("snapshot unavailable 只允许 external_agent_runner route。")
+    _text(execution["runner_name"], "external runner name")
+    runner_version = execution["runner_version"]
+    if runner_version is not None:
+        _text(runner_version, "external runner version")
+    displayed = _text(
+        execution["displayed_model_label"], "external runner displayed model label"
+    )
+    if displayed != resolved_model_id:
+        raise ValueError(
+            "snapshot unavailable 的 displayed model label 必须等于 frozen resolved label。"
+        )
+    if execution["execution_mode"] not in EXTERNAL_AGENT_RUNNER_EXECUTION_MODES:
+        raise ValueError("external runner execution_mode 非法。")
+    if execution["prompt_identity"] != inputs.prompt_package["prompt_identity"]:
+        raise ValueError("external runner prompt identity drift。")
+    if execution["protocol_config_identity"] != inputs.config["config_identity"]:
+        raise ValueError("external runner RCP config identity drift。")
+    _bool(
+        execution["external_lookup"],
+        "external runner external_lookup",
+        expected=False,
+    )
+    _bool(
+        execution["fulltext_access"],
+        "external runner fulltext_access",
+        expected=False,
+    )
+    _bool(
+        execution["one_candidate_per_judgement"],
+        "external runner one candidate per judgement",
+        expected=True,
     )
 
 
@@ -835,8 +964,21 @@ def validate_model_roster(
         artifact["allow_snapshot_unavailable_exception"],
         "snapshot unavailable exception",
     )
-    if allow_unavailable and run_scope == "primary":
+    protocol_version = inputs.config["protocol_version"]
+    if (
+        allow_unavailable
+        and run_scope == "primary"
+        and protocol_version == RCP_PROTOCOL_VERSION_V03
+    ):
         raise ValueError("Primary roster 不得静默允许 snapshot unavailable。")
+    if (
+        allow_unavailable
+        and run_scope == "primary"
+        and not inputs.config["model_identity_policy"].get(
+            "external_agent_runner_snapshot_unavailable_primary_allowed", False
+        )
+    ):
+        raise ValueError("当前 RCP version 不允许 Primary snapshot unavailable。")
     downstream = artifact["downstream_generator_family"]
     if downstream is not None:
         downstream = _text(downstream, "downstream generator family")
@@ -923,15 +1065,26 @@ def validate_model_roster(
             "resolved identity confirmed",
             expected=True,
         )
+        execution = _mapping(entry["execution_config"], "execution config")
+        if canonical_json_sha256(execution) != entry["execution_config_sha256"]:
+            raise ValueError("model execution_config hash drift。")
         guarantee = _text(entry["snapshot_guarantee"], "snapshot guarantee")
         if guarantee not in {"immutable", "provider_versioned", "unavailable"}:
             raise ValueError("snapshot_guarantee 非法。")
         snapshot = entry["snapshot_version"]
+        external_unavailable = False
         if guarantee == "unavailable":
             if snapshot is not None:
                 raise ValueError("snapshot unavailable 时不得伪造 snapshot_version。")
             if not allow_unavailable:
                 raise ValueError("snapshot unavailable 缺少显式 protocol exception。")
+            if protocol_version == RCP_PROTOCOL_VERSION_V031:
+                _validate_external_agent_runner_config(
+                    execution,
+                    inputs=inputs,
+                    resolved_model_id=resolved,
+                )
+                external_unavailable = True
         else:
             snapshot = _text(snapshot, "snapshot version")
         actual_identity = (
@@ -945,7 +1098,11 @@ def validate_model_roster(
                 "(provider + resolved model + snapshot/version)。"
             )
         actual_model_identities.add(actual_identity)
-        if requested_type == "rolling_alias" and resolved == requested:
+        if (
+            requested_type == "rolling_alias"
+            and resolved == requested
+            and not external_unavailable
+        ):
             raise ValueError(
                 "rolling alias 未解析成可确认 identity；不得冒充 exact snapshot。"
             )
@@ -958,9 +1115,6 @@ def validate_model_roster(
             )
         ):
             raise ValueError("正式 roster 不得使用 fixture model identity。")
-        execution = _mapping(entry["execution_config"], "execution config")
-        if canonical_json_sha256(execution) != entry["execution_config_sha256"]:
-            raise ValueError("model execution_config hash drift。")
         if entry["status"] != "frozen":
             raise ValueError("正式 roster entry 必须 frozen。")
         if downstream == family:
@@ -1374,7 +1528,7 @@ def validate_ai_task_package(
 
 
 def render_ai_execution_instructions() -> str:
-    return """# RCP-v0.3 External Model Screening
+    return """# RCP External Model Screening
 
 This bundle contains independent, one-candidate Title+Abstract tasks. Process
 each task separately with the frozen prompt package. Do not use web search,
@@ -1385,6 +1539,9 @@ repository and retain their SHA-256 values for import.
 
 The task bundle is not a ranking exercise. Do not compare candidates or choose
 a Top-8. Every candidate receives an independent 0/1/2 or abstain judgement.
+A model × Topic may use one sequential shared runner session, but each task must
+be emitted immediately and independently. Do not rescale from prior label
+counts, revisit earlier candidates, compare candidates, or construct a ranking.
 """
 
 

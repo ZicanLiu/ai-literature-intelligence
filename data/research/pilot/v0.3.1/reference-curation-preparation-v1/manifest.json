@@ -1,0 +1,42 @@
+{
+  "artifact_id": "srtp_rcp_preparation_de6defa2980f78fa4b31bd13",
+  "artifact_type": "srtp_rcp_preparation_manifest",
+  "config": {
+    "artifact_id": "srtp_rcp_config_84e96835aa12e61fd9451273",
+    "config_identity": "srtp-rcp-config:sha256:84e96835aa12e61fd9451273b9b58add2415f05bfb7b5593f9a1c20db241315b",
+    "path": "configs/pilot/srtp_pilot_v0.3.1_reference_curation_v1.json",
+    "sha256": "fb88b81e4ca37adc89b4bf1b8566b6e7de6297f2e25565376b7d9b0918ad5f03"
+  },
+  "created_at": "2026-09-01T21:55:45+08:00",
+  "files": {
+    "README.md": "23b30650872aefa85bfb7a2de74f9ff9ebc7472be4a5f429a62250b0e1a1d8b6",
+    "model_roster_template.json": "b7577d07fca4803d49aab958c174a2e655b91b5ffd3b22e165222f5438e5a939"
+  },
+  "is_fixture": false,
+  "legacy_dual_curator_preparation": {
+    "path": "data/research/pilot/v0.2/selection-preparation-v1/manifest.json",
+    "sha256": "75707e713706d820daf48bc55597aa601a763bc2ec15c5c8c8488838c9d767d6",
+    "status": "preserved_historical_prepared_artifact",
+    "use": "optional_dual_human_baseline_not_primary_rcp"
+  },
+  "model_roster_status": "template_only_real_roster_not_frozen",
+  "package_identity": "srtp-rcp-preparation:sha256:de6defa2980f78fa4b31bd1369856d0109011e6be94678359579fd93c534d7ef",
+  "pilot_version": "srtp-pilot-v0.2",
+  "primary_method_id": "pilot_ai_assisted_reference_abstract_v1",
+  "protocol_id": "srtp_reference_curation_v0.3",
+  "protocol_version": "RCP-v0.3.1",
+  "real_execution_status": {
+    "formal_bm25": "not_started",
+    "formal_reference": "not_started",
+    "human_review": "not_started",
+    "matched_context": "not_started",
+    "model_judgements": "not_started"
+  },
+  "schema_version": "1.0",
+  "status": "prepared_not_started",
+  "u80": {
+    "artifact_id": "srtp_pilot_u80_bfbb0ff51856fd877d84c8a9",
+    "sha256": "6d1e268b398e0266ed68902799e331fa256c913c037b0ebe8dfff4aacfc12739",
+    "u80_identity": "srtp-pilot-u80:sha256:bfbb0ff51856fd877d84c8a9dfc0ee07d3c617723a318f8b5f8cd8a45002e5c9"
+  }
+}

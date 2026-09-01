@@ -1,4 +1,4 @@
-"""Coordinator CLI for external, provider-neutral RCP-v0.3 execution."""
+"""Coordinator CLI for external, provider-neutral RCP-v0.3.1 execution."""
 
 from __future__ import annotations
 
@@ -47,7 +47,10 @@ from src.w6_contracts import load_json_object
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = (
-    PROJECT_ROOT / "configs" / "pilot" / "srtp_pilot_v0.3_reference_curation_v1.json"
+    PROJECT_ROOT
+    / "configs"
+    / "pilot"
+    / "srtp_pilot_v0.3.1_reference_curation_v1.json"
 )
 
 
@@ -63,7 +66,7 @@ def _add_time_and_output(parser: argparse.ArgumentParser) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Offline/external RCP-v0.3 coordinator. This CLI never calls a model API."
+            "Offline/external RCP-v0.3.1 coordinator. This CLI never calls a model API."
         )
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -281,7 +284,7 @@ def _git_revision() -> str:
 def _require_clean_formal_worktree() -> str:
     state = capture_git_state(PROJECT_ROOT)
     if not state["git_worktree_clean"]:
-        raise ValueError("formal RCP-v0.3 execution requires a clean Git worktree。")
+        raise ValueError("formal RCP-v0.3.1 execution requires a clean Git worktree。")
     return state["git_revision"]
 
 
@@ -696,9 +699,9 @@ def main(argv: list[str] | None = None) -> int:
         else:
             raise ValueError("unknown RCP coordinator command。")
     except (OSError, RuntimeError, ValueError) as error:
-        print(f"Pilot RCP-v0.3 coordinator FAILED: {error}", file=sys.stderr)
+        print(f"Pilot RCP coordinator FAILED: {error}", file=sys.stderr)
         return 1
-    print(f"Pilot RCP-v0.3 {args.command} PASSED。")
+    print(f"Pilot {inputs.config['protocol_version']} {args.command} PASSED。")
     return 0
 
 
