@@ -18,6 +18,7 @@ from src.pilot_context import (
     validate_matched_context,
 )
 from src.pilot_reference_curation import (
+    AGGREGATION_IDENTITY_PREFIX,
     AI_TASK_FORBIDDEN_KEYS,
     BM25_METHOD_ID,
     FINAL_REFERENCE_IDENTITY_PREFIX,
@@ -48,6 +49,7 @@ from src.pilot_reference_curation import (
     validate_safe_zero_audit_outcome,
     validate_safe_zero_audit_plan,
     _artifact_id,
+    _artifact_reference,
     _identity_without,
 )
 from src.pilot_reference_review import (
@@ -66,6 +68,7 @@ from src.pilot_reference_review import (
     validate_human_submission,
 )
 from src.pilot_reference_selection import (
+    _derive_reference_ranking,
     build_bm25_selection_after_reference,
     build_cutoff_decision_from_submissions,
     build_final_reference,
@@ -76,7 +79,11 @@ from src.pilot_reference_selection import (
     validate_cutoff_decision,
     validate_reference_selection_freeze_reference,
 )
-from src.pilot_selection import payload_sha256, validate_selection_artifact
+from src.pilot_selection import (
+    SELECTION_IDENTITY_PREFIX,
+    payload_sha256,
+    validate_selection_artifact,
+)
 from src.w6_contracts import canonical_json_sha256, deterministic_identity
 
 
@@ -1192,6 +1199,143 @@ class RCPHumanAndFinalSelectionTests(RCPFixture):
             git_revision=GIT_REVISION,
         )
 
+    def _in_memory_formal_reference_chain(self):
+        """Build a strict-valid formal branch fixture without persisting outcomes."""
+
+        aggregation = copy.deepcopy(self.chain["aggregation"])
+        aggregation["is_fixture"] = False
+        aggregation_identity = _identity_without(
+            aggregation,
+            prefix=AGGREGATION_IDENTITY_PREFIX,
+            omitted={"artifact_id", "aggregation_identity"},
+        )
+        aggregation["aggregation_identity"] = aggregation_identity
+        aggregation["artifact_id"] = _artifact_id(
+            "srtp_rcp_aggregation", aggregation_identity
+        )
+        audit_plan = build_safe_zero_audit_plan(
+            aggregation,
+            inputs=self.inputs,
+            created_at=COMPLETED_AT,
+            git_revision=GIT_REVISION,
+        )
+        required = derive_h1_candidate_ids(aggregation, audit_plan)
+        safe_ids = set(audit_plan["safe_zero_canonical_entity_ids"])
+        eligible_ids = set(
+            [candidate_id for candidate_id in required if candidate_id not in safe_ids][
+                :8
+            ]
+        )
+        self.assertEqual(len(eligible_ids), 8)
+
+        submissions = {}
+        for reviewer in ("r1", "r2"):
+            package, mapping = build_human_task_package(
+                inputs=self.inputs,
+                aggregation=aggregation,
+                reviewer_slot=reviewer,
+                stage="h1",
+                candidate_ids=required,
+                created_at=COMPLETED_AT,
+                git_revision=GIT_REVISION,
+            )
+            response = self._human_response(
+                package,
+                mapping,
+                f"in_memory_formal_{reviewer}",
+                lambda candidate_id: 2 if candidate_id in eligible_ids else 0,
+            )
+            for judgement in response["judgements"]:
+                judgement["short_reason"] = (
+                    "Synthetic in-memory formal-branch trust regression."
+                )
+            submissions[reviewer] = import_human_submission(
+                response,
+                task_package=package,
+                mapping=mapping,
+                imported_at=COMPLETED_AT,
+                git_revision=GIT_REVISION,
+            )
+        final_labels = build_final_human_labels(
+            aggregation,
+            r1_h1=submissions["r1"],
+            r2_h1=submissions["r2"],
+            required_candidate_ids=required,
+            created_at=COMPLETED_AT,
+            git_revision=GIT_REVISION,
+        )
+        audit_outcome = build_safe_zero_audit_outcome(
+            audit_plan,
+            inputs=self.inputs,
+            aggregation=aggregation,
+            final_human_labels=final_labels,
+            completed_at=COMPLETED_AT,
+            git_revision=GIT_REVISION,
+        )
+        ranking = _derive_reference_ranking(
+            aggregation=aggregation,
+            final_human_labels=final_labels,
+            cutoff_decision=None,
+        )
+
+        fixture_cutoff = self._cutoff_decision()
+        final = build_final_reference(
+            inputs=self.inputs,
+            roster=self.roster,
+            execution_manifest=self.execution_manifest,
+            aggregation=self.chain["aggregation"],
+            audit_plan=self.chain["audit_plan"],
+            audit_outcome=self.chain["audit_outcome"],
+            final_human_labels=self.chain["final_labels"],
+            cutoff_decision=fixture_cutoff,
+            created_at=COMPLETED_AT,
+            git_revision=GIT_REVISION,
+            run_bundles=self.all_bundles,
+            allow_fixture=True,
+        )
+        final.update(
+            {
+                "aggregation": _artifact_reference(aggregation),
+                "safe_zero_audit_plan": _artifact_reference(audit_plan),
+                "safe_zero_audit_outcome": _artifact_reference(audit_outcome),
+                "human_labels": _artifact_reference(final_labels),
+                "cutoff_decision": None,
+                "eligible_count": ranking["eligible_count"],
+                "ranked_eligible": ranking["ranked_eligible"],
+                "selected_canonical_entity_ids": ranking[
+                    "selected_canonical_entity_ids"
+                ],
+                "frontier_8_9_10": ranking["frontier_8_9_10"],
+                "status": "reference_frozen",
+                "is_fixture": False,
+            }
+        )
+        final_identity = _identity_without(
+            final,
+            prefix=FINAL_REFERENCE_IDENTITY_PREFIX,
+            omitted={"artifact_id", "final_reference_identity"},
+        )
+        final["final_reference_identity"] = final_identity
+        final["artifact_id"] = _artifact_id(
+            "srtp_rcp_final_reference", final_identity
+        )
+        validate_final_reference(
+            final,
+            inputs=self.inputs,
+            aggregation=aggregation,
+            audit_plan=audit_plan,
+            audit_outcome=audit_outcome,
+            final_human_labels=final_labels,
+            cutoff_decision=None,
+        )
+        return {
+            "aggregation": aggregation,
+            "audit_plan": audit_plan,
+            "audit_outcome": audit_outcome,
+            "final_labels": final_labels,
+            "final": final,
+        }
+
     def test_cutoff_tasks_are_blind_and_decision_binds_submissions(self) -> None:
         tie_group, slots = self._cutoff_inputs()
         self.assertIsNotNone(tie_group)
@@ -1364,6 +1508,146 @@ class RCPHumanAndFinalSelectionTests(RCPFixture):
             "selection_score",
         ):
             self.assertNotIn(forbidden_method_metadata.casefold(), rendered)
+
+    def test_formal_reference_reconstruction_chain_reaches_freeze(self) -> None:
+        chain = self._in_memory_formal_reference_chain()
+        selection = build_reference_selection_artifact(
+            inputs=self.inputs,
+            final_reference=chain["final"],
+            aggregation=chain["aggregation"],
+            audit_plan=chain["audit_plan"],
+            audit_outcome=chain["audit_outcome"],
+            final_human_labels=chain["final_labels"],
+            cutoff_decision=None,
+            created_at=COMPLETED_AT,
+            git_revision=GIT_REVISION,
+        )
+        validated = validate_selection_artifact(
+            selection, inputs=self.inputs.pilot_inputs
+        )
+        self.assertFalse(validated["is_fixture"])
+        self.assertEqual(
+            list(validated["selected_canonical_entity_ids"]),
+            chain["final"]["selected_canonical_entity_ids"],
+        )
+        freeze = build_reference_selection_freeze_reference(selection)
+        validate_reference_selection_freeze_reference(
+            freeze,
+            selection,
+            inputs=self.inputs.pilot_inputs,
+            require_formal=True,
+        )
+
+    def test_refreshed_hash_top8_attack_fails_final_selection_and_bm25(self) -> None:
+        cutoff = self._cutoff_decision()
+        final = build_final_reference(
+            inputs=self.inputs,
+            roster=self.roster,
+            execution_manifest=self.execution_manifest,
+            aggregation=self.chain["aggregation"],
+            audit_plan=self.chain["audit_plan"],
+            audit_outcome=self.chain["audit_outcome"],
+            final_human_labels=self.chain["final_labels"],
+            cutoff_decision=cutoff,
+            created_at=COMPLETED_AT,
+            git_revision=GIT_REVISION,
+            run_bundles=self.all_bundles,
+            allow_fixture=True,
+        )
+        selection = build_reference_selection_artifact(
+            inputs=self.inputs,
+            final_reference=final,
+            aggregation=self.chain["aggregation"],
+            audit_plan=self.chain["audit_plan"],
+            audit_outcome=self.chain["audit_outcome"],
+            final_human_labels=self.chain["final_labels"],
+            cutoff_decision=cutoff,
+            created_at=COMPLETED_AT,
+            git_revision=GIT_REVISION,
+        )
+        attacked_final = copy.deepcopy(final)
+        replacement_id = next(
+            candidate_id
+            for candidate_id in self.inputs.pilot_inputs.u80_by_topic[self.topic_id]
+            if candidate_id not in final["selected_canonical_entity_ids"]
+        )
+        attacked_ids = list(final["selected_canonical_entity_ids"])
+        attacked_ids[-1] = replacement_id
+        attacked_final["selected_canonical_entity_ids"] = attacked_ids
+        attacked_final["status"] = "reference_frozen"
+        attacked_final["is_fixture"] = False
+        attacked_final_identity = _identity_without(
+            attacked_final,
+            prefix=FINAL_REFERENCE_IDENTITY_PREFIX,
+            omitted={"artifact_id", "final_reference_identity"},
+        )
+        attacked_final["final_reference_identity"] = attacked_final_identity
+        attacked_final["artifact_id"] = _artifact_id(
+            "srtp_rcp_final_reference", attacked_final_identity
+        )
+        with self.assertRaisesRegex(ValueError, "protocol reconstruction"):
+            validate_final_reference(
+                attacked_final,
+                inputs=self.inputs,
+                aggregation=self.chain["aggregation"],
+                audit_plan=self.chain["audit_plan"],
+                audit_outcome=self.chain["audit_outcome"],
+                final_human_labels=self.chain["final_labels"],
+                cutoff_decision=cutoff,
+            )
+
+        attacked_selection = copy.deepcopy(selection)
+        attacked_selection["selected_canonical_entity_ids"] = attacked_ids
+        attacked_selection["is_fixture"] = False
+        attacked_selection["purpose"] = "formal_internal_reference_selection"
+        provenance = attacked_selection["method_specific_provenance"]
+        provenance["reference_finalization"] = {
+            "artifact_id": attacked_final["artifact_id"],
+            "final_reference_identity": attacked_final_identity,
+            "sha256": payload_sha256(attacked_final),
+        }
+        provenance["selected_canonical_entity_ids"] = attacked_ids
+        provenance["pipeline_is_fixture"] = False
+        provenance["final_reference_reconstruction_closure"] = {
+            "final_reference": attacked_final,
+            "aggregation": copy.deepcopy(self.chain["aggregation"]),
+            "safe_zero_audit_plan": copy.deepcopy(self.chain["audit_plan"]),
+            "safe_zero_audit_outcome": copy.deepcopy(self.chain["audit_outcome"]),
+            "final_human_labels": copy.deepcopy(self.chain["final_labels"]),
+            "cutoff_decision": copy.deepcopy(cutoff),
+        }
+        attacked_selection_identity = _identity_without(
+            attacked_selection,
+            prefix=SELECTION_IDENTITY_PREFIX,
+            omitted={"artifact_id", "selection_identity"},
+        )
+        attacked_selection["selection_identity"] = attacked_selection_identity
+        attacked_selection["artifact_id"] = _artifact_id(
+            "srtp_pilot_selection", attacked_selection_identity
+        )
+        with self.assertRaisesRegex(ValueError, "protocol reconstruction"):
+            validate_selection_artifact(
+                attacked_selection, inputs=self.inputs.pilot_inputs
+            )
+
+        attacked_freeze = build_reference_selection_freeze_reference(
+            attacked_selection
+        )
+        with self.assertRaisesRegex(ValueError, "protocol reconstruction"):
+            validate_reference_selection_freeze_reference(
+                attacked_freeze,
+                attacked_selection,
+                inputs=self.inputs.pilot_inputs,
+                require_formal=True,
+            )
+        with self.assertRaisesRegex(ValueError, "protocol reconstruction"):
+            build_bm25_selection_after_reference(
+                self.inputs,
+                topic_id=self.topic_id,
+                reference_selection_freeze=attacked_selection,
+                created_at=COMPLETED_AT,
+                git_revision=GIT_REVISION,
+            )
 
     def test_finalizer_fails_with_less_than_eight_eligible(self) -> None:
         safe_ids = set(self.chain["audit_plan"]["safe_zero_canonical_entity_ids"])

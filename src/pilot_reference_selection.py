@@ -687,8 +687,14 @@ def validate_final_reference(
 
 def _reference_method_provenance(
     final_reference: Mapping[str, Any],
+    *,
+    aggregation: Mapping[str, Any] | None = None,
+    audit_plan: Mapping[str, Any] | None = None,
+    audit_outcome: Mapping[str, Any] | None = None,
+    final_human_labels: Mapping[str, Any] | None = None,
+    cutoff_decision: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    return {
+    provenance = {
         "protocol_id": RCP_PROTOCOL_ID,
         "protocol_config_identity": final_reference["protocol"]["config_identity"],
         "protocol_config_sha256": final_reference["protocol"]["config_sha256"],
@@ -717,6 +723,32 @@ def _reference_method_provenance(
         "external_lookup": False,
         "pipeline_is_fixture": final_reference["is_fixture"],
     }
+    if final_reference["is_fixture"] is False:
+        if any(
+            parent is None
+            for parent in (
+                aggregation,
+                audit_plan,
+                audit_outcome,
+                final_human_labels,
+            )
+        ):
+            raise ValueError(
+                "formal Reference Selection 缺少 Final reconstruction closure。"
+            )
+        provenance["final_reference_reconstruction_closure"] = {
+            "final_reference": copy.deepcopy(dict(final_reference)),
+            "aggregation": copy.deepcopy(dict(aggregation)),
+            "safe_zero_audit_plan": copy.deepcopy(dict(audit_plan)),
+            "safe_zero_audit_outcome": copy.deepcopy(dict(audit_outcome)),
+            "final_human_labels": copy.deepcopy(dict(final_human_labels)),
+            "cutoff_decision": (
+                copy.deepcopy(dict(cutoff_decision))
+                if cutoff_decision is not None
+                else None
+            ),
+        }
+    return provenance
 
 
 def validate_reference_selection_method_provenance(
@@ -728,27 +760,29 @@ def validate_reference_selection_method_provenance(
     purpose: str,
 ) -> None:
     provenance = _mapping(dict(details), "Reference selection provenance")
+    base_fields = {
+        "protocol_id",
+        "protocol_config_identity",
+        "protocol_config_sha256",
+        "reference_finalization",
+        "model_roster",
+        "execution_manifest",
+        "model_judgement_batch_refs",
+        "aggregation",
+        "safe_zero_audit_plan",
+        "safe_zero_audit_outcome",
+        "human_labels",
+        "cutoff_decision",
+        "selected_canonical_entity_ids",
+        "all_top8_human_reviewed",
+        "sentinel_used_for_ranking",
+        "external_lookup",
+        "pipeline_is_fixture",
+    }
     _exact(
         provenance,
-        {
-            "protocol_id",
-            "protocol_config_identity",
-            "protocol_config_sha256",
-            "reference_finalization",
-            "model_roster",
-            "execution_manifest",
-            "model_judgement_batch_refs",
-            "aggregation",
-            "safe_zero_audit_plan",
-            "safe_zero_audit_outcome",
-            "human_labels",
-            "cutoff_decision",
-            "selected_canonical_entity_ids",
-            "all_top8_human_reviewed",
-            "sentinel_used_for_ranking",
-            "external_lookup",
-            "pipeline_is_fixture",
-        },
+        base_fields
+        | ({"final_reference_reconstruction_closure"} if not is_fixture else set()),
         "Reference selection provenance",
     )
     rcp_inputs = load_reference_curation_inputs(
@@ -796,8 +830,68 @@ def validate_reference_selection_method_provenance(
     if is_fixture:
         if purpose != "plumbing_only":
             raise ValueError("fixture Reference selection 只能用于 plumbing_only。")
-    elif purpose != "formal_internal_reference_selection":
+        return
+    if purpose != "formal_internal_reference_selection":
         raise ValueError("formal Reference selection purpose drift。")
+    closure = _mapping(
+        provenance["final_reference_reconstruction_closure"],
+        "formal Final Reference reconstruction closure",
+    )
+    _exact(
+        closure,
+        {
+            "final_reference",
+            "aggregation",
+            "safe_zero_audit_plan",
+            "safe_zero_audit_outcome",
+            "final_human_labels",
+            "cutoff_decision",
+        },
+        "formal Final Reference reconstruction closure",
+    )
+    final_reference = _mapping(
+        closure["final_reference"], "trusted Final Reference"
+    )
+    aggregation = _mapping(closure["aggregation"], "trusted aggregation")
+    audit_plan = _mapping(
+        closure["safe_zero_audit_plan"], "trusted safe-zero audit plan"
+    )
+    audit_outcome = _mapping(
+        closure["safe_zero_audit_outcome"], "trusted safe-zero audit outcome"
+    )
+    final_human_labels = _mapping(
+        closure["final_human_labels"], "trusted final Human labels"
+    )
+    cutoff_decision = closure["cutoff_decision"]
+    if cutoff_decision is not None:
+        cutoff_decision = _mapping(cutoff_decision, "trusted cutoff decision")
+    validated_final = validate_final_reference(
+        final_reference,
+        inputs=rcp_inputs,
+        aggregation=aggregation,
+        audit_plan=audit_plan,
+        audit_outcome=audit_outcome,
+        final_human_labels=final_human_labels,
+        cutoff_decision=cutoff_decision,
+    )
+    if validated_final["is_fixture"]:
+        raise ValueError("formal Reference Selection 不接受 fixture Final closure。")
+    if list(selected) != list(validated_final["selected_canonical_entity_ids"]):
+        raise ValueError(
+            "Reference Selection selected IDs 与 reconstructed Final Top-8 不一致。"
+        )
+    reconstructed_provenance = _reference_method_provenance(
+        final_reference,
+        aggregation=aggregation,
+        audit_plan=audit_plan,
+        audit_outcome=audit_outcome,
+        final_human_labels=final_human_labels,
+        cutoff_decision=cutoff_decision,
+    )
+    if provenance != reconstructed_provenance:
+        raise ValueError(
+            "formal Reference Selection provenance 与 Final reconstruction closure 不一致。"
+        )
 
 
 def build_reference_selection_artifact(
@@ -830,7 +924,14 @@ def build_reference_selection_artifact(
             "config_identity": inputs.config["config_identity"],
         },
         selected_canonical_entity_ids=list(validated["selected_canonical_entity_ids"]),
-        method_specific_provenance=_reference_method_provenance(final_reference),
+        method_specific_provenance=_reference_method_provenance(
+            final_reference,
+            aggregation=aggregation,
+            audit_plan=audit_plan,
+            audit_outcome=audit_outcome,
+            final_human_labels=final_human_labels,
+            cutoff_decision=cutoff_decision,
+        ),
         created_at=created_at,
         git_revision=git_revision,
         is_fixture=validated["is_fixture"],
