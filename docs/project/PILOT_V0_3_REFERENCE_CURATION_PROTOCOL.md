@@ -188,7 +188,10 @@ H1 assigns every non-safe-zero case plus the safe-zero audit sample to R1 and R2
 Both receive actor-specific opaque IDs and see only the frozen Question/boundary,
 Title, and Abstract. They cannot see model names/families, votes/labels, routing
 reasons, safe-zero state, BM25, source signals, rank, score, or the other
-reviewer. Completed imports are immutable content-addressed artifacts.
+reviewer. Completed imports retain the trusted task/map snapshots and rebuild
+canonical labels from those snapshots plus the raw response; self-reported
+canonical labels are not accepted. R1/R2/R3 reviewer IDs must be distinct for
+the same Topic.
 
 H2 is built only from protocol-derived triggers: R1/R2 label difference, defer,
 essential match-vs-mismatch conflict, two-level human-consensus/Core gap, or an
@@ -205,7 +208,8 @@ Reference non-freezable rather than silently assigning a value.
 
 All human bundles and private mappings export outside the repository. The
 visible reviewer directory contains instructions, task package, and blank
-response; the canonical map is written separately for the coordinator.
+response; the canonical map is written to a non-nested private coordinator
+directory.
 
 ## 9. Safe-zero audit
 
@@ -217,9 +221,10 @@ C(N-m, n) / C(N, n) <= 0.05
 ```
 
 Sampling uses the frozen SHA-256 protocol/Topic/candidate/seed convention and is
-deterministic. A confirmed discrepancy escalates every remaining safe-zero case
-to blind human review. The plan and outcome are both content-addressed and
-deterministically reconstructed.
+deterministic. Discrepancies are derived from validated final Human labels for
+the sampled cases; callers do not supply a discrepancy list. Any non-zero audit
+label escalates every remaining safe-zero case to blind human review. The plan
+and outcome are both content-addressed and deterministically reconstructed.
 
 ## 10. Final Reference and exact cutoff ties
 
@@ -234,7 +239,8 @@ n_core_label_ge_1 DESC
 ```
 
 Sentinel output is not a rank signal. Every selected ID must be in the selective
-human-label artifact.
+human-label artifact. The formal validator recomputes the ranking and cutoff
+result from the validated Human labels and requires exact stored Top-8 IDs.
 
 For an exact rank-8 tie group, the coordinator exports actor-specific blind
 cutoff tasks. R1/R2 each select exactly the required `s`; their intersection has
@@ -243,8 +249,9 @@ into ordered priority groups. SHA-256 resolves only a residual within-group tie
 and is recorded as a mechanical last resort, not scientific superiority. The
 decision binds all imported blind cutoff submissions.
 
-The finalization also records the 8/9/10 frontier and one-swap alternatives for
-future downstream sensitivity analysis. It does not run that analysis now.
+The Primary finalization records the 8/9/10 frontier only. RCP-v0.3 marks
+one-swap generation as `deferred_not_primary_rcp_v0.3` and stores no one-swap
+sets; any future sensitivity design requires a separate, explicit scope.
 
 ## 11. Generic Selection, BM25, and matched context
 

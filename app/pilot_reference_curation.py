@@ -119,7 +119,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_config(audit_outcome)
     audit_outcome.add_argument("--audit-plan", type=Path, required=True)
     audit_outcome.add_argument("--aggregation", type=Path, required=True)
-    audit_outcome.add_argument("--confirmed-discrepancies", type=Path, required=True)
+    audit_outcome.add_argument("--human-labels", type=Path, required=True)
     audit_outcome.add_argument("--completed-at", required=True)
     audit_outcome.add_argument("--output", type=Path, required=True)
 
@@ -128,6 +128,7 @@ def build_parser() -> argparse.ArgumentParser:
     human_export.add_argument("--aggregation", type=Path, required=True)
     human_export.add_argument("--audit-plan", type=Path)
     human_export.add_argument("--audit-outcome", type=Path)
+    human_export.add_argument("--audit-human-labels", type=Path)
     human_export.add_argument("--h2-packet", type=Path)
     human_export.add_argument("--prior-r3-h1", type=Path)
     human_export.add_argument("--candidate-roster", type=Path)
@@ -277,6 +278,13 @@ def _git_revision() -> str:
     return capture_git_state(PROJECT_ROOT)["git_revision"]
 
 
+def _require_clean_formal_worktree() -> str:
+    state = capture_git_state(PROJECT_ROOT)
+    if not state["git_worktree_clean"]:
+        raise ValueError("formal RCP-v0.3 execution requires a clean Git worktree。")
+    return state["git_revision"]
+
+
 def _candidate_ids_file(path: Path, label: str) -> list[str]:
     payload = _load(path, label)
     values = payload.get("candidate_ids")
@@ -289,6 +297,8 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         inputs = load_reference_curation_inputs(args.config, project_root=PROJECT_ROOT)
+        if args.command != "validate-roster":
+            _require_clean_formal_worktree()
         if args.command == "validate-roster":
             roster = _load(args.roster, "RCP model roster")
             result = validate_model_roster(roster, inputs=inputs)
@@ -415,6 +425,9 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "record-audit-outcome":
             aggregation = _load(args.aggregation, "RCP aggregation")
             audit_plan = _load(args.audit_plan, "safe-zero audit plan")
+            final_human_labels = _load(
+                args.human_labels, "validated final Human labels"
+            )
             validate_safe_zero_audit_plan(
                 audit_plan,
                 aggregation=aggregation,
@@ -422,9 +435,9 @@ def main(argv: list[str] | None = None) -> int:
             )
             payload = build_safe_zero_audit_outcome(
                 audit_plan,
-                confirmed_discrepancy_ids=_candidate_ids_file(
-                    args.confirmed_discrepancies, "confirmed discrepancies"
-                ),
+                inputs=inputs,
+                aggregation=aggregation,
+                final_human_labels=final_human_labels,
                 completed_at=args.completed_at,
                 git_revision=_git_revision(),
             )
@@ -448,9 +461,19 @@ def main(argv: list[str] | None = None) -> int:
                     inputs=inputs,
                 )
                 if audit_outcome is not None:
+                    if args.audit_human_labels is None:
+                        raise ValueError(
+                            "H1 escalation export requires --audit-human-labels。"
+                        )
+                    audit_human_labels = _load(
+                        args.audit_human_labels, "safe-zero audit Human labels"
+                    )
                     validate_safe_zero_audit_outcome(
                         audit_outcome,
                         audit_plan=audit_plan,
+                        inputs=inputs,
+                        aggregation=aggregation,
+                        final_human_labels=audit_human_labels,
                     )
                 candidate_ids = derive_h1_candidate_ids(
                     aggregation, audit_plan, audit_outcome=audit_outcome
@@ -607,17 +630,22 @@ def main(argv: list[str] | None = None) -> int:
                 _external_output(args.output, "final human labels output"), payload
             )
         elif args.command == "finalize-reference":
+            aggregation = _load(args.aggregation, "RCP aggregation")
+            audit_plan = _load(args.audit_plan, "safe-zero audit plan")
+            audit_outcome = _load(args.audit_outcome, "safe-zero audit outcome")
+            final_human_labels = _load(args.human_labels, "final human labels")
+            cutoff_decision = _load_optional(args.cutoff_decision, "cutoff decision")
             finalization = build_final_reference(
                 inputs=inputs,
                 roster=_load(args.roster, "RCP model roster"),
                 execution_manifest=_load(
                     args.execution_manifest, "RCP execution manifest"
                 ),
-                aggregation=_load(args.aggregation, "RCP aggregation"),
-                audit_plan=_load(args.audit_plan, "safe-zero audit plan"),
-                audit_outcome=_load(args.audit_outcome, "safe-zero audit outcome"),
-                final_human_labels=_load(args.human_labels, "final human labels"),
-                cutoff_decision=_load_optional(args.cutoff_decision, "cutoff decision"),
+                aggregation=aggregation,
+                audit_plan=audit_plan,
+                audit_outcome=audit_outcome,
+                final_human_labels=final_human_labels,
+                cutoff_decision=cutoff_decision,
                 created_at=args.created_at,
                 git_revision=_git_revision(),
                 run_bundles=_load_run_bundles(args.run_descriptor),
@@ -625,6 +653,11 @@ def main(argv: list[str] | None = None) -> int:
             selection = build_reference_selection_artifact(
                 inputs=inputs,
                 final_reference=finalization,
+                aggregation=aggregation,
+                audit_plan=audit_plan,
+                audit_outcome=audit_outcome,
+                final_human_labels=final_human_labels,
+                cutoff_decision=cutoff_decision,
                 created_at=args.created_at,
                 git_revision=_git_revision(),
             )

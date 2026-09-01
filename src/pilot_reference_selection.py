@@ -27,7 +27,6 @@ from src.pilot_reference_curation import (
     _integer,
     _list,
     _mapping,
-    _sha256,
     _strings,
     _text,
     load_reference_curation_inputs,
@@ -121,33 +120,55 @@ def build_cutoff_decision(
         remaining_slots = 0
     if remaining_slots:
         raise ValueError("cutoff tie decision 未能补足 required slots。")
-    submission_refs = [copy.deepcopy(dict(row)) for row in source_submissions]
-    if not is_fixture and not submission_refs:
+    submission_snapshots = [copy.deepcopy(dict(row)) for row in source_submissions]
+    if not is_fixture and not submission_snapshots:
         raise ValueError("formal cutoff decision 必须绑定 blind human submissions。")
-    if submission_refs:
+    submission_refs = []
+    if submission_snapshots:
         roles = []
-        for row in submission_refs:
-            _exact(
-                row,
-                {
-                    "artifact_id",
-                    "submission_identity",
-                    "sha256",
-                    "reviewer_slot",
-                    "stage",
-                },
-                "cutoff blind submission reference",
-            )
-            role = _text(row["reviewer_slot"], "cutoff submission reviewer")
-            if role not in {"r1", "r2", "r3"} or row["stage"] != f"cutoff_{role}":
-                raise ValueError("cutoff blind submission reviewer/stage drift。")
-            _text(row["artifact_id"], "cutoff submission artifact_id")
-            _text(row["submission_identity"], "cutoff submission identity")
-            _sha256(row["sha256"], "cutoff submission SHA-256")
+        reviewer_ids = []
+        by_role: dict[str, Mapping[str, Any]] = {}
+        for submission in submission_snapshots:
+            validated = validate_cutoff_submission_identity(submission)
+            role = validated["reviewer_slot"]
+            if role in by_role:
+                raise ValueError("cutoff blind submission reviewer roster duplicate。")
+            if (
+                validated["tie_group_canonical_entity_ids"] != tuple(tie_group)
+                or validated["slots_required"] != slots
+                or validated["is_fixture"] is not is_fixture
+            ):
+                raise ValueError(
+                    "cutoff blind submission tie/slot/fixture binding drift。"
+                )
+            by_role[role] = submission
             roles.append(role)
+            reviewer_ids.append(
+                _text(submission.get("reviewer_id"), "cutoff reviewer_id")
+            )
+            submission_refs.append(
+                {
+                    "artifact_id": validated["artifact_id"],
+                    "submission_identity": validated["submission_identity"],
+                    "sha256": validated["sha256"],
+                    "reviewer_slot": role,
+                    "stage": submission["stage"],
+                }
+            )
         expected_roles = {"r1", "r2", "r3"} if r3_required else {"r1", "r2"}
         if set(roles) != expected_roles or len(roles) != len(expected_roles):
             raise ValueError("cutoff blind submission reference roster drift。")
+        if len(set(reviewer_ids)) != len(reviewer_ids):
+            raise ValueError("同一 Topic 的 cutoff R1/R2/R3 reviewer_id 必须互异。")
+        if list(by_role["r1"].get("selected_canonical_entity_ids") or []) != r1:
+            raise ValueError("cutoff R1 canonical selection/raw response drift。")
+        if list(by_role["r2"].get("selected_canonical_entity_ids") or []) != r2:
+            raise ValueError("cutoff R2 canonical selection/raw response drift。")
+        if (
+            r3_required
+            and list(by_role["r3"].get("canonical_priority_groups") or []) != groups
+        ):
+            raise ValueError("cutoff R3 canonical priority/raw response drift。")
     payload: dict[str, Any] = {
         "schema_version": RCP_SCHEMA_VERSION,
         "artifact_type": "srtp_rcp_cutoff_decision",
@@ -168,6 +189,7 @@ def build_cutoff_decision(
         },
         "selected_from_tie": selected,
         "blind_submission_refs": submission_refs,
+        "blind_submission_snapshots": submission_snapshots,
         "created_at": _datetime(created_at, "cutoff decision created_at"),
         "is_fixture": is_fixture,
         "provenance": {
@@ -202,7 +224,7 @@ def validate_cutoff_decision(
         created_at=artifact.get("created_at"),
         git_revision=provenance.get("git_revision"),
         is_fixture=_bool(artifact.get("is_fixture"), "cutoff is_fixture"),
-        source_submissions=artifact.get("blind_submission_refs", []),
+        source_submissions=artifact.get("blind_submission_snapshots", []),
     )
     if artifact != reconstructed:
         raise ValueError("cutoff decision deterministic reconstruction drift。")
@@ -271,16 +293,6 @@ def build_cutoff_decision_from_submissions(
         source_artifacts.append(r3_submission)
     elif r3_submission is not None:
         raise ValueError("R1/R2 intersection 已补足时不得注入 R3 cutoff decision。")
-    refs = [
-        {
-            "artifact_id": artifact["artifact_id"],
-            "submission_identity": artifact["submission_identity"],
-            "sha256": payload_sha256(artifact),
-            "reviewer_slot": artifact["reviewer_slot"],
-            "stage": artifact["stage"],
-        }
-        for artifact in source_artifacts
-    ]
     return build_cutoff_decision(
         tie_group_canonical_entity_ids=list(r1["tie_group_canonical_entity_ids"]),
         slots_required=r1["slots_required"],
@@ -291,7 +303,7 @@ def build_cutoff_decision_from_submissions(
         created_at=created_at,
         git_revision=git_revision,
         is_fixture=r1["is_fixture"],
-        source_submissions=refs,
+        source_submissions=source_artifacts,
     )
 
 
@@ -302,80 +314,36 @@ def _final_reference_identity_payload(payload: Mapping[str, Any]) -> dict[str, A
     return body
 
 
-def build_final_reference(
+def _validate_reference_human_closure(
     *,
     inputs: ReferenceCurationInputs,
-    roster: Mapping[str, Any],
-    execution_manifest: Mapping[str, Any],
     aggregation: Mapping[str, Any],
     audit_plan: Mapping[str, Any],
     audit_outcome: Mapping[str, Any],
     final_human_labels: Mapping[str, Any],
-    cutoff_decision: Mapping[str, Any] | None,
-    created_at: str,
-    git_revision: str,
-    run_bundles: Sequence[Mapping[str, Any]] | None = None,
-    allow_fixture: bool = False,
-) -> dict[str, Any]:
-    roster_validation = validate_model_roster(
-        roster, inputs=inputs, allow_fixture=allow_fixture
-    )
-    execution_validation = validate_reference_execution_manifest(
-        execution_manifest,
-        inputs=inputs,
-        roster=roster,
-        run_bundles=run_bundles,
-        allow_fixture=allow_fixture,
-    )
-    if run_bundles is None and not allow_fixture:
-        raise ValueError(
-            "formal Reference finalization requires the exact 10-batch run closure。"
-        )
-    if run_bundles is not None:
-        topic_id_for_aggregation = aggregation.get("topic", {}).get("topic_id")
-        topic_bundles = [
-            bundle
-            for bundle in run_bundles
-            if bundle.get("batch", {}).get("topic", {}).get("topic_id")
-            == topic_id_for_aggregation
-        ]
-        validate_judgement_aggregation(
-            aggregation,
-            inputs=inputs,
-            roster=roster,
-            run_bundles=topic_bundles,
-            allow_fixture=allow_fixture,
-        )
-    if aggregation.get("model_roster") != {
-        "artifact_id": roster_validation["artifact_id"],
-        "roster_identity": roster_validation["roster_identity"],
-        "sha256": roster_validation["sha256"],
-    }:
-        raise ValueError("final Reference aggregation/roster binding drift。")
-    if aggregation.get("is_fixture") != roster_validation["is_fixture"]:
-        raise ValueError("final Reference fixture status drift。")
+) -> None:
     validate_safe_zero_audit_plan(
         audit_plan,
         aggregation=aggregation,
         inputs=inputs,
     )
-    validate_safe_zero_audit_outcome(audit_outcome, audit_plan=audit_plan)
-    if audit_outcome.get("audit_plan") != _artifact_reference(audit_plan):
-        raise ValueError("final Reference audit-outcome/plan binding drift。")
     validate_final_human_labels_identity(
         final_human_labels,
         aggregation=aggregation,
     )
-    topic_id = aggregation["topic"]["topic_id"]
-    if final_human_labels.get("topic", {}).get("topic_id") != topic_id:
-        raise ValueError("final Reference human labels wrong Topic。")
-    matrix = {
-        row["canonical_entity_id"]: row for row in aggregation["judgement_matrix"]
-    }
-    labels = {
-        row["canonical_entity_id"]: row
-        for row in _list(final_human_labels.get("labels"), "final human labels")
-    }
+    validate_safe_zero_audit_outcome(
+        audit_outcome,
+        audit_plan=audit_plan,
+        inputs=inputs,
+        aggregation=aggregation,
+        final_human_labels=final_human_labels,
+    )
+    if audit_outcome.get("audit_plan") != _artifact_reference(
+        audit_plan
+    ) or audit_outcome.get("human_audit_labels") != _artifact_reference(
+        final_human_labels
+    ):
+        raise ValueError("final Reference audit outcome parent binding drift。")
     required_review = {
         row["canonical_entity_id"]
         for row in aggregation["judgement_matrix"]
@@ -384,8 +352,27 @@ def build_final_reference(
     required_review.update(audit_plan["audit_sample_canonical_entity_ids"])
     if audit_outcome.get("escalation_required") is True:
         required_review.update(audit_outcome["escalated_review_canonical_entity_ids"])
-    if set(labels) != required_review:
+    label_ids = {
+        row["canonical_entity_id"]
+        for row in _list(final_human_labels.get("labels"), "final human labels")
+    }
+    if label_ids != required_review:
         raise ValueError("final Reference selective human review coverage drift。")
+
+
+def _derive_reference_ranking(
+    *,
+    aggregation: Mapping[str, Any],
+    final_human_labels: Mapping[str, Any],
+    cutoff_decision: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    matrix = {
+        row["canonical_entity_id"]: row for row in aggregation["judgement_matrix"]
+    }
+    labels = {
+        row["canonical_entity_id"]: row
+        for row in _list(final_human_labels.get("labels"), "final human labels")
+    }
     eligible = []
     for candidate_id, human in labels.items():
         relevance = human["final_human_relevance"]
@@ -442,34 +429,90 @@ def build_final_reference(
         selected_ids = [row["canonical_entity_id"] for row in eligible[:SELECTION_K]]
     if len(selected_ids) != SELECTION_K or len(set(selected_ids)) != SELECTION_K:
         raise ValueError("final Reference Top-8 duplicate/count drift。")
-    if not set(selected_ids).issubset(set(labels)):
+    if not set(selected_ids).issubset(labels):
         raise ValueError(
             "no AI-only Top-8 inclusion：所有入选项必须有人类 review/support。"
         )
     ranked_eligible = [
         {"rank": rank, **row} for rank, row in enumerate(eligible, start=1)
     ]
-    frontier = [row for row in ranked_eligible if row["rank"] in {8, 9, 10}]
-    one_swap_sets = []
-    rank8 = next((row for row in frontier if row["rank"] == 8), None)
-    if rank8 is not None:
-        for alternate in frontier:
-            if alternate["rank"] in {9, 10}:
-                alternate_set = [
-                    candidate_id
-                    for candidate_id in selected_ids
-                    if candidate_id != rank8["canonical_entity_id"]
-                ] + [alternate["canonical_entity_id"]]
-                one_swap_sets.append(
-                    {
-                        "swap_out_rank": 8,
-                        "swap_out_canonical_entity_id": rank8["canonical_entity_id"],
-                        "swap_in_rank": alternate["rank"],
-                        "swap_in_canonical_entity_id": alternate["canonical_entity_id"],
-                        "selected_canonical_entity_ids": alternate_set,
-                        "purpose": "future_downstream_sensitivity_only",
-                    }
-                )
+    return {
+        "eligible_count": len(eligible),
+        "ranked_eligible": ranked_eligible,
+        "selected_canonical_entity_ids": selected_ids,
+        "frontier_8_9_10": [
+            row for row in ranked_eligible if row["rank"] in {8, 9, 10}
+        ],
+    }
+
+
+def build_final_reference(
+    *,
+    inputs: ReferenceCurationInputs,
+    roster: Mapping[str, Any],
+    execution_manifest: Mapping[str, Any],
+    aggregation: Mapping[str, Any],
+    audit_plan: Mapping[str, Any],
+    audit_outcome: Mapping[str, Any],
+    final_human_labels: Mapping[str, Any],
+    cutoff_decision: Mapping[str, Any] | None,
+    created_at: str,
+    git_revision: str,
+    run_bundles: Sequence[Mapping[str, Any]] | None = None,
+    allow_fixture: bool = False,
+) -> dict[str, Any]:
+    roster_validation = validate_model_roster(
+        roster, inputs=inputs, allow_fixture=allow_fixture
+    )
+    execution_validation = validate_reference_execution_manifest(
+        execution_manifest,
+        inputs=inputs,
+        roster=roster,
+        run_bundles=run_bundles,
+        allow_fixture=allow_fixture,
+    )
+    if run_bundles is None and not allow_fixture:
+        raise ValueError(
+            "formal Reference finalization requires the exact 10-batch run closure。"
+        )
+    if run_bundles is not None:
+        topic_id_for_aggregation = aggregation.get("topic", {}).get("topic_id")
+        topic_bundles = [
+            bundle
+            for bundle in run_bundles
+            if bundle.get("batch", {}).get("topic", {}).get("topic_id")
+            == topic_id_for_aggregation
+        ]
+        validate_judgement_aggregation(
+            aggregation,
+            inputs=inputs,
+            roster=roster,
+            run_bundles=topic_bundles,
+            allow_fixture=allow_fixture,
+        )
+    if aggregation.get("model_roster") != {
+        "artifact_id": roster_validation["artifact_id"],
+        "roster_identity": roster_validation["roster_identity"],
+        "sha256": roster_validation["sha256"],
+    }:
+        raise ValueError("final Reference aggregation/roster binding drift。")
+    if aggregation.get("is_fixture") != roster_validation["is_fixture"]:
+        raise ValueError("final Reference fixture status drift。")
+    _validate_reference_human_closure(
+        inputs=inputs,
+        aggregation=aggregation,
+        audit_plan=audit_plan,
+        audit_outcome=audit_outcome,
+        final_human_labels=final_human_labels,
+    )
+    topic_id = aggregation["topic"]["topic_id"]
+    if final_human_labels.get("topic", {}).get("topic_id") != topic_id:
+        raise ValueError("final Reference human labels wrong Topic。")
+    ranking = _derive_reference_ranking(
+        aggregation=aggregation,
+        final_human_labels=final_human_labels,
+        cutoff_decision=cutoff_decision,
+    )
     created = _datetime(created_at, "final Reference created_at")
     payload: dict[str, Any] = {
         "schema_version": RCP_SCHEMA_VERSION,
@@ -508,14 +551,15 @@ def build_final_reference(
             if cutoff_decision is not None
             else None
         ),
-        "eligible_count": len(eligible),
-        "ranked_eligible": ranked_eligible,
-        "selected_canonical_entity_ids": selected_ids,
+        "eligible_count": ranking["eligible_count"],
+        "ranked_eligible": ranking["ranked_eligible"],
+        "selected_canonical_entity_ids": ranking["selected_canonical_entity_ids"],
         "k": SELECTION_K,
         "all_top8_human_reviewed": True,
         "sentinel_used_for_ranking": False,
-        "frontier_8_9_10": frontier,
-        "one_swap_sensitivity_sets": one_swap_sets,
+        "frontier_8_9_10": ranking["frontier_8_9_10"],
+        "one_swap_sensitivity_status": "deferred_not_primary_rcp_v0.3",
+        "one_swap_sensitivity_sets": [],
         "status": "fixture_complete"
         if aggregation["is_fixture"]
         else "reference_frozen",
@@ -532,7 +576,15 @@ def build_final_reference(
     )
     payload["final_reference_identity"] = identity
     payload["artifact_id"] = _artifact_id("srtp_rcp_final_reference", identity)
-    validate_final_reference(payload, inputs=inputs)
+    validate_final_reference(
+        payload,
+        inputs=inputs,
+        aggregation=aggregation,
+        audit_plan=audit_plan,
+        audit_outcome=audit_outcome,
+        final_human_labels=final_human_labels,
+        cutoff_decision=cutoff_decision,
+    )
     return payload
 
 
@@ -540,6 +592,11 @@ def validate_final_reference(
     final_reference: Mapping[str, Any],
     *,
     inputs: ReferenceCurationInputs,
+    aggregation: Mapping[str, Any],
+    audit_plan: Mapping[str, Any],
+    audit_outcome: Mapping[str, Any],
+    final_human_labels: Mapping[str, Any],
+    cutoff_decision: Mapping[str, Any] | None,
 ) -> dict[str, Any]:
     artifact = _mapping(dict(final_reference), "final Reference")
     if (
@@ -550,13 +607,52 @@ def validate_final_reference(
         or artifact.get("k") != SELECTION_K
         or artifact.get("all_top8_human_reviewed") is not True
         or artifact.get("sentinel_used_for_ranking") is not False
+        or artifact.get("topic") != aggregation.get("topic")
+        or artifact.get("u80") != aggregation.get("u80")
+        or artifact.get("aggregation") != _artifact_reference(aggregation)
+        or artifact.get("safe_zero_audit_plan") != _artifact_reference(audit_plan)
+        or artifact.get("safe_zero_audit_outcome") != _artifact_reference(audit_outcome)
+        or artifact.get("human_labels") != _artifact_reference(final_human_labels)
+        or artifact.get("cutoff_decision")
+        != (
+            _artifact_reference(cutoff_decision)
+            if cutoff_decision is not None
+            else None
+        )
     ):
-        raise ValueError("final Reference protocol/K/human/sentinel semantics drift。")
+        raise ValueError("final Reference protocol/parent/K/human semantics drift。")
+    _validate_reference_human_closure(
+        inputs=inputs,
+        aggregation=aggregation,
+        audit_plan=audit_plan,
+        audit_outcome=audit_outcome,
+        final_human_labels=final_human_labels,
+    )
+    ranking = _derive_reference_ranking(
+        aggregation=aggregation,
+        final_human_labels=final_human_labels,
+        cutoff_decision=cutoff_decision,
+    )
     selected = _strings(
         artifact.get("selected_canonical_entity_ids"),
         "final Reference selected IDs",
         count=SELECTION_K,
     )
+    for field in (
+        "eligible_count",
+        "ranked_eligible",
+        "selected_canonical_entity_ids",
+        "frontier_8_9_10",
+    ):
+        if artifact.get(field) != ranking[field]:
+            raise ValueError(
+                f"final Reference stored {field} 与 protocol reconstruction 不一致。"
+            )
+    if (
+        artifact.get("one_swap_sensitivity_status") != "deferred_not_primary_rcp_v0.3"
+        or artifact.get("one_swap_sensitivity_sets") != []
+    ):
+        raise ValueError("RCP-v0.3 Primary one-swap 必须保持 deferred。")
     topic_id = artifact.get("topic", {}).get("topic_id")
     if not set(selected).issubset(set(inputs.pilot_inputs.u80_by_topic[topic_id])):
         raise ValueError("final Reference selected IDs 超出 frozen U80。")
@@ -564,6 +660,14 @@ def validate_final_reference(
         raise ValueError("final Reference 必须绑定 exact 10 model judgement batches。")
     if len(artifact.get("model_judgement_batch_refs", [])) != 10:
         raise ValueError("final Reference model batch refs count drift。")
+    expected_status = (
+        "fixture_complete" if aggregation.get("is_fixture") else "reference_frozen"
+    )
+    if (
+        artifact.get("is_fixture") != aggregation.get("is_fixture")
+        or artifact.get("status") != expected_status
+    ):
+        raise ValueError("final Reference fixture/status drift。")
     identity = deterministic_identity(
         FINAL_REFERENCE_IDENTITY_PREFIX, _final_reference_identity_payload(artifact)
     )
@@ -700,10 +804,23 @@ def build_reference_selection_artifact(
     *,
     inputs: ReferenceCurationInputs,
     final_reference: Mapping[str, Any],
+    aggregation: Mapping[str, Any],
+    audit_plan: Mapping[str, Any],
+    audit_outcome: Mapping[str, Any],
+    final_human_labels: Mapping[str, Any],
+    cutoff_decision: Mapping[str, Any] | None,
     created_at: str,
     git_revision: str,
 ) -> dict[str, Any]:
-    validated = validate_final_reference(final_reference, inputs=inputs)
+    validated = validate_final_reference(
+        final_reference,
+        inputs=inputs,
+        aggregation=aggregation,
+        audit_plan=audit_plan,
+        audit_outcome=audit_outcome,
+        final_human_labels=final_human_labels,
+        cutoff_decision=cutoff_decision,
+    )
     return build_selection_artifact(
         inputs=inputs.pilot_inputs,
         topic_id=validated["topic_id"],

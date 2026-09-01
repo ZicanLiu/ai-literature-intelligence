@@ -857,6 +857,7 @@ def validate_model_roster(
     entry_ids: set[str] = set()
     families: set[str] = set()
     groups: set[str] = set()
+    actual_model_identities: set[tuple[str, str, str]] = set()
     roles: Counter[str] = Counter()
     validated_entries: dict[str, dict[str, Any]] = {}
     for raw in entries:
@@ -890,7 +891,7 @@ def validate_model_roster(
         if role not in MODEL_ROLES:
             raise ValueError("RCP model role 必须是 core/sentinel。")
         roles[role] += 1
-        _text(entry["provider"], "model provider")
+        provider = _text(entry["provider"], "model provider")
         family = _text(entry["model_family"], "model family")
         group = _text(entry["independence_group"], "independence group")
         if family in families or group in groups:
@@ -932,7 +933,18 @@ def validate_model_roster(
             if not allow_unavailable:
                 raise ValueError("snapshot unavailable 缺少显式 protocol exception。")
         else:
-            _text(snapshot, "snapshot version")
+            snapshot = _text(snapshot, "snapshot version")
+        actual_identity = (
+            provider.strip().casefold(),
+            resolved.strip().casefold(),
+            "" if snapshot is None else snapshot.strip().casefold(),
+        )
+        if actual_identity in actual_model_identities:
+            raise ValueError(
+                "RCP formal model roster 包含重复 actual model identity "
+                "(provider + resolved model + snapshot/version)。"
+            )
+        actual_model_identities.add(actual_identity)
         if requested_type == "rolling_alias" and resolved == requested:
             raise ValueError(
                 "rolling alias 未解析成可确认 identity；不得冒充 exact snapshot。"
@@ -1428,6 +1440,7 @@ def export_ai_task_package(
         project_root=inputs.project_root,
         label="RCP private coordinator map output",
     )
+    validate_visible_private_output_isolation(output, coordinator)
     if output.exists() and any(output.iterdir()):
         raise ValueError("RCP model-facing output directory 必须不存在或为空。")
     if coordinator.exists():
@@ -1448,6 +1461,31 @@ def export_ai_task_package(
         "task_package": str(output / "task_package.json"),
         "coordinator_map": str(coordinator),
     }
+
+
+def validate_visible_private_output_isolation(
+    visible_output_dir: str | Path,
+    private_map_output: str | Path,
+) -> tuple[Path, Path]:
+    """Keep a reviewer/model-visible bundle outside the private mapping tree."""
+
+    visible = Path(visible_output_dir).resolve()
+    private_map = Path(private_map_output).resolve()
+    private_root = private_map.parent
+
+    def _is_within(path: Path, directory: Path) -> bool:
+        try:
+            path.relative_to(directory)
+        except ValueError:
+            return False
+        return True
+
+    if _is_within(private_map, visible) or _is_within(visible, private_root):
+        raise ValueError(
+            "RCP visible bundle 与 private coordinator mapping 必须位于隔离目录；"
+            "不得互相包含。"
+        )
+    return visible, private_map
 
 
 def build_evidence_span(
@@ -2735,18 +2773,37 @@ def validate_safe_zero_audit_plan(
 def build_safe_zero_audit_outcome(
     audit_plan: Mapping[str, Any],
     *,
-    confirmed_discrepancy_ids: Sequence[str],
+    inputs: ReferenceCurationInputs,
+    aggregation: Mapping[str, Any],
+    final_human_labels: Mapping[str, Any],
     completed_at: str,
     git_revision: str,
 ) -> dict[str, Any]:
+    validate_safe_zero_audit_plan(
+        audit_plan,
+        aggregation=aggregation,
+        inputs=inputs,
+    )
+    # Local import avoids a module-initialization cycle while keeping the audit
+    # outcome dependent on the validated, raw-response-derived Human closure.
+    from src.pilot_reference_review import validate_final_human_labels_identity
+
+    validate_final_human_labels_identity(
+        final_human_labels,
+        aggregation=aggregation,
+    )
     selected = _strings(
         audit_plan.get("audit_sample_canonical_entity_ids"), "audit sample IDs"
     )
-    discrepancies = _strings(
-        list(confirmed_discrepancy_ids), "confirmed discrepancy IDs"
-    )
-    if not set(discrepancies).issubset(set(selected)):
-        raise ValueError("confirmed discrepancy 必须来自实际 audit sample。")
+    labels = {
+        row["canonical_entity_id"]: row["final_human_relevance"]
+        for row in _list(final_human_labels.get("labels"), "final human labels")
+    }
+    if not set(selected).issubset(labels):
+        raise ValueError("validated Human labels 未覆盖完整 safe-zero audit sample。")
+    discrepancies = [
+        candidate_id for candidate_id in selected if labels[candidate_id] != 0
+    ]
     all_safe = _strings(
         audit_plan.get("safe_zero_canonical_entity_ids"), "safe-zero IDs"
     )
@@ -2758,6 +2815,7 @@ def build_safe_zero_audit_outcome(
         "audit_outcome_identity": "pending",
         "protocol_id": RCP_PROTOCOL_ID,
         "audit_plan": _artifact_reference(audit_plan),
+        "human_audit_labels": _artifact_reference(final_human_labels),
         "reviewed_canonical_entity_ids": selected,
         "confirmed_discrepancy_ids": discrepancies,
         "escalation_required": escalation,
@@ -2787,6 +2845,9 @@ def validate_safe_zero_audit_outcome(
     audit_outcome: Mapping[str, Any],
     *,
     audit_plan: Mapping[str, Any],
+    inputs: ReferenceCurationInputs,
+    aggregation: Mapping[str, Any],
+    final_human_labels: Mapping[str, Any],
 ) -> dict[str, Any]:
     artifact = _mapping(dict(audit_outcome), "safe-zero audit outcome")
     provenance = _mapping(
@@ -2794,10 +2855,9 @@ def validate_safe_zero_audit_outcome(
     )
     reconstructed = build_safe_zero_audit_outcome(
         audit_plan,
-        confirmed_discrepancy_ids=_strings(
-            artifact.get("confirmed_discrepancy_ids"),
-            "confirmed discrepancy IDs",
-        ),
+        inputs=inputs,
+        aggregation=aggregation,
+        final_human_labels=final_human_labels,
         completed_at=artifact.get("completed_at"),
         git_revision=provenance.get("git_revision"),
     )

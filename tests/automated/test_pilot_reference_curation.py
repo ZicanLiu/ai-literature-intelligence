@@ -8,6 +8,9 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
+
+from app.pilot_reference_curation import _require_clean_formal_worktree
 
 from src.pilot_context import (
     build_matched_context,
@@ -17,6 +20,8 @@ from src.pilot_context import (
 from src.pilot_reference_curation import (
     AI_TASK_FORBIDDEN_KEYS,
     BM25_METHOD_ID,
+    FINAL_REFERENCE_IDENTITY_PREFIX,
+    HUMAN_SUBMISSION_IDENTITY_PREFIX,
     REFERENCE_METHOD_ID,
     build_ai_task_package,
     build_evidence_span,
@@ -42,6 +47,8 @@ from src.pilot_reference_curation import (
     validate_reference_preparation_package,
     validate_safe_zero_audit_outcome,
     validate_safe_zero_audit_plan,
+    _artifact_id,
+    _identity_without,
 )
 from src.pilot_reference_review import (
     build_anonymized_h2_evidence_packet,
@@ -70,7 +77,7 @@ from src.pilot_reference_selection import (
     validate_reference_selection_freeze_reference,
 )
 from src.pilot_selection import payload_sha256, validate_selection_artifact
-from src.w6_contracts import canonical_json_sha256
+from src.w6_contracts import canonical_json_sha256, deterministic_identity
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -442,7 +449,9 @@ class RCPFixture(unittest.TestCase):
         )
         audit_outcome = build_safe_zero_audit_outcome(
             audit_plan,
-            confirmed_discrepancy_ids=[],
+            inputs=cls.inputs,
+            aggregation=aggregation,
+            final_human_labels=final_labels,
             completed_at=COMPLETED_AT,
             git_revision=GIT_REVISION,
         )
@@ -509,6 +518,40 @@ class RCPPreparationAndRosterTests(RCPFixture):
         unfrozen["entries"][0]["status"] = "prepared"
         with self.assertRaises(ValueError):
             validate_model_roster(unfrozen, inputs=self.inputs, allow_fixture=True)
+
+    def test_actual_model_identity_duplicate_fails_despite_distinct_declared_family(
+        self,
+    ) -> None:
+        duplicate = copy.deepcopy(self.entries)
+        for field in (
+            "provider",
+            "requested_model_id",
+            "provider_reported_model_id",
+            "resolved_model_id",
+            "snapshot_version",
+        ):
+            duplicate[1][field] = duplicate[0][field]
+        with self.assertRaisesRegex(ValueError, "actual model identity"):
+            build_model_roster(
+                inputs=self.inputs,
+                entries=duplicate,
+                frozen_at=CREATED_AT,
+                git_revision=GIT_REVISION,
+                created_by="fixture",
+                run_scope="plumbing_only",
+                is_fixture=True,
+            )
+
+    def test_formal_cli_requires_clean_worktree(self) -> None:
+        with mock.patch(
+            "app.pilot_reference_curation.capture_git_state",
+            return_value={
+                "git_revision": GIT_REVISION,
+                "git_worktree_clean": False,
+            },
+        ):
+            with self.assertRaisesRegex(ValueError, "clean Git worktree"):
+                _require_clean_formal_worktree()
 
     def test_model_identity_and_downstream_family_fail_closed(self) -> None:
         alias = copy.deepcopy(self.entries)
@@ -711,6 +754,16 @@ class RCPTaskAndJudgementTests(RCPFixture):
                     json.loads(Path(result["task_package"]).read_text(encoding="utf-8"))
                 ),
             )
+            with self.assertRaisesRegex(ValueError, "隔离目录"):
+                export_ai_task_package(
+                    package=bundle["task_package"],
+                    mapping=bundle["mapping"],
+                    roster=self.roster,
+                    inputs=self.inputs,
+                    model_output_dir=root / "shared_model_bundle",
+                    coordinator_map_output=root / "shared_model_bundle" / "map.json",
+                    allow_fixture=True,
+                )
         after = subprocess.run(
             ["git", "status", "--porcelain"],
             cwd=PROJECT_ROOT,
@@ -810,14 +863,63 @@ class RCPAggregationAndAuditTests(RCPFixture):
             aggregation=self.aggregations[topic],
             inputs=self.inputs,
         )
+        aggregation = self.aggregations[topic]
+        required = derive_h1_candidate_ids(aggregation, left)
+        discrepancy_id = left["audit_sample_canonical_entity_ids"][0]
+        safe_ids = set(left["safe_zero_canonical_entity_ids"])
+        submissions = {}
+        for reviewer in ("r1", "r2"):
+            package, mapping = build_human_task_package(
+                inputs=self.inputs,
+                aggregation=aggregation,
+                reviewer_slot=reviewer,
+                stage="h1",
+                candidate_ids=required,
+                created_at=COMPLETED_AT,
+                git_revision=GIT_REVISION,
+            )
+            response = self._human_response(
+                package,
+                mapping,
+                f"fixture_audit_{reviewer}",
+                lambda candidate_id: (
+                    1
+                    if candidate_id == discrepancy_id
+                    else (0 if candidate_id in safe_ids else 2)
+                ),
+            )
+            submissions[reviewer] = import_human_submission(
+                response,
+                task_package=package,
+                mapping=mapping,
+                imported_at=COMPLETED_AT,
+                git_revision=GIT_REVISION,
+            )
+        human_labels = build_final_human_labels(
+            aggregation,
+            r1_h1=submissions["r1"],
+            r2_h1=submissions["r2"],
+            required_candidate_ids=required,
+            created_at=COMPLETED_AT,
+            git_revision=GIT_REVISION,
+        )
         outcome = build_safe_zero_audit_outcome(
             left,
-            confirmed_discrepancy_ids=[left["audit_sample_canonical_entity_ids"][0]],
+            inputs=self.inputs,
+            aggregation=aggregation,
+            final_human_labels=human_labels,
             completed_at=COMPLETED_AT,
             git_revision=GIT_REVISION,
         )
         self.assertTrue(outcome["escalation_required"])
-        validate_safe_zero_audit_outcome(outcome, audit_plan=left)
+        self.assertEqual(outcome["confirmed_discrepancy_ids"], [discrepancy_id])
+        validate_safe_zero_audit_outcome(
+            outcome,
+            audit_plan=left,
+            inputs=self.inputs,
+            aggregation=aggregation,
+            final_human_labels=human_labels,
+        )
         self.assertEqual(
             set(outcome["escalated_review_canonical_entity_ids"]),
             set(left["safe_zero_canonical_entity_ids"])
@@ -916,6 +1018,16 @@ class RCPHumanAndFinalSelectionTests(RCPFixture):
                 Path(result["task_package"]).read_text(encoding="utf-8")
             )
             self.assertNotIn("canonical_entity_id", json.dumps(visible))
+            with self.assertRaisesRegex(ValueError, "隔离目录"):
+                export_human_task_package(
+                    package=package,
+                    mapping=mapping,
+                    inputs=self.inputs,
+                    aggregation=self.chain["aggregation"],
+                    candidate_ids=self.chain["required"],
+                    human_output_dir=root / "shared_human_bundle",
+                    coordinator_map_output=root / "shared_human_bundle" / "map.json",
+                )
         after = subprocess.run(
             ["git", "status", "--porcelain"],
             cwd=PROJECT_ROOT,
@@ -931,15 +1043,52 @@ class RCPHumanAndFinalSelectionTests(RCPFixture):
         mapping = self.chain["maps"][("r1", "h1")]
         validate_human_submission(submission, task_package=package, mapping=mapping)
         tampered = copy.deepcopy(submission)
-        tampered["canonical_records"][0]["short_reason"] = "changed"
+        old_relevance = tampered["canonical_records"][0]["relevance"]
+        tampered["canonical_records"][0]["relevance"] = 1 if old_relevance != 1 else 2
+        identity = _identity_without(
+            tampered,
+            prefix=HUMAN_SUBMISSION_IDENTITY_PREFIX,
+            omitted={"artifact_id", "submission_identity"},
+        )
+        tampered["submission_identity"] = identity
+        tampered["artifact_id"] = _artifact_id("srtp_rcp_human_submission", identity)
         with self.assertRaisesRegex(ValueError, "immutable"):
-            validate_human_submission(tampered, task_package=package, mapping=mapping)
+            validate_human_submission(tampered)
+        with self.assertRaisesRegex(ValueError, "immutable"):
+            build_final_human_labels(
+                self.chain["aggregation"],
+                r1_h1=tampered,
+                r2_h1=self.chain["h1"]["r2"],
+                required_candidate_ids=self.chain["required"],
+                created_at=COMPLETED_AT,
+                git_revision=GIT_REVISION,
+            )
         swapped = copy.deepcopy(mapping)
         swapped["candidate_map"][0]["canonical_entity_id"] = swapped["candidate_map"][
             1
         ]["canonical_entity_id"]
         with self.assertRaises(ValueError):
             validate_human_submission(submission, task_package=package, mapping=swapped)
+
+    def test_same_topic_reviewer_ids_must_be_distinct(self) -> None:
+        r2_response = copy.deepcopy(self.chain["h1"]["r2"]["raw_response"])
+        r2_response["reviewer_id"] = self.chain["h1"]["r1"]["reviewer_id"]
+        r2 = import_human_submission(
+            r2_response,
+            task_package=self.chain["packages"][("r2", "h1")],
+            mapping=self.chain["maps"][("r2", "h1")],
+            imported_at=COMPLETED_AT,
+            git_revision=GIT_REVISION,
+        )
+        with self.assertRaisesRegex(ValueError, "reviewer_id 必须互异"):
+            build_final_human_labels(
+                self.chain["aggregation"],
+                r1_h1=self.chain["h1"]["r1"],
+                r2_h1=r2,
+                required_candidate_ids=self.chain["required"],
+                created_at=COMPLETED_AT,
+                git_revision=GIT_REVISION,
+            )
 
     def test_h2_and_r3_resolve_by_median_without_ai_auto_inclusion(self) -> None:
         labels = {
@@ -1049,7 +1198,9 @@ class RCPHumanAndFinalSelectionTests(RCPFixture):
         r1_package, r1_map, r1 = self._cutoff_submission(
             "r1", tie_group, slots, tie_group[:slots]
         )
-        _, _, r2 = self._cutoff_submission("r2", tie_group, slots, tie_group[:slots])
+        r2_package, r2_map, r2 = self._cutoff_submission(
+            "r2", tie_group, slots, tie_group[:slots]
+        )
         self.assertFalse(
             _all_keys(r1_package)
             & {
@@ -1065,6 +1216,24 @@ class RCPHumanAndFinalSelectionTests(RCPFixture):
             {"candidate_id", "title", "abstract"},
         )
         validate_cutoff_submission(r1, task_package=r1_package, mapping=r1_map)
+        duplicate_reviewer_response = copy.deepcopy(r2["raw_response"])
+        duplicate_reviewer_response["reviewer_id"] = r1["reviewer_id"]
+        duplicate_reviewer_r2 = import_cutoff_submission(
+            duplicate_reviewer_response,
+            task_package=r2_package,
+            mapping=r2_map,
+            imported_at=COMPLETED_AT,
+            git_revision=GIT_REVISION,
+        )
+        with self.assertRaisesRegex(ValueError, "reviewer_id 必须互异"):
+            build_cutoff_decision_from_submissions(
+                r1_submission=r1,
+                r2_submission=duplicate_reviewer_r2,
+                r3_submission=None,
+                tie_break_seed="srtp-rcp-v0.3-cutoff-tie-v1",
+                created_at=COMPLETED_AT,
+                git_revision=GIT_REVISION,
+            )
         decision = build_cutoff_decision_from_submissions(
             r1_submission=r1,
             r2_submission=r2,
@@ -1116,14 +1285,55 @@ class RCPHumanAndFinalSelectionTests(RCPFixture):
             run_bundles=self.all_bundles,
             allow_fixture=True,
         )
-        validated_final = validate_final_reference(final, inputs=self.inputs)
+        validated_final = validate_final_reference(
+            final,
+            inputs=self.inputs,
+            aggregation=self.chain["aggregation"],
+            audit_plan=self.chain["audit_plan"],
+            audit_outcome=self.chain["audit_outcome"],
+            final_human_labels=self.chain["final_labels"],
+            cutoff_decision=cutoff,
+        )
         self.assertEqual(len(validated_final["selected_canonical_entity_ids"]), 8)
         self.assertTrue(final["all_top8_human_reviewed"])
         self.assertGreaterEqual(len(final["frontier_8_9_10"]), 1)
-        self.assertTrue(final["one_swap_sensitivity_sets"])
+        self.assertEqual(
+            final["one_swap_sensitivity_status"],
+            "deferred_not_primary_rcp_v0.3",
+        )
+        self.assertEqual(final["one_swap_sensitivity_sets"], [])
+        tampered = copy.deepcopy(final)
+        tampered["selected_canonical_entity_ids"][:2] = reversed(
+            tampered["selected_canonical_entity_ids"][:2]
+        )
+        body = copy.deepcopy(tampered)
+        body.pop("artifact_id")
+        body.pop("final_reference_identity")
+        tampered_identity = deterministic_identity(
+            FINAL_REFERENCE_IDENTITY_PREFIX, body
+        )
+        tampered["final_reference_identity"] = tampered_identity
+        tampered["artifact_id"] = _artifact_id(
+            "srtp_rcp_final_reference", tampered_identity
+        )
+        with self.assertRaisesRegex(ValueError, "protocol reconstruction"):
+            validate_final_reference(
+                tampered,
+                inputs=self.inputs,
+                aggregation=self.chain["aggregation"],
+                audit_plan=self.chain["audit_plan"],
+                audit_outcome=self.chain["audit_outcome"],
+                final_human_labels=self.chain["final_labels"],
+                cutoff_decision=cutoff,
+            )
         selection = build_reference_selection_artifact(
             inputs=self.inputs,
             final_reference=final,
+            aggregation=self.chain["aggregation"],
+            audit_plan=self.chain["audit_plan"],
+            audit_outcome=self.chain["audit_outcome"],
+            final_human_labels=self.chain["final_labels"],
+            cutoff_decision=cutoff,
             created_at=COMPLETED_AT,
             git_revision=GIT_REVISION,
         )
@@ -1156,7 +1366,14 @@ class RCPHumanAndFinalSelectionTests(RCPFixture):
             self.assertNotIn(forbidden_method_metadata.casefold(), rendered)
 
     def test_finalizer_fails_with_less_than_eight_eligible(self) -> None:
-        eligible_ids = set(self.chain["required"][:7])
+        safe_ids = set(self.chain["audit_plan"]["safe_zero_canonical_entity_ids"])
+        eligible_ids = set(
+            [
+                candidate_id
+                for candidate_id in self.chain["required"]
+                if candidate_id not in safe_ids
+            ][:7]
+        )
         submissions = {}
         for reviewer in ("r1", "r2"):
             package = self.chain["packages"][(reviewer, "h1")]
@@ -1182,6 +1399,14 @@ class RCPHumanAndFinalSelectionTests(RCPFixture):
             created_at=COMPLETED_AT,
             git_revision=GIT_REVISION,
         )
+        audit_outcome = build_safe_zero_audit_outcome(
+            self.chain["audit_plan"],
+            inputs=self.inputs,
+            aggregation=self.chain["aggregation"],
+            final_human_labels=labels,
+            completed_at=COMPLETED_AT,
+            git_revision=GIT_REVISION,
+        )
         with self.assertRaisesRegex(ValueError, "insufficient_eligible"):
             build_final_reference(
                 inputs=self.inputs,
@@ -1189,7 +1414,7 @@ class RCPHumanAndFinalSelectionTests(RCPFixture):
                 execution_manifest=self.execution_manifest,
                 aggregation=self.chain["aggregation"],
                 audit_plan=self.chain["audit_plan"],
-                audit_outcome=self.chain["audit_outcome"],
+                audit_outcome=audit_outcome,
                 final_human_labels=labels,
                 cutoff_decision=None,
                 created_at=COMPLETED_AT,
@@ -1215,6 +1440,11 @@ class RCPHumanAndFinalSelectionTests(RCPFixture):
         selection = build_reference_selection_artifact(
             inputs=self.inputs,
             final_reference=final,
+            aggregation=self.chain["aggregation"],
+            audit_plan=self.chain["audit_plan"],
+            audit_outcome=self.chain["audit_outcome"],
+            final_human_labels=self.chain["final_labels"],
+            cutoff_decision=cutoff,
             created_at=COMPLETED_AT,
             git_revision=GIT_REVISION,
         )

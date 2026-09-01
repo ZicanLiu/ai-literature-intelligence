@@ -46,6 +46,7 @@ from src.pilot_reference_curation import (
     _topic_boundary,
     _u80_reference,
     _validate_evidence_spans,
+    validate_visible_private_output_isolation,
 )
 from src.pilot_selection import (
     payload_sha256,
@@ -483,6 +484,7 @@ def export_human_task_package(
         project_root=inputs.project_root,
         label="RCP private human coordinator map output",
     )
+    validate_visible_private_output_isolation(output, coordinator)
     if output.exists() and any(output.iterdir()):
         raise ValueError("RCP human-facing output directory 必须不存在或为空。")
     if coordinator.exists():
@@ -760,6 +762,7 @@ def export_cutoff_task_package(
         project_root=inputs.project_root,
         label="RCP cutoff private coordinator map output",
     )
+    validate_visible_private_output_isolation(output, coordinator)
     if output.exists() and any(output.iterdir()):
         raise ValueError("RCP cutoff output directory 必须不存在或为空。")
     if coordinator.exists():
@@ -781,6 +784,75 @@ def export_cutoff_task_package(
     }
 
 
+def _validate_trusted_task_map_snapshots(
+    task_package: Mapping[str, Any],
+    mapping: Mapping[str, Any],
+    *,
+    cutoff: bool,
+) -> None:
+    package = _mapping(dict(task_package), "trusted Human task package snapshot")
+    private_map = _mapping(dict(mapping), "trusted Human private map snapshot")
+    if cutoff:
+        package_type = "srtp_rcp_cutoff_human_task_package"
+        map_type = "srtp_rcp_cutoff_human_map"
+        package_prefix = CUTOFF_TASK_PACKAGE_IDENTITY_PREFIX
+        map_prefix = CUTOFF_MAP_IDENTITY_PREFIX
+        package_artifact_prefix = "srtp_rcp_cutoff_tasks"
+        map_artifact_prefix = "srtp_rcp_cutoff_map"
+        visible_rows = _list(package.get("candidates"), "cutoff task candidates")
+        visible_ids = [row.get("candidate_id") for row in visible_rows]
+    else:
+        package_type = "srtp_rcp_human_task_package"
+        map_type = "srtp_rcp_human_task_map"
+        package_prefix = HUMAN_TASK_PACKAGE_IDENTITY_PREFIX
+        map_prefix = HUMAN_MAP_IDENTITY_PREFIX
+        package_artifact_prefix = "srtp_rcp_human_tasks"
+        map_artifact_prefix = "srtp_rcp_human_map"
+        visible_rows = _list(package.get("tasks"), "Human task rows")
+        visible_ids = [
+            row.get("candidate", {}).get("candidate_id") for row in visible_rows
+        ]
+    if (
+        package.get("artifact_type") != package_type
+        or private_map.get("artifact_type") != map_type
+        or package.get("protocol_id") != RCP_PROTOCOL_ID
+        or private_map.get("protocol_id") != RCP_PROTOCOL_ID
+    ):
+        raise ValueError("trusted Human task/map protocol or artifact type drift。")
+    package_identity = _identity_without(
+        package,
+        prefix=package_prefix,
+        omitted={"artifact_id", "package_identity"},
+    )
+    map_identity = _identity_without(
+        private_map,
+        prefix=map_prefix,
+        omitted={"artifact_id", "map_identity"},
+    )
+    if (
+        package.get("package_identity") != package_identity
+        or package.get("artifact_id")
+        != _artifact_id(package_artifact_prefix, package_identity)
+        or private_map.get("map_identity") != map_identity
+        or private_map.get("artifact_id")
+        != _artifact_id(map_artifact_prefix, map_identity)
+        or private_map.get("task_package") != _artifact_reference(package)
+    ):
+        raise ValueError("trusted Human task/map content-addressed identity drift。")
+    map_rows = _list(private_map.get("candidate_map"), "Human private candidate map")
+    mapped_ids = [row.get("candidate_id") for row in map_rows]
+    if (
+        len(visible_ids) != len(set(visible_ids))
+        or len(mapped_ids) != len(set(mapped_ids))
+        or set(visible_ids) != set(mapped_ids)
+        or package.get("reviewer_slot") != private_map.get("reviewer_slot")
+        or package.get("stage") != private_map.get("stage")
+        or package.get("topic", {}).get("topic_id") != private_map.get("topic_id")
+        or package.get("is_fixture") != private_map.get("is_fixture")
+    ):
+        raise ValueError("trusted Human task/map roster or scope drift。")
+
+
 def import_cutoff_submission(
     response: Mapping[str, Any],
     *,
@@ -790,6 +862,7 @@ def import_cutoff_submission(
     git_revision: str,
     _skip_validation: bool = False,
 ) -> dict[str, Any]:
+    _validate_trusted_task_map_snapshots(task_package, mapping, cutoff=True)
     form = _mapping(dict(response), "cutoff human response")
     _exact(
         form,
@@ -900,6 +973,8 @@ def import_cutoff_submission(
         "topic": copy.deepcopy(task_package["topic"]),
         "task_package": _artifact_reference(task_package),
         "private_map_sha256": payload_sha256(mapping),
+        "trusted_task_package_snapshot": copy.deepcopy(dict(task_package)),
+        "trusted_private_map_snapshot": copy.deepcopy(dict(mapping)),
         "tie_group_canonical_entity_ids": sorted(canonical_by_opaque.values()),
         "slots_required": task_package["slots_required"],
         "selected_canonical_entity_ids": canonical_selected,
@@ -934,14 +1009,27 @@ def import_cutoff_submission(
 def validate_cutoff_submission(
     submission: Mapping[str, Any],
     *,
-    task_package: Mapping[str, Any],
-    mapping: Mapping[str, Any],
+    task_package: Mapping[str, Any] | None = None,
+    mapping: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     artifact = _mapping(dict(submission), "cutoff submission")
+    trusted_task = _mapping(
+        artifact.get("trusted_task_package_snapshot"),
+        "trusted cutoff task package snapshot",
+    )
+    trusted_map = _mapping(
+        artifact.get("trusted_private_map_snapshot"),
+        "trusted cutoff private map snapshot",
+    )
+    _validate_trusted_task_map_snapshots(trusted_task, trusted_map, cutoff=True)
+    if task_package is not None and dict(task_package) != trusted_task:
+        raise ValueError("cutoff submission trusted task snapshot mismatch。")
+    if mapping is not None and dict(mapping) != trusted_map:
+        raise ValueError("cutoff submission trusted private map snapshot mismatch。")
     reconstructed = import_cutoff_submission(
         artifact.get("raw_response"),
-        task_package=task_package,
-        mapping=mapping,
+        task_package=trusted_task,
+        mapping=trusted_map,
         imported_at=artifact.get("imported_at"),
         git_revision=_mapping(
             artifact.get("provenance"), "cutoff submission provenance"
@@ -964,6 +1052,7 @@ def validate_cutoff_submission_identity(
     submission: Mapping[str, Any],
 ) -> dict[str, Any]:
     artifact = _mapping(dict(submission), "cutoff submission")
+    reconstructed = validate_cutoff_submission(artifact)
     reviewer = artifact.get("reviewer_slot")
     if (
         artifact.get("artifact_type") != "srtp_rcp_cutoff_human_submission"
@@ -984,9 +1073,8 @@ def validate_cutoff_submission_identity(
     ) != _artifact_id("srtp_rcp_cutoff_submission", identity):
         raise ValueError("cutoff submission identity drift。")
     return {
-        "artifact_id": artifact["artifact_id"],
+        **reconstructed,
         "submission_identity": identity,
-        "sha256": payload_sha256(artifact),
         "reviewer_slot": reviewer,
         "topic_id": artifact.get("topic", {}).get("topic_id"),
         "tie_group_canonical_entity_ids": tuple(
@@ -1068,6 +1156,7 @@ def import_human_submission(
     git_revision: str,
     _skip_validation: bool = False,
 ) -> dict[str, Any]:
+    _validate_trusted_task_map_snapshots(task_package, mapping, cutoff=False)
     form = _mapping(dict(response), "human response")
     _exact(
         form,
@@ -1172,6 +1261,8 @@ def import_human_submission(
         "topic": copy.deepcopy(task_package["topic"]),
         "task_package": _artifact_reference(task_package),
         "private_map_sha256": payload_sha256(mapping),
+        "trusted_task_package_snapshot": copy.deepcopy(dict(task_package)),
+        "trusted_private_map_snapshot": copy.deepcopy(dict(mapping)),
         "raw_response": copy.deepcopy(form),
         "raw_response_sha256": payload_sha256(form),
         "canonical_records": canonical_records,
@@ -1199,14 +1290,27 @@ def import_human_submission(
 def validate_human_submission(
     submission: Mapping[str, Any],
     *,
-    task_package: Mapping[str, Any],
-    mapping: Mapping[str, Any],
+    task_package: Mapping[str, Any] | None = None,
+    mapping: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     artifact = _mapping(dict(submission), "human submission")
+    trusted_task = _mapping(
+        artifact.get("trusted_task_package_snapshot"),
+        "trusted Human task package snapshot",
+    )
+    trusted_map = _mapping(
+        artifact.get("trusted_private_map_snapshot"),
+        "trusted Human private map snapshot",
+    )
+    _validate_trusted_task_map_snapshots(trusted_task, trusted_map, cutoff=False)
+    if task_package is not None and dict(task_package) != trusted_task:
+        raise ValueError("human submission trusted task snapshot mismatch。")
+    if mapping is not None and dict(mapping) != trusted_map:
+        raise ValueError("human submission trusted private map snapshot mismatch。")
     reconstructed = import_human_submission(
         artifact.get("raw_response"),
-        task_package=task_package,
-        mapping=mapping,
+        task_package=trusted_task,
+        mapping=trusted_map,
         imported_at=artifact.get("imported_at"),
         git_revision=_mapping(artifact.get("provenance"), "human provenance").get(
             "git_revision"
@@ -1242,6 +1346,7 @@ def _validate_submission_identity_and_scope(
     allowed_stages: set[str],
 ) -> dict[str, dict[str, Any]]:
     artifact = _mapping(dict(submission), "human submission")
+    validate_human_submission(artifact)
     if (
         artifact.get("artifact_type") != "srtp_rcp_human_review_submission"
         or artifact.get("protocol_id") != RCP_PROTOCOL_ID
@@ -1291,8 +1396,23 @@ def compute_h2_triggers(
     *,
     cutoff_frontier_ids: Sequence[str] = (),
 ) -> dict[str, list[str]]:
-    r1 = _records_by_canonical(r1_h1)
-    r2 = _records_by_canonical(r2_h1)
+    r1 = _validate_submission_identity_and_scope(
+        r1_h1,
+        aggregation=aggregation,
+        reviewer_slot="r1",
+        allowed_stages={"h1"},
+    )
+    r2 = _validate_submission_identity_and_scope(
+        r2_h1,
+        aggregation=aggregation,
+        reviewer_slot="r2",
+        allowed_stages={"h1"},
+    )
+    _validate_reviewer_identity_separation(
+        r1_submissions=[r1_h1],
+        r2_submissions=[r2_h1],
+        r3_submissions=[],
+    )
     if set(r1) != set(r2):
         raise ValueError("R1/R2 H1 candidate roster drift。")
     matrix = {
@@ -1524,6 +1644,30 @@ def _overlay_records(
     return result
 
 
+def _validate_reviewer_identity_separation(
+    *,
+    r1_submissions: Sequence[Mapping[str, Any]],
+    r2_submissions: Sequence[Mapping[str, Any]],
+    r3_submissions: Sequence[Mapping[str, Any]],
+) -> None:
+    slot_identities: dict[str, str] = {}
+    for slot, submissions in (
+        ("r1", r1_submissions),
+        ("r2", r2_submissions),
+        ("r3", r3_submissions),
+    ):
+        reviewer_ids = {
+            _text(submission.get("reviewer_id"), f"{slot} reviewer_id")
+            for submission in submissions
+        }
+        if len(reviewer_ids) > 1:
+            raise ValueError(f"同一 Topic 的 {slot} H1/H2 reviewer_id 必须一致。")
+        if reviewer_ids:
+            slot_identities[slot] = next(iter(reviewer_ids))
+    if len(set(slot_identities.values())) != len(slot_identities):
+        raise ValueError("同一 Topic 的 R1/R2/R3 reviewer_id 必须互异。")
+
+
 def compute_r3_triggers(
     aggregation: Mapping[str, Any],
     r1_h1: Mapping[str, Any],
@@ -1533,6 +1677,37 @@ def compute_r3_triggers(
     r2_h2: Mapping[str, Any] | None = None,
     cutoff_tie_ids: Sequence[str] = (),
 ) -> dict[str, list[str]]:
+    _validate_submission_identity_and_scope(
+        r1_h1,
+        aggregation=aggregation,
+        reviewer_slot="r1",
+        allowed_stages={"h1"},
+    )
+    _validate_submission_identity_and_scope(
+        r2_h1,
+        aggregation=aggregation,
+        reviewer_slot="r2",
+        allowed_stages={"h1"},
+    )
+    if r1_h2 is not None:
+        _validate_submission_identity_and_scope(
+            r1_h2,
+            aggregation=aggregation,
+            reviewer_slot="r1",
+            allowed_stages={"h2"},
+        )
+    if r2_h2 is not None:
+        _validate_submission_identity_and_scope(
+            r2_h2,
+            aggregation=aggregation,
+            reviewer_slot="r2",
+            allowed_stages={"h2"},
+        )
+    _validate_reviewer_identity_separation(
+        r1_submissions=[row for row in (r1_h1, r1_h2) if row is not None],
+        r2_submissions=[row for row in (r2_h1, r2_h2) if row is not None],
+        r3_submissions=[],
+    )
     r1 = _overlay_records(r1_h1, r1_h2)
     r2 = _overlay_records(r2_h1, r2_h2)
     if set(r1) != set(r2):
@@ -1626,6 +1801,11 @@ def build_final_human_labels(
         )
         if set(r3_h2_records) != set(r3_h1_records):
             raise ValueError("R3 H2/H1 candidate roster drift。")
+    _validate_reviewer_identity_separation(
+        r1_submissions=[row for row in (r1_h1, r1_h2) if row is not None],
+        r2_submissions=[row for row in (r2_h1, r2_h2) if row is not None],
+        r3_submissions=[row for row in (r3, r3_h2) if row is not None],
+    )
     r1 = _overlay_records(r1_h1, r1_h2)
     r2 = _overlay_records(r2_h1, r2_h2)
     r3_records = _overlay_records(r3, r3_h2) if r3 is not None else {}
@@ -1683,6 +1863,9 @@ def build_final_human_labels(
                 "stage": submission["stage"],
             }
             for submission in source_submissions
+        ],
+        "source_submission_snapshots": [
+            copy.deepcopy(dict(submission)) for submission in source_submissions
         ],
         "candidate_count": len(final_rows),
         "labels": final_rows,
@@ -1759,6 +1942,49 @@ def validate_final_human_labels_identity(
     aggregation: Mapping[str, Any],
 ) -> dict[str, Any]:
     artifact = _mapping(dict(final_human_labels), "final human labels")
+    source_snapshots = _list(
+        artifact.get("source_submission_snapshots"),
+        "final human source submission snapshots",
+        nonempty=True,
+    )
+    by_slot_stage: dict[tuple[str, str], Mapping[str, Any]] = {}
+    for raw in source_snapshots:
+        submission = _mapping(raw, "final human source submission snapshot")
+        validate_human_submission(submission)
+        key = (
+            _text(submission.get("reviewer_slot"), "source reviewer slot"),
+            _text(submission.get("stage"), "source review stage"),
+        )
+        if key in by_slot_stage:
+            raise ValueError("final human labels duplicate source submission stage。")
+        by_slot_stage[key] = submission
+    allowed_keys = {
+        ("r1", "h1"),
+        ("r1", "h2"),
+        ("r2", "h1"),
+        ("r2", "h2"),
+        ("r3", "r3_h1"),
+        ("r3", "r3_h2"),
+    }
+    if not {("r1", "h1"), ("r2", "h1")}.issubset(by_slot_stage) or not set(
+        by_slot_stage
+    ).issubset(allowed_keys):
+        raise ValueError("final human labels source submission closure drift。")
+    required_candidate_ids = [
+        row.get("canonical_entity_id")
+        for row in _list(artifact.get("labels"), "final human label records")
+    ]
+    validate_final_human_labels(
+        artifact,
+        aggregation=aggregation,
+        r1_h1=by_slot_stage[("r1", "h1")],
+        r2_h1=by_slot_stage[("r2", "h1")],
+        r1_h2=by_slot_stage.get(("r1", "h2")),
+        r2_h2=by_slot_stage.get(("r2", "h2")),
+        r3=by_slot_stage.get(("r3", "r3_h1")),
+        r3_h2=by_slot_stage.get(("r3", "r3_h2")),
+        required_candidate_ids=required_candidate_ids,
+    )
     if (
         artifact.get("artifact_type") != "srtp_rcp_final_human_labels"
         or artifact.get("protocol_id") != RCP_PROTOCOL_ID
