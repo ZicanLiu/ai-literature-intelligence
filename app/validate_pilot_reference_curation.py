@@ -1,4 +1,4 @@
-"""Validate the committed RCP-v0.3 preparation package."""
+"""Validate the committed RCP-v0.3.1 preparation package."""
 
 from __future__ import annotations
 
@@ -11,14 +11,17 @@ from src.pilot_reference_curation import validate_reference_preparation_package
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = (
-    PROJECT_ROOT / "configs" / "pilot" / "srtp_pilot_v0.3_reference_curation_v1.json"
+    PROJECT_ROOT
+    / "configs"
+    / "pilot"
+    / "srtp_pilot_v0.3.1_reference_curation_v1.json"
 )
 DEFAULT_PACKAGE = (
     PROJECT_ROOT
     / "data"
     / "research"
     / "pilot"
-    / "v0.3"
+    / "v0.3.1"
     / "reference-curation-preparation-v1"
 )
 
@@ -26,7 +29,7 @@ DEFAULT_PACKAGE = (
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Validate RCP-v0.3 protocol/config/prompt/roster-template closure and "
+            "Validate RCP-v0.3.1 protocol/config/prompt/roster-template closure and "
             "confirm that real execution remains not started."
         )
     )
@@ -44,10 +47,10 @@ def main(argv: list[str] | None = None) -> int:
             project_root=PROJECT_ROOT,
         )
     except (OSError, RuntimeError, ValueError) as error:
-        print(f"Pilot RCP-v0.3 validation FAILED: {error}", file=sys.stderr)
+        print(f"Pilot RCP validation FAILED: {error}", file=sys.stderr)
         return 1
     print(
-        "Pilot RCP-v0.3 validation PASSED: "
+        f"Pilot {result['protocol_version']} validation PASSED: "
         f"status={result['status']}, real_model_judgements_started=false, "
         f"manifest_sha256={result['manifest_sha256']}"
     )

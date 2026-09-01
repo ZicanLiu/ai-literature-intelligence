@@ -15,7 +15,10 @@ from src.w6_contracts import load_json_object
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = (
-    PROJECT_ROOT / "configs" / "pilot" / "srtp_pilot_v0.3_reference_curation_v1.json"
+    PROJECT_ROOT
+    / "configs"
+    / "pilot"
+    / "srtp_pilot_v0.3.1_reference_curation_v1.json"
 )
 
 

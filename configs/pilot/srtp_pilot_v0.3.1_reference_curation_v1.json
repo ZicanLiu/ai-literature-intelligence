@@ -1,0 +1,185 @@
+{
+  "artifact_id": "srtp_rcp_config_84e96835aa12e61fd9451273",
+  "artifact_type": "srtp_reference_curation_config",
+  "comparison_policy": {
+    "bm25_execution_policy": "after_reference_selection_freeze",
+    "bm25_method_id": "pilot_bm25_lexical_v1",
+    "downstream_generator_family": null,
+    "reference_method_id": "pilot_ai_assisted_reference_abstract_v1",
+    "same_context_policy_required": true,
+    "sensitivity_only_family_overlap_allowed": false
+  },
+  "config_identity": "srtp-rcp-config:sha256:84e96835aa12e61fd9451273b9b58add2415f05bfb7b5593f9a1c20db241315b",
+  "created_at": "2026-09-01T21:55:45+08:00",
+  "final_selection_policy": {
+    "cutoff_blind_reviewers": [
+      "r1",
+      "r2"
+    ],
+    "cutoff_hash_tiebreak": "mechanical_last_resort_only",
+    "cutoff_intersection_priority": true,
+    "cutoff_r3_full_tie_group_priority": true,
+    "eligible_human_relevance": [
+      1,
+      2
+    ],
+    "k": 8,
+    "one_swap_frontier_ranks": [
+      8,
+      9,
+      10
+    ],
+    "primary_ordering": [
+      "final_human_relevance_desc",
+      "n_core_label_2_desc",
+      "n_core_label_ge_1_desc"
+    ],
+    "sentinel_rank_signal": false
+  },
+  "human_review_policy": {
+    "final_numeric_rule": "r1_r2_agreement_else_three_label_median",
+    "h1_blind": true,
+    "h1_reviewers": [
+      "r1",
+      "r2"
+    ],
+    "h1_scope": "non_safe_zero_plus_audit_cases",
+    "h2_anonymized_evidence_only": true,
+    "persistent_defer_at_frontier": "reference_not_freezable",
+    "r3_blind_h1_before_h2": true,
+    "reviewer_slots": [
+      "r1",
+      "r2",
+      "r3"
+    ]
+  },
+  "input_boundary": {
+    "formal_bm25_generated": false,
+    "formal_reference_generated": false,
+    "fulltext_primary_allowed": false,
+    "hidden_labels_allowed": false,
+    "hidden_topics_allowed": false,
+    "live_api_allowed": false,
+    "matched_experimental_context_generated": false,
+    "real_human_review_started": false,
+    "real_model_judgements_started": false
+  },
+  "inputs": {
+    "prompt_package": {
+      "artifact_id": "srtp_rcp_prompt_b38f158a1e0c24eedb31c6ff",
+      "path": "data/research/pilot/v0.3/reference-curation-preparation-v1/screening_prompt_v1.json",
+      "prompt_identity": "srtp-rcp-screening-prompt:sha256:b38f158a1e0c24eedb31c6ff88bf82af8874c64c6c321e0e9438ecc6ef25d616",
+      "sha256": "5e19e9f2f3d72cb2c67769636786619a993af087d53def8dee31545e15f7cac2"
+    },
+    "roster_template": {
+      "path": "data/research/pilot/v0.3.1/reference-curation-preparation-v1/model_roster_template.json",
+      "sha256": "b7577d07fca4803d49aab958c174a2e655b91b5ffd3b22e165222f5438e5a939"
+    },
+    "selection_context_config": {
+      "artifact_id": "srtp_pilot_selection_context_config_v1",
+      "config_identity": "srtp-pilot-selection-context-config:sha256:eda8667b014186a22e46e1ae944b35dbde24111a7e4299ff34413dbc5a51a921",
+      "path": "configs/pilot/srtp_pilot_v0.2_selection_context_v1.json",
+      "sha256": "0cca88c95fc613c6bfdd97b5cb1ceb92b30f4d8a89a3422a8ab10141fbf56343"
+    }
+  },
+  "is_fixture": false,
+  "judgement_policy": {
+    "abstain_uses_null_relevance": true,
+    "boundary_dimensions": [
+      "scientific_object",
+      "data_modality",
+      "target_task",
+      "method_role"
+    ],
+    "boundary_values": [
+      "match",
+      "mismatch",
+      "unclear",
+      "not_stated"
+    ],
+    "evidence_span_maximum": 2,
+    "evidence_span_minimum": 1,
+    "maximum_schema_repair_attempts": 1,
+    "numeric_confidence_decision_bearing": false,
+    "reason_summary_maximum_unicode_characters": 240,
+    "relevance_values": [
+      0,
+      1,
+      2
+    ],
+    "uncertain_is_not_relevance_one": true
+  },
+  "model_identity_policy": {
+    "default_allow_snapshot_unavailable_exception": false,
+    "downstream_generator_family_separation": true,
+    "external_agent_runner_execution_modes": [
+      "one_candidate_per_session",
+      "sequential_shared_runner_session"
+    ],
+    "external_agent_runner_required_execution_config_fields": [
+      "execution_route",
+      "runner_name",
+      "runner_version",
+      "displayed_model_label",
+      "execution_mode",
+      "prompt_identity",
+      "protocol_config_identity",
+      "external_lookup",
+      "fulltext_access",
+      "one_candidate_per_judgement"
+    ],
+    "external_agent_runner_snapshot_unavailable_primary_allowed": true,
+    "resolved_identity_required": true,
+    "rolling_alias_may_be_requested": true,
+    "rolling_alias_may_masquerade_as_snapshot": false,
+    "snapshot_unavailable_requires_explicit_exception": true
+  },
+  "panel": {
+    "core_count": 3,
+    "distinct_independence_groups": 5,
+    "distinct_model_families": 5,
+    "one_primary_instance_per_family": true,
+    "same_family_versions_vote": false,
+    "sentinel_count": 2,
+    "sentinels_vote_or_rank": false
+  },
+  "primary_method_id": "pilot_ai_assisted_reference_abstract_v1",
+  "protocol": {
+    "all_top8_human_review_required": true,
+    "automatic_exclusion": "strict_safe_zero_only",
+    "automatic_inclusion": "forbidden",
+    "external_lookup": false,
+    "fulltext_primary": false,
+    "human_review_blind_first": true,
+    "primary_information": [
+      "frozen_research_question",
+      "frozen_topic_boundary",
+      "opaque_candidate_id",
+      "title",
+      "abstract"
+    ],
+    "reference_claim": "auditable_internal_reference_selection",
+    "selection_k": 8
+  },
+  "protocol_id": "srtp_reference_curation_v0.3",
+  "protocol_version": "RCP-v0.3.1",
+  "safe_zero_audit_policy": {
+    "assumed_error_fraction": 0.1,
+    "audit_seed": "srtp-rcp-v0.3-safe-zero-audit-v1",
+    "confirmed_discrepancy_action": "review_all_remaining_safe_zero",
+    "miss_probability_maximum": 0.05,
+    "sampling_algorithm": "sha256_protocol_topic_candidate_seed_v1"
+  },
+  "safe_zero_policy": {
+    "all_core_zero": true,
+    "all_sentinel_zero": true,
+    "no_abstain": true,
+    "no_unclear_or_not_stated": true,
+    "shared_hard_mismatch_dimension_required": true,
+    "status": "provisional_exclusion_only",
+    "sufficient_evidence_required": true,
+    "valid_spans_required": true
+  },
+  "schema_version": "1.0",
+  "status": "prepared_not_started"
+}

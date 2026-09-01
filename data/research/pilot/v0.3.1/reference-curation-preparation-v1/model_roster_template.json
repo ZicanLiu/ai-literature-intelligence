@@ -1,0 +1,123 @@
+{
+  "artifact_type": "srtp_rcp_model_roster_template",
+  "external_agent_runner_snapshot_unavailable": {
+    "allowed_execution_modes": [
+      "one_candidate_per_session",
+      "sequential_shared_runner_session"
+    ],
+    "execution_route": "external_agent_runner",
+    "required_execution_config_fields": [
+      "execution_route",
+      "runner_name",
+      "runner_version",
+      "displayed_model_label",
+      "execution_mode",
+      "prompt_identity",
+      "protocol_config_identity",
+      "external_lookup",
+      "fulltext_access",
+      "one_candidate_per_judgement"
+    ],
+    "runner_version_nullable": true,
+    "snapshot_guarantee": "unavailable",
+    "snapshot_version": null
+  },
+  "instructions": "Freeze five real cross-family entries outside the repository. Use the exact-snapshot fields when available. For an external agent runner without an immutable/provider-versioned snapshot, declare snapshot_guarantee=unavailable and snapshot_version=null; never invent a snapshot. Record the complete hashed runner execution config before screening.",
+  "is_fixture": false,
+  "protocol_id": "srtp_reference_curation_v0.3",
+  "protocol_version": "RCP-v0.3.1",
+  "required_slots": [
+    {
+      "fields_to_freeze": [
+        "provider",
+        "model_family",
+        "requested_model_id",
+        "requested_model_id_type",
+        "provider_reported_model_id",
+        "resolved_model_id",
+        "resolved_identity_confirmed",
+        "snapshot_version",
+        "snapshot_guarantee",
+        "independence_group",
+        "execution_config",
+        "execution_config_sha256"
+      ],
+      "role": "core",
+      "slot_id": "core_1"
+    },
+    {
+      "fields_to_freeze": [
+        "provider",
+        "model_family",
+        "requested_model_id",
+        "requested_model_id_type",
+        "provider_reported_model_id",
+        "resolved_model_id",
+        "resolved_identity_confirmed",
+        "snapshot_version",
+        "snapshot_guarantee",
+        "independence_group",
+        "execution_config",
+        "execution_config_sha256"
+      ],
+      "role": "core",
+      "slot_id": "core_2"
+    },
+    {
+      "fields_to_freeze": [
+        "provider",
+        "model_family",
+        "requested_model_id",
+        "requested_model_id_type",
+        "provider_reported_model_id",
+        "resolved_model_id",
+        "resolved_identity_confirmed",
+        "snapshot_version",
+        "snapshot_guarantee",
+        "independence_group",
+        "execution_config",
+        "execution_config_sha256"
+      ],
+      "role": "core",
+      "slot_id": "core_3"
+    },
+    {
+      "fields_to_freeze": [
+        "provider",
+        "model_family",
+        "requested_model_id",
+        "requested_model_id_type",
+        "provider_reported_model_id",
+        "resolved_model_id",
+        "resolved_identity_confirmed",
+        "snapshot_version",
+        "snapshot_guarantee",
+        "independence_group",
+        "execution_config",
+        "execution_config_sha256"
+      ],
+      "role": "sentinel",
+      "slot_id": "sentinel_1"
+    },
+    {
+      "fields_to_freeze": [
+        "provider",
+        "model_family",
+        "requested_model_id",
+        "requested_model_id_type",
+        "provider_reported_model_id",
+        "resolved_model_id",
+        "resolved_identity_confirmed",
+        "snapshot_version",
+        "snapshot_guarantee",
+        "independence_group",
+        "execution_config",
+        "execution_config_sha256"
+      ],
+      "role": "sentinel",
+      "slot_id": "sentinel_2"
+    }
+  ],
+  "schema_version": "1.0",
+  "status": "prepared_template_not_frozen"
+}

@@ -53,7 +53,32 @@ from src.pilot_reference_review import (
 )
 
 
-DEFAULT_RCP_CONFIG = Path("configs/pilot/srtp_pilot_v0.3_reference_curation_v1.json")
+DEFAULT_RCP_CONFIG = Path(
+    "configs/pilot/srtp_pilot_v0.3.1_reference_curation_v1.json"
+)
+RCP_CONFIG_PATHS_BY_IDENTITY = {
+    "srtp-rcp-config:sha256:84e96835aa12e61fd9451273b9b58add2415f05bfb7b5593f9a1c20db241315b": DEFAULT_RCP_CONFIG,
+    "srtp-rcp-config:sha256:65bac7fea0e0583c3625be60b36de75e82794ac958900e31572978b9db2359bc": Path(
+        "configs/pilot/srtp_pilot_v0.3_reference_curation_v1.json"
+    ),
+}
+
+
+def _load_bound_reference_curation_inputs(
+    provenance: Mapping[str, Any], *, inputs: PilotSelectionInputs
+) -> ReferenceCurationInputs:
+    config_identity = provenance.get("protocol_config_identity")
+    config_path = RCP_CONFIG_PATHS_BY_IDENTITY.get(config_identity)
+    if config_path is None:
+        raise ValueError("Reference selection protocol/config binding drift。")
+    candidate = load_reference_curation_inputs(
+        config_path, project_root=inputs.project_root
+    )
+    if provenance.get("protocol_config_sha256") != sha256_file(
+        candidate.config_path
+    ):
+        raise ValueError("Reference selection protocol/config binding drift。")
+    return candidate
 
 
 def build_cutoff_decision(
@@ -785,15 +810,8 @@ def validate_reference_selection_method_provenance(
         | ({"final_reference_reconstruction_closure"} if not is_fixture else set()),
         "Reference selection provenance",
     )
-    rcp_inputs = load_reference_curation_inputs(
-        DEFAULT_RCP_CONFIG, project_root=inputs.project_root
-    )
-    if (
-        provenance["protocol_id"] != RCP_PROTOCOL_ID
-        or provenance["protocol_config_identity"]
-        != rcp_inputs.config["config_identity"]
-        or provenance["protocol_config_sha256"] != sha256_file(rcp_inputs.config_path)
-    ):
+    rcp_inputs = _load_bound_reference_curation_inputs(provenance, inputs=inputs)
+    if provenance["protocol_id"] != RCP_PROTOCOL_ID:
         raise ValueError("Reference selection protocol/config binding drift。")
     if list(selected) != provenance["selected_canonical_entity_ids"]:
         raise ValueError("Reference selection selected IDs/finalization drift。")
