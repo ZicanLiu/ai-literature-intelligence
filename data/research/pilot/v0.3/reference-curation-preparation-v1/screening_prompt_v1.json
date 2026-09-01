@@ -1,0 +1,86 @@
+{
+  "artifact_id": "srtp_rcp_prompt_b38f158a1e0c24eedb31c6ff",
+  "artifact_type": "srtp_rcp_screening_prompt_package",
+  "boundary_definitions": {
+    "data_modality": [
+      "match",
+      "mismatch",
+      "unclear",
+      "not_stated"
+    ],
+    "method_role": [
+      "match",
+      "mismatch",
+      "unclear",
+      "not_stated"
+    ],
+    "scientific_object": [
+      "match",
+      "mismatch",
+      "unclear",
+      "not_stated"
+    ],
+    "target_task": [
+      "match",
+      "mismatch",
+      "unclear",
+      "not_stated"
+    ]
+  },
+  "evidence_span_policy": {
+    "exact_offsets_required": true,
+    "fields": [
+      "title",
+      "abstract"
+    ],
+    "maximum": 2,
+    "minimum": 1
+  },
+  "external_lookup": false,
+  "instruction_text": "Judge one candidate independently against the frozen Research Question and Topic boundary using only the exact Title and Abstract supplied. Return relevance 2 only when all four necessary dimensions directly match and AI/ML has a substantive task role; return 1 for a genuine but partial or auxiliary match; return 0 only for a directly evidenced hard mismatch; otherwise abstain. Do not rank candidates, select a Top-8, browse, retrieve full text, use another judgement, or provide private chain-of-thought.",
+  "output_contract": {
+    "numeric_confidence": false,
+    "one_candidate_per_judgement": true,
+    "structured_fields": [
+      "relevance",
+      "abstain",
+      "boundary",
+      "evidence_sufficiency",
+      "uncertainty_codes",
+      "exclusion_or_boundary_codes",
+      "evidence_spans",
+      "reason_summary"
+    ]
+  },
+  "primary_information": [
+    "frozen_research_question",
+    "frozen_topic_boundary",
+    "opaque_candidate_id",
+    "exact_title",
+    "exact_abstract"
+  ],
+  "private_reasoning_policy": {
+    "chain_of_thought_requested": false,
+    "chain_of_thought_retained": false
+  },
+  "prompt_identity": "srtp-rcp-screening-prompt:sha256:b38f158a1e0c24eedb31c6ff88bf82af8874c64c6c321e0e9438ecc6ef25d616",
+  "protocol_id": "srtp_reference_curation_v0.3",
+  "reason_policy": {
+    "maximum_unicode_characters": 240,
+    "short_auditable_summary_only": true
+  },
+  "relevance_definitions": {
+    "0": "At least one necessary dimension has a directly evidenced hard mismatch.",
+    "1": "The work is in the target domain but is partial, auxiliary, or has a non-fatal boundary limitation.",
+    "2": "All four necessary dimensions directly match and AI/ML has a substantive role in the target task.",
+    "abstain": "Title and Abstract do not support a reliable judgement; relevance must be null."
+  },
+  "schema_repair_policy": {
+    "maximum_attempts": 1,
+    "rejudgement_forbidden": true,
+    "schema_only": true,
+    "second_failure_routes_human": true
+  },
+  "schema_version": "1.0",
+  "status": "frozen"
+}

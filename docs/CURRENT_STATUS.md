@@ -1,11 +1,14 @@
 # 当前项目状态
 
-更新时间：2026-08-26
+更新时间：2026-08-31
 
-本次在 2026-08-26 fetch 后核对的公共 `origin/main` 为 `9081105`（PR #63，W6 Research Contract &
-Parallel Development Bootstrap）。PR #71 尚未合并；本文分别记录公共 `main` 与 PR #71 merge
-candidate，不能把后者表述成已经位于 `main`。实时远端状态仍须在每次接手任务时重新
-fetch/GitHub 核对。
+本次只读核对的公共 `origin/main` 为
+`ccb75414aa426f82f5e40cfd81f88ba66f0afe77`（PR #78，CI Quality Gate duplicate-test
+hotfix）。PR #71、后续 W6 integration PR、Pilot v0.2 Real-Data Foundation（PR #77）及 CI
+hotfix 均已进入该基线。实时远端状态仍须在每次接手任务时重新 fetch/GitHub 核对。
+
+当前 `codex/pilot-v0.2-selection-context` 工作分支以该公共 main 为 merge-base，包含尚未 push
+的 Pilot selection/context 与 RCP-v0.3 本地实现。不能把这些分支成果表述为已经进入公共 main。
 
 W5 Method Ranking Contract v1.1 已建立并向后兼容 v1.0。v1.1 只用于完整声明 B0/B1 的冻结
 source sample 输入；BM25、SPECTER2、Cross-Encoder 与 RRF 的 v1.0 package 继续有效。
@@ -200,7 +203,11 @@ python -m app.validate_w6_bootstrap
 Benchmark status 为 `bootstrap_fixture`；仓库没有真实 W6 hidden labels，也没有批准的 W6
 Benchmark v0.2-alpha。
 
-### PR #71 merge candidate（尚未进入 main）
+### PR #71 历史 merge-candidate 快照（现已进入 main）
+
+以下内容保留 2026-08-26 当时的审计边界，不能再用“尚未进入 main”解释当前仓库。PR #71
+及随后列于当前 Git 历史的 W6 integration PR 已合并；具体当前能力必须以源码、committed
+artifacts 和 validators 重新核对。
 
 `feature/w6-benchmark-boundary-aware` 上的 PR #71 在公共 Bootstrap 之上形成了以下待合并成果：
 
@@ -226,10 +233,29 @@ PR #71 没有修改 W4 approved Benchmark、W5 frozen method artifacts/metrics/e
 canonicalization、final pool selection、blind annotation/second annotation/review/adjudication、正式
 method/fusion generation、sealed Hidden evaluation 与 synthesis 均属于后续工作。
 
+## Pilot v0.2 Selection / Context 与 RCP-v0.3 分支状态
+
+公共 main 已包含两个 Dev Topic 的 frozen canonical U80 和 CI duplicate-test hotfix。本地
+`codex/pilot-v0.2-selection-context` 分支已准备但尚未 push：
+
+- BM25 Lexical Selection、Dual-Curator tooling、generic Selection Artifact 和 method-agnostic
+  Matched Context Builder；
+- committed Dual-Curator `selection-preparation-v1`，状态仍为 `prepared_not_started`；
+- RCP-v0.3 AI-assisted internal Reference infrastructure：versioned prompt/config、3 Core + 2
+  Sentinel roster contract、one-candidate task export、strict judgement import、safe-zero/routing、
+  blind H1/H2/R3、safe-zero audit、blind cutoff、final Reference、Reference-bound BM25 与 formal
+  pair validation；
+- committed RCP preparation package，状态为 `prepared_not_started`，真实 roster 尚未冻结。
+
+当前没有真实模型 judgement、真实人类 review、正式 Reference Top-8、正式 BM25 Top-8、matched
+experimental context 或 synthesis output。RCP 的正确 claim 仅为未来的 **auditable internal
+reference selection**，不是 astronomy expert gold/ground truth。完整边界与真实执行 checkpoint 见
+[`PILOT_V0_3_REFERENCE_CURATION_PROTOCOL.md`](project/PILOT_V0_3_REFERENCE_CURATION_PROTOCOL.md)。
+
 ## 当前验证
 
-以下是 PR #71 merge candidate（含 OpenAlex provenance-closure P1 修复）的 2026-08-26 实际验证快照，
-不是公共 `main` 的测试快照：
+以下是 PR #71 merge candidate（含 OpenAlex provenance-closure P1 修复）的 2026-08-26 历史验证
+快照，不是当前公共 `main` 或本地 Pilot/RCP 分支的测试快照：
 
 - approved benchmark strict validator：60/60、20 × 3，通过；
 - 正式 W5 artifact checker：精确六方法 roster 6/6，通过；

@@ -43,6 +43,9 @@ jobs:
       - name: W6 Bootstrap Contracts and Fixtures
         run: python -m app.validate_w6_bootstrap
 
+      - name: Pilot RCP-v0.3 Prepared-State Contract
+        run: python -m app.validate_pilot_reference_curation
+
       - name: W6 Basic Artifact Gate
         run: python -m app.w6_quality_gate --mode basic --output outputs/quality/w6_ci_report.json
 
