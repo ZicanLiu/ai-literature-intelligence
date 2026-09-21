@@ -293,6 +293,29 @@ gold/ground truth；已发生的 MCA 上游人工审核也不等于 downstream �
 
 ## 当前验证
 
+### 2026-09-21 pilot closeout 验证
+
+以下是实现提交 `02e795c` 的本地 Windows clean-worktree 验证快照；本节后续仅补记验证结果。
+数字按执行环境分别记录，不能当作永久事实：
+
+- Full unittest：1,050 total，1,036 PASS，14 skips，0 failure / 0 error。
+  其中 4 个为 Windows symlink/junction 权限条件项，10 个为未设置外部 evidence 环境变量的回归。
+- Downstream targeted：111 total，101 PASS，10 个外部 evidence 条件 skip；新增迁移与 formal
+  verification 回归 17/17 PASS。缺字段、缺 source、缺 Judge、重复项和 mismatch 均验证非零退出。
+- 显式设置迁移后 evidence root 与 Full Pro ZIP 的真实 evidence regression：10/10 PASS，0 skip。
+- Basic Gate：505 files，0 error / 0 warning；Full Gate：505 files，0 error / 3 个既有历史 warning。
+  两个 Gate 使用 `--skip-tests`，完整 unittest 已独立执行，避免重复运行。
+- 备份 legacy root 和迁移后 lowercase root：29/29 package + supplement 在场；9,307
+  VERIFIED_BYTES，12 SELF_HASHED_UNANCHORED，1 个原分类 documented exception，0 missing，
+  0 unexplained formal-chain mismatch。Canonical registry / integrity summary / DAG 相等。
+- 24 outputs / 144 claims / 72 primary evaluations / 432 primary claim-judge units 完整；
+  Full Pro 24 outputs / 144 sensitivity units；formal first-look 28/28 MATCH。
+- `git diff --check` 通过；原始 evidence 的 10,086 文件全部与迁移前独立备份同名同字节。
+
+首次在未提交状态执行 full unittest 时，既有 coordinator CLI 测试的 Git-clean 前置断言失败；
+提交后重跑全量通过，未修改该断言。CI 在独立 Ubuntu/Python 环境运行，状态以 PR checks 为准；
+CI 无私人 evidence 时的 skips 不能与本地真实 evidence 回归混作一个结果。
+
 ### 2026-09-19 历史 ZCode independent offline revalidation
 
 以下为 2026-09-19 本地 Windows 环境的一次 independent revalidation snapshot，不是永久测试
