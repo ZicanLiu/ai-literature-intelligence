@@ -74,7 +74,9 @@ class TestRealEvidenceIdentity(unittest.TestCase):
             self.assertEqual(macro["Delta_U"], macro["MCA_mean_U"] - macro["BM25_mean_U"])
 
     def test_frozen_first_look_reproduced(self):
-        frozen_csv = (Path(EVIDENCE_ROOT) / "DOWNSTREAM_SCIENTIFIC_UNBLINDED_ANALYSIS_20260916"
+        from src.downstream_measurement.inventory import resolve_package_directory
+
+        frozen_csv = (resolve_package_directory(Path(EVIDENCE_ROOT), "unblinded_analysis")
                       / "results" / "JUDGE_PRIMARY_MACRO_RESULTS.csv")
         from src.downstream_measurement.first_look import compare_to_frozen
 

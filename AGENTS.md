@@ -125,6 +125,13 @@ AI 可以读取项目文件、搜索调用关系、运行离线测试与安全 f
 
 ## 9. 必读导航
 
+- 当前阶段：2026-09 downstream pilot 已收口；先读
+  [phase closure](docs/project/downstream_pilot_phase_closure_20260921.md) 与
+  [measurement evidence contract](docs/project/DOWNSTREAM_MEASUREMENT_EVIDENCE_CONTRACT.md)。
+  外部 evidence root 为 `MVP/evidence_pilot_202609`，不是整个 MVP；仓内 preparation 的
+  `prepared_not_started` 不代表外部研究未执行。正式复现使用 `--formal-verification`。
+- 保持 original human Gate = `NOT_EVALUABLE`、Full Pro = `SENSITIVITY_EVALUATOR`、
+  Rubric V2 = `FUTURE / PROSPECTIVE DRAFT`；当前证据不证明 MCA 更优。
 - [详细项目交接与 AI 开发入口](docs/project/AI_PROJECT_ONBOARDING.md)
 - [当前仓库状态](docs/CURRENT_STATUS.md)
 - [Unified Pipeline 使用与复现](docs/project/UNIFIED_PIPELINE_GUIDE.md)

@@ -138,7 +138,7 @@ FROZEN_COMPARISON_FIELDS = (
 FROZEN_JUDGE_ROSTER = ("GPT", "DeepSeek", "GLM")
 
 
-def compare_to_frozen(reproduction: dict, frozen_macro_csv: str) -> dict:
+def compare_to_frozen(reproduction: dict, frozen_macro_csv: str) -> list[dict]:
     """Compare reproduced macro against the frozen first-look table (no hardcoded values).
 
     Every semantic field present in the frozen table is compared:
@@ -195,3 +195,48 @@ def compare_to_frozen(reproduction: dict, frozen_macro_csv: str) -> dict:
                        "reproduced": sorted(reproduction["primary"]),
                        "match": roster_ok and sorted(reproduction["primary"]) == sorted(FROZEN_JUDGE_ROSTER)})
     return comparison
+
+
+def assess_frozen_comparison(reproduction: dict, frozen_macro_csv: str | None) -> dict:
+    """Check the complete frozen contract without changing endpoint arithmetic.
+
+    A subset of matching fields is not a successful formal reproduction.
+    The required multiset is 3 judges x (8 endpoint fields + n_cells), plus
+    the exact judge-roster comparison. Diagnostic callers may persist this
+    result and continue; formal callers must stop unless status is MATCH.
+    """
+    import csv
+    import io
+    from collections import Counter
+
+    expected_keys = {(judge, field) for judge in FROZEN_JUDGE_ROSTER
+                     for field in (*FROZEN_COMPARISON_FIELDS, "n_cells")}
+    expected_keys.add((None, "JUDGE_ROSTER"))
+    result = {"status": "MISSING_SOURCE", "fields_compared": 0,
+              "expected_fields": len(expected_keys), "rows": [], "problems": []}
+    if frozen_macro_csv is None:
+        result["problems"].append("frozen macro CSV missing")
+        return result
+    header = csv.DictReader(io.StringIO(frozen_macro_csv.lstrip("\ufeff"))).fieldnames or []
+    required_columns = ("judge", *FROZEN_COMPARISON_FIELDS, "n_cells")
+    bad_columns = [field for field in required_columns if header.count(field) != 1]
+    if bad_columns:
+        result["problems"].append(f"missing or duplicate frozen columns: {bad_columns}")
+    try:
+        comparison = compare_to_frozen(reproduction, frozen_macro_csv)
+    except (KeyError, TypeError, ValueError, OverflowError) as error:
+        result["status"] = "INCOMPLETE"
+        result["problems"].append(f"invalid frozen comparison: {type(error).__name__}")
+        return result
+    result["rows"] = comparison
+    result["fields_compared"] = sum("match" in row for row in comparison)
+    observed_keys = Counter((row.get("judge"), row.get("field")) for row in comparison)
+    if observed_keys != Counter(expected_keys):
+        result["problems"].append("comparison field set incomplete, duplicated or unexpected")
+    if sorted(reproduction.get("primary", {})) != sorted(FROZEN_JUDGE_ROSTER):
+        result["problems"].append("primary evaluator roster incomplete or unexpected")
+    if result["problems"]:
+        result["status"] = "INCOMPLETE"
+    else:
+        result["status"] = "MATCH" if all(row.get("match") is True for row in comparison) else "MISMATCH"
+    return result

@@ -1,6 +1,6 @@
 # Downstream Measurement Evidence Contract（证据与测量契约）
 
-> 版本：1.0（2026-09-19，ZCode downstream measurement workbench）
+> 版本：1.1（2026-09-21，路径迁移兼容与正式复现验证；度量语义不变）
 > 状态：工程契约文档。描述 `src/downstream_measurement/` 与两个 CLI 的输入、
 > 身份、验证与禁止事项。本文不改变任何冻结研究结果。
 
@@ -16,6 +16,10 @@ pre-unblinding closure/authorization → first-look 解盲 → Full Pro 敏感�
 - 证据根（evidence root）只读：不 rename / 不 normalize / 不重生成 manifest /
   不删除 / 不移动 / 不覆盖。
 - Supplement（Full Pro 144-claim 盲评）来自仓库外 zip 或其解压目录，同样只读。
+- 当前逻辑 root 是 `MVP/evidence_pilot_202609`，不能再将整个 MVP 作为 evidence root。
+  已授权的本地维护只移动 package 顶层目录并转为 lowercase；内部文件名/相对路径/字节不变。
+  CLI 自身仍只读。`PACKAGE_ROLE_TABLE` 以 lowercase 为 canonical，并保留显式 legacy aliases；
+  `package_id` 和 formal chain 身份不随目录拼写变化。两份 aliases 同时存在时 fail closed。
 - Derived 输出目录必须位于证据根之外（`safe_output_dir` 强制拒绝）。
 - 禁止：读取 `.env`/secrets、live API、LLM inference、新增 judgement。
 
@@ -57,6 +61,11 @@ byte mismatch 同时满足（a）下游包自己的 integrity report 已分类�
   macro = 4 个 Topic×Task 对比等权均值；全部用精确有理数（Fraction）计算。
 - 与冻结 first-look 的比较：冻结表以十进制 double 序列化，因此等值判定在
   冻结工件自身精度上进行（|diff| ≤ 1e-12），不硬编码任何预期数值。
+- 正式复现加 `--formal-verification`：恰好 3 Judge × (8 endpoint fields + `n_cells`)
+  + exact Judge roster = 28 项，必须完整且全 MATCH。缺少冻结 CSV、字段/roster 不完整、
+  重复字段/Judge 或任一 mismatch 都返回非零，并在 staging 留下 `_PARTIAL_FAILED.txt`，
+  不发布成功 bundle。默认 diagnostic 模式允许继续，comparison JSON 和 manifest 的
+  `analysis_config` 明确记录 mode/status；它不能被当作正式复现通过。
 
 ## 5. 角色与标签纪律
 
@@ -88,3 +97,23 @@ byte mismatch 同时满足（a）下游包自己的 integrity report 已分类�
   （24/144/72/432 身份格 + 冻结 first-look 复现），由环境变量
   `SRTP_DOWNSTREAM_EVIDENCE_ROOT`（与可选 `SRTP_DOWNSTREAM_SUPPLEMENT_ZIP`）
   门控，CI 无证据时静默 skip。
+- `test_downstream_measurement_closeout.py`：真实 synthetic 文件迁移后的 identity/bytes 等价、
+  legacy restore、alias 冲突、frozen legacy DAG anchor，以及 formal MATCH/failure/partial
+  publication 和 diagnostic 行为。
+
+## 8. 当前本地执行入口
+
+在正式 Git 仓库运行（这里只使用逻辑相对位置，不要求特定个人绝对路径）：
+
+```powershell
+$pilotEvidence = '..\evidence_pilot_202609'
+$pilotSupplement = Join-Path $pilotEvidence 'srtp_meeting_latest_supplement_20260919\SRTP_MEETING_LATEST_SUPPLEMENT_20260919.zip'
+python -m app.build_downstream_evidence_registry --evidence-root $pilotEvidence `
+  --supplement-zip $pilotSupplement --output-dir '..\derived_analysis\registry_new_run'
+python -m app.run_downstream_measurement_audit --evidence-root $pilotEvidence `
+  --supplement-zip $pilotSupplement --registry-dir '..\derived_analysis\registry_new_run' `
+  --output-dir '..\derived_analysis\audit_new_run' --formal-verification
+```
+
+每次使用新的 derived output 目录；已有目录会被拒绝，避免混入旧产物。恢复旧 uppercase
+快照后，只需指定恢复位置与 supplement，科学身份无需重新生成。
