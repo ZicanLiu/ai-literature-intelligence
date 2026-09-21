@@ -20,7 +20,7 @@ from src.downstream_measurement.error_audit import build_error_audit
 from src.downstream_measurement.figures import render_all
 from src.downstream_measurement.first_look import assess_frozen_comparison, reproduce_first_look
 from src.downstream_measurement.influence import build_influence
-from src.downstream_measurement.integrity import load_integrity_summary
+from src.downstream_measurement.integrity import load_frozen_macro_source, load_integrity_summary
 from src.downstream_measurement.inventory import FORMAL_CHAIN_PACKAGES, resolve_package_directory
 from src.downstream_measurement.report_manifest import build_manifest
 from src.downstream_measurement.sensitivity import build_sensitivity
@@ -131,14 +131,6 @@ def _verify_registry_matches_evidence(registry: dict, evidence_root: Path) -> li
     return mismatches
 
 
-def _frozen_macro_csv(evidence_root: Path) -> str | None:
-    path = (resolve_package_directory(evidence_root, "unblinded_analysis")
-            / "results" / "JUDGE_PRIMARY_MACRO_RESULTS.csv")
-    if not path.exists():
-        return None
-    return path.read_text(encoding="utf-8-sig")
-
-
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evidence-root", required=True)
@@ -236,8 +228,18 @@ def _run_audit(args, evidence_root: Path, supplement_zip: Path | None,
               ["evaluator", "role", "grain", "BM25_mean_U", "MCA_mean_U", "Delta_U", "exact_Delta_U",
                "BM25_mean_E", "MCA_mean_E", "Delta_E", "exact_Delta_E", "U_direction", "E_direction"],
               macro_rows)
-    frozen_csv = _frozen_macro_csv(evidence_root)
+    integrity_summary_path = registry_dir / "integrity" / "integrity_summary.json"
+    integrity_summary = (load_integrity_summary(integrity_summary_path)
+                         if integrity_summary_path.is_file() else {"packages": {}, "counts": {}})
+    source_packages = integrity_summary.get("packages", {})
+    frozen_csv, source_verification = load_frozen_macro_source(
+        evidence_root, source_packages.get("unblinded_analysis"))
     comparison = assess_frozen_comparison(reproduction, frozen_csv)
+    comparison["value_comparison_status"] = comparison["status"]
+    comparison["source_verification"] = source_verification
+    if source_verification["status"] != "VERIFIED_BYTES":
+        comparison["status"] = source_verification["status"]
+        comparison["problems"].extend(source_verification["problems"])
     comparison["mode"] = "formal_verification" if args.formal_verification else "diagnostic"
     atomic_write_json(first_look_dir / "comparison_vs_frozen_first_look.json", comparison)
     print(f"[first-look] comparison vs frozen first-look: {comparison['status']} "
@@ -299,9 +301,7 @@ def _run_audit(args, evidence_root: Path, supplement_zip: Path | None,
     figure_result = render_all(
         {"reproduction": reproduction, "sensitivity": sensitivity, "decomposition": decomposition,
          "influence": influence, "counterfactual": counterfactual,
-         "integrity": load_json(registry_dir / "integrity" / "integrity_summary.json")
-         if (registry_dir / "integrity" / "integrity_summary.json").exists()
-         else {"packages": {}, "counts": {}}},
+         "integrity": integrity_summary},
         output_dir / "figures",
     )
     print(f"[figures] written: {figure_result['written']} failed: {figure_result['failed']}")
@@ -318,12 +318,7 @@ def _run_audit(args, evidence_root: Path, supplement_zip: Path | None,
         "counterfactual metric variants are diagnostic sensitivity, not new endpoints and not rescoring",
         "first-look comparison relies on the frozen analysis package bytes verified in Phase B",
     ]
-    integrity_summary_path = registry_dir / "integrity" / "integrity_summary.json"
     integrity_csv_path = registry_dir / "integrity" / "evidence_integrity.csv"
-    source_packages = {}
-    if integrity_summary_path.exists():
-        summary = load_integrity_summary(integrity_summary_path)
-        source_packages = summary.get("packages", {})
     missing_rows = []
     if integrity_csv_path.exists():
         import csv as _csv
@@ -358,6 +353,7 @@ def _run_audit(args, evidence_root: Path, supplement_zip: Path | None,
         analysis_config={"lattice": "2x2x2x3", "first_n_units": 6, "difference_direction": "MCA - BM25",
                          "verification_mode": comparison["mode"],
                          "first_look_comparison_status": comparison["status"],
+                         "first_look_source": source_verification,
                          "lambda_grid": counterfactual["lambda_grid"],
                          "sensitivity_evaluator": "FullPro"},
         limitation_flags=limitation_flags,

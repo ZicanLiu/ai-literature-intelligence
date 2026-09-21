@@ -23,6 +23,8 @@ PR #81 已提供只读 evidence registry、独立 first-look reproduction 和 me
   `package_id`、formal chain identity、原始 manifest 和科研语义不变；两份 alias 同时存在时拒绝选择。
 - `--formal-verification` 要求冻结 first-look 完整 28/28 MATCH；缺源、缺字段、缺 Judge 或 mismatch
   以非零退出，保留 partial/failed staging。默认 diagnostic 模式记录比较状态后可继续诊断。
+  独立终审补充严格 CSV 语法/行宽验证、当前 frozen CSV 与 registry manifest hash 绑定；
+  已有 `*.staging` 会被拒绝，重试不删除失败现场或与 staging 同名的证据目录。
 - 已完成不同物理磁盘上的最小独立备份、逐文件 SHA256 回读和备份位置的 registry/first-look 验证。
   这是同机独立磁盘副本，**不声称异地备份或云端同步已验证**。
 - Supplement ZIP 与下载目录同名文件只有 README 不同；用户授权使用 ZIP 验证，并分别原样保存

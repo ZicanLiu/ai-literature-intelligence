@@ -21,6 +21,9 @@ env/
 .DS_Store
 Thumbs.db
 
+# Local AI permissions/settings belong to each developer, not the repository.
+**/.claude/settings.local.json
+
 # Logs and temporary files
 *.log
 tmp/

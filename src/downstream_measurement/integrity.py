@@ -64,6 +64,54 @@ def parse_sha_manifest(path: Path) -> dict[str, str]:
     return entries
 
 
+def load_frozen_macro_source(evidence_root: Path, registered_package: dict | None) -> tuple[str | None, dict]:
+    """Read the comparison bytes and bind them to the registry's manifest snapshot.
+
+    Numeric agreement alone does not verify a frozen source. Diagnostic callers
+    may use readable bytes with a failed binding, but must retain this status.
+    """
+    package_id = "unblinded_analysis"
+    relative_path = "results/JUDGE_PRIMARY_MACRO_RESULTS.csv"
+    package_dir = resolve_package_directory(evidence_root, package_id)
+    source = package_dir / relative_path
+    manifest = package_dir / "SHA256_manifest.txt"
+    result = {"package_id": package_id, "file": relative_path,
+              "status": "MISSING_SOURCE", "actual_sha256": None, "expected_sha256": None,
+              "manifest_sha256": None,
+              "registered_manifest_sha256": (registered_package or {}).get("manifest_sha256"),
+              "problems": []}
+    if not source.is_file():
+        result["problems"].append("frozen macro CSV missing")
+        return None, result
+    text = None
+    try:
+        raw = source.read_bytes()
+        result["actual_sha256"] = sha256_bytes(raw)
+        text = raw.decode("utf-8-sig")
+        if not manifest.is_file() or not result["registered_manifest_sha256"]:
+            result["status"] = "UNVERIFIED_SOURCE"
+            result["problems"].append("frozen package manifest or registry hash anchor missing")
+            return text, result
+        result["manifest_sha256"] = sha256_file(manifest)
+        if result["manifest_sha256"] != result["registered_manifest_sha256"]:
+            result["status"] = "SOURCE_MISMATCH"
+            result["problems"].append("frozen package manifest changed since registry construction")
+            return text, result
+        result["expected_sha256"] = parse_sha_manifest(manifest).get(relative_path)
+        if not result["expected_sha256"]:
+            result["status"] = "UNVERIFIED_SOURCE"
+            result["problems"].append("frozen macro CSV has no manifest entry")
+        elif result["actual_sha256"] != result["expected_sha256"]:
+            result["status"] = "SOURCE_MISMATCH"
+            result["problems"].append("frozen macro CSV bytes differ from the registered manifest")
+        else:
+            result["status"] = VERIFIED_BYTES
+    except (OSError, UnicodeError, ValueError) as error:
+        result["status"] = "INVALID_SOURCE"
+        result["problems"].append(f"cannot verify frozen source: {type(error).__name__}")
+    return text, result
+
+
 # Byte mismatches that the project itself has already discovered, classified
 # and independently verified. Each exception is re-verified here against the
 # cited in-project check files before it may soften the fail-closed rule; the

@@ -144,7 +144,7 @@ def compare_to_frozen(reproduction: dict, frozen_macro_csv: str) -> list[dict]:
     Every semantic field present in the frozen table is compared:
     arm means, deltas and directions for both endpoints (8 fields x 3 judges
     = 24 comparisons), plus structural columns that can be independently
-    rebuilt (n_cells / n_observed_per_arm). The judge roster must be exactly
+    rebuilt (n_cells). The judge roster must be exactly
     the frozen three. Numeric equality is asserted at the frozen artifact's
     own serialisation precision (double, tolerance 1e-12).
     """
@@ -207,6 +207,7 @@ def assess_frozen_comparison(reproduction: dict, frozen_macro_csv: str | None) -
     """
     import csv
     import io
+    import math
     from collections import Counter
 
     expected_keys = {(judge, field) for judge in FROZEN_JUDGE_ROSTER
@@ -217,14 +218,26 @@ def assess_frozen_comparison(reproduction: dict, frozen_macro_csv: str | None) -
     if frozen_macro_csv is None:
         result["problems"].append("frozen macro CSV missing")
         return result
-    header = csv.DictReader(io.StringIO(frozen_macro_csv.lstrip("\ufeff"))).fieldnames or []
     required_columns = ("judge", *FROZEN_COMPARISON_FIELDS, "n_cells")
-    bad_columns = [field for field in required_columns if header.count(field) != 1]
-    if bad_columns:
-        result["problems"].append(f"missing or duplicate frozen columns: {bad_columns}")
     try:
+        reader = csv.reader(io.StringIO(frozen_macro_csv.lstrip("\ufeff")), strict=True)
+        header = next(reader, [])
+        bad_columns = [field for field in required_columns if header.count(field) != 1]
+        if bad_columns or any(not field.strip() or header.count(field) != 1 for field in header):
+            raise ValueError("missing, blank or duplicate frozen columns")
+        for row in reader:
+            if not row:  # Allow empty physical lines, as DictReader does.
+                continue
+            if len(row) != len(header):
+                raise ValueError("frozen row width differs from header")
+            values = dict(zip(header, row))
+            if any(values[field].strip() in ("", "NA") for field in required_columns):
+                raise ValueError("blank required frozen field")
+            for field in (*FROZEN_COMPARISON_FIELDS, "n_cells"):
+                if field not in ("U_direction", "E_direction") and not math.isfinite(float(values[field])):
+                    raise ValueError("non-finite frozen numeric field")
         comparison = compare_to_frozen(reproduction, frozen_macro_csv)
-    except (KeyError, TypeError, ValueError, OverflowError) as error:
+    except (csv.Error, KeyError, TypeError, ValueError, OverflowError) as error:
         result["status"] = "INCOMPLETE"
         result["problems"].append(f"invalid frozen comparison: {type(error).__name__}")
         return result

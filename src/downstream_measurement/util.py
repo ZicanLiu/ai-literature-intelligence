@@ -131,14 +131,12 @@ def prepare_staging_target(target: Path) -> Path:
     sibling `*.staging` directory and only renames it into place after full
     success) or the run fails closed — never mixed writes into stale output.
     """
-    import shutil
-
     target = Path(target).resolve()
     if target.exists():
         raise FileExistsError(f"output target already exists; refusing to mix writes: {target}")
     staging = target.with_name(target.name + ".staging")
-    if staging.exists():
-        shutil.rmtree(staging)
+    # Never erase a previous failed run or an evidence root that happens to
+    # occupy this sibling path. mkdir also refuses files and dangling links.
     staging.mkdir(parents=True)
     return staging
 

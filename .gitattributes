@@ -21,3 +21,9 @@
 *.sqlite binary
 *.sqlite3 binary
 *.zip binary
+
+# Exclude local credentials/settings from Git source archives even if tracked.
+.env export-ignore
+.env.* export-ignore
+.env.example -export-ignore
+**/.claude/settings.local.json export-ignore
