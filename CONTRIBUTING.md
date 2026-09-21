@@ -59,6 +59,22 @@ git check-ignore -v .env
 
 不要用 `git add .`。应精确添加本任务修改的文件，避免把本地配置或无关结果带入提交。
 
+### 共享代码 ZIP
+
+在正式代码仓库中，从已审核的 commit 导出代码；不要直接压缩整个 MVP 或工作目录。
+确认 `HEAD` 是准备分享的版本后执行：
+
+```powershell
+git archive --format=zip --prefix=astro-spectrum-literature-mvp/ --output=../astro-spectrum-literature-source.zip HEAD
+```
+
+Git archive 只导出该 commit 的文件，不含 `.git/` 或未跟踪文件（包括 ignored 的本地文件）；
+已跟踪的历史输出仍会导出。
+`.gitattributes` 额外排除 `.env*`（保留 `.env.example`）和本地 Claude settings。
+分享前核对 ZIP 成员清单及已提交内容，确认没有私人路径、凭证或未经授权的材料。
+`.gitignore` 不会过滤 Explorer/通用 ZIP 工具的输入；`.zcodeignore` 只影响搜索，
+不会阻止上传或打包。原始 evidence 的私有备份与代码分享分别管理，不使用此命令替代备份。
+
 ## 4. 输出与实验数据
 
 - 普通运行写入 `outputs/experiments/<run_id>/`，每次目录独立，默认由 `.gitignore` 忽略。

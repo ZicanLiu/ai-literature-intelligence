@@ -12,6 +12,7 @@ import json
 import zipfile
 from pathlib import Path
 
+from .inventory import package_directory_names, resolve_package_directory
 from .util import canonical_json_bytes, load_json, sha256_bytes, sha256_file
 
 PRIMARY_JUDGES = ["GPT", "DeepSeek", "GLM"]
@@ -73,12 +74,12 @@ class CanonicalRegistry:
 
 def build_canonical(evidence_root: Path, supplement_zip: Path | None) -> CanonicalRegistry:
     evidence_root = Path(evidence_root)
-    prep = evidence_root / "DOWNSTREAM_EXPERIMENT_PREP_20260906"
-    formal = evidence_root / "DOWNSTREAM_CODEX_FORMAL_EXECUTION_20260906"
+    prep = resolve_package_directory(evidence_root, "experiment_prep")
+    formal = resolve_package_directory(evidence_root, "formal_execution")
     judge_dirs = {
-        "GPT": evidence_root / "DOWNSTREAM_AI_EVAL_GPT_20260915",
-        "DeepSeek": evidence_root / "DOWNSTREAM_AI_EVAL_DEEPSEEK_20260915",
-        "GLM": evidence_root / "DOWNSTREAM_AI_EVAL_GLM_20260915",
+        "GPT": resolve_package_directory(evidence_root, "ai_eval_gpt"),
+        "DeepSeek": resolve_package_directory(evidence_root, "ai_eval_deepseek"),
+        "GLM": resolve_package_directory(evidence_root, "ai_eval_glm"),
     }
     formal_manifest_hashes = _parse_formal_manifest_hashes(formal)
 
@@ -118,7 +119,7 @@ def build_canonical(evidence_root: Path, supplement_zip: Path | None) -> Canonic
     freeze_binding = load_json(formal / "source_freeze_binding.json")
     snapshot = None
     for key in freeze_binding.get("source_snapshot", {}):
-        if key.replace("\\", "/").endswith("DOWNSTREAM_EXPERIMENT_PREP_20260906"):
+        if key.replace("\\", "/").split("/")[-1] in package_directory_names("experiment_prep"):
             snapshot = freeze_binding["source_snapshot"][key]
             break
     _check(snapshot is not None, "formal snapshot does not bind prep package")

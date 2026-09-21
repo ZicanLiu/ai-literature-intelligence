@@ -15,7 +15,7 @@ from .util import atomic_write_json, load_json, sha256_file, write_csv
 # Curated package role table. `status_evidence` names the in-package files the
 # role statement is grounded in; the builder re-reads those files and records
 # their declared status strings verbatim instead of trusting this table.
-PACKAGE_ROLE_TABLE = {
+_LEGACY_PACKAGE_ROLE_TABLE = {
     "RCP_v0.3.1_CODEX_SCREENING_RESULTS": {
         "package_id": "rcp_screening_codex",
         "role": "RCP-v0.3.1 screening execution (Codex, two independent topic runs)",
@@ -279,11 +279,52 @@ PACKAGE_ROLE_TABLE = {
     },
 }
 
-# The full Pro sensitivity evaluation lives in a supplement ZIP outside the
-# evidence root (referenced by meeting-prep SOURCE_MAP as S14/S15/S16).
+# Directory spelling is a storage locator, never the scientific identity.
+# Retain the curated historical names as explicit restore aliases.
+PACKAGE_ROLE_TABLE = {
+    legacy.lower(): {
+        **meta,
+        "canonical_directory": legacy.lower(),
+        "legacy_directory_names": [legacy] if legacy != legacy.lower() else [],
+    }
+    for legacy, meta in _LEGACY_PACKAGE_ROLE_TABLE.items()
+}
+
+
+def package_directory_names(package_id: str) -> tuple[str, ...]:
+    """Return the canonical name and the explicitly supported legacy aliases."""
+    meta = next(row for row in PACKAGE_ROLE_TABLE.values() if row["package_id"] == package_id)
+    return (meta["canonical_directory"], *meta["legacy_directory_names"])
+
+
+def resolve_package_directory(evidence_root: Path, package_id: str) -> Path:
+    """Resolve by observed directory names on both case-sensitive and Windows FS.
+
+    Two present aliases are ambiguous even if their bytes happen to agree.
+    A missing package resolves to its canonical path for existing missing-byte
+    reporting; discovery must not invent a new package identity for a rename.
+    """
+    root = Path(evidence_root)
+    names = package_directory_names(package_id)
+    found = [entry for entry in root.iterdir() if entry.name in names and entry.is_dir()]
+    if len(found) > 1:
+        raise ValueError(f"ambiguous package directories for {package_id}: {sorted(p.name for p in found)}")
+    return found[0] if found else root / names[0]
+
+
+def resolve_package_directories(evidence_root: Path) -> dict[str, str]:
+    return {
+        meta["package_id"]: resolve_package_directory(evidence_root, meta["package_id"]).name
+        for meta in PACKAGE_ROLE_TABLE.values()
+    }
+
+
+# Full Pro is supplied explicitly as a ZIP or extracted member directory.
+# Canonical local storage is below; legacy external locations remain accepted.
 SUPPLEMENT_PACKAGE = {
     "package_id": "meeting_supplement_pro_full",
-    "logical_location": "download/SRTP_MEETING_LATEST_SUPPLEMENT_20260919.zip",
+    "canonical_directory": "srtp_meeting_latest_supplement_20260919",
+    "logical_location": "srtp_meeting_latest_supplement_20260919/SRTP_MEETING_LATEST_SUPPLEMENT_20260919.zip",
     "role": "Full Pro blind audit of all 24 outputs / 144 claims + post-hoc measurement diagnostics (SENSITIVITY_EVALUATOR; not a frozen primary judge)",
     "chain_position": "post_hoc_sensitivity_full",
     "primary_or_sensitivity": "sensitivity",
@@ -328,15 +369,18 @@ def _declared_status(path: Path) -> str:
     return ""
 
 
-def discover_packages(evidence_root: Path) -> list[dict]:
+def discover_packages(evidence_root: Path) -> tuple[list[dict], list[str]]:
     """Scan the evidence root and describe every evidence package found."""
     evidence_root = Path(evidence_root)
     known_dirs = {entry.name for entry in evidence_root.iterdir() if entry.is_dir()}
     rows = []
     for dir_name, meta in sorted(PACKAGE_ROLE_TABLE.items()):
-        package_dir = evidence_root / dir_name
+        package_dir = resolve_package_directory(evidence_root, meta["package_id"])
+        location = {"directory": package_dir.name,
+                    "canonical_directory": dir_name,
+                    "legacy_directory_names": meta["legacy_directory_names"]}
         if not package_dir.exists():
-            rows.append({"package_id": meta["package_id"], "directory": dir_name, "present": False})
+            rows.append({"package_id": meta["package_id"], **location, "present": False})
             continue
         file_count = 0
         total_bytes = 0
@@ -359,7 +403,7 @@ def discover_packages(evidence_root: Path) -> list[dict]:
         rows.append(
             {
                 "package_id": meta["package_id"],
-                "directory": dir_name,
+                **location,
                 "present": True,
                 "role": meta["role"],
                 "chain_position": meta["chain_position"],
@@ -378,7 +422,9 @@ def discover_packages(evidence_root: Path) -> list[dict]:
                 ),
             }
         )
-    unknown = sorted(known_dirs - set(PACKAGE_ROLE_TABLE))
+    accepted_names = {name for meta in PACKAGE_ROLE_TABLE.values()
+                      for name in package_directory_names(meta["package_id"])}
+    unknown = sorted(known_dirs - accepted_names)
     return rows, unknown
 
 
@@ -388,6 +434,10 @@ def build_inventory(evidence_root: Path, supplement_zip: Path | None) -> dict:
     supplement_path = Path(supplement_zip) if supplement_zip else None
     supplement_row["present"] = bool(supplement_path and supplement_path.exists())
     if supplement_row["present"]:
+        supplement_container = supplement_path if supplement_path.is_dir() else supplement_path.parent
+        if (supplement_container.name == supplement_row["canonical_directory"]
+                and supplement_container.parent.resolve() == Path(evidence_root).resolve()):
+            unknown_dirs = [name for name in unknown_dirs if name != supplement_container.name]
         if supplement_path.is_dir():
             pro = next(supplement_path.glob("PRO_FULL_BLIND_AUDIT_144.json"), None)
             supplement_row["zip_sha256"] = f"extracted-dir:{sha256_file(pro)}" if pro else "extracted-dir:no-pro-json"
@@ -398,7 +448,7 @@ def build_inventory(evidence_root: Path, supplement_zip: Path | None) -> dict:
     return {
         "schema_version": "1.0",
         "generated_by": "downstream_measurement.inventory",
-        "evidence_root_logical_name": "srtp_mvp_external_root",
+        "evidence_root_logical_name": "evidence_pilot_202609",
         "packages": rows,
         "supplement_package": supplement_row,
         "unknown_top_level_directories": unknown_dirs,

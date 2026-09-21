@@ -1,11 +1,43 @@
 # 当前项目状态
 
-更新时间：2026-09-01
+更新时间：2026-09-21
 
-本次只读核对的公共 `origin/main` 为
-`d5dc7bfc6b24146dfc64b8452ec8ef7731acf990`（PR #79）。Pilot v0.2
-Selection/Context 与 RCP-v0.3 pre-execution infrastructure 已随 PR #79 进入 `main`；实时远端状态
-仍须在每次接手任务时重新 fetch/GitHub 核对。
+本次 fetch 后核对的公共 `origin/main` 为
+`1fa0d93093b816c6cc2ded6f618a51a33916a7ec`：PR #81 downstream measurement workbench
+已于 2026-09-20 合并。接手时本地主仓库落后且有未提交文档/审计输出；已先保存原稿，再
+fast-forward 并建立独立任务分支。本页 SHA 是核验快照，不是永久事实；每次接手仍须重新核对。
+当时 open PR 为 #82（成员协作练习），无 open Issue；本轮范围来自用户的 pilot closeout 任务。
+
+## 2026-09 downstream pilot 阶段收口
+
+仓库外的真实执行已完成：RCP real execution / integration → MCA protocol、人工审核聚合与
+final selection → downstream experiment preparation → 24 formal generator outputs →
+GPT / DeepSeek / GLM 三个 formal blind Judges → agreement → pre-unblinding closure 与授权
+→ frozen first-look → Full Pro sensitivity audit → measurement reconstruction。
+PR #81 已提供只读 evidence registry、独立 first-look reproduction 和 measurement audit 工作台。
+
+- 正式代码仓库仍为 `MVP/astro-spectrum-literature-mvp`。
+- 当前 pilot evidence root 为 `MVP/evidence_pilot_202609`：29 个已登记 package 的顶层目录
+  已改为 lowercase，另保留 Full Pro supplement ZIP；内部路径、文件名和原始字节保持不变。
+- 新代码支持 lowercase canonical directory 与明确登记的 legacy uppercase aliases；
+  `package_id`、formal chain identity、原始 manifest 和科研语义不变；两份 alias 同时存在时拒绝选择。
+- `--formal-verification` 要求冻结 first-look 完整 28/28 MATCH；缺源、缺字段、缺 Judge 或 mismatch
+  以非零退出，保留 partial/failed staging。默认 diagnostic 模式记录比较状态后可继续诊断。
+  独立终审补充严格 CSV 语法/行宽验证、当前 frozen CSV 与 registry manifest hash 绑定；
+  已有 `*.staging` 会被拒绝，重试不删除失败现场或与 staging 同名的证据目录。
+- 已完成不同物理磁盘上的最小独立备份、逐文件 SHA256 回读和备份位置的 registry/first-look 验证。
+  这是同机独立磁盘副本，**不声称异地备份或云端同步已验证**。
+- Supplement ZIP 与下载目录同名文件只有 README 不同；用户授权使用 ZIP 验证，并分别原样保存
+  两份快照。此冲突独立登记，不作为 frozen manifest 例外，supplement 仍为 `SELF_HASHED_UNANCHORED`。
+
+科研边界保持：**MCA ≠ proved better；Full Pro = SENSITIVITY_EVALUATOR，不能作为第四个 primary
+Judge；original human Gate = NOT_EVALUABLE；Rubric V2 = FUTURE / PROSPECTIVE DRAFT**。
+原始三 Judge 的方向差异和 measurement diagnosis 不构成外部效度或机制归因证明。
+
+当前入口：
+[阶段收口](project/downstream_pilot_phase_closure_20260921.md)、
+[measurement evidence contract](project/DOWNSTREAM_MEASUREMENT_EVIDENCE_CONTRACT.md)、
+[preservation 执行状态](project/EXTERNAL_RESEARCH_EVIDENCE_PRESERVATION_PLAN.md)。
 
 W5 Method Ranking Contract v1.1 已建立并向后兼容 v1.0。v1.1 只用于完整声明 B0/B1 的冻结
 source sample 输入；BM25、SPECTER2、Cross-Encoder 与 RRF 的 v1.0 package 继续有效。
@@ -13,6 +45,10 @@ source sample 输入；BM25、SPECTER2、Cross-Encoder 与 RRF 的 v1.0 package 
 
 v0.3.0 tag 仍指向较早的 W2 发布基线 `899f745`；不能用旧 tag、`d558a088` 前置基线或旧文档
 快照替代当前 Git/源码/测试事实。
+
+本页区分 committed repository preparation artifacts 与仓库外已实际执行的 research evidence。
+后者通过独立 provenance/evidence chain 核验，不因仓内准备包仍为 `prepared_not_started` 而变成
+“尚未执行”，也不自动成为 committed benchmark artifact。
 
 ## AI / 新成员接手入口
 
@@ -25,7 +61,8 @@ v0.3.0 tag 仍指向较早的 W2 发布基线 `899f745`；不能用旧 tag、`d5
    [`W4_PILOT_BENCHMARK_PROTOCOL.md`](project/W4_PILOT_BENCHMARK_PROTOCOL.md) 和
    [`W5_METHOD_RANKING_CONTRACT.md`](project/W5_METHOD_RANKING_CONTRACT.md)；
 5. W6 任务继续阅读
-   [`W6_RESEARCH_CONTRACT_AND_PARALLEL_BOOTSTRAP.md`](project/W6_RESEARCH_CONTRACT_AND_PARALLEL_BOOTSTRAP.md)。
+   [`W6_RESEARCH_CONTRACT_AND_PARALLEL_BOOTSTRAP.md`](project/W6_RESEARCH_CONTRACT_AND_PARALLEL_BOOTSTRAP.md)；
+6. downstream pilot 任务继续阅读本页阶段收口入口和 measurement evidence contract。
 
 所有状态都要重新用当前 Git、源码和实际测试核对。
 
@@ -226,14 +263,15 @@ artifacts 和 validators 重新核对。
 PR #71 没有修改 W4 approved Benchmark、W5 frozen method artifacts/metrics/error analysis，也没有重新
 采集或改写 9 Topics、Dev/Hidden split、54 queries 或 2,977-Work corpus。
 
-真实 W6 Integration 仍未完成：Multi-Retriever pooling、enrichment、exact-ID 之后的受控
-canonicalization、final pool selection、blind annotation/second annotation/review/adjudication、正式
-method/fusion generation、sealed Hidden evaluation 与 synthesis 均属于后续工作。
+上述段落是 2026-08-26 integration 审计语境。完整 W6 跨 Topic/Hidden 研究链仍未全部完成，
+尤其是正式 blind annotation/review、sealed Hidden evaluation 与跨 Topic 泛化验证。
+两个 Dev Topic 的后续 Pilot/RCP/MCA、matched context 和 downstream generation/evaluation
+已经执行，不能再用该历史快照否定本页记录的 2026-09 pilot evidence。
 
-## Pilot v0.2 Selection / Context 与 RCP 当前状态
+## Pilot v0.2 Selection / Context 与 RCP：仓内准备包和外部执行
 
 公共 `main` 已包含两个 Dev Topic 的 frozen canonical U80、Pilot Selection/Context 与
-RCP-v0.3 pre-execution infrastructure（PR #79）：
+RCP-v0.3 pre-execution infrastructure（PR #79）；以下状态专指 committed preparation artifacts：
 
 - BM25 Lexical Selection、Dual-Curator tooling、generic Selection Artifact 和 method-agnostic
   Matched Context Builder；
@@ -242,18 +280,65 @@ RCP-v0.3 pre-execution infrastructure（PR #79）：
   Sentinel roster contract、one-candidate task export、strict judgement import、safe-zero/routing、
   blind H1/H2/R3、safe-zero audit、blind cutoff、final Reference、Reference-bound BM25 与 formal
   pair validation；
-- committed RCP preparation package，状态为 `prepared_not_started`，真实 roster 尚未冻结。
+- committed RCP preparation package，状态为 `prepared_not_started`；该准备快照未包含后续冻结的真实 roster。
 
-Versioned RCP-v0.3.1 external-agent-runner package 仍为 `prepared_not_started`；它只放宽诚实声明
-snapshot unavailable 的 Primary runner provenance，不启动真实执行。
+Versioned RCP-v0.3.1 external-agent-runner committed preparation package 仍为 `prepared_not_started`；
+该准备包自身不记录后来在仓库外完成的运行。真实 RCP screening、integration、MCA、matched
+contexts、formal generation、AI evaluation 和 first-look 已执行，其证据在独立 pilot evidence root。
 
-当前没有真实模型 judgement、真实人类 review、正式 Reference Top-8、正式 BM25 Top-8、matched
-experimental context 或 synthesis output。RCP 的正确 claim 仅为未来的 **auditable internal
-reference selection**，不是 astronomy expert gold/ground truth。完整边界与真实执行 checkpoint 见
+不得再把仓内 preparation 状态推断成“没有真实 judgement/review/selection/context/output”。
+RCP 的正确 claim 仍仅为 **auditable internal reference selection**，不是 astronomy expert
+gold/ground truth；已发生的 MCA 上游人工审核也不等于 downstream 原始 human Gate 已完成。
+协议与执行边界见
 [`PILOT_V0_3_REFERENCE_CURATION_PROTOCOL.md`](project/PILOT_V0_3_REFERENCE_CURATION_PROTOCOL.md) 与
 [`RCP-v0.3.1 addendum`](project/PILOT_V0_3_1_REFERENCE_CURATION_PROTOCOL.md)。
 
 ## 当前验证
+
+### 2026-09-21 pilot closeout 验证
+
+以下是实现提交 `02e795c` 的本地 Windows clean-worktree 验证快照；本节后续仅补记验证结果。
+数字按执行环境分别记录，不能当作永久事实：
+
+- Full unittest：1,050 total，1,036 PASS，14 skips，0 failure / 0 error。
+  其中 4 个为 Windows symlink/junction 权限条件项，10 个为未设置外部 evidence 环境变量的回归。
+- Downstream targeted：111 total，101 PASS，10 个外部 evidence 条件 skip；新增迁移与 formal
+  verification 回归 17/17 PASS。缺字段、缺 source、缺 Judge、重复项和 mismatch 均验证非零退出。
+- 显式设置迁移后 evidence root 与 Full Pro ZIP 的真实 evidence regression：10/10 PASS，0 skip。
+- Basic Gate：505 files，0 error / 0 warning；Full Gate：505 files，0 error / 3 个既有历史 warning。
+  两个 Gate 使用 `--skip-tests`，完整 unittest 已独立执行，避免重复运行。
+- 备份 legacy root 和迁移后 lowercase root：29/29 package + supplement 在场；9,307
+  VERIFIED_BYTES，12 SELF_HASHED_UNANCHORED，1 个原分类 documented exception，0 missing，
+  0 unexplained formal-chain mismatch。Canonical registry / integrity summary / DAG 相等。
+- 24 outputs / 144 claims / 72 primary evaluations / 432 primary claim-judge units 完整；
+  Full Pro 24 outputs / 144 sensitivity units；formal first-look 28/28 MATCH。
+- `git diff --check` 通过；原始 evidence 的 10,086 文件全部与迁移前独立备份同名同字节。
+
+首次在未提交状态执行 full unittest 时，既有 coordinator CLI 测试的 Git-clean 前置断言失败；
+提交后重跑全量通过，未修改该断言。CI 在独立 Ubuntu/Python 环境运行，状态以 PR checks 为准；
+CI 无私人 evidence 时的 skips 不能与本地真实 evidence 回归混作一个结果。
+
+### 2026-09-19 历史 ZCode independent offline revalidation
+
+以下为 2026-09-19 本地 Windows 环境的一次 independent revalidation snapshot，不是永久测试
+数字；所有数字须由后续任务重新运行核验：
+
+- `main` / `origin/main` = `34bbd9c6d9ca57d0073ce9687e72703171e9d1d8`，工作树 clean；
+- 全量离线测试 `python -m unittest discover -s tests/automated -p "test_*.py"`：
+  939 tests，OK，skipped=4，0 failure / 0 error；
+- 4 个 skip 均为 Windows symlink/junction 权限条件性跳过，不属于业务失败；
+- approved benchmark strict validator：60/60、20 × 3，通过，manifest SHA-256 与本页记录一致；
+- W5 六个 frozen method packages 经 `app.validate_w5_method` 全部通过；
+- W6 bootstrap / topic validators 通过（2 topics fixture；9 real topics、Dev 5 / Hidden 4 sealed）；
+- Pilot real-data-foundation 与 dual-curator preparation validators 通过；
+- RCP-v0.3 / v0.3.1 准备包各自在匹配 config 下通过（`prepared_not_started`、
+  `real_model_judgements_started=false`）；
+- W5 formal experiment metrics 与 committed `data/analysis/w5_formal_experiment_v1/` 一致；
+- Full Quality Gate（`--skip-tests`，测试已独立完整运行）：478 files，0 error / 3 个既有
+  历史 warning，PASSED；
+- `git diff --check` 通过。
+
+### 2026-08-26 历史验证快照
 
 以下是 PR #71 merge candidate（含 OpenAlex provenance-closure P1 修复）的 2026-08-26 历史验证
 快照，不是当前公共 `main` 或本地 Pilot/RCP 分支的测试快照：

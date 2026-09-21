@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from .inventory import PACKAGE_ROLE_TABLE, package_directory_names
 from .util import load_json
 
 _PATH_KEYS = ("path", "absolute_path", "file", "relative_path", "package_copy", "member")
@@ -94,6 +95,9 @@ class DagContext:
         upstream = self.verified.get(package_id, {})
         anchor = self.anchors.get(package_id)
         dir_name = self.roots.get(package_id, Path(package_id)).name
+        directory_names = (package_directory_names(package_id)
+                           if any(meta["package_id"] == package_id for meta in PACKAGE_ROLE_TABLE.values())
+                           else (dir_name,))
         matched_files = set()
         anchor_matches = 0
         for binding in bindings:
@@ -109,7 +113,8 @@ class DagContext:
                 continue
             if (anchor and digest == anchor
                     and any(hint.replace("\\", "/").endswith("SHA256_manifest.txt")
-                            or dir_name in hint.replace("\\", "/") for hint in hints)):
+                            or any(name in hint.replace("\\", "/") for name in directory_names)
+                            for hint in hints)):
                 anchor_matches += 1
         return len(matched_files), anchor_matches
 

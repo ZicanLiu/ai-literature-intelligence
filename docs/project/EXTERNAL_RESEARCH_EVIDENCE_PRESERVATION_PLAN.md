@@ -1,7 +1,7 @@
 # External Research Evidence Preservation Plan（外部研究证据保存方案）
 
-> 状态：**方案比较文档（2026-09-19）**。本轮不迁移、不复制、不修改任何
-> 外部证据；所有选项仅供人决策的比较分析。
+> 初始状态：**方案比较文档（2026-09-19）**，当时未执行迁移或独立备份。
+> 以下原方案保留历史语境；2026-09-21 用户授权执行的实际结果见末节。
 
 ## 1. 现状与风险
 
@@ -60,3 +60,25 @@ SELF_HASHED_UNANCHORED（无上游锚）；唯一 1 处 mismatch 为下游包已
   决策，不是保存决策）；
 - 不在保存过程中 normalize/重排/重打包任何原始字节；
 - 不修改本 worktree 之外的任何现有目录来"方便入库"。
+
+## Execution status — 2026-09-21
+
+**Minimum independent backup completed; hash verification completed.**
+
+- 用户授权将 29 个登记 package（10,086 files / 276,455,443 bytes）、现有 manifest、
+  Full Pro ZIP/现存 12 个同名成员及本地辅助材料原样保存到另一块物理磁盘。
+  整个 backup payload 为 10,121 files / 279,740,567 bytes；逐文件回读 SHA256 全一致，
+  missing/unexpected/source drift 均为 0；包括空目录在内的 595 个 package 目录核验一致。
+- 从备份位置重新构建 registry 并完成 formal first-look：28/28 MATCH，24/144/72/432 lattice
+  完整，Full Pro 24/144 roster 完整。既有 manifest 的 9,307 VERIFIED_BYTES、1 个原分类空白模板
+  例外、0 missing 保持；12 个 supplement 成员继续标为 SELF_HASHED_UNANCHORED。
+- 现存恢复 ZIP 与下载目录同名文件仅 README 不一致。用户授权以 ZIP 作为后续验证输入；
+  两份原始快照和哈希分别保留，无覆盖、无删文件。此冲突独立记录，**不是** frozen manifest
+  新豁免，也没有为 ZIP 声称此前不存在的 immutable trust anchor。
+- 29 个 package 已迁入逻辑位置 `MVP/evidence_pilot_202609`，仅顶层 lowercase；迁移前后
+  所有内部文件名、相对路径和字节一致。新 root 的 registry 与 formal first-look 验证通过。
+- 派生 registry/integrity/analysis 和维护记录单独保存，原始 evidence 不进入公共代码库。
+
+这是**同机不同物理磁盘**的最小冗余，尚不等于异地备份、远端独立验证、WORM 或时间公证。
+私有 evidence repo、异地冗余和访问控制的长期方案仍未完成；本轮没有创建或发布 evidence repo。
+具体私人位置只记录在本地 maintenance 报告，不提交个人绝对路径。

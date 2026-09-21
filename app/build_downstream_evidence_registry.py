@@ -16,7 +16,7 @@ from src.downstream_measurement.canonical import build_canonical
 from src.downstream_measurement.dag import build_dag, dag_markdown
 from src.downstream_measurement.inventory import (
     FORMAL_CHAIN_PACKAGES,
-    PACKAGE_ROLE_TABLE,
+    resolve_package_directories,
     build_inventory,
     persist_inventory,
 )
@@ -59,7 +59,7 @@ def main(argv=None) -> int:
 
 
 def _build(evidence_root: Path, supplement_zip: Path | None, final_target: Path, output_dir: Path) -> int:
-    package_dirs = {meta["package_id"]: dirname for dirname, meta in PACKAGE_ROLE_TABLE.items()}
+    package_dirs = resolve_package_directories(evidence_root)
     print(f"[registry] evidence root: {evidence_root}")
     print(f"[registry] packages declared: {len(package_dirs)} + supplement")
 

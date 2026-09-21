@@ -74,13 +74,15 @@ class TestRealEvidenceIdentity(unittest.TestCase):
             self.assertEqual(macro["Delta_U"], macro["MCA_mean_U"] - macro["BM25_mean_U"])
 
     def test_frozen_first_look_reproduced(self):
-        frozen_csv = (Path(EVIDENCE_ROOT) / "DOWNSTREAM_SCIENTIFIC_UNBLINDED_ANALYSIS_20260916"
-                      / "results" / "JUDGE_PRIMARY_MACRO_RESULTS.csv")
-        from src.downstream_measurement.first_look import compare_to_frozen
+        from src.downstream_measurement.inventory import resolve_package_directory
 
-        comparison = compare_to_frozen(self.reproduction, frozen_csv.read_text(encoding="utf-8-sig"))
-        mismatches = [row for row in comparison if not row.get("match", False)]
-        self.assertEqual(mismatches, [], f"frozen first-look reproduction mismatch: {mismatches}")
+        frozen_csv = (resolve_package_directory(Path(EVIDENCE_ROOT), "unblinded_analysis")
+                      / "results" / "JUDGE_PRIMARY_MACRO_RESULTS.csv")
+        from src.downstream_measurement.first_look import assess_frozen_comparison
+
+        comparison = assess_frozen_comparison(self.reproduction, frozen_csv.read_text(encoding="utf-8-sig"))
+        self.assertEqual(comparison["status"], "MATCH", comparison)
+        self.assertEqual(comparison["fields_compared"], 28)
 
 
 if __name__ == "__main__":

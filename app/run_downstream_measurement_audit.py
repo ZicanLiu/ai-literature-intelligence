@@ -18,10 +18,10 @@ from src.downstream_measurement.counterfactual import build_counterfactual
 from src.downstream_measurement.decomposition import build_decomposition
 from src.downstream_measurement.error_audit import build_error_audit
 from src.downstream_measurement.figures import render_all
-from src.downstream_measurement.first_look import compare_to_frozen, reproduce_first_look
+from src.downstream_measurement.first_look import assess_frozen_comparison, reproduce_first_look
 from src.downstream_measurement.influence import build_influence
-from src.downstream_measurement.integrity import load_integrity_summary
-from src.downstream_measurement.inventory import FORMAL_CHAIN_PACKAGES, PACKAGE_ROLE_TABLE
+from src.downstream_measurement.integrity import load_frozen_macro_source, load_integrity_summary
+from src.downstream_measurement.inventory import FORMAL_CHAIN_PACKAGES, resolve_package_directory
 from src.downstream_measurement.report_manifest import build_manifest
 from src.downstream_measurement.sensitivity import build_sensitivity
 from src.downstream_measurement.integrity import collect_missing_source_rows
@@ -36,8 +36,6 @@ from src.downstream_measurement.util import (
     sha256_file,
     write_csv,
 )
-
-EVIDENCE_ROOT_PACKAGES = {meta["package_id"]: dirname for dirname, meta in PACKAGE_ROLE_TABLE.items()}
 
 
 def _verify_registry_matches_reconstruction(loaded: dict, evidence_root: Path,
@@ -75,8 +73,8 @@ def _verify_registry_matches_evidence(registry: dict, evidence_root: Path) -> li
        manifest file itself untouched), with the single pre-documented
        blank-template exception still honoured, never regenerated.
     """
-    prep = Path(evidence_root) / "DOWNSTREAM_EXPERIMENT_PREP_20260906"
-    formal = Path(evidence_root) / "DOWNSTREAM_CODEX_FORMAL_EXECUTION_20260906"
+    prep = resolve_package_directory(evidence_root, "experiment_prep")
+    formal = resolve_package_directory(evidence_root, "formal_execution")
     identities = registry.get("source_identities", {})
     protocol = load_json(prep / "protocol" / "downstream_experiment_protocol_v1.json")
     mapping_rel = protocol["blinding"]["private_condition_map"]
@@ -88,9 +86,9 @@ def _verify_registry_matches_evidence(registry: dict, evidence_root: Path) -> li
         "human_evaluation_schema_sha256": prep / "protocol" / "human_evaluation_schema.json",
         "formal_execution_manifest_sha256": formal / "formal_execution_manifest.json",
         "formal_package_manifest_sha256": formal / "SHA256_manifest.txt",
-        "gpt_package_manifest_sha256": Path(evidence_root) / "DOWNSTREAM_AI_EVAL_GPT_20260915" / "SHA256_manifest.txt",
-        "deepseek_package_manifest_sha256": Path(evidence_root) / "DOWNSTREAM_AI_EVAL_DEEPSEEK_20260915" / "SHA256_manifest.txt",
-        "glm_package_manifest_sha256": Path(evidence_root) / "DOWNSTREAM_AI_EVAL_GLM_20260915" / "SHA256_manifest.txt",
+        "gpt_package_manifest_sha256": resolve_package_directory(evidence_root, "ai_eval_gpt") / "SHA256_manifest.txt",
+        "deepseek_package_manifest_sha256": resolve_package_directory(evidence_root, "ai_eval_deepseek") / "SHA256_manifest.txt",
+        "glm_package_manifest_sha256": resolve_package_directory(evidence_root, "ai_eval_glm") / "SHA256_manifest.txt",
     }
     mismatches = []
     for key, path in sorted(current.items()):
@@ -116,9 +114,8 @@ def _verify_registry_matches_evidence(registry: dict, evidence_root: Path) -> li
         k.endswith("_package_manifest_sha256") for k in identities
     ) else set(FORMAL_CHAIN_PACKAGES)
     for package_id in sorted(identity_packages):
-        dirname = EVIDENCE_ROOT_PACKAGES.get(package_id)
-        package_dir = Path(evidence_root) / dirname if dirname else None
-        if package_dir is None or not package_dir.is_dir():
+        package_dir = resolve_package_directory(evidence_root, package_id)
+        if not package_dir.is_dir():
             mismatches.append(f"byte-layer: formal chain package {package_id} missing at evidence root")
             continue
         result = verify_package(package_dir, package_id)
@@ -134,20 +131,14 @@ def _verify_registry_matches_evidence(registry: dict, evidence_root: Path) -> li
     return mismatches
 
 
-def _frozen_macro_csv(evidence_root: Path) -> str | None:
-    path = (evidence_root / "DOWNSTREAM_SCIENTIFIC_UNBLINDED_ANALYSIS_20260916"
-            / "results" / "JUDGE_PRIMARY_MACRO_RESULTS.csv")
-    if not path.exists():
-        return None
-    return path.read_text(encoding="utf-8-sig")
-
-
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evidence-root", required=True)
     parser.add_argument("--supplement-zip", default=None)
     parser.add_argument("--registry-dir", default=None, help="output dir of build_downstream_evidence_registry")
     parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--formal-verification", action="store_true",
+                        help="require the complete frozen first-look comparison to MATCH; otherwise fail with partial staging")
     args = parser.parse_args(argv)
 
     evidence_root = Path(args.evidence_root)
@@ -237,25 +228,34 @@ def _run_audit(args, evidence_root: Path, supplement_zip: Path | None,
               ["evaluator", "role", "grain", "BM25_mean_U", "MCA_mean_U", "Delta_U", "exact_Delta_U",
                "BM25_mean_E", "MCA_mean_E", "Delta_E", "exact_Delta_E", "U_direction", "E_direction"],
               macro_rows)
-    frozen_csv = _frozen_macro_csv(evidence_root)
-    comparison = None
-    if frozen_csv:
-        comparison = compare_to_frozen(reproduction, frozen_csv)
-        all_match = all(row.get("match", False) for row in comparison)
-        n_fields = sum(1 for row in comparison if "match" in row)
-        atomic_write_json(first_look_dir / "comparison_vs_frozen_first_look.json", {
-            "status": "MATCH" if all_match else "MISMATCH",
-            "fields_compared": n_fields,
-            "rows": comparison,
-        })
-        print(f"[first-look] comparison vs frozen first-look: {'MATCH' if all_match else 'MISMATCH'} "
-              f"({n_fields} field comparisons)")
-        if not all_match:
-            for row in comparison:
-                if not row.get("match", False):
-                    print("  mismatch:", row)
-    else:
-        print("[first-look] frozen macro CSV not found; comparison skipped")
+    integrity_summary_path = registry_dir / "integrity" / "integrity_summary.json"
+    integrity_summary = (load_integrity_summary(integrity_summary_path)
+                         if integrity_summary_path.is_file() else {"packages": {}, "counts": {}})
+    source_packages = integrity_summary.get("packages", {})
+    frozen_csv, source_verification = load_frozen_macro_source(
+        evidence_root, source_packages.get("unblinded_analysis"))
+    comparison = assess_frozen_comparison(reproduction, frozen_csv)
+    comparison["value_comparison_status"] = comparison["status"]
+    comparison["source_verification"] = source_verification
+    if source_verification["status"] != "VERIFIED_BYTES":
+        comparison["status"] = source_verification["status"]
+        comparison["problems"].extend(source_verification["problems"])
+    comparison["mode"] = "formal_verification" if args.formal_verification else "diagnostic"
+    atomic_write_json(first_look_dir / "comparison_vs_frozen_first_look.json", comparison)
+    print(f"[first-look] comparison vs frozen first-look: {comparison['status']} "
+          f"({comparison['fields_compared']}/{comparison['expected_fields']} field comparisons)")
+    if comparison["status"] != "MATCH":
+        for problem in comparison["problems"]:
+            print("  comparison:", problem)
+        for row in comparison["rows"]:
+            if not row.get("match", False):
+                print("  mismatch:", row)
+        if args.formal_verification:
+            mark_staging_partial(output_dir, f"formal first-look verification failed: {comparison['status']}")
+            print("[audit] FAIL CLOSED — formal first-look verification failed; staging marked partial",
+                  file=sys.stderr)
+            return 8
+        print("[first-look] diagnostic mode continues; formal reproduction is not verified")
 
     # Phases G-K.
     decomposition = build_decomposition(registry)
@@ -301,9 +301,7 @@ def _run_audit(args, evidence_root: Path, supplement_zip: Path | None,
     figure_result = render_all(
         {"reproduction": reproduction, "sensitivity": sensitivity, "decomposition": decomposition,
          "influence": influence, "counterfactual": counterfactual,
-         "integrity": load_json(registry_dir / "integrity" / "integrity_summary.json")
-         if (registry_dir / "integrity" / "integrity_summary.json").exists()
-         else {"packages": {}, "counts": {}}},
+         "integrity": integrity_summary},
         output_dir / "figures",
     )
     print(f"[figures] written: {figure_result['written']} failed: {figure_result['failed']}")
@@ -320,12 +318,7 @@ def _run_audit(args, evidence_root: Path, supplement_zip: Path | None,
         "counterfactual metric variants are diagnostic sensitivity, not new endpoints and not rescoring",
         "first-look comparison relies on the frozen analysis package bytes verified in Phase B",
     ]
-    integrity_summary_path = registry_dir / "integrity" / "integrity_summary.json"
     integrity_csv_path = registry_dir / "integrity" / "evidence_integrity.csv"
-    source_packages = {}
-    if integrity_summary_path.exists():
-        summary = load_integrity_summary(integrity_summary_path)
-        source_packages = summary.get("packages", {})
     missing_rows = []
     if integrity_csv_path.exists():
         import csv as _csv
@@ -358,6 +351,9 @@ def _run_audit(args, evidence_root: Path, supplement_zip: Path | None,
             if (registry_dir / rel).is_file()
         },
         analysis_config={"lattice": "2x2x2x3", "first_n_units": 6, "difference_direction": "MCA - BM25",
+                         "verification_mode": comparison["mode"],
+                         "first_look_comparison_status": comparison["status"],
+                         "first_look_source": source_verification,
                          "lambda_grid": counterfactual["lambda_grid"],
                          "sensitivity_evaluator": "FullPro"},
         limitation_flags=limitation_flags,

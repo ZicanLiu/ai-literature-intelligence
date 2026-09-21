@@ -138,13 +138,13 @@ FROZEN_COMPARISON_FIELDS = (
 FROZEN_JUDGE_ROSTER = ("GPT", "DeepSeek", "GLM")
 
 
-def compare_to_frozen(reproduction: dict, frozen_macro_csv: str) -> dict:
+def compare_to_frozen(reproduction: dict, frozen_macro_csv: str) -> list[dict]:
     """Compare reproduced macro against the frozen first-look table (no hardcoded values).
 
     Every semantic field present in the frozen table is compared:
     arm means, deltas and directions for both endpoints (8 fields x 3 judges
     = 24 comparisons), plus structural columns that can be independently
-    rebuilt (n_cells / n_observed_per_arm). The judge roster must be exactly
+    rebuilt (n_cells). The judge roster must be exactly
     the frozen three. Numeric equality is asserted at the frozen artifact's
     own serialisation precision (double, tolerance 1e-12).
     """
@@ -195,3 +195,61 @@ def compare_to_frozen(reproduction: dict, frozen_macro_csv: str) -> dict:
                        "reproduced": sorted(reproduction["primary"]),
                        "match": roster_ok and sorted(reproduction["primary"]) == sorted(FROZEN_JUDGE_ROSTER)})
     return comparison
+
+
+def assess_frozen_comparison(reproduction: dict, frozen_macro_csv: str | None) -> dict:
+    """Check the complete frozen contract without changing endpoint arithmetic.
+
+    A subset of matching fields is not a successful formal reproduction.
+    The required multiset is 3 judges x (8 endpoint fields + n_cells), plus
+    the exact judge-roster comparison. Diagnostic callers may persist this
+    result and continue; formal callers must stop unless status is MATCH.
+    """
+    import csv
+    import io
+    import math
+    from collections import Counter
+
+    expected_keys = {(judge, field) for judge in FROZEN_JUDGE_ROSTER
+                     for field in (*FROZEN_COMPARISON_FIELDS, "n_cells")}
+    expected_keys.add((None, "JUDGE_ROSTER"))
+    result = {"status": "MISSING_SOURCE", "fields_compared": 0,
+              "expected_fields": len(expected_keys), "rows": [], "problems": []}
+    if frozen_macro_csv is None:
+        result["problems"].append("frozen macro CSV missing")
+        return result
+    required_columns = ("judge", *FROZEN_COMPARISON_FIELDS, "n_cells")
+    try:
+        reader = csv.reader(io.StringIO(frozen_macro_csv.lstrip("\ufeff")), strict=True)
+        header = next(reader, [])
+        bad_columns = [field for field in required_columns if header.count(field) != 1]
+        if bad_columns or any(not field.strip() or header.count(field) != 1 for field in header):
+            raise ValueError("missing, blank or duplicate frozen columns")
+        for row in reader:
+            if not row:  # Allow empty physical lines, as DictReader does.
+                continue
+            if len(row) != len(header):
+                raise ValueError("frozen row width differs from header")
+            values = dict(zip(header, row))
+            if any(values[field].strip() in ("", "NA") for field in required_columns):
+                raise ValueError("blank required frozen field")
+            for field in (*FROZEN_COMPARISON_FIELDS, "n_cells"):
+                if field not in ("U_direction", "E_direction") and not math.isfinite(float(values[field])):
+                    raise ValueError("non-finite frozen numeric field")
+        comparison = compare_to_frozen(reproduction, frozen_macro_csv)
+    except (csv.Error, KeyError, TypeError, ValueError, OverflowError) as error:
+        result["status"] = "INCOMPLETE"
+        result["problems"].append(f"invalid frozen comparison: {type(error).__name__}")
+        return result
+    result["rows"] = comparison
+    result["fields_compared"] = sum("match" in row for row in comparison)
+    observed_keys = Counter((row.get("judge"), row.get("field")) for row in comparison)
+    if observed_keys != Counter(expected_keys):
+        result["problems"].append("comparison field set incomplete, duplicated or unexpected")
+    if sorted(reproduction.get("primary", {})) != sorted(FROZEN_JUDGE_ROSTER):
+        result["problems"].append("primary evaluator roster incomplete or unexpected")
+    if result["problems"]:
+        result["status"] = "INCOMPLETE"
+    else:
+        result["status"] = "MATCH" if all(row.get("match") is True for row in comparison) else "MISMATCH"
+    return result

@@ -285,6 +285,21 @@ retrieval recall benchmark。所有正式方法统一输出 60 行 ranking CSV �
 阶段不得读取 approved benchmark label。公共 validator、evaluator adapter 及两个无标签 fixture
 允许 BM25、Dense、Cross-Encoder、RRF、Error Analysis 和 CI 任务从同一 `main` 独立开发。
 
+### W6 与 Pilot/RCP 研究入口
+
+- [W6 Research Contract 与并行开发边界](docs/project/W6_RESEARCH_CONTRACT_AND_PARALLEL_BOOTSTRAP.md)
+- [Pilot v0.2 Real Data Foundation](docs/project/PILOT_V0_2_REAL_DATA_FOUNDATION.md)
+- [Pilot v0.2 Selection / Matched Context](docs/project/PILOT_V0_2_SELECTION_AND_MATCHED_CONTEXT.md)
+- [RCP-v0.3 Reference Curation Protocol](docs/project/PILOT_V0_3_REFERENCE_CURATION_PROTOCOL.md)
+- [RCP-v0.3.1 External Agent Runner Addendum](docs/project/PILOT_V0_3_1_REFERENCE_CURATION_PROTOCOL.md)
+
+W6 已冻结真实 Research Topics 与 topic-level Dev/Hidden split，仓库内 Benchmark package 仍为
+`bootstrap_fixture`。Pilot v0.2 canonical U80 与 selection/RCP 准备包已进入 `main`；仓库内
+selection 与 RCP 准备包状态仍为 `prepared_not_started`。仓库外 RCP/MCA、24 formal outputs、
+三 Judge 盲评、frozen first-look 与 measurement reconstruction 已完成，证据位于逻辑目录
+`MVP/evidence_pilot_202609`。当前状态以 [`docs/CURRENT_STATUS.md`](docs/CURRENT_STATUS.md) 和
+[pilot 阶段收口](docs/project/downstream_pilot_phase_closure_20260921.md) 为准。
+
 ## 14. 后续可扩展方向
 
 - Crossref DOI 二次校验

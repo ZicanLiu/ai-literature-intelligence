@@ -4,9 +4,9 @@
 
 本文帮助只熟悉 v0.2.0、只参与过某个 W2 模块，或第一次进入仓库的成员和 AI Agent 建立完整上下文。它不是永远正确的状态数据库。
 
-- 快照更新时间：2026-08-24
+- 当前阶段入口更新时间：2026-09-21；下文 W1–W6 技术说明保留各阶段历史上下文
 - W5 Contract 前置基线：`d558a088`（PR #48 已合并；仅作历史锚点）
-- 当前公共能力：W5 Contract v1.1（向后兼容 v1.0）、六方法正式 artifact、统一评价与
+- 2026-08-24 历史公共能力：W5 Contract v1.1（向后兼容 v1.0）、六方法正式 artifact、统一评价与
   Error Analysis 已完成 post-merge 收口；W6 已建立 Research Contract、hash-pinned offline
   fixtures 和六人独立并行开发边界，但尚未产生真实 W6 research artifact
 - 当前状态：W1–W4 工程、六人 Pilot Annotation、独立 Blind AI Audit 与人工复核已完成；
@@ -15,6 +15,13 @@
 
 每次开始新任务，都必须重新用 Git、源码和测试核对本文。事实优先级及长期规则见
 [`AGENTS.md`](../../AGENTS.md)，当前快照见 [`docs/CURRENT_STATUS.md`](../CURRENT_STATUS.md)。
+
+当前已完成 2026-09 downstream AI pilot 与 evidence/measurement reconstruction，PR #81 已进入
+main。先读 [phase closure](downstream_pilot_phase_closure_20260921.md) 和
+[measurement evidence contract](DOWNSTREAM_MEASUREMENT_EVIDENCE_CONTRACT.md)。外部证据的逻辑位置
+为 `MVP/evidence_pilot_202609`，派生输出在 `MVP/derived_analysis`；正式 Git 仓库位置不变。
+仓内 `prepared_not_started` 仅是 committed preparation package 的状态，不能否认外部真实执行。
+原 human Gate 仍为 `NOT_EVALUABLE`，Full Pro 仅为 sensitivity，Rubric V2 仅为 prospective draft。
 
 ## 1. 项目背景
 
