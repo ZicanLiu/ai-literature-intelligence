@@ -343,8 +343,10 @@ contract 规则：
 
 - `basic` 依次运行 bundle inventory/hash、Quality Gate 隔离依赖闭包、Topic/retrieval/source/
   canonical/pre-post pool、opaque task mapping/blind view、topic split 与 hidden-label seal 检查；
-- `full` 先完成全部 Basic 检查，再调用 `validate_w6_bootstrap_bundle()`，增加 annotation/review、
-  method/fusion、synthesis/evidence、benchmark 及六任务完整 dependency matrix；
+- `basic` / `full` 与 `validate_w6_bootstrap_bundle()` 共用一次分层验证。Basic 在 base checks
+  后返回；Full 在同一调用内复用已加载并验证的 base 数据，只增加 annotation/review、
+  method/fusion、synthesis/evidence、benchmark 及其余任务 dependency matrix 检查。
+  不接受调用方提供的“已验证”flag/缓存；每次入口调用重新加载并验证当前文件；
 - 任一预期 manifest/artifact 输入、读取 I/O 或 validator 错误都会写出本次 invocation 的 `FAIL`
   report 并返回非零；输出位置不可写或属于其他文件时返回非零且拒绝覆盖；unexpected programming
   error 不会被吞掉，且 CLI 会在运行前移除同一 Gate 拥有的旧 report，避免 stale `PASS`；
@@ -412,3 +414,28 @@ Integration PR 不等于允许绕过 hash、blindness 或 hidden seal。若真�
 - synthesis LLM/backend、evidence extraction policy 和 human factual verification。
 
 这些决定不得在 Bootstrap fixture 中被提前当作正式研究结论。
+
+## 12. W6 Gate single-pass 回归证据（2026-09-22）
+
+修改前基线 `37b2f7d`：`run_w6_quality_gate(full)` 完成 Basic 后调用
+`validate_w6_bootstrap_bundle(path)`；后者重新 load inventory，再重复 Topic、retrieval、source、
+canonical、pre/post pool、task map、blind view、split 和 hidden seal。Full 独有的 annotation/review、
+method/fusion、evidence/synthesis、benchmark 和完整 dependency matrix 原本只运行一次。
+
+对公共 valid fixture 用 `unittest.mock` 包装实际 validator、执行完整 Full 调用，计数如下。
+数值表示调用次数，不是性能基准或科研结果：
+
+| 实际入口 | 修改前 Full | 修改后 Full |
+| --- | ---: | ---: |
+| load_w6_bootstrap_bundle_inventory | 2 | 1 |
+| topic / retrieval / source / canonical 各自 | 2 | 1 |
+| validate_candidate_pool（pre + post 合计） | 4 | 2 |
+| task map / blind view / split / hidden seal 各自 | 2 | 1 |
+
+内部 generator 在真实 check 成功后才产出阶段结果，其局部变量持有本次 base 数据。
+Gate 消费这些阶段生成原有 12 个 Basic / 13 个 Full report checks；完整 public validator 消费同一
+流程至末端，返回原有完整结果。base 失败时后续 checks 为 SKIP，Full-only 失败保留 Basic PASS
+和具体错误。没有跨调用 cache、外部 validated token 或科学规则删减。
+
+持久回归位于 `test_w6_quality_gate.py`：共享调用计数、Basic/Full-only failure 分层、base failure
+阻断 Full、下一次调用识别文件漂移；原 CLI exit/report 和六任务隔离 fixture 测试继续执行。

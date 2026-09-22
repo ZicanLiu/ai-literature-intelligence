@@ -1601,17 +1601,93 @@ def validate_w6_bootstrap_bundle(
     manifest_path: str | Path,
 ) -> dict[str, Any]:
     """Validate the complete public W6 Bootstrap fixture bundle."""
+    for name, result in _iter_w6_bootstrap_validation(manifest_path, include_full=True):
+        if name == "full_bundle_contract":
+            return result
+    raise RuntimeError("W6 full validation did not complete")
+
+
+def _iter_w6_bootstrap_validation(manifest_path: str | Path, *, include_full: bool):
+    """Run shared checks once, then optionally continue with Full-only checks.
+
+    The generator owns its invocation-local snapshot. A stage is yielded only
+    after validation succeeds; neither entry point accepts caller-validated data.
+    """
     inventory = load_w6_bootstrap_bundle_inventory(manifest_path)
+    yield "bundle_inventory", inventory
     manifest = inventory["manifest"]
     registry = inventory["registry"]
     payloads = inventory["payloads"]
     paths = inventory["paths"]
     artifact_refs = manifest["artifacts"]
+    _validate_quality_gate_dependency_closure(manifest)
+    yield "quality_gate_dependency_closure", None
+
+    topics = validate_topic_set(payloads["topic_set"])
+    yield "topic_identity", topics
+    retrieval = validate_retrieval_provenance(
+        payloads["retrieval_provenance"], topics=topics
+    )
+    yield "retrieval_provenance", retrieval
+    records = validate_source_records(
+        payloads["source_records"], topics=topics, retrieval=retrieval
+    )
+    yield "source_record_provenance", records
+    canonical = validate_canonical_entities(
+        payloads["canonical_entities"], records=records, retrieval=retrieval
+    )
+    yield "canonical_identity", canonical
+    precanonical_pool_members = validate_candidate_pool(
+        payloads["precanonical_candidate_pool"],
+        topics=topics,
+        records=records,
+        retrieval=retrieval,
+        registry=registry,
+    )
+    yield "precanonical_pool_closure", precanonical_pool_members
+    pool_members = validate_candidate_pool(
+        payloads["candidate_pool"],
+        topics=topics,
+        records=records,
+        retrieval=retrieval,
+        registry=registry,
+        canonical=canonical,
+    )
+    yield "candidate_pool_closure", pool_members
+    task_mappings = validate_annotation_task_map(
+        payloads["annotation_task_map"],
+        records=records,
+        pool_members=pool_members,
+        registry=registry,
+    )
+    yield "blind_task_mapping", task_mappings
+    tasks = validate_blind_annotation_tasks(
+        payloads["annotation_tasks"],
+        topics=topics,
+        records=records,
+        task_mappings=task_mappings,
+        registry=registry,
+    )
+    yield "blind_annotation_view", tasks
+    split_sets = validate_topic_split(payloads["split_manifest"], topics=topics)
+    _validate_registry_reference(payloads["split_manifest"]["topic_set"], registry, "split.topic_set")
+    yield "topic_split_leakage", split_sets
+    validate_hidden_label_anchor(
+        payloads["hidden_label_anchor"],
+        split=payloads["split_manifest"],
+        split_sets=split_sets,
+        registry=registry,
+    )
+    yield "hidden_label_seal", None
+    if not include_full:
+        return
 
     parallel = _require_mapping_value(manifest["parallel_development"], "parallel_development")
     if set(parallel) != set(PARALLEL_MODULE_FIXTURE_REQUIREMENTS):
         raise ValueError("parallel_development 必须覆盖六个公共任务槽位。")
     for module_name, requirements in PARALLEL_MODULE_FIXTURE_REQUIREMENTS.items():
+        if module_name == "quality_gate":
+            continue  # Already checked in the base stage.
         entry = _require_mapping_value(parallel[module_name], f"parallel module {module_name}")
         _require_exact_fields(entry, {"depends_on", "artifacts"}, f"parallel module {module_name}")
         if entry["depends_on"] != ["w6_bootstrap"]:
@@ -1624,46 +1700,6 @@ def validate_w6_bootstrap_bundle(
         if not declared_names <= set(artifact_refs):
             raise ValueError(f"{module_name} 引用不存在的 Bootstrap artifact。")
 
-    topics = validate_topic_set(payloads["topic_set"])
-    retrieval = validate_retrieval_provenance(
-        payloads["retrieval_provenance"], topics=topics
-    )
-    records = validate_source_records(
-        payloads["source_records"], topics=topics, retrieval=retrieval
-    )
-    canonical = validate_canonical_entities(
-        payloads["canonical_entities"], records=records, retrieval=retrieval
-    )
-    precanonical_pool_members = validate_candidate_pool(
-        payloads["precanonical_candidate_pool"],
-        topics=topics,
-        records=records,
-        retrieval=retrieval,
-        registry=registry,
-    )
-    pool_members = validate_candidate_pool(
-        payloads["candidate_pool"],
-        topics=topics,
-        records=records,
-        retrieval=retrieval,
-        registry=registry,
-        canonical=canonical,
-    )
-    task_mappings = validate_annotation_task_map(
-        payloads["annotation_task_map"],
-        records=records,
-        pool_members=pool_members,
-        registry=registry,
-    )
-    tasks = validate_blind_annotation_tasks(
-        payloads["annotation_tasks"],
-        topics=topics,
-        records=records,
-        task_mappings=task_mappings,
-        registry=registry,
-    )
-    split_sets = validate_topic_split(payloads["split_manifest"], topics=topics)
-    _validate_registry_reference(payloads["split_manifest"]["topic_set"], registry, "split.topic_set")
     annotations = validate_annotation_results(
         payloads["annotation_results"],
         tasks=tasks,
@@ -1674,12 +1710,6 @@ def validate_w6_bootstrap_bundle(
     )
     reviews = validate_annotation_reviews(
         payloads["annotation_reviews"], annotations=annotations
-    )
-    validate_hidden_label_anchor(
-        payloads["hidden_label_anchor"],
-        split=payloads["split_manifest"],
-        split_sets=split_sets,
-        registry=registry,
     )
 
     # Local imports avoid a circular dependency: method/synthesis validators reuse
@@ -1742,7 +1772,7 @@ def validate_w6_bootstrap_bundle(
         reviews=reviews,
         split_sets=split_sets,
     )
-    return {
+    yield "full_bundle_contract", {
         "manifest": manifest,
         "registry": registry,
         "paths": paths,
@@ -1762,6 +1792,31 @@ def validate_w6_bootstrap_bundle(
         "evidence_units": evidence,
         "synthesis_input": synthesis_input,
     }
+
+
+def _validate_quality_gate_dependency_closure(manifest: dict[str, Any]) -> None:
+    parallel = manifest.get("parallel_development")
+    if not isinstance(parallel, dict):
+        raise ValueError("parallel_development must be an object")
+    quality_gate = parallel.get("quality_gate")
+    if not isinstance(quality_gate, dict):
+        raise ValueError("quality_gate dependency declaration is missing")
+    if set(quality_gate) != {"depends_on", "artifacts"}:
+        raise ValueError("quality_gate dependency declaration fields invalid")
+    if quality_gate["depends_on"] != ["w6_bootstrap"]:
+        raise ValueError("quality_gate may depend only on the merged w6_bootstrap contract")
+    artifacts = quality_gate["artifacts"]
+    if not isinstance(artifacts, list) or any(not isinstance(item, str) for item in artifacts):
+        raise ValueError("quality_gate artifact dependency list invalid")
+    if len(artifacts) != len(set(artifacts)):
+        raise ValueError("quality_gate artifact dependency list contains duplicates")
+    expected = PARALLEL_MODULE_FIXTURE_REQUIREMENTS["quality_gate"]
+    if set(artifacts) != expected:
+        missing = sorted(expected.difference(artifacts))
+        extra = sorted(set(artifacts).difference(expected))
+        raise ValueError(
+            f"quality_gate dependency closure drift: missing={missing}, extra={extra}"
+        )
 
 
 CANONICALIZATION_INPUT_NAMES = (

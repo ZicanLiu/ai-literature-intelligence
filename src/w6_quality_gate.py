@@ -6,24 +6,10 @@ import json
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from src.annotation_tasks import sha256_file
-from src.w6_contracts import (
-    PARALLEL_MODULE_FIXTURE_REQUIREMENTS,
-    load_w6_bootstrap_bundle_inventory,
-    validate_annotation_task_map,
-    validate_artifact_identity_reference,
-    validate_blind_annotation_tasks,
-    validate_candidate_pool,
-    validate_canonical_entities,
-    validate_hidden_label_anchor,
-    validate_retrieval_provenance,
-    validate_source_records,
-    validate_topic_set,
-    validate_topic_split,
-    validate_w6_bootstrap_bundle,
-)
+from src.w6_contracts import _iter_w6_bootstrap_validation
 
 
 REPORT_SCHEMA_VERSION = "1.0"
@@ -64,10 +50,8 @@ class BundleInventory:
 def run_w6_quality_gate(manifest_path: str | Path, *, mode: str = "basic") -> dict[str, Any]:
     """Run the deterministic W6 gate and return a machine-readable report.
 
-    Basic validates the public data, identity, provenance, blind-view, split, and
-    hidden-label boundary. Full first runs Basic and then delegates the complete
-    annotation/method/fusion/synthesis/benchmark contract to the public bundle
-    validator.
+    Basic and Full consume the same validation stages. Full continues from the
+    verified base snapshot into annotation/method/fusion/synthesis/benchmark checks.
     """
 
     normalized_mode = mode.lower()
@@ -96,126 +80,30 @@ def run_w6_quality_gate(manifest_path: str | Path, *, mode: str = "basic") -> di
         "failed_checks": [],
     }
 
-    state: dict[str, Any] = {}
-    check_index = 0
-
-    def run_check(operation: Callable[[], Any]) -> bool:
-        nonlocal check_index
-        check_name, category = BASIC_CHECKS[check_index]
-        check_index += 1
-        try:
-            value = operation()
-        except (OSError, ValueError) as exc:
-            _record_failed_check(report, check_name, category, str(exc))
-            _append_skipped_checks(report, BASIC_CHECKS[check_index:])
-            if normalized_mode == "full":
-                _append_skipped_checks(report, FULL_ONLY_CHECKS)
-            _finalize_report(report)
-            return False
-        report["checks"].append(
-            {"name": check_name, "category": category, "status": "PASS", "detail": None}
-        )
-        state[check_name] = value
-        return True
-
-    if not run_check(lambda: _load_bundle_inventory(requested_path)):
-        return report
-    inventory: BundleInventory = state["bundle_inventory"]
-    report["input"]["sha256"] = sha256_file(inventory.manifest_path)
-    report["inventory"] = _serialize_inventory(inventory)
-
-    if not run_check(lambda: _validate_quality_gate_dependency_closure(inventory.manifest)):
-        return report
-    if not run_check(lambda: validate_topic_set(inventory.payloads["topic_set"])):
-        return report
-    topics = state["topic_identity"]
-    if not run_check(
-        lambda: validate_retrieval_provenance(
-            inventory.payloads["retrieval_provenance"], topics=topics
-        )
-    ):
-        return report
-    retrieval = state["retrieval_provenance"]
-    if not run_check(
-        lambda: validate_source_records(
-            inventory.payloads["source_records"], topics=topics, retrieval=retrieval
-        )
-    ):
-        return report
-    records = state["source_record_provenance"]
-    if not run_check(
-        lambda: validate_canonical_entities(
-            inventory.payloads["canonical_entities"], records=records, retrieval=retrieval
-        )
-    ):
-        return report
-    canonical = state["canonical_identity"]
-    if not run_check(
-        lambda: validate_candidate_pool(
-            inventory.payloads["precanonical_candidate_pool"],
-            topics=topics,
-            records=records,
-            retrieval=retrieval,
-            registry=inventory.registry,
-        )
-    ):
-        return report
-    if not run_check(
-        lambda: validate_candidate_pool(
-            inventory.payloads["candidate_pool"],
-            topics=topics,
-            records=records,
-            retrieval=retrieval,
-            registry=inventory.registry,
-            canonical=canonical,
-        )
-    ):
-        return report
-    pool_members = state["candidate_pool_closure"]
-    if not run_check(
-        lambda: validate_annotation_task_map(
-            inventory.payloads["annotation_task_map"],
-            records=records,
-            pool_members=pool_members,
-            registry=inventory.registry,
-        )
-    ):
-        return report
-    task_mappings = state["blind_task_mapping"]
-    if not run_check(
-        lambda: validate_blind_annotation_tasks(
-            inventory.payloads["annotation_tasks"],
-            topics=topics,
-            records=records,
-            task_mappings=task_mappings,
-            registry=inventory.registry,
-        )
-    ):
-        return report
-    if not run_check(lambda: _validate_split(inventory, topics)):
-        return report
-    split_sets = state["topic_split_leakage"]
-    if not run_check(
-        lambda: validate_hidden_label_anchor(
-            inventory.payloads["hidden_label_anchor"],
-            split=inventory.payloads["split_manifest"],
-            split_sets=split_sets,
-            registry=inventory.registry,
-        )
-    ):
-        return report
-
-    if normalized_mode == "full":
-        name, category = FULL_ONLY_CHECKS[0]
-        try:
-            validated_bundle = validate_w6_bootstrap_bundle(inventory.manifest_path)
-        except (OSError, ValueError) as exc:
-            _record_failed_check(report, name, category, str(exc))
-        else:
+    checks = BASIC_CHECKS + (FULL_ONLY_CHECKS if normalized_mode == "full" else ())
+    stages = _iter_w6_bootstrap_validation(requested_path, include_full=normalized_mode == "full")
+    inventory = None
+    try:
+        for index, (name, category) in enumerate(checks):
+            try:
+                completed_name, value = next(stages)
+            except (OSError, ValueError) as exc:
+                _record_failed_check(report, name, category, str(exc))
+                _append_skipped_checks(report, checks[index + 1:])
+                break
+            if completed_name != name:
+                raise RuntimeError(f"unexpected W6 validation stage: {completed_name}")
             report["checks"].append(
                 {"name": name, "category": category, "status": "PASS", "detail": None}
             )
-            _add_full_inventory(report, inventory.bundle_dir, validated_bundle)
+            if name == "bundle_inventory":
+                inventory = BundleInventory(**value)
+                report["input"]["sha256"] = sha256_file(inventory.manifest_path)
+                report["inventory"] = _serialize_inventory(inventory)
+            elif name == "full_bundle_contract":
+                _add_full_inventory(report, inventory.bundle_dir, value)
+    finally:
+        stages.close()
 
     _finalize_report(report)
     return report
@@ -273,53 +161,6 @@ def remove_previous_gate_report(output_path: str | Path) -> None:
     if not isinstance(previous, dict) or previous.get("gate") != GATE_NAME:
         raise ValueError(f"refusing to overwrite non-gate output: {target}")
     target.unlink()
-
-
-def _load_bundle_inventory(manifest_path: Path) -> BundleInventory:
-    loaded = load_w6_bootstrap_bundle_inventory(manifest_path)
-    return BundleInventory(
-        manifest_path=loaded["manifest_path"],
-        bundle_dir=loaded["bundle_dir"],
-        manifest=loaded["manifest"],
-        registry=loaded["registry"],
-        payloads=loaded["payloads"],
-        paths=loaded["paths"],
-    )
-
-
-def _validate_quality_gate_dependency_closure(manifest: dict[str, Any]) -> None:
-    parallel = manifest.get("parallel_development")
-    if not isinstance(parallel, dict):
-        raise ValueError("parallel_development must be an object")
-    quality_gate = parallel.get("quality_gate")
-    if not isinstance(quality_gate, dict):
-        raise ValueError("quality_gate dependency declaration is missing")
-    if set(quality_gate) != {"depends_on", "artifacts"}:
-        raise ValueError("quality_gate dependency declaration fields invalid")
-    if quality_gate["depends_on"] != ["w6_bootstrap"]:
-        raise ValueError("quality_gate may depend only on the merged w6_bootstrap contract")
-    artifacts = quality_gate["artifacts"]
-    if not isinstance(artifacts, list) or any(not isinstance(item, str) for item in artifacts):
-        raise ValueError("quality_gate artifact dependency list invalid")
-    if len(artifacts) != len(set(artifacts)):
-        raise ValueError("quality_gate artifact dependency list contains duplicates")
-    expected = PARALLEL_MODULE_FIXTURE_REQUIREMENTS["quality_gate"]
-    if set(artifacts) != expected:
-        missing = sorted(expected.difference(artifacts))
-        extra = sorted(set(artifacts).difference(expected))
-        raise ValueError(
-            f"quality_gate dependency closure drift: missing={missing}, extra={extra}"
-        )
-
-
-def _validate_split(inventory: BundleInventory, topics: dict[str, Any]) -> dict[str, set[str]]:
-    split = inventory.payloads["split_manifest"]
-    split_sets = validate_topic_split(split, topics=topics)
-    reference = validate_artifact_identity_reference(split["topic_set"], "split.topic_set")
-    expected = inventory.registry.get(reference["artifact_id"])
-    if expected != reference:
-        raise ValueError("split.topic_set does not match the bundle artifact registry")
-    return split_sets
 
 
 def _serialize_inventory(inventory: BundleInventory) -> dict[str, Any]:

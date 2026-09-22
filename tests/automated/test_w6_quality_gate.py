@@ -16,6 +16,8 @@ from pathlib import Path
 from unittest import mock
 
 import app.w6_quality_gate as gate_cli
+import src.w6_contracts as contracts
+from src.w6_quality_gate import run_w6_quality_gate
 from src.annotation_tasks import sha256_file
 from src.w6_contracts import compute_benchmark_identity, compute_pool_identity
 from src.w6_method_contract import compute_method_configuration_hash
@@ -245,6 +247,56 @@ class W6QualityGateCLITests(unittest.TestCase):
         self.assertEqual(full["summary"]["file_count"], 23)
         self.assertNotIn("full_bundle_contract", [row["name"] for row in basic["checks"]])
         self.assertIn("full_bundle_contract", [row["name"] for row in full["checks"]])
+
+    def test_full_consumes_shared_checks_once(self) -> None:
+        expected = {
+            "load_w6_bootstrap_bundle_inventory": 1,
+            "_validate_quality_gate_dependency_closure": 1,
+            "validate_topic_set": 1,
+            "validate_retrieval_provenance": 1,
+            "validate_source_records": 1,
+            "validate_canonical_entities": 1,
+            "validate_candidate_pool": 2,  # one pre-pool and one post-pool
+            "validate_annotation_task_map": 1,
+            "validate_blind_annotation_tasks": 1,
+            "validate_topic_split": 1,
+            "validate_hidden_label_anchor": 1,
+        }
+        with contextlib.ExitStack() as stack:
+            validators = {name: stack.enter_context(mock.patch.object(
+                contracts, name, wraps=getattr(contracts, name))) for name in expected}
+            report = run_w6_quality_gate(VALID_ROOT / "bundle_manifest.json", mode="full")
+        self.assertEqual(report["result"], "PASS")
+        self.assertEqual({name: validator.call_count for name, validator in validators.items()}, expected)
+
+    def test_full_only_failure_keeps_basic_pass(self) -> None:
+        fixture = self.new_fixture()
+        fixture.apply_invalid_recipe("method_hidden_generation_input")
+        basic = run_w6_quality_gate(fixture.manifest_path, mode="basic")
+        full = run_w6_quality_gate(fixture.manifest_path, mode="full")
+        self.assertEqual(basic["result"], "PASS")
+        self.assertEqual(full["checks"][:-1], basic["checks"])
+        self.assertEqual(full["failed_checks"], ["full_bundle_contract"])
+        self.assertTrue(full["errors"][0]["detail"])
+
+    def test_base_failure_blocks_full_checks(self) -> None:
+        fixture = self.new_fixture()
+        fixture.apply_invalid_recipe("split_overlap")
+        with mock.patch.object(contracts, "validate_annotation_results") as annotations:
+            full = run_w6_quality_gate(fixture.manifest_path, mode="full")
+        annotations.assert_not_called()
+        self.assertEqual(full["failed_checks"], ["topic_split_leakage"])
+        self.assertEqual(full["checks"][-1]["name"], "full_bundle_contract")
+        self.assertEqual(full["checks"][-1]["status"], "SKIP")
+
+    def test_each_invocation_reloads_sources(self) -> None:
+        fixture = self.new_fixture()
+        self.assertEqual(run_w6_quality_gate(fixture.manifest_path, mode="full")["result"], "PASS")
+        fixture.artifact_path("topic_set").write_text("{}", encoding="utf-8")
+        full = run_w6_quality_gate(fixture.manifest_path, mode="full")
+        self.assertEqual(full["failed_checks"], ["bundle_inventory"])
+        with self.assertRaisesRegex(ValueError, "hash mismatch"):
+            contracts.validate_w6_bootstrap_bundle(fixture.manifest_path)
 
     def test_report_is_byte_deterministic(self) -> None:
         output = self.root / "deterministic.json"
