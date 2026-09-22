@@ -200,15 +200,6 @@ def _integer(value: Any, label: str, *, minimum: int = 0) -> int:
     return value
 
 
-def _number(value: Any, label: str, *, minimum: float | None = None) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise ValueError(f"{label} 必须是有限数值。")
-    result = float(value)
-    if not math.isfinite(result) or (minimum is not None and result < minimum):
-        raise ValueError(f"{label} 必须是合法有限数值。")
-    return result
-
-
 def _datetime(value: Any, label: str) -> str:
     text = _text(value, label)
     try:

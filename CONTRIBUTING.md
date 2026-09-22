@@ -1,6 +1,6 @@
 # 贡献指南
 
-本项目当前稳定基线为 v0.2.0。真实文献数据来自 OpenAlex；稳定功能包括文献获取、清洗、严格规则去重、初步排序、CSV、SQLite、图表和运行摘要。
+当前阶段以 [CURRENT_STATUS](docs/CURRENT_STATUS.md) 为准；v0.2.0 保留为兼容 baseline。
 
 ## 1. 开始 Issue 前
 
@@ -88,14 +88,29 @@ Git archive 只导出该 commit 的文件，不含 `.git/` 或未跟踪文件（
 
 本阶段不随意修改评分权重、去重规则或核心流程。若任务确实需要修改核心行为，必须先在 Issue 中说明问题、证据和影响范围。
 
-普通文档或分析任务至少检查相关文件；影响运行流程的改动至少执行：
+交付前先运行与改动相关的定向回归。以下是 canonical local verification sequence：
+完整 unittest 只运行一次，然后 Basic / Full 明确跳过重复测试。任一步失败先修复，不得把
+后续 Gate 的 PASS 当作测试通过。
 
 ```powershell
-python -m app.main --mode mock --keyword "machine learning astronomical spectra" --max-results 20
-python -m unittest discover -s tests/automated -p "test_*.py" -v
+python -m unittest discover -s tests/automated -p "test_*.py" -q
+if ($LASTEXITCODE -ne 0) { throw "unittest failed" }
+python -m app.quality_gate --level basic --skip-tests
+if ($LASTEXITCODE -ne 0) { throw "Basic Gate failed" }
+python -m app.quality_gate --level full --skip-tests
+if ($LASTEXITCODE -ne 0) { throw "Full Gate failed" }
+git diff --check
+if ($LASTEXITCODE -ne 0) { throw "diff check failed" }
 ```
 
-只有本地合法配置 OpenAlex Key 时，才执行 live 验证；不得把密钥写进命令行、代码、日志或报告。
+Gate 的其他 checks 不变；独立调用 Gate 时，默认仍运行 unittest。
+`src.validation.run_unittest_suite(root, timeout_seconds=600)` 是 Gate 的真实测试 runner。
+默认从 180 秒调整为 600 秒：已测 suite 约 367 秒，预留正常机器差异，同时保留有限 hang
+上限；API 调用方可显式覆盖 `timeout_seconds`，超时仍是 error。独立 unittest 命令本身不受
+该 Gate runner 超时控制。涉及 Git-clean 前置条件的完整测试应在本地提交后运行。
+
+W6、downstream 等任务还必须执行相应协议的 validator/真实 evidence regression。
+Live 只有在任务必要、用户明确授权且本地配置合法时才执行；不得把密钥写进命令、日志或报告。
 
 ## 6. Pull Request 要求
 

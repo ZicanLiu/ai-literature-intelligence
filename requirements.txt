@@ -2,3 +2,5 @@ requests
 pandas
 matplotlib
 python-dotenv
+# YAML semantics for offline CI contract tests
+PyYAML>=6.0,<7

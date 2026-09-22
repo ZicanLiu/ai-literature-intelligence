@@ -217,13 +217,6 @@ def _resolve_repo_path(project_root: Path, relative_path: Any, label: str) -> Pa
     return resolved
 
 
-def _reference(path: Path, payload: Mapping[str, Any]) -> dict[str, str]:
-    return {
-        "artifact_id": _require_text(payload.get("artifact_id"), "artifact_id"),
-        "sha256": sha256_file(path),
-    }
-
-
 def compute_question_identity(topic_id: str, research_question: str) -> str:
     return deterministic_identity(
         QUESTION_IDENTITY_PREFIX,
