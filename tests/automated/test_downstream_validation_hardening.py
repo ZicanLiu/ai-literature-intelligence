@@ -2,6 +2,7 @@
 import contextlib
 import io
 import json
+import os
 import tempfile
 import unittest
 from collections import Counter
@@ -22,6 +23,56 @@ from tests.automated.test_downstream_measurement_closeout import frozen_csv
 
 
 class ManifestBoundaries(unittest.TestCase):
+    def test_normalized_path_aliases_fail_with_same_or_different_digests(self):
+        aliases = ("./sub/file", "sub//file", "sub/./file", "sub/../sub/file")
+        if os.name == "nt":
+            aliases += ("SUB/FILE",)
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = Path(tmp) / "SHA256_manifest.txt"
+            for alias in aliases:
+                for digest in ("a" * 64, "b" * 64):
+                    with self.subTest(alias=alias, digest=digest):
+                        manifest.write_text(f"{'a' * 64}  sub/file\n{digest}  {alias}\n")
+                        with self.assertRaisesRegex(ValueError, "duplicate relative path"):
+                            parse_sha_manifest(manifest)
+
+    def test_manifest_paths_must_be_package_relative(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = Path(tmp) / "SHA256_manifest.txt"
+            for name in ("/file", "C:/file", "C:file", "//server/share/file",
+                         "../file", "sub/../../file", ".", "sub/.."):
+                with self.subTest(name=name):
+                    manifest.write_text(f"{'a' * 64}  {name}\n")
+                    with self.assertRaisesRegex(ValueError, "package-relative"):
+                        parse_sha_manifest(manifest)
+
+    def test_legacy_digest_forms_and_relative_spelling_are_preserved(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = Path(tmp) / "SHA256_manifest.txt"
+            manifest.write_bytes(("\ufeff# historical format\r\n  " + "A" * 64
+                                  + "\t ./sub\\file  \r\n").encode("utf-8"))
+            self.assertEqual(parse_sha_manifest(manifest), {"./sub/file": "a" * 64})
+            if os.name != "nt":
+                manifest.write_text(f"{'a' * 64}  file\n{'b' * 64}  FILE\n")
+                self.assertEqual(len(parse_sha_manifest(manifest)), 2)
+
+    def test_registry_cli_rejects_aliased_manifest_entry(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            mini = MiniEvidenceRoot(tmp / "evidence")
+            package = resolve_package_directory(mini.root, "generator_freeze_v2")
+            manifest = package / "SHA256_manifest.txt"
+            original = manifest.read_text(encoding="utf-8")
+            digest, name = original.splitlines()[0].split(None, 1)
+            manifest.write_text(original + f"{digest}  ./{name}\n", encoding="utf-8")
+            output = tmp / "registry"
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                code = build_main(["--evidence-root", str(mini.root), "--output-dir", str(output)])
+            self.assertNotEqual(code, 0)
+            self.assertFalse(output.exists())
+            marker = tmp / "registry.staging/_PARTIAL_FAILED.txt"
+            self.assertIn("duplicate relative path", marker.read_text(encoding="utf-8"))
+
     def test_duplicate_paths_fail_even_with_matching_digests(self):
         with tempfile.TemporaryDirectory() as tmp:
             manifest = Path(tmp) / "SHA256_manifest.txt"

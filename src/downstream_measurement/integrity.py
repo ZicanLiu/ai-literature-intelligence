@@ -12,9 +12,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import posixpath
 import re
 import zipfile
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 from .inventory import resolve_package_directory
 from .util import atomic_write_json, load_json, sha256_bytes, sha256_file, write_csv
@@ -61,6 +63,7 @@ def parse_sha_manifest_bytes(raw: bytes) -> dict[str, str]:
     """Parse a single byte snapshot without silently replacing duplicate entries."""
     text = raw.decode("utf-8-sig")
     entries = {}
+    path_keys = set()
     for line_number, line in enumerate(text.splitlines(), start=1):
         line = line.strip()
         if not line or line.startswith("#"):
@@ -70,8 +73,16 @@ def parse_sha_manifest_bytes(raw: bytes) -> dict[str, str]:
             raise ValueError(f"invalid SHA256 manifest entry at line {line_number}")
         digest, rel = parts
         rel = rel.strip().replace("\\", "/")
-        if rel in entries:
+        normalized = posixpath.normpath(rel)
+        if (rel.startswith("/") or PureWindowsPath(rel).drive
+                or normalized in {".", ".."} or normalized.startswith("../")):
+            raise ValueError(f"manifest path must be package-relative at line {line_number}")
+        # Compare aliases without rewriting the declared source locator. On
+        # Windows, normcase also rejects two spellings differing only in case.
+        path_key = os.path.normcase(normalized)
+        if path_key in path_keys:
             raise ValueError(f"duplicate relative path in SHA256 manifest: {rel}")
+        path_keys.add(path_key)
         entries[rel] = digest.lower()
     if not entries:
         raise ValueError("empty SHA256 manifest")

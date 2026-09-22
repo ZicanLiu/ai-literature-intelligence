@@ -54,6 +54,9 @@ byte mismatch 同时满足（a）下游包自己的 integrity report 已分类�
 Required formal-chain package 或其 SHA manifest 缺失时，产生具名
 `MISSING_SOURCE_BYTES` 行并计入 `formal_chain_missing`，不能以空列表通过。
 Manifest 重复相对路径（digest 相同也一样）、非法 digest 或空 manifest 显式失败。
+重复判断包括 `.`、内部 `..`、重复分隔符和 Windows 上的大小写别名；保留登记路径的
+原有拼写（兼容原来的斜杠转换），不改写 manifest 字节。路径必须相对 package，拒绝绝对路径、
+Windows drive-relative 路径和越出 package 的 `..`，不能用绝对/相对两种写法重复登记同一文件。
 正式 audit 即使读取既有 registry 且数值为 28/28 MATCH，也重新核验当前 required formal chain；
 缺包、缺 manifest 或字节漂移均阻止正式发布。
 计数字段 `packages_checked` 表示检查的对象总数；`packages_manifest_verified` 只计入
