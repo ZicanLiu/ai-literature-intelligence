@@ -12,8 +12,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import posixpath
+import re
 import zipfile
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 from .inventory import resolve_package_directory
 from .util import atomic_write_json, load_json, sha256_bytes, sha256_file, write_csv
@@ -53,14 +56,36 @@ class IntegrityError(AssertionError):
 
 
 def parse_sha_manifest(path: Path) -> dict[str, str]:
-    text = Path(path).read_bytes().decode("utf-8-sig")
+    return parse_sha_manifest_bytes(Path(path).read_bytes())
+
+
+def parse_sha_manifest_bytes(raw: bytes) -> dict[str, str]:
+    """Parse a single byte snapshot without silently replacing duplicate entries."""
+    text = raw.decode("utf-8-sig")
     entries = {}
-    for line in text.splitlines():
+    path_keys = set()
+    for line_number, line in enumerate(text.splitlines(), start=1):
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        digest, rel = line.split(None, 1)
-        entries[rel.strip().replace("\\", "/")] = digest
+        parts = line.split(None, 1)
+        if len(parts) != 2 or not re.fullmatch(r"[0-9a-fA-F]{64}", parts[0]):
+            raise ValueError(f"invalid SHA256 manifest entry at line {line_number}")
+        digest, rel = parts
+        rel = rel.strip().replace("\\", "/")
+        normalized = posixpath.normpath(rel)
+        if (rel.startswith("/") or PureWindowsPath(rel).drive
+                or normalized in {".", ".."} or normalized.startswith("../")):
+            raise ValueError(f"manifest path must be package-relative at line {line_number}")
+        # Compare aliases without rewriting the declared source locator. On
+        # Windows, normcase also rejects two spellings differing only in case.
+        path_key = os.path.normcase(normalized)
+        if path_key in path_keys:
+            raise ValueError(f"duplicate relative path in SHA256 manifest: {rel}")
+        path_keys.add(path_key)
+        entries[rel] = digest.lower()
+    if not entries:
+        raise ValueError("empty SHA256 manifest")
     return entries
 
 
@@ -180,18 +205,26 @@ def verify_documented_exception(evidence_root: Path, exception: dict, mismatch_r
     }
 
 
-def verify_package(package_dir: Path, package_id: str) -> dict:
+def _missing_manifest(package_id: str, reason: str, required: bool) -> dict:
+    rows = [{
+        "package": package_id, "file": "SHA256_manifest.txt",
+        "expected_sha256": "", "actual_sha256": "", "match": False,
+        "source_of_expected_hash": reason, "verification_level": MISSING_SOURCE_BYTES,
+    }] if required else []
+    return {
+        "package_id": package_id, "has_manifest": False, "rows": rows,
+        "summary": {"verified": 0, "mismatched": 0, "missing": len(rows), "total": len(rows)},
+        "manifest_sha256": None,
+    }
+
+
+def verify_package(package_dir: Path, package_id: str, *, require_manifest: bool = True) -> dict:
     """Recompute every manifest entry of one package."""
     package_dir = Path(package_dir)
     manifest_path = package_dir / "SHA256_manifest.txt"
-    if not manifest_path.exists():
-        return {
-            "package_id": package_id,
-            "has_manifest": False,
-            "rows": [],
-            "summary": {"verified": 0, "mismatched": 0, "missing": 0, "total": 0},
-            "manifest_sha256": None,
-        }
+    if not manifest_path.is_file():
+        reason = "required manifest missing" if package_dir.is_dir() else "required package missing"
+        return _missing_manifest(package_id, reason, require_manifest)
     manifest = parse_sha_manifest(manifest_path)
     rows = []
     counts = {"verified": 0, "mismatched": 0, "missing": 0}
@@ -345,7 +378,10 @@ def build_integrity(evidence_root: Path, package_dirs: dict[str, str], supplemen
                     formal_chain_ids: set[str]) -> dict:
     results = {}
     for package_id, dir_name in sorted(package_dirs.items()):
-        results[package_id] = verify_package(Path(evidence_root) / dir_name, package_id)
+        results[package_id] = verify_package(
+            Path(evidence_root) / dir_name, package_id, require_manifest=package_id in formal_chain_ids)
+    for package_id in sorted(formal_chain_ids - package_dirs.keys()):
+        results[package_id] = _missing_manifest(package_id, "required package not declared", True)
     if supplement_zip and Path(supplement_zip).exists():
         results["meeting_supplement_pro_full"] = verify_zip_package(Path(supplement_zip), "meeting_supplement_pro_full")
     all_rows = []
@@ -384,6 +420,11 @@ def build_integrity(evidence_root: Path, package_dirs: dict[str, str], supplemen
         } for pid, r in results.items()},
         "rows": all_rows,
         "counts": {
+            "packages_checked": len(results),
+            "packages_manifest_verified": sum(
+                1 for r in results.values() if r["has_manifest"] and r["summary"]["total"] > 0
+                and not r["summary"]["missing"] and not r["summary"]["mismatched"]),
+            # Deprecated compatibility alias: historically counted all checked objects.
             "packages_verified": len(results),
             "files_verified": sum(1 for r in all_rows if r["verification_level"] == VERIFIED_BYTES),
             "self_hashed_unanchored": sum(1 for r in all_rows if r["verification_level"] == SELF_HASHED_UNANCHORED),

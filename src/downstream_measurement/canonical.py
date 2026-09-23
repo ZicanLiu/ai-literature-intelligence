@@ -13,7 +13,8 @@ import zipfile
 from pathlib import Path
 
 from .inventory import package_directory_names, resolve_package_directory
-from .util import canonical_json_bytes, load_json, sha256_bytes, sha256_file
+from .integrity import parse_sha_manifest_bytes
+from .util import canonical_json_bytes, sha256_bytes, sha256_file
 
 PRIMARY_JUDGES = ["GPT", "DeepSeek", "GLM"]
 SENSITIVITY_EVALUATOR = "FullPro"
@@ -39,7 +40,7 @@ def _task_hash(judge: str, research_question: str, task_instruction: str) -> str
 def _as_bool(value) -> bool:
     if isinstance(value, bool):
         return value
-    if isinstance(value, str):
+    if isinstance(value, str) and value.strip().lower() in {"true", "false"}:
         return value.strip().lower() == "true"
     raise CanonicalBuildError(f"non-boolean atomic flag: {value!r}")
 
@@ -81,18 +82,19 @@ def build_canonical(evidence_root: Path, supplement_zip: Path | None) -> Canonic
         "DeepSeek": resolve_package_directory(evidence_root, "ai_eval_deepseek"),
         "GLM": resolve_package_directory(evidence_root, "ai_eval_glm"),
     }
-    formal_manifest_hashes = _parse_formal_manifest_hashes(formal)
+    formal_manifest_bytes = (formal / "SHA256_manifest.txt").read_bytes()
+    formal_manifest_hashes = parse_sha_manifest_bytes(formal_manifest_bytes)
 
-    protocol = load_json(prep / "protocol" / "downstream_experiment_protocol_v1.json")
+    protocol, protocol_sha = _read_json_with_hash(prep / "protocol" / "downstream_experiment_protocol_v1.json")
     mapping_rel = protocol["blinding"]["private_condition_map"]
-    mapping = load_json(prep / mapping_rel)
-    plan = load_json(prep / "protocol" / "private_execution_plan.json")
-    schema = load_json(prep / "protocol" / "human_evaluation_schema.json")
+    mapping, mapping_sha = _read_json_with_hash(prep / mapping_rel)
+    plan, plan_sha = _read_json_with_hash(prep / "protocol" / "private_execution_plan.json")
+    schema, schema_sha = _read_json_with_hash(prep / "protocol" / "human_evaluation_schema.json")
     rubric_bytes = (prep / "protocol" / "HUMAN_EVALUATION_RUBRIC_V1.md").read_bytes()
     rubric_sha = sha256_bytes(rubric_bytes)
 
     _check(protocol["source_files"]["protocol/private_execution_plan.json"]
-           == sha256_file(prep / "protocol" / "private_execution_plan.json"), "plan hash drift vs protocol")
+           == plan_sha, "plan hash drift vs protocol")
     _check(len(mapping) == 4, "condition mapping must have 4 entries")
     conditions = {c["opaque_condition_id"]: c for c in mapping}
     _check(len(conditions) == 4, "duplicate opaque_condition_id")
@@ -109,24 +111,24 @@ def build_canonical(evidence_root: Path, supplement_zip: Path | None) -> Canonic
     _check(lattice == expected_lattice,
            "run lattice does not match protocol matrix x 3 repetitions")
 
-    formal_manifest = load_json(formal / "formal_execution_manifest.json")
+    formal_manifest, execution_manifest_sha = _read_json_with_hash(formal / "formal_execution_manifest.json")
     _check(formal_manifest["status"] == "COMPLETE", "formal execution not COMPLETE")
     _check(formal_manifest["operational_summary"]["technically_completed_outputs"] == len(run_ids),
            "formal outputs count mismatch")
     _check(formal_manifest["preparation_protocol_sha256"]
-           == sha256_file(prep / "protocol" / "downstream_experiment_protocol_v1.json"),
+           == protocol_sha,
            "formal manifest protocol hash drift")
-    freeze_binding = load_json(formal / "source_freeze_binding.json")
+    freeze_binding, _ = _read_json_with_hash(formal / "source_freeze_binding.json")
     snapshot = None
     for key in freeze_binding.get("source_snapshot", {}):
         if key.replace("\\", "/").split("/")[-1] in package_directory_names("experiment_prep"):
             snapshot = freeze_binding["source_snapshot"][key]
             break
     _check(snapshot is not None, "formal snapshot does not bind prep package")
-    _check(snapshot.get(mapping_rel) == sha256_file(prep / mapping_rel),
+    _check(snapshot.get(mapping_rel) == mapping_sha,
            "condition mapping hash drift vs formal source snapshot")
     _check(snapshot.get("protocol/private_execution_plan.json")
-           == sha256_file(prep / "protocol" / "private_execution_plan.json"),
+           == plan_sha,
            "execution plan hash drift vs formal source snapshot")
 
     generator_identity = {
@@ -139,13 +141,13 @@ def build_canonical(evidence_root: Path, supplement_zip: Path | None) -> Canonic
 
     registry = CanonicalRegistry()
     registry.source_identities = {
-        "protocol_sha256": sha256_file(prep / "protocol" / "downstream_experiment_protocol_v1.json"),
-        "condition_mapping_sha256": sha256_file(prep / mapping_rel),
-        "execution_plan_sha256": sha256_file(prep / "protocol" / "private_execution_plan.json"),
+        "protocol_sha256": protocol_sha,
+        "condition_mapping_sha256": mapping_sha,
+        "execution_plan_sha256": plan_sha,
         "rubric_sha256": rubric_sha,
-        "human_evaluation_schema_sha256": sha256_file(prep / "protocol" / "human_evaluation_schema.json"),
-        "formal_execution_manifest_sha256": sha256_file(formal / "formal_execution_manifest.json"),
-        "formal_package_manifest_sha256": sha256_file(formal / "SHA256_manifest.txt"),
+        "human_evaluation_schema_sha256": schema_sha,
+        "formal_execution_manifest_sha256": execution_manifest_sha,
+        "formal_package_manifest_sha256": sha256_bytes(formal_manifest_bytes),
     }
 
     outputs_by_id: dict[str, dict] = {}
@@ -158,8 +160,10 @@ def build_canonical(evidence_root: Path, supplement_zip: Path | None) -> Canonic
         _check(run["arm"] == condition["arm"] and run["topic_id"] == condition["topic_id"]
                and run["context_sha256"] == condition["context_sha256"],
                f"run/condition binding mismatch for {oid}")
-        input_doc = load_json(formal / "public_blinded_outputs" / oid / "input.json")
-        gen_doc = load_json(formal / "public_blinded_outputs" / oid / "generator_output.json")
+        input_doc, actual_input_hash = _read_json_with_hash(
+            formal / "public_blinded_outputs" / oid / "input.json")
+        gen_doc, actual_gen_hash = _read_json_with_hash(
+            formal / "public_blinded_outputs" / oid / "generator_output.json")
         gen_hash = formal_manifest_hashes[f"public_blinded_outputs/{oid}/generator_output.json"]
         input_hash = formal_manifest_hashes[f"public_blinded_outputs/{oid}/input.json"]
         _check(input_doc["output_id"] == oid and gen_doc["task_id"] == run["task_id"],
@@ -168,7 +172,8 @@ def build_canonical(evidence_root: Path, supplement_zip: Path | None) -> Canonic
                f"task instruction drift for {oid}")
         _check(sha256_bytes(input_doc["evidence_context"].encode("utf-8")) == condition["context_sha256"],
                f"context hash drift for {oid}")
-        _check(sha256_file(formal / "public_blinded_outputs" / oid / "generator_output.json") == gen_hash,
+        _check(actual_input_hash == input_hash, f"input byte hash drift for {oid}")
+        _check(actual_gen_hash == gen_hash,
                f"generator output byte hash drift for {oid}")
         row = {
             "output_id": oid,
@@ -217,24 +222,23 @@ def build_canonical(evidence_root: Path, supplement_zip: Path | None) -> Canonic
             oid = path.stem
             run = next(r for r in runs if r["output_id"] == oid)
             condition = conditions[run["opaque_condition_id"]]
-            input_doc = load_json(formal / "public_blinded_outputs" / oid / "input.json")
-            gen_doc = load_json(formal / "public_blinded_outputs" / oid / "generator_output.json")
-            judgement = load_json(path)
+            gen_claims = claims_by_output[oid]
+            judgement, judgement_sha = _read_json_with_hash(path)
             _check(judgement["output_id"] == oid, f"{judge}/{oid}: output_id mismatch")
             expected_binding = {
                 "context": condition["context_sha256"],
                 "generator_output": formal_manifest_hashes[f"public_blinded_outputs/{oid}/generator_output.json"],
-                "task": _task_hash(judge, input_doc["research_question"], input_doc["task_instruction"]),
+                "task": _task_hash(judge, research_question_by_oid[oid], task_instruction_by_oid[oid]),
                 "rubric": rubric_sha,
             }
             _check(judgement["input_sha256"] == expected_binding,
                    f"{judge}/{oid}: input binding mismatch {judgement['input_sha256']} != {expected_binding}")
             units = judgement["claim_units"]
-            _check(len(units) == len(gen_doc["claims"]), f"{judge}/{oid}: claim count mismatch")
+            _check(len(units) == len(gen_claims), f"{judge}/{oid}: claim count mismatch")
             _check([u["appearance_index"] for u in units] == list(range(1, len(units) + 1)),
                    f"{judge}/{oid}: appearance_index not 1..n")
             span_defects = 0
-            for unit, claim in zip(units, gen_doc["claims"]):
+            for unit, claim in zip(units, gen_claims):
                 _check(unit["submitted_slot_id"] == claim["slot_id"], f"{judge}/{oid}: slot mismatch")
                 _check(unit["redundancy"] in ("REDUNDANT", "NONREDUNDANT"), f"{judge}/{oid}: bad redundancy label")
                 _check(bool(unit["redundancy_of_indices"]) == (unit["redundancy"] == "REDUNDANT"),
@@ -277,7 +281,7 @@ def build_canonical(evidence_root: Path, supplement_zip: Path | None) -> Canonic
                 "task_binding_sha256": expected_binding["task"],
                 "context_binding_sha256": expected_binding["context"],
                 "generator_output_sha256": expected_binding["generator_output"],
-                "judgement_file_sha256": sha256_file(path),
+                "judgement_file_sha256": judgement_sha,
                 "schema_status": "STRUCTURALLY_VALIDATED",
                 "valid_abstention": bool(judgement.get("valid_abstention")),
                 "exact_match_checks": judgement.get("exact_match_checks"),
@@ -300,7 +304,7 @@ def build_canonical(evidence_root: Path, supplement_zip: Path | None) -> Canonic
                     "error_ids": list(unit["error_ids"]),
                     "has_linked_error": bool(unit["error_ids"]),
                     "source_package_id": f"ai_eval_{judge.lower()}",
-                    "source_file_sha256": sha256_file(path),
+                    "source_file_sha256": judgement_sha,
                     "source_locator": f"ai_eval_{judge.lower()}:judgements/{oid}.json#/claim_units/{unit['appearance_index'] - 1}",
                 })
             for event in events or []:
@@ -316,7 +320,7 @@ def build_canonical(evidence_root: Path, supplement_zip: Path | None) -> Canonic
                     "affected_appearance_indices": list(event["affected_appearance_indices"]),
                     "error_types": list(event["error_types"]),
                     "source_package_id": f"ai_eval_{judge.lower()}",
-                    "source_file_sha256": sha256_file(path),
+                    "source_file_sha256": judgement_sha,
                     "source_locator": f"ai_eval_{judge.lower()}:judgements/{oid}.json#/substantive_error_events",
                 })
 
@@ -563,7 +567,7 @@ def _as_list(value):
     return list(value)
 
 
-def _parse_formal_manifest_hashes(formal_dir: Path) -> dict[str, str]:
-    from .integrity import parse_sha_manifest
-
-    return parse_sha_manifest(formal_dir / "SHA256_manifest.txt")
+def _read_json_with_hash(path: Path):
+    """Parse and identify the same bytes; callers reuse this invocation's result."""
+    raw = path.read_bytes()
+    return json.loads(raw.decode("utf-8-sig")), sha256_bytes(raw)

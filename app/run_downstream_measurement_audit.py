@@ -20,7 +20,7 @@ from src.downstream_measurement.error_audit import build_error_audit
 from src.downstream_measurement.figures import render_all
 from src.downstream_measurement.first_look import assess_frozen_comparison, reproduce_first_look
 from src.downstream_measurement.influence import build_influence
-from src.downstream_measurement.integrity import load_frozen_macro_source, load_integrity_summary
+from src.downstream_measurement.integrity import build_integrity, load_frozen_macro_source, load_integrity_summary
 from src.downstream_measurement.inventory import FORMAL_CHAIN_PACKAGES, resolve_package_directory
 from src.downstream_measurement.report_manifest import build_manifest
 from src.downstream_measurement.sensitivity import build_sensitivity
@@ -240,6 +240,17 @@ def _run_audit(args, evidence_root: Path, supplement_zip: Path | None,
     if source_verification["status"] != "VERIFIED_BYTES":
         comparison["status"] = source_verification["status"]
         comparison["problems"].extend(source_verification["problems"])
+    if args.formal_verification and comparison["status"] == "MATCH":
+        # A prior registry or numerical agreement cannot establish that the
+        # required formal chain is still present and intact at this invocation.
+        current_integrity = build_integrity(evidence_root, {
+            pid: resolve_package_directory(evidence_root, pid).name
+            for pid in FORMAL_CHAIN_PACKAGES
+        }, None, FORMAL_CHAIN_PACKAGES)
+        comparison["formal_chain_verification"] = current_integrity["counts"]
+        if current_integrity["fail_closed"] or integrity_summary.get("fail_closed", False):
+            comparison["status"] = "FORMAL_CHAIN_INVALID"
+            comparison["problems"].append("required formal package/manifest/bytes missing or mismatched")
     comparison["mode"] = "formal_verification" if args.formal_verification else "diagnostic"
     atomic_write_json(first_look_dir / "comparison_vs_frozen_first_look.json", comparison)
     print(f"[first-look] comparison vs frozen first-look: {comparison['status']} "

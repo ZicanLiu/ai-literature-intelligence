@@ -171,6 +171,28 @@ class MiniEvidenceRoot:
                 }
                 self.judgement_specs[(judge, run["output_id"])] = judgement
         self._write_judgements()
+        self._write_required_package_manifests()
+
+    def _write_required_package_manifests(self):
+        # The byte-integrity chain requires every formal package. Minimal
+        # synthetic placeholders cover packages whose contents this fixture
+        # does not model; no production evidence or frozen fixture is changed.
+        from src.downstream_measurement.inventory import FORMAL_CHAIN_PACKAGES, resolve_package_directory
+
+        for package_id in sorted(FORMAL_CHAIN_PACKAGES):
+            package = resolve_package_directory(self.root, package_id)
+            package.mkdir(exist_ok=True)
+            manifest = package / "SHA256_manifest.txt"
+            if manifest.exists():
+                continue
+            files = sorted(p for p in package.rglob("*") if p.is_file())
+            if not files:
+                marker = package / "synthetic_fixture.txt"
+                marker.write_text("Synthetic byte-integrity fixture only.\n", encoding="utf-8")
+                files = [marker]
+            manifest.write_text("".join(
+                f"{util.sha256_file(p)}  {p.relative_to(package).as_posix()}\n" for p in files
+            ), encoding="utf-8")
 
     def _write_formal_manifest(self):
         lines = []
