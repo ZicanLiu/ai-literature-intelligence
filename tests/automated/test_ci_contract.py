@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import contextlib
+import copy
+import shlex
 import io
 import json
 import shutil
 import tempfile
 import unittest
 from pathlib import Path
+
+import yaml
 
 from scripts.check_w5_method_artifacts import (
     check_formal_artifacts,
@@ -24,65 +28,124 @@ FORMAL_ARTIFACT_SOURCE = PROJECT_ROOT / "data" / "analysis" / "w5_methods"
 
 
 class CIWorkflowContractTests(unittest.TestCase):
-    """Lightweight workflow smoke checks without adding a YAML dependency."""
+    """Check parsed workflow behavior; names, comments and YAML layout are free."""
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.workflow_path = PROJECT_ROOT / ".github" / "workflows" / "ci.yml"
-        if not cls.workflow_path.is_file():
-            raise AssertionError("CI workflow file is missing")
-        cls.workflow = cls.workflow_path.read_text(encoding="utf-8")
+        cls.workflow_text = (PROJECT_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        # BaseLoader preserves GitHub's `on` key and treats values consistently
+        # without YAML 1.1's implicit boolean conversion.
+        cls.workflow = yaml.load(cls.workflow_text, Loader=yaml.BaseLoader)
 
-    def test_ci_triggers_main_push_and_pull_request(self) -> None:
-        self.assertIn("push:", self.workflow)
-        self.assertIn("pull_request:", self.workflow)
-        self.assertGreaterEqual(self.workflow.count('branches: [ "main" ]'), 2)
+    def assert_verification_contract(self, workflow):
+        commands = []
+        for job_name, job in workflow["jobs"].items():
+            for index, step in enumerate(job["steps"]):
+                if "run" in step:
+                    tokens = shlex.split(step["run"], comments=True)
+                    commands.append((job_name, index, step, tokens))
 
-    def test_python_environment_and_core_install(self) -> None:
-        self.assertIn("actions/setup-python@v5", self.workflow)
-        self.assertIn('python-version: "3.13"', self.workflow)
-        self.assertIn("pip install -r requirements.txt", self.workflow)
+        def find(prefix):
+            return [row for row in commands if row[3][:len(prefix)] == prefix]
 
-    def test_required_gates_are_separate_blocking_steps(self) -> None:
-        required_commands = [
-            'git diff --check ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}',
-            "python -m app.validate_w4_benchmark",
-            "python -m app.validate_w6_bootstrap",
-            "python -m app.w6_quality_gate --mode basic --output outputs/quality/w6_ci_report.json",
-            'python -m unittest discover -s tests/automated -p "test_*.py" -q',
-            "python -m app.quality_gate --level basic --skip-tests",
-            "python scripts/check_w5_method_artifacts.py",
-        ]
-        for command in required_commands:
-            self.assertIn(command, self.workflow)
-        self.assertNotIn("continue-on-error", self.workflow)
+        def blocking(row):
+            job = workflow["jobs"][row[0]]
+            for scope in (job, row[2]):
+                self.assertEqual(str(scope.get("continue-on-error", "false")).lower(), "false")
+                self.assertIn(scope.get("if"), (None, "success()", "${{ success() }}"))
+                self.assertNotIn("ASTRO_QUALITY_GATE_RUNNING", scope.get("env", {}))
+            shell = row[2].get("shell", job.get("defaults", {}).get("run", {}).get("shell"))
+            self.assertIn(shell, (None, "bash"))
+            self.assertFalse(set(row[3]) & {"||", "&&", ";", "true", "exit", "--help", "-h", "--version"})
 
-    def test_full_unittest_step_precedes_gate_that_skips_only_duplicate_tests(self) -> None:
-        unittest_step = (
-            "- name: Offline Unit Tests\n"
-            '        run: python -m unittest discover -s tests/automated -p "test_*.py" -q'
-        )
-        quality_gate_step = (
-            "- name: Basic Quality Gate\n"
-            "        # 完整 unittest 已由上一独立 blocking step 执行；此处只运行其余门禁检查。\n"
-            "        run: python -m app.quality_gate --level basic --skip-tests"
-        )
-        self.assertIn(unittest_step, self.workflow)
-        self.assertIn(quality_gate_step, self.workflow)
-        self.assertLess(self.workflow.index(unittest_step), self.workflow.index(quality_gate_step))
-        self.assertEqual(
-            self.workflow.count(
-                'python -m unittest discover -s tests/automated -p "test_*.py" -q'
-            ),
-            1,
-        )
-        self.assertNotIn("ASTRO_QUALITY_GATE_RUNNING", self.workflow)
+        tests = find(["python", "-m", "unittest", "discover"])
+        self.assertEqual(len(tests), 1, "full unittest must be an independent step")
+        test = tests[0]
+        # Catch repeated or embedded invocations, including compound scripts.
+        self.assertEqual(sum(row[3][i:i+2] == ["-m", "unittest"]
+                             for row in commands for i in range(len(row[3]))), 1)
+        self.assertNotIn("matrix", workflow["jobs"][test[0]].get("strategy", {}))
+        blocking(test)
+        tokens = test[3]
+        self.assertEqual(tokens[tokens.index("-s") + 1], "tests/automated")
+        self.assertEqual(tokens[tokens.index("-p") + 1], "test_*.py")
+        self.assertTrue(set(tokens[4:]) <= {"-s", "tests/automated", "-p", "test_*.py", "-q", "-v"})
 
-    def test_no_secret_or_model_environment_is_required(self) -> None:
-        self.assertNotIn("secrets.", self.workflow)
-        self.assertIn("DISABLE_LIVE_API", self.workflow)
+        gates = find(["python", "-m", "app.quality_gate"])
+        self.assertTrue(gates)
+        self.assertTrue(any("basic" in row[3] for row in gates))
+        for gate in gates:
+            blocking(gate)
+            self.assertEqual(gate[0], test[0])
+            self.assertGreater(gate[1], test[1])
+            self.assertIn("--skip-tests", gate[3])
+
+        for module in ("app.validate_w4_benchmark", "app.validate_w6_bootstrap",
+                       "app.validate_pilot_reference_curation", "app.w6_quality_gate"):
+            rows = find(["python", "-m", module])
+            self.assertEqual(len(rows), 1, module)
+            blocking(rows[0])
+            if module == "app.w6_quality_gate":
+                self.assertEqual(rows[0][3][rows[0][3].index("--mode") + 1], "basic")
+        artifacts = find(["python", "scripts/check_w5_method_artifacts.py"])
+        self.assertEqual(len(artifacts), 1)
+        blocking(artifacts[0])
+        diffs = find(["git", "diff", "--check"])
+        self.assertEqual(len(diffs), 1)
+        self.assertEqual(diffs[0][2].get("if"), "github.event_name == 'pull_request'")
+        self.assertEqual(diffs[0][2].get("continue-on-error", "false"), "false")
+        diff_range = " ".join(diffs[0][3][3:])
+        self.assertIn("github.event.pull_request.base.sha", diff_range)
+        self.assertIn("github.event.pull_request.head.sha", diff_range)
+        self.assertIn("..", diff_range)
+
+    def test_required_validations_are_blocking_and_unittest_runs_once(self):
+        self.assert_verification_contract(self.workflow)
+
+    def test_names_comments_and_yaml_layout_do_not_change_contract(self):
+        workflow = copy.deepcopy(self.workflow)
+        for job in workflow["jobs"].values():
+            for index, step in enumerate(job["steps"]):
+                step["name"] = f"renamed step {index}"
+                if "run" in step:
+                    step["run"] = "# arbitrary explanation\n" + step["run"]
+        rendered = yaml.dump(workflow, indent=4, sort_keys=True)
+        self.assert_verification_contract(yaml.load(rendered, Loader=yaml.BaseLoader))
+
+    def test_weakened_or_repeated_execution_is_rejected(self):
+        for mutation in ("duplicate", "nonblocking", "skip_condition", "gate_reruns", "missing_validator"):
+            with self.subTest(mutation=mutation):
+                workflow = copy.deepcopy(self.workflow)
+                steps = next(iter(workflow["jobs"].values()))["steps"]
+                test = next(s for s in steps if "-m unittest" in s.get("run", ""))
+                if mutation == "duplicate":
+                    steps.append(copy.deepcopy(test))
+                elif mutation == "nonblocking":
+                    test["continue-on-error"] = "true"
+                elif mutation == "skip_condition":
+                    test["if"] = "false"
+                elif mutation == "gate_reruns":
+                    gate = next(s for s in steps if "-m app.quality_gate" in s.get("run", ""))
+                    gate["run"] = gate["run"].replace("--skip-tests", "")
+                else:
+                    steps[:] = [s for s in steps if "app.validate_w4_benchmark" not in s.get("run", "")]
+                with self.assertRaises(AssertionError):
+                    self.assert_verification_contract(workflow)
+
+    def test_triggers_environment_and_dependencies(self):
+        for event in ("push", "pull_request"):
+            self.assertIn("main", self.workflow["on"][event]["branches"])
+        steps = [step for job in self.workflow["jobs"].values() for step in job["steps"]]
+        python = [s for s in steps if s.get("uses", "").startswith("actions/setup-python@")]
+        self.assertEqual(len(python), 1)
+        self.assertEqual(python[0]["with"]["python-version"], "3.13")
+        run_text = "\n".join(s.get("run", "") for s in steps)
+        self.assertIn("pip install -r requirements.txt", run_text)
+        self.assertNotIn("secrets.", json.dumps(self.workflow))
+        self.assertTrue(any(job.get("env", {}).get("DISABLE_LIVE_API") == "true"
+                            for job in self.workflow["jobs"].values()))
         for package in ("torch", "transformers", "sentence-transformers"):
-            self.assertNotIn(package, self.workflow.lower())
+            self.assertNotIn(package, run_text.lower())
 
 
 class W5ArtifactCheckerTests(unittest.TestCase):

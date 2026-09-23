@@ -389,7 +389,9 @@ def validate_tracked_experiments(relative_paths: Iterable[Path]) -> ValidationRe
     return result
 
 
-def run_unittest_suite(root: Path, timeout_seconds: int = 180) -> ValidationResult:
+# The offline suite measured ~367 s; 600 s allows normal runner variation
+# while retaining a finite hang bound. Callers may set timeout_seconds.
+def run_unittest_suite(root: Path, timeout_seconds: int = 600) -> ValidationResult:
     result = ValidationResult()
     if os.getenv("ASTRO_QUALITY_GATE_RUNNING") == "1":
         result.add_warning("自动测试已处于质量门禁子进程中，跳过递归执行。")

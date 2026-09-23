@@ -82,9 +82,12 @@ Exact 按现有 OpenAlex ID、DOI、无 ID/DOI 时同标题规则自动应用。
 
 ```powershell
 python -m unittest discover -s tests/automated -p "test_*.py" -v
-python -m app.quality_gate --level basic
-python -m app.quality_gate --level full
+if ($LASTEXITCODE -ne 0) { throw "unittest failed" }
+python -m app.quality_gate --level basic --skip-tests
+python -m app.quality_gate --level full --skip-tests
 git diff --check
 ```
 
 Quality Gate 是 run 完成后的工程验收，不参与每篇论文的评分流程。
+
+统一交付顺序和 Gate runner timeout 说明见[贡献指南](../../CONTRIBUTING.md#5-修改与验证)。

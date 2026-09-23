@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -349,6 +350,21 @@ class SecurityAndOrchestrationTests(unittest.TestCase):
         self.assertEqual(result.status, "passed")
         self.assertEqual(result.details["test_status"], "already_running")
         self.assertTrue(result.warnings)
+
+    def test_runner_default_and_explicit_timeout_are_bounded(self) -> None:
+        completed = subprocess.CompletedProcess([], 0, "", "Ran 1 test\nOK")
+        with patch.dict(os.environ, {"ASTRO_QUALITY_GATE_RUNNING": "0"}):
+            with patch("src.validation.subprocess.run", return_value=completed) as runner:
+                self.assertEqual(run_unittest_suite(PROJECT_ROOT).status, "passed")
+                self.assertEqual(runner.call_args.kwargs["timeout"], 600)
+                run_unittest_suite(PROJECT_ROOT, timeout_seconds=30)
+                self.assertEqual(runner.call_args.kwargs["timeout"], 30)
+            with patch("src.validation.subprocess.run",
+                       side_effect=subprocess.TimeoutExpired("unittest", 30)):
+                result = run_unittest_suite(PROJECT_ROOT, timeout_seconds=30)
+        self.assertEqual(result.status, "failed")
+        self.assertEqual(result.details["test_status"], "timeout")
+        self.assertTrue(result.errors)
 
     def test_exit_code_is_zero_for_pass_and_one_for_failure(self) -> None:
         self.assertEqual(exit_code_for_result(ValidationResult()), 0)

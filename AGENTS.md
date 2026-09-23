@@ -1,32 +1,14 @@
 # 项目开发与 AI Agent 规则
 
-本文件是开发者、Codex、ChatGPT、Claude Code 等工具接手仓库时的第一入口。它只保留高优先级、长期有效的规则；完整上下文见
-[AI 项目交接文档](docs/project/AI_PROJECT_ONBOARDING.md)。
+本文件规定长期边界；[接手导航](docs/project/AI_PROJECT_ONBOARDING.md) 提供按任务选读的协议。
+项目研究 AI 驱动的科研文献获取、清洗、去重、排序、离线评价与辅助分析。
+分数只用于可解释初筛，不代表论文真实学术价值。
 
-## 1. 项目定位
+## 1. 事实与开始任务
 
-本项目研究 AI 驱动的科研文献全流程获取与辅助评估。当前 MVP 聚焦“AI 在天文光谱数据处理中的应用”，主链覆盖：
-
-```text
-获取 → 清洗 → 去重 → 排序 → 离线评价 → 后续科研分析
-```
-
-当前分数和排序只用于可解释的文献初筛，不代表论文真实学术价值。
-
-## 2. 事实优先级
-
-发生冲突时，按以下顺序判断：
-
-1. 当前工作区实际代码、测试与 Git 状态；
-2. 当前正在执行的 GitHub Issue；
-3. [`docs/CURRENT_STATUS.md`](docs/CURRENT_STATUS.md)；
-4. [`docs/project/AI_PROJECT_ONBOARDING.md`](docs/project/AI_PROJECT_ONBOARDING.md)；
-5. 其他设计与使用文档；
-6. 历史周报、会议记录和旧聊天。
-
-文档与源码冲突时，以当前源码和实际测试为准，并明确报告差异。不要把文档中的测试数、提交号或快照状态当作永久事实。
-
-## 3. 开始任务前
+事实优先级：当前源码/测试/Git → 当前 Issue 或用户任务 →
+[当前状态](docs/CURRENT_STATUS.md) → 协议/使用文档 → 历史记录与聊天。
+文档与源码冲突时报告差异，不把历史测试数、SHA 或状态当作永久事实。
 
 先只读核对：
 
@@ -36,110 +18,60 @@ git branch --show-current
 git log -5 --oneline --decorate
 ```
 
-确认分支、HEAD 和未提交修改后，依次阅读本文件、[详细交接文档](docs/project/AI_PROJECT_ONBOARDING.md)、[当前状态](docs/CURRENT_STATUS.md)及当前 Issue。里程碑相关任务还必须继续阅读 `CURRENT_STATUS` 指向的当周计划。不得覆盖不属于本任务的工作区修改。
+然后阅读本文件、精简接手导航、当前状态和当前任务；按导航补读相关协议。
+里程碑任务还须读当前状态指向的阶段计划。保护所有不属于本任务的工作区修改。
+同步 main 后建立独立任务分支；禁止直接在 main 开发或推送。
+并行分支只能依赖公共 main 和冻结 contract/fixture，不读取未合并 sibling code/artifact；
+用仅复制声明输入的隔离测试证明依赖闭包。
 
-## 4. 架构边界
+## 2. 架构与实现
 
-- `app/`：CLI、参数解析和用户入口；
-- `src/`：可复用业务逻辑；
-- 依赖方向只能是 `app → src`，不得新增 `src → app`；
-- `python -m app.main` 保留 v0.2.0 baseline；
-- `python -m app.run_pipeline` 是 v0.3.0 Unified Pipeline 入口；
-- `python -m app.batch_runner` 是复用统一 Pipeline 的批量实验入口；
-- Quality Gate 是工程验收工具，不是论文处理或评分步骤。
+- `app/` 是 CLI/参数/用户入口，`src/` 是可复用业务逻辑；依赖只能 `app → src`。
+- 保留 `app.main` 的历史 baseline；统一主链为 `app.run_pipeline`，批量入口
+  `app.batch_runner` 复用同一 Pipeline。Quality Gate 是工程验收，不是论文评分步骤。
+- acquisition query 与 ranking keyword 不同；query/run/batch/item 身份不得混用或靠字符串反推。
+- 保留来源 `source_query_ids/source_run_ids/source_keywords`；获取层 ID 防重复不等于 entity dedup。
+- Stage 1 分层不等于人工相关性标签；suspected duplicate 只进入复核队列，不自动删除。
+- 先搜索调用关系，复用现有模块，做任务范围内的最小修改；不擅自换算法、调权重或扩范围。
 
-当前 Unified Pipeline 高层数据流：
+## 3. 科研不可变边界
 
-```text
-Domain Terms → Domain Query Set → Acquisition Queries → OpenAlex v2
-→ Processor Clean → Attach Provenance → Combine → Exact Dedup
-→ Suspected Review Queue → Baseline preliminary_score
-→ TF-IDF / Stage 1 / Stage 2 → Optional Evaluation → Outputs → Quality Gate
-```
+- 冻结 evidence、manifest/hash、raw annotation/judgement、treatment mapping 和历史结论
+  不得为修复代码或通过测试而改写；不静默合并/删除冻结 benchmark 的已知 same-paper alias。
+- 原始 annotation、AI assistance、review/adjudication 各有独立 provenance；保留
+  actor/model/tool/evidence/review，不把 AI proposal 写成人类最终裁决或 pure-human gold。
+- Query Relevance 使用明确的 graded contract；未知、未完成裁决、draft/proposed label
+  不进入正式 benchmark。正式实验必须通过对应 approved/identity/hash validator；版本特定的
+  cardinality、trust anchors 和 promotion 规则见相关协议。
+- ranking/retrieval/fusion generation 只能读声明的冻结、无标签输入；参数、模型与 artifact
+  先冻结，再评价。不得依据正式 label 或指标回调方法、挑 run，或混用不同 Pool/Query。
+- Dev/Hidden 按 topic 隔离；真实 split 在 labels 和 label-aware selection 前冻结。
+  Hidden labels 不进入 method development、generation 或普通仓库；遵守 seal/reveal 协议。
+- blind annotation view 不暴露 retriever/method、source rank/score、ranking/fusion signal。
+- synthesis relevance 不等于事实正确性；supported/partially-supported claim 必须绑定
+  具体 paper identity 和 evidence reference。
+- 阶段的 human Gate、sensitivity evaluator、prospective rubric 与解释限制以当前状态和
+  冻结协议为准；不得把工程 PASS 提升为研究优越性或外部有效性结论。
 
-## 5. 必须区分的概念
+## 4. 精简原则
 
-- acquisition query 用于获取候选；ranking keyword 用于对合并候选集统一排序，二者不等同；
-- `query_id`、parent `run_id`、child `run_id`、`batch_id`、`item_id` 是不同标识；
-- `source_query_ids`、`source_run_ids`、`source_keywords` 是 provenance，不得丢失或靠字符串反推；
-- Stage 1 的 `high/medium/low` 是算法分层，不是人工的“高度相关/部分相关/不相关”标签；
-- OpenAlex v2 的页内/跨页 ID 去重是获取层防重复，不等于 W2 entity exact dedup；
-- suspected duplicate 只进入人工复核队列，不得自动删除。
-- W4 Pilot Benchmark 只评价 Query Relevance，使用 `0/1/2` graded relevance；个人标注的
-  `?`、空值和未完成 adjudication 不得进入 approved benchmark；
-- 原始 annotation、judgement、AI assistance 和 adjudication 是不同 provenance 层；不得改写
-  成员判断历史或把 AI proposal 表述成人类最终裁决；
-- W4 v0.1 是 record-level query-paper benchmark；已知 same-paper alias 必须保留并显式记录，
-  不得为提高指标静默合并或删除。
-- W5 正式方法必须使用统一 Method Ranking Contract；ranking generation 只能读取冻结 Candidate
-  Pool 和 Research Query，不得读取 approved benchmark label/judgement。参数、模型和 artifact
-  必须先冻结再评价，不得根据正式 label 或指标回调。
+Prefer the simplest mechanism that protects a demonstrated risk.
 
-### W6 公共并行与科研边界
+- 新 manifest/hash/gate/compatibility layer 必须说明具体风险、实际消费者和失败后果。
+- Git 跟踪的普通源码/配置通常无需额外自定义 integrity 层；属于冻结科研身份的输入除外。
+- 跨信任边界重新验证；同一不可变进程内快照复用已经完成的验证结果。
+- 永久回归测试保护持久行为或真实回归，不绑定某次 PR 的格式。
+- 新抽象必须降低整体理解成本；不建立 Complexity Gate。
 
-- 并行任务只能依赖当前 `main` 与已冻结的公共 contract/fixture；不得导入尚未合并的 sibling code
-  或 artifact，并应以只复制声明输入的隔离依赖测试证明闭包；
-- Dev / Hidden Test 必须按 topic 隔离，真实 split 在 labels 和 label-aware method selection 前冻结；
-  hidden-test labels 不得进入 method development、retrieval/ranking/fusion generation 或普通仓库；
-- blind annotation view 不得暴露 retriever/method、source rank/score、ranking 或 fusion signal；
-- AI-assisted annotation 必须保留 actor/model/tool/evidence/review provenance，不得表述为
-  pure-human gold；
-- W6 ranking/fusion 优先复用 W5 Method Ranking Contract 的列、排序和冻结输入语义，不修改或
-  重冻已有 W5 正式 artifact；
-- synthesis relevance 不等于事实正确性；每个 supported/partially-supported claim 必须绑定具体
-  paper identity 和 evidence reference。
+## 5. 验证、安全与交付
 
-## 6. 开发边界
+行为变更补定向回归。交付前按[唯一的本地验证顺序](CONTRIBUTING.md#5-修改与验证)
+运行完整离线 unittest 一次，再运行适用 Gate 并明确跳过重复测试，检查完整 diff。
+不得删断言、放宽错误、降级为 warning 或修改历史 evidence 来换取通过。
 
-不要：
+`.env` 不得读取、输出、复制或记录；不泄露 API Key、Token、密码、个人绝对路径、
+临时 live 配置、未经授权 PDF 或私人材料。Live 只在任务必要、用户明确授权且配置合法时最小运行。
+普通 experiment/batch 输出、本地数据库、私人 evidence 不提交。
 
-- 把业务逻辑复制进 `app/main.py` 或其他 CLI；
-- 删除或暗改 v0.2.0 baseline；
-- 为通过测试修改历史 fixture/evidence 的原始结论；
-- 隐式选择 ranking keyword，丢弃 provenance，或自动删除 suspected duplicate；
-- 把 AI-assisted label 表述为人工 ground truth；
-- 把 proposed/draft judged set 用作正式实验，或绕过 approved status、60/60 identity 和冻结
-  artifact hash 的 strict validator；
-- 绕过 W5 method-output validator、混用不同 Candidate Pool/RQ，或把含 benchmark 答案的 artifact
-  当作正式 ranking；
-- 为“更高级”而擅自替换算法、调权重或扩大 Issue 范围；
-- 删除断言、放宽错误或把 error 降级为 warning 来换取通过；
-- 提交普通 `outputs/experiments/`、`outputs/batches/` 或本地数据库。
-
-优先复用现有模块，先搜索调用关系，再做最小修改；接口冲突要报告真实原因，不按常见项目结构猜测不存在的代码。修改行为时补定向测试，并在交付前运行全量离线测试和适用的 Quality Gate。
-
-## 7. AI 使用与安全
-
-AI 可以读取项目文件、搜索调用关系、运行离线测试与安全 fixture，并在 Issue 范围内修改代码、测试和文档。live 请求只有在任务确有必要、用户明确授权且本地配置合法时才运行，并保持最小规模。
-
-`.env` 可能存在，但不得读取、输出、复制或记录其中内容。不得提交或泄露 `.env`、API Key、Token、密码、个人绝对路径、临时 live 配置、未经授权的 PDF 或个人敏感材料。
-
-## 8. Git 工作流
-
-```text
-同步 main → 从 main 建独立任务分支 → 完成 Issue → 测试与门禁
-→ 人工检查 diff → commit → push → PR → 审核 → main
-```
-
-禁止直接在 `main` 开发或推送。提交说明默认使用简洁中文。没有用户明确授权时，AI 不执行 `push`、合并、建标签或发布；不得用破坏性命令丢弃现有修改。
-
-## 9. 必读导航
-
-- 当前阶段：2026-09 downstream pilot 已收口；先读
-  [phase closure](docs/project/downstream_pilot_phase_closure_20260921.md) 与
-  [measurement evidence contract](docs/project/DOWNSTREAM_MEASUREMENT_EVIDENCE_CONTRACT.md)。
-  外部 evidence root 为 `MVP/evidence_pilot_202609`，不是整个 MVP；仓内 preparation 的
-  `prepared_not_started` 不代表外部研究未执行。正式复现使用 `--formal-verification`。
-- 保持 original human Gate = `NOT_EVALUABLE`、Full Pro = `SENSITIVITY_EVALUATOR`、
-  Rubric V2 = `FUTURE / PROSPECTIVE DRAFT`；当前证据不证明 MCA 更优。
-- [详细项目交接与 AI 开发入口](docs/project/AI_PROJECT_ONBOARDING.md)
-- [当前仓库状态](docs/CURRENT_STATUS.md)
-- [Unified Pipeline 使用与复现](docs/project/UNIFIED_PIPELINE_GUIDE.md)
-- [批量实验指南](docs/project/BATCH_EXPERIMENT_GUIDE.md)
-- [W2 数据接口约定](docs/project/W2_DATA_CONTRACTS.md)
-- [v0.3.0 候选发布说明](docs/reports/week2/V0.3.0_RELEASE_NOTES.md)
-- [W4 研究计划](docs/project/W4_RESEARCH_PLAN.md)
-- [W4 Pilot Benchmark 收口协议](docs/project/W4_PILOT_BENCHMARK_PROTOCOL.md)
-- [W5 Method Ranking Contract 与公共实验协议](docs/project/W5_METHOD_RANKING_CONTRACT.md)
-- [W6 Research Contract 与并行开发 Bootstrap](docs/project/W6_RESEARCH_CONTRACT_AND_PARALLEL_BOOTSTRAP.md)
-- [贡献指南](CONTRIBUTING.md)
+提交说明默认简洁中文。精确 stage 本任务文件；不以破坏性命令丢弃已有修改。
+未获用户明确授权不 push、merge、tag 或 release；PR 等待审核，不自动合并。
