@@ -368,6 +368,8 @@ class WorkspaceTests(unittest.TestCase):
         self.assertEqual(run.status, "COMPLETED")
         self.assertEqual(run.output["findings"][0]["category"], Category.UNRESOLVED)
         self.assertEqual(run.output["evidence"][0]["locator_status"], "INVALID")
+        self.assertEqual(run.output["provider_output"]["findings"][0]["category"], Category.BLOCKER)
+        self.assertEqual(run.output["provider_output"]["findings"][0]["explanation"], "provider proposal")
 
     def test_malformed_output_and_provider_failure_are_not_findings(self):
         class Broken:

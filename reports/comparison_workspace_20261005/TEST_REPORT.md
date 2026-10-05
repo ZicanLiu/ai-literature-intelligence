@@ -37,8 +37,13 @@ structured output / store=false、timeout / refusal / incomplete / malformed 路
 
 ## 最终仓库顺序
 
-将先本地提交取得 clean worktree，再执行 CONTRIBUTING 中的完整离线 unittest 一次，
-然后 Basic / Full --skip-tests 与 git diff --check。执行后在此记录真实结果，不以旧报告替代。
+初次完整顺序在 clean commit ac5760a 上执行：1117 tests in 253.699s，
+OK (skipped=15)；Basic 0 errors / 0 warnings；Full 0 errors / 3 historical warnings；
+git diff --check 与 git diff --check origin/main...HEAD 均 exit 0。
+
+随后交付复核发现 locator 验证改变类别时也须保留原始提议，补入 provider_output 与
+该失败路径的回归断言。因必要的代码变更，将在新 clean commit 上重新执行最终完整顺序，
+不会将初次通过结果冒充修订后的结果。最终结果在执行后追加。
 
 ## 已见诊断
 

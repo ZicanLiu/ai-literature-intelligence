@@ -301,6 +301,9 @@ class Workspace:
             output = {"observations": [o.model_dump(mode="json") for o in observations],
                       "findings": [f.model_dump(mode="json") for f in findings],
                       "evidence": [e.model_dump(mode="json") for e in evidence]}
+        # Keep the original proposal before locator validation changes a review category.
+        # Run detail and all exports consume this, independently of the validated projection.
+        output["provider_output"] = parsed.model_dump(mode="json")
         return output
 
     def execute(self, run_id, provider):

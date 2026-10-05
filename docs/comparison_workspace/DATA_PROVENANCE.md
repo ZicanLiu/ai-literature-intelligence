@@ -32,6 +32,8 @@ Correction 只追加：before、after、理由、独立证据、操作者和时�
 
 Run 保存输入 revision / 全快照、mode / stage / provider / model、status、输出、时间、
 request ID、返回 token usage、失败原因。费用未可靠计算，保持 unknown。
+Run.output.provider_output 保存提供方原始结构化提议，独立于带 locator 的验证投影。
+无效引文导致“未决”时，原先的类别和解释仍可在运行详情与全部导出中审阅。
 晚到结果为 STALE，不覆盖新 revision；过期历史运行保留可查。
 重启中断不会自动重试可能计费的请求。
 手工保存只记录输入快照，不清空既有模型提议，也不把它们改为用户批准。
