@@ -45,7 +45,8 @@ manifest、annotation、judgement、treatment mapping、W4/W5/W6 合同或旧算
 [官方漏洞公告](https://github.com/advisories/GHSA-hq66-cqwq-w95j)。
 
 后端 36 项定向测试、4 条浏览器回归与视觉验收已通过。
-最终仓库验证结果在 [TEST_REPORT](TEST_REPORT.md) 更新；未执行 live API。
+最终仓库验证：1117 tests / 15 skipped，Basic 与 Full PASS；Full 有 3 条历史警告。
+精确命令、复验原因和环境限制见 [TEST_REPORT](TEST_REPORT.md)；未执行 live API。
 后续审查仅应核对 [NEXT_STEPS](NEXT_STEPS.md)，v0.1 后停止功能扩展。
 
 ## 精确变更文件清单
@@ -109,3 +110,14 @@ A	web/comparison-workspace/tests/workspace.spec.ts
 A	web/comparison-workspace/tsconfig.json
 A	web/comparison-workspace/vite.config.ts
 ```
+
+## v0.1 验收结论
+
+十四项 handoff 验收均完成，环境限制在测试报告中明示。启动 / 无 Key demo / 真实上传路径 /
+单活动目标 / 矩阵 / 页码与片段 / 四类状态 / 独立修订 / 实际重启持久化 / 三格式导出 /
+三种尺寸视觉检查 / 历史 evidence 保护 / 现有验证 / 功能限定 diff 均有对应实现与验证。
+不提供科学认证；没有研究新颖性或用户有效性主张。API 接口只通过 mock，没有 live 验证。
+
+原工作区最终核验仍为 codex/srtp-reentry-audit-20261002，HEAD / origin/main 5876190f，
+仅 docs/reports/reentry_20261002/ 未跟踪；目录仍在。独立功能分支的提交限定上述 57 个文件，
+工作区在交付报告本地提交后为 clean。最后只更新报告；不扩展功能、不 push、不创建 PR。

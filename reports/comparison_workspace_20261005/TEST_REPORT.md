@@ -7,7 +7,7 @@
 
 | 命令 | 结果 |
 | --- | --- |
-| python -m unittest discover -s tests/automated -p test_comparison_workspace.py -q | 36 tests，OK；最近一次 4.602s |
+| python -m unittest discover -s tests/automated -p test_comparison_workspace.py -q | 36 tests，OK；最近一次 4.732s |
 | npm run build（web/comparison-workspace） | TypeScript + Vite 通过；PDF.js 异步分包后无 bundle size 警告 |
 | npm test（同目录） | 4 passed，11.1s |
 | npm audit | 更新 PDF.js 后 0 vulnerabilities |
@@ -60,3 +60,40 @@ git diff --check 与 git diff --check origin/main...HEAD 均 exit 0。
   两种配置字体均未用于合成正文；六页实际渲染后检查清晰，没有缺字 / 重叠 / 截断。
 
 UI 的最终检查与截图见 [SCREENSHOT_CHECKLIST](SCREENSHOT_CHECKLIST.md)。
+
+## 最终复验（全部 exit 0）
+
+代码基准：13bf593（随后仅更新交付报告）。按 CONTRIBUTING 顺序实际执行：
+
+```powershell
+python -m unittest discover -s tests/automated -p "test_*.py" -q
+python -m app.quality_gate --level basic --skip-tests
+python -m app.quality_gate --level full --skip-tests
+git diff --check
+```
+
+- unittest：Ran 1117 tests in 250.603s；OK (skipped=15)。36 项产品测试包含其中。
+- Basic：562 files，0 errors / 0 warnings，PASSED；测试明确 SKIPPED。
+- Full：562 files，0 errors / 3 warnings，PASSED；测试明确 SKIPPED。
+- git diff --check、git diff --check origin/main...HEAD：均 exit 0。
+- 实际停止 / 重启默认启动进程，重开同一项目后 3 篇 / 21 观察 / 3 活动目标 / revision 1
+  保留，数据目录确认在 Git 之外；最终代码的 demo 再次 COMPLETED，原始提议字段保留。
+- 没有 live API；GitHub CI 未运行。两次完整顺序均成功，第二次由必要的 provenance 修复触发；
+  没有以第一次结果替代第二次。没有借 Gate 重复运行 unittest。
+
+Full 原样警告：
+
+```text
+WARNING: 历史 W1 标注存在 1 个 CSV 结构问题；保留原始交付物并作为遗留问题记录。
+WARNING: 历史标注 data/manual/relevance_labels_w1.csv 有 19 个 ID 未在当前统一样例中找到；作为 W1 遗留问题记录。
+WARNING: 检测到历史已跟踪 experiments：openalex_stellar_spectra_60
+```
+
+15 skips：静态 suite 标记核对显示 10 项 TestRealEvidenceIdentity 因
+SRTP_DOWNSTREAM_EVIDENCE_ROOT not set or missing 跳过；剩余 5 项为当前 Windows 的
+大小写别名 / symlink / junction 能力限制（与源中仅有的五个动态 skip 调用对应）。
+没有配置或读取私人 evidence root，没有绕过 skip 条件；不宣称真实外部 evidence 回归已执行。
+
+本地 staging 曾发现新增文件 EOF 多余空行，已在初次代码提交前清除；最终分支 diff 检查通过。
+Git 在前端文本 staging 时提示 LF will be replaced by CRLF the next time Git touches it；
+这来自当前 Windows checkout 的行尾设置。最终内容没有空白差异错误。
