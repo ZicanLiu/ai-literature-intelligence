@@ -127,6 +127,9 @@ class Finding(Record):
     explanation: str = Field(min_length=1, max_length=6000)
     evidence_ids: list[str] = Field(default_factory=list)
     provenance: Provenance = Field(default_factory=Provenance)
+    # Legacy manual records have no trustworthy current-context binding.
+    # Provider findings derive this flag from their immutable Run revision.
+    stale: bool = True
 
 
 class Correction(Record):

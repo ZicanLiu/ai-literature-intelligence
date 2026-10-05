@@ -61,7 +61,7 @@ class Repository:
             p = Project.model_validate_json(row[0])
             items.append({"id": p.id, "title": p.title, "question": p.question,
                           "revision": p.revision, "updated_at": p.updated_at,
-                          "paper_count": len(p.papers), "synthetic": p.demo_question is not None})
+                          "paper_count": len(p.papers), "synthetic": any(paper.synthetic for paper in p.papers)})
         return sorted(items, key=lambda p: p["updated_at"], reverse=True)
 
     @staticmethod

@@ -1,5 +1,5 @@
 """Deterministic synthetic walkthrough; field differences are question relative."""
-from ..demo.content import PAPERS, QUESTIONS, statements
+from ..demo.content import DEMO_SCOPE, PAPERS, QUESTIONS, statements
 from ..domain.models import (
     AnalysisOutput, Category, ConditionState, EvidenceCandidate, ExtractionOutput,
     FindingCandidate, ObservationCandidate, ResultCandidate,
@@ -55,8 +55,9 @@ class DemoProvider:
                     result_id=result["id"], dimension=DIMENSIONS[key], value=text,
                     state=ConditionState.PRESENT if text else ConditionState.NOT_LOCATED, evidence=ev))
         # Corrected inputs are carried into the deterministic output, never reset by a rerun.
+        active_ids = {r["id"] for r in active_results}
         for corrected in input_snapshot["observations"]:
-            if any(c["target_id"] == corrected["id"] for c in corrections):
+            if corrected["result_id"] in active_ids and any(c["target_id"] == corrected["id"] for c in corrections):
                 replacement = ObservationCandidate(
                     result_id=corrected["result_id"], dimension=corrected["dimension"],
                     value=corrected["value"], state=corrected["state"],
@@ -72,18 +73,21 @@ class DemoProvider:
             return FindingCandidate(category=category, affected_result_ids=affected,
                                     scope=input_snapshot["question"], explanation=explanation,
                                     evidence=[e for key in keys for e in refs[key]])
-        findings = [
-            finding(Category.SUPPORTED, all_ids,
-                    "三篇合成文献均定位到 Dataset X 和 Accuracy 定义。定位证明文字出现，解释仍需复核。",
-                    [(l, k) for l in ids for k in ("dataset", "metric")]),
-        ]
+        findings = []
         q = input_snapshot["demo_question"]
         # Expected demo narratives are intentionally suspended after relevant edits.
-        if corrections or any(not r["experiment_identity"].endswith("primary") for r in active_results):
+        if (corrections or input_snapshot["scope"] != DEMO_SCOPE
+                or any(o["provenance"]["mode"] == "manual" for o in input_snapshot["observations"])
+                or any(not r["experiment_identity"].endswith("primary") for r in active_results)):
             findings.append(finding(Category.UNRESOLVED, all_ids,
-                                    "目标或提取信息已修订；内置演示结论不再适用，请复核后记录手工判断。",
+                                    "范围、目标或提取信息已修订；内置演示结论不再适用，请复核后记录手工判断。",
                                     [(l, "result") for l in ids]))
-        elif q == "reported":
+            return ProviderResult(AnalysisOutput(observations=observations, findings=findings),
+                                  model="synthetic-fixture-v0.1")
+        findings.append(finding(Category.SUPPORTED, all_ids,
+                                "三篇合成文献均定位到 Dataset X 和 Accuracy 定义。定位证明文字出现，解释仍需复核。",
+                                [(l, k) for l in ids for k in ("dataset", "metric")]))
+        if q == "reported":
             findings.append(finding(Category.SUPPORTED, all_ids,
                                     "仅比较报告数字：A 92%，C 91%，B 89%。此顺序不表示相同条件下的方法优劣。",
                                     [(l, "result") for l in ids]))

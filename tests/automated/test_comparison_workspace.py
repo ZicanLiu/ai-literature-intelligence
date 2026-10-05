@@ -425,7 +425,7 @@ class WorkspaceTests(unittest.TestCase):
 
     def test_http_scoping_revision_202_exports_and_no_arbitrary_paths(self):
         app = create_app(workspace=self.w)
-        with TestClient(app) as client:
+        with TestClient(app, base_url="http://127.0.0.1") as client:
             self.assertFalse(client.get("/api/capabilities").json()["api_enabled"])
             self.assertEqual(client.patch(f"/api/projects/{self.p.id}",
                 json={"title": "stale", "expected_revision": 999}).status_code, 409)
@@ -447,7 +447,7 @@ class WorkspaceTests(unittest.TestCase):
                 json={"title": "x", "question": "x"}).status_code, 403)
 
     def test_http_real_upload_and_import_contract(self):
-        with TestClient(create_app(workspace=self.w)) as client:
+        with TestClient(create_app(workspace=self.w), base_url="http://127.0.0.1") as client:
             p = client.post("/api/projects", json={"title": "upload test", "question": "numbers"}).json()
             r = client.post(f"/api/projects/{p['id']}/papers", data={"expected_revision": p["revision"]},
                            files={"file": ("论文🪐.pdf", self.raw, "application/pdf")})
@@ -463,11 +463,132 @@ class WorkspaceTests(unittest.TestCase):
         mock = Mock()
         self.w.providers["api"] = OpenAIProvider(explicit_enabled=True, model="mock-model",
                                                 hard_offline=False, client=mock)
-        with TestClient(create_app(workspace=self.w)) as client:
+        with TestClient(create_app(workspace=self.w), base_url="http://127.0.0.1") as client:
             r = client.post(f"/api/projects/{self.p.id}/analyses",
                             json={"expected_revision": self.p.revision, "mode": "api"})
             self.assertEqual(r.status_code, 422)
         mock.responses.parse.assert_not_called()
+
+    def test_corrected_finding_survives_rerun_and_second_correction(self):
+        f = self.w.view(self.p.id)["findings"][0]
+        original = copy.deepcopy(self.repo.get_run(self.run.id).output)
+        self.w.correct(self.p.id, self.p.revision, "finding", f["id"],
+                       {"explanation": "Reviewed interpretation"}, "source review", f["evidence_ids"])
+        self.assertEqual(self.run_analysis().status, "COMPLETED")
+        view = self.w.view(self.p.id)
+        current = next(x for x in view["findings"] if x["id"] == f["id"])
+        self.assertEqual(current["explanation"], "Reviewed interpretation")
+        self.assertEqual(current["provenance"]["mode"], "manual")
+        self.assertFalse(current["stale"])
+        self.w.correct(self.p.id, view["revision"], "finding", f["id"],
+                       {"explanation": "Second review"}, "refine interpretation", f["evidence_ids"])
+        self.assertEqual(self.repo.get(self.p.id).corrections[-1].before["explanation"], "Reviewed interpretation")
+        self.assertEqual(self.repo.get_run(self.run.id).output, original)
+
+    def test_manual_findings_stay_stale_after_context_changes_and_reruns(self):
+        for change in ("question", "scope", "target", "observation"):
+            with self.subTest(change=change):
+                p, run = self.w.seed_demo()
+                wait_run(self.w, run)
+                p = self.repo.get(p.id)
+                a = p.papers[0]
+                p = self.w.add_finding(p.id, p.revision, {
+                    "category": "BLOCKER", "affected_result_ids": [a.active_target_result_id],
+                    "scope": p.question, "explanation": "Manual interpretation for original inputs",
+                    "evidence_ids": [p.evidence[0].id]})
+                fid = p.manual_findings[-1].id
+                if change == "question":
+                    p = self.w.patch(p.id, p.revision, {"demo_question": "efficiency"})
+                elif change == "scope":
+                    p = self.w.patch(p.id, p.revision, {"scope": "Different comparison scope"})
+                elif change == "target":
+                    p = self.w.select(p.id, p.revision, a.id, a.results[1].id)
+                else:
+                    obs = p.observations[0]
+                    p = self.w.correct(p.id, p.revision, "observation", obs.id,
+                                       {"value": "Changed condition"}, "source review", obs.evidence_ids)
+                finished = wait_run(self.w, self.w.start_run(p.id, p.revision, "analysis", "demo"))
+                self.assertEqual(finished.status, "COMPLETED")
+                view = self.w.view(p.id)
+                self.assertTrue(view["analysis_stale"])
+                self.assertTrue(next(f for f in view["findings"] if f["id"] == fid)["stale"])
+                report = markdown(view)
+                self.assertIn("Manual interpretation", report.split("## STALE / ")[1])
+                current_blockers = report.split("## 阻断")[1].split("## 未决")[0]
+                self.assertNotIn("Manual interpretation", current_blockers)
+                rows = list(csv.DictReader(io.StringIO(csv_report(view))))
+                row = next(row for row in rows if row["record_type"] == "finding" and row["id"] == fid)
+                self.assertEqual(row["state_or_category"], "STALE / BLOCKER")
+
+    def test_legacy_manual_finding_without_context_is_not_assumed_current(self):
+        from src.comparison_workspace.domain.models import Finding
+        legacy = self.w.view(self.p.id)["findings"][0]
+        legacy.pop("stale")
+        self.assertTrue(Finding.model_validate(legacy).stale)
+
+    def test_corrected_inactive_observation_does_not_break_demo(self):
+        obs = self.p.observations[0]
+        p = self.w.correct(self.p.id, self.p.revision, "observation", obs.id,
+                           {"value": "Reviewed condition"}, "source review", obs.evidence_ids)
+        self.w.select(p.id, p.revision, self.a.id, self.a.results[1].id)
+        self.assertEqual(self.run_analysis().status, "COMPLETED")
+        p = self.repo.get(p.id)
+        self.w.select(p.id, p.revision, self.a.id, self.a.results[0].id)
+        self.assertEqual(self.run_analysis().status, "COMPLETED")
+        view = self.w.view(p.id)
+        self.assertEqual(next(o for o in view["observations"] if o["id"] == obs.id)["value"], "Reviewed condition")
+
+    def test_demo_suspends_all_fixed_findings_after_correction(self):
+        obs = self.p.observations[0]
+        self.w.correct(self.p.id, self.p.revision, "observation", obs.id,
+                       {"value": "Dataset: Dataset Y."}, "source review", obs.evidence_ids)
+        self.assertEqual(self.run_analysis().status, "COMPLETED")
+        self.assertEqual({f["category"] for f in self.w.view(self.p.id)["findings"]}, {"UNRESOLVED"})
+
+    def test_observation_dimension_correction_cannot_hide_an_existing_record(self):
+        obs = self.p.observations[0]
+        with self.assertRaises(WorkspaceError) as context:
+            self.w.correct(self.p.id, self.p.revision, "observation", obs.id,
+                           {"dimension": self.p.observations[1].dimension}, "rename", obs.evidence_ids)
+        self.assertEqual(context.exception.status_code, 409)
+        self.assertEqual(self.repo.get(self.p.id).corrections, [])
+        p = self.w.correct(self.p.id, self.p.revision, "observation", obs.id,
+                           {"dimension": "Reviewed dataset"}, "rename", obs.evidence_ids)
+        with self.assertRaises(WorkspaceError):
+            self.w.add_observation(p.id, p.revision, {"result_id": obs.result_id,
+                "dimension": "Reviewed dataset", "value": "duplicate", "state": "PRESENT"})
+        self.assertEqual(self.run_analysis().status, "COMPLETED")
+        keys = [(o["result_id"], o["dimension"]) for o in self.w.view(p.id)["observations"]]
+        self.assertEqual(len(keys), len(set(keys)))
+
+    def test_unvalidated_observation_is_ambiguous_without_rewriting_raw_proposal(self):
+        for evidence in ([], [self.evidence(quote="fabricated quote").model_dump()],
+                         [self.evidence().model_dump(), self.evidence(quote="fabricated quote").model_dump()]):
+            with self.subTest(evidence_count=len(evidence)):
+                doc = self.import_document()
+                doc["analysis"]["observations"] = [{"result_id": self.a.active_target_result_id,
+                    "dimension": "Imported value", "value": "proposed value", "state": "PRESENT",
+                    "evidence": evidence}]
+                run = self.run_analysis("import", PrecomputedImportProvider(doc))
+                self.assertEqual(run.status, "COMPLETED")
+                self.assertEqual(run.output["observations"][0]["state"], "AMBIGUOUS")
+                self.assertEqual(run.output["provider_output"]["observations"][0]["state"], "PRESENT")
+
+    def test_known_synthetic_pdf_keeps_warning_when_uploaded_under_new_filename(self):
+        p = self.w.create("Uploaded fixture", "Manual workflow")
+        p = self.w.upload(p.id, p.revision, self.raw, "renamed.pdf")
+        self.assertTrue(p.papers[0].synthetic)
+        summary = next(s for s in self.repo.list() if s["id"] == p.id)
+        self.assertTrue(summary["synthetic"])
+        self.assertIn("synthetic_warning", portable(self.w.view(p.id)))
+        self.assertIsNone(p.demo_question)
+
+    def test_untrusted_host_cannot_read_or_write_local_projects(self):
+        with TestClient(create_app(workspace=self.w), base_url="http://attacker.invalid:8765") as client:
+            self.assertEqual(client.get("/api/projects").status_code, 400)
+            self.assertEqual(client.get(f"/api/projects/{self.p.id}/papers/{self.a.id}/source").status_code, 400)
+            self.assertEqual(client.post("/api/projects", headers={"Origin": "http://attacker.invalid:8765"},
+                                        json={"title": "probe", "question": "probe"}).status_code, 400)
 
     def test_declared_input_dependency_closure(self):
         isolated = Path(self.temp.name) / "isolated"

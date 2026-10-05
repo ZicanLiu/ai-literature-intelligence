@@ -2,6 +2,7 @@
 from pathlib import Path
 
 DEMO_WARNING = "SYNTHETIC DEMO / NOT RESEARCH EVIDENCE"
+DEMO_SCOPE = "合成分类实验 · Dataset X · 仅演示工作流，不作研究结论"
 QUESTIONS = {
     "reported": "哪篇论文报告的 Accuracy 最高？",
     "protocol": "在相同评估协议下，A 是否优于 B？",

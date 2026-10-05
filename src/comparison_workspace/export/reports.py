@@ -67,10 +67,14 @@ def markdown(view: dict) -> str:
                          f"{o['provenance']['mode']} | {', '.join(o['evidence_ids'])} |")
     for cat, label in CATEGORY_LABELS.items():
         lines += ["", f"## {label}", ""]
-        items = [f for f in view["findings"] if f["category"] == cat]
+        items = [f for f in view["findings"] if f["category"] == cat and not f["stale"]]
         lines += [f"- {clean(f['explanation'])} · affected={','.join(f['affected_result_ids'])} · "
                   f"scope={clean(f['scope'])} · mode={f['provenance']['mode']} · evidence={','.join(f['evidence_ids'])}"
                   for f in items] or ["尚无记录（不表示已通过）。"]
+    lines += ["", "## STALE / 历史判断（不适用于当前输入）", ""]
+    lines += [f"- {clean(f['explanation'])} · category={f['category']} · "
+              f"scope={clean(f['scope'])} · affected={','.join(f['affected_result_ids'])} · STALE"
+              for f in view["findings"] if f["stale"]] or ["无过期判断。"]
     lines += ["", "## 原文定位", ""]
     for e in view["evidence"]:
         lines += [f"- {e['id']} · paper={e['paper_id']} · source={e['source_snapshot_id']} · "
@@ -114,7 +118,11 @@ def csv_report(view: dict) -> str:
                   fields.get("state", ""), fields.get("mode", ""), ";".join(item.get("evidence_ids", [])),
                   json.dumps(item, ensure_ascii=False)]
         writer.writerow([cell(v) for v in values])
-    row("project", portable(view))
+    collections = {"papers", "observations", "findings", "evidence", "corrections", "runs",
+                   "original_observations", "original_findings", "original_papers"}
+    # Child records already have their own rows; do not duplicate the entire
+    # growing project/run history in a single oversized CSV cell.
+    row("project", {k: v for k, v in view.items() if k not in collections})
     for p in view["papers"]:
         source = p["source"]
         row("paper", p, paper_id=p["id"], source_id=source["id"], source_sha256=source["sha256"])
@@ -125,7 +133,8 @@ def csv_report(view: dict) -> str:
         row("observation", o, result_id=o["result_id"], dimension=o["dimension"],
             value=o["value"], state=o["state"], mode=o["provenance"]["mode"])
     for f in view["findings"]:
-        row("finding", f, value=f["explanation"], state=f["category"], mode=f["provenance"]["mode"])
+        row("finding", f, value=f["explanation"], state=("STALE / " if f["stale"] else "") + f["category"],
+            mode=f["provenance"]["mode"])
     for name in ("evidence", "corrections", "runs", "original_observations", "original_findings", "original_papers"):
         for item in view[name]:
             row(name, item)

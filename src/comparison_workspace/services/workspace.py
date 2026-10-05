@@ -7,12 +7,12 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from src.utils import current_timestamp
-from ..demo.content import PAPERS, QUESTIONS, pdf_path
+from ..demo.content import DEMO_SCOPE, PAPERS, QUESTIONS, pdf_path
 from ..domain.models import (
-    AnalysisOutput, Category, Correction, EvidenceCandidate, ExtractionOutput, Finding,
+    AnalysisOutput, Category, ConditionState, Correction, EvidenceCandidate, ExtractionOutput, Finding,
     IdentityField, Mode, Observation, Paper, Project, Provenance, Result, Run, WorkspaceError,
 )
-from ..pdf.sources import locate, parse_pdf, store_raw
+from ..pdf.sources import locate, parse_pdf, sha256, store_raw
 from ..providers.base import ProviderFailure, ProviderResult
 from ..providers.demo import DemoProvider
 from ..storage.repository import Repository
@@ -52,7 +52,8 @@ class Workspace:
     def effective(self, p: Project, findings: list[Finding] | None = None) -> Project:
         p = p.model_copy(deep=True)
         if findings is not None:
-            p.manual_findings = p.manual_findings + copy.deepcopy(findings)
+            retained = {f.id for f in p.manual_findings}
+            p.manual_findings += [copy.deepcopy(f) for f in findings if f.id not in retained]
         for c in p.corrections:
             if c.target_kind == "identity":
                 self.paper(p, c.target_id).identity = {k: IdentityField.model_validate(v) for k, v in c.after.items()}
@@ -62,6 +63,9 @@ class Workspace:
             for i, item in enumerate(records):
                 if item.id == c.target_id:
                     validated = type(item).model_validate({**item.model_dump(mode="json"), **c.after})
+                    if c.target_kind == "finding":
+                        # Context invalidation must not be undone by an older correction.
+                        validated.stale = item.stale
                     if c.target_kind == "result":
                         paper = self.paper(p, item.paper_id)
                         paper.results = [validated if r.id == item.id else r for r in paper.results]
@@ -74,13 +78,18 @@ class Workspace:
         runs = self.repo.runs(project_id)
         analysis = next((r for r in runs if r.id == original.current_analysis_run_id), None)
         findings = [Finding.model_validate(f) for f in (analysis.output or {}).get("findings", [])] if analysis else []
+        retained = {f.id for f in original.manual_findings}
+        findings = [f for f in findings if f.id not in retained]
+        for f in findings:
+            f.stale = analysis.input_revision != original.revision
         current = self.effective(original, findings)
         result = current.model_dump(mode="json")
         result["findings"] = result.pop("manual_findings")
         result["original_papers"] = [p.model_dump(mode="json") for p in original.papers]
         result["original_observations"] = [o.model_dump(mode="json") for o in original.observations]
         result["original_findings"] = [f.model_dump(mode="json") for f in original.manual_findings + findings]
-        result["analysis_stale"] = bool(analysis and analysis.input_revision != original.revision)
+        result["analysis_stale"] = bool((analysis and analysis.input_revision != original.revision)
+                                        or any(f.stale for f in current.manual_findings))
         # Run histories retain complete snapshots internally; avoid copying every page into the UI list.
         result["runs"] = [r.model_dump(mode="json", exclude={"input_snapshot"}) for r in runs]
         for r in result["runs"]:
@@ -91,8 +100,15 @@ class Workspace:
     def create(self, title, question, scope=""):
         return self.repo.create(Project(title=title, question=question, scope=scope))
 
+    @staticmethod
+    def stale_findings(p):
+        # User judgements are question/target-relative, just like model runs.
+        for finding in p.manual_findings:
+            finding.stale = True
+
     def patch(self, project_id, expected, changes):
         def update(p):
+            previous = (p.question, p.scope)
             if "demo_question" in changes:
                 if p.demo_question is None:
                     raise WorkspaceError("真实项目不能切换到合成演示。")
@@ -104,6 +120,8 @@ class Workspace:
                 if k not in {"title", "question", "scope"}:
                     raise WorkspaceError("不可修改字段。")
                 setattr(p, k, v)
+            if previous != (p.question, p.scope):
+                self.stale_findings(p)
         return self.repo.mutate(project_id, expected, update)
 
     def upload(self, project_id, expected, data, filename):
@@ -115,7 +133,8 @@ class Workspace:
         if any(paper.source.sha256 == source.sha256 for paper in p.papers):
             raise WorkspaceError("同一 PDF 已在本项目上传。", 409)
         paper = Paper(identity={"title": IdentityField(value=source.original_filename, source="filename")},
-                      source=source)
+                      source=source, synthetic=any(source.sha256 == sha256(pdf_path(spec["letter"]).read_bytes())
+                                                   for spec in PAPERS))
         def add(current):
             if len(current.papers) >= 10:
                 raise WorkspaceError("每个项目最多 10 篇论文。")
@@ -123,6 +142,7 @@ class Workspace:
                 raise WorkspaceError("同一 PDF 已在本项目上传。", 409)
             store_raw(self.repo.sources_dir, source, data)
             current.papers.append(paper)
+            self.stale_findings(current)
         return self.repo.mutate(project_id, expected, add)
 
     def add_evidence(self, project_id, expected, candidate):
@@ -138,6 +158,7 @@ class Workspace:
             paper.results.append(result)
             if len(paper.results) == 1:
                 paper.active_target_result_id = result.id
+                self.stale_findings(p)
         return self.repo.mutate(project_id, expected, add)
 
     def select(self, project_id, expected, paper_id, result_id):
@@ -145,7 +166,9 @@ class Workspace:
             paper = self.paper(p, paper_id)
             if result_id is not None and not any(r.id == result_id for r in paper.results):
                 raise WorkspaceError("活动结果不属于该论文。")
-            paper.active_target_result_id = result_id
+            if paper.active_target_result_id != result_id:
+                paper.active_target_result_id = result_id
+                self.stale_findings(p)
         return self.repo.mutate(project_id, expected, update)
 
     def add_observation(self, project_id, expected, fields):
@@ -153,14 +176,16 @@ class Workspace:
             obs = Observation(**fields)
             paper_id = self.result(p, obs.result_id).paper_id
             self.check_evidence(p, obs.evidence_ids, {paper_id})
-            if any((o.result_id, o.dimension) == (obs.result_id, obs.dimension) for o in p.observations):
+            if any((o.result_id, o.dimension) == (obs.result_id, obs.dimension)
+                   for o in self.effective(p).observations):
                 raise WorkspaceError("该维度已有观察，请通过修订保留原记录。", 409)
             p.observations.append(obs)
+            self.stale_findings(p)
         return self.repo.mutate(project_id, expected, add)
 
     def add_finding(self, project_id, expected, fields):
         def add(p):
-            f = Finding(**fields)
+            f = Finding(**fields, stale=False)
             self.validate_finding(p, f)
             p.manual_findings.append(f)
         return self.repo.mutate(project_id, expected, add)
@@ -207,11 +232,25 @@ class Workspace:
                     papers = {obj.paper_id}
                 elif kind == "observation":
                     papers = {self.result(p, obj.result_id).paper_id}
+                    if any(o.id != obj.id and (o.result_id, o.dimension) == (obj.result_id, obj.dimension)
+                           for o in effective.observations):
+                        raise WorkspaceError("该维度已有观察，不能通过修订覆盖另一条记录。", 409)
                 else:
                     papers = {self.result(p, rid).paper_id for rid in obj.affected_result_ids}
                     self.validate_finding(p, obj)
+                    normalized["stale"] = False
+                    # Retain the original proposal so its correction remains effective
+                    # after current_analysis_run_id moves to a newer run.
+                    retained = next((f for f in p.manual_findings if f.id == target_id), None)
+                    if retained is None:
+                        original = next(f for f in view["original_findings"] if f["id"] == target_id)
+                        retained = Finding.model_validate(original)
+                        p.manual_findings.append(retained)
+                    retained.stale = False
                 self.check_evidence(p, normalized.get("evidence_ids", []), papers)
             self.check_evidence(p, evidence_ids, papers)
+            if kind != "finding":
+                self.stale_findings(p)
             p.corrections.append(Correction(target_kind=kind, target_id=target_id, before=before,
                                             after=normalized, rationale=rationale, evidence_ids=evidence_ids))
         return self.repo.mutate(project_id, expected, add)
@@ -283,15 +322,19 @@ class Workspace:
                 if key in seen:
                     raise WorkspaceError("分析包含重复结果维度。")
                 seen.add(key)
-                observations.append(Observation(result_id=c.result_id, dimension=c.dimension,
-                                                value=c.value, state=c.state,
-                                                evidence_ids=bind(c.evidence, {active[c.result_id]}), provenance=prov))
+                obs = Observation(result_id=c.result_id, dimension=c.dimension, value=c.value, state=c.state,
+                                  evidence_ids=bind(c.evidence, {active[c.result_id]}), provenance=prov)
+                if obs.state == ConditionState.PRESENT and (not obs.evidence_ids or any(
+                        e.id in obs.evidence_ids and e.locator_status != "LOCATED" for e in evidence)):
+                    obs.state = ConditionState.AMBIGUOUS
+                observations.append(obs)
             for c in parsed.findings:
                 if not c.affected_result_ids or any(rid not in active for rid in c.affected_result_ids):
                     raise WorkspaceError("分析结论引用了非活动目标结果。")
                 f = Finding(category=c.category, affected_result_ids=c.affected_result_ids, scope=c.scope,
                             explanation=c.explanation,
-                            evidence_ids=bind(c.evidence, {active[rid] for rid in c.affected_result_ids}), provenance=prov)
+                            evidence_ids=bind(c.evidence, {active[rid] for rid in c.affected_result_ids}),
+                            provenance=prov, stale=False)
                 # Unverified provider interpretation remains reviewable, never promoted to located support.
                 if f.category != Category.UNRESOLVED and (not f.evidence_ids or any(
                         e.id in f.evidence_ids and e.locator_status != "LOCATED" for e in evidence)):
@@ -338,7 +381,10 @@ class Workspace:
                     # Preserve user observations and every correction target as original records.
                     corrected_ids = {c.target_id for c in current.corrections if c.target_kind == "observation"}
                     retained = [o for o in current.observations if o.id in corrected_ids or o.provenance.mode == Mode.MANUAL]
-                    retained_keys = {(o.result_id, o.dimension) for o in retained}
+                    effective = self.effective(current)
+                    retained_ids = {r.id for r in retained}
+                    retained_keys = {(o.result_id, o.dimension) for o in effective.observations
+                                     if o.id in retained_ids}
                     current.observations = retained + [Observation.model_validate(o) for o in run.output["observations"]
                                                       if (o["result_id"], o["dimension"]) not in retained_keys]
             self.repo.finish(run, attach)
@@ -364,7 +410,7 @@ class Workspace:
         if question_key not in QUESTIONS:
             raise WorkspaceError("未知演示问题。")
         p = Project(title="三篇文献，一张可复核的对照表", question=QUESTIONS[question_key],
-                    scope="合成分类实验 · Dataset X · 仅演示工作流，不作研究结论", demo_question=question_key)
+                    scope=DEMO_SCOPE, demo_question=question_key)
         for spec in PAPERS:
             raw = pdf_path(spec["letter"]).read_bytes()
             source = parse_pdf(raw, f"SYNTHETIC_DEMO_{spec['letter']}.pdf")

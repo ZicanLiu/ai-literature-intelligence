@@ -11,6 +11,7 @@ from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import Field
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from src.comparison_workspace.domain.models import EvidenceCandidate, Record, WorkspaceError
 from src.comparison_workspace.export.reports import csv_report, markdown, portable
@@ -112,6 +113,7 @@ def create_app(data_dir: Path | None = None, *, workspace: Workspace | None = No
         service.close()
 
     app = FastAPI(title="SRTP Scientific Comparison Workspace", version="0.1.0", lifespan=lifespan)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"], www_redirect=False)
     app.state.workspace = service
 
     @app.middleware("http")

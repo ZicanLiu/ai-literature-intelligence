@@ -97,3 +97,20 @@ SRTP_DOWNSTREAM_EVIDENCE_ROOT not set or missing 跳过；剩余 5 项为当前 
 本地 staging 曾发现新增文件 EOF 多余空行，已在初次代码提交前清除；最终分支 diff 检查通过。
 Git 在前端文本 staging 时提示 LF will be replaced by CRLF the next time Git touches it；
 这来自当前 Windows checkout 的行尾设置。最终内容没有空白差异错误。
+
+## 2026-10-05 独立终审复验
+
+从 e0d9480 重新验证，未直接采用初次交付报告中的通过结论：
+
+- 修复前：36 项后端测试通过；前端构建通过；4 条浏览器流程通过（8.6s）；npm audit 0 漏洞。
+- 红队额外复现：判断修订重跑失去有效投影、手工判断过期遗漏、修订后切换目标导致 Demo 失败、
+  固定演示叙述忽略修订、普通上传丢失合成身份、非本地 Host 可读写接口等问题。
+- 修复后定向测试：45 tests in 6.466s，OK；新增 9 项持久行为回归。
+- 修复后 TypeScript / Vite 构建通过；6 条浏览器流程通过（15.1s）。
+  新流程覆盖判断修订重跑、问题改变后的历史分区、来源可辨识的证据选择、
+  修订观察后切换目标并重跑；原流程补验普通上传的合成警示。
+- npm audit：0 vulnerabilities；python -m pip check：No broken requirements found。
+- 新测试首次暴露 CSV 项目行重复完整历史导致普通 CSV reader 超过字段长度，
+  已去除项目行的重复子集合，保留各类独立记录，再次通过。未删除断言或放宽产品错误。
+- 最终统一验证须在本次修复的本地 clean commit 上执行一次；结果在执行后追加。
+  未执行 live API，未读取私人 evidence，未运行 GitHub CI。
