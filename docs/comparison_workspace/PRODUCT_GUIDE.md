@@ -1,4 +1,4 @@
-# 科研比较工作台 v0.1 使用指南
+# 科研比较工作台 v0.1.1 使用指南
 
 这是独立的本地产品入口。历史文献获取、排序、benchmark 和 Pipeline 保持原接口。
 
@@ -64,19 +64,66 @@ Markdown、JSON、CSV 导出保存问题、身份、活动目标、观察、四�
 候选结构见 [domain/models.py](../../src/comparison_workspace/domain/models.py)。
 模板里的 evidence 用 paper_id、source_snapshot_id、page_index（0 起算）、quote 定位。
 
-## 可选 OpenAI API
+## 使用自己的 AI API
 
-本次交付没有执行 live 请求。只在用户允许发送本项目文本到外部 API 时配置。
-进程环境必须设置 OPENAI_API_KEY、COMPARISON_OPENAI_MODEL，并明确 DISABLE_LIVE_API=false；
-启动再加 --enable-api。缺少任一条件不能发出请求。默认硬离线；不读取 .env 或 Codex 登录态，
-不会将 ChatGPT/Codex 订阅当作 API 凭据。模型由用户明确选择，需支持 Responses structured output。
+v0.1.1 支持 OpenAI 和 DeepSeek。启动后打开右上角“AI 设置”，无需 --enable-api。
+该旧启动参数保留兼容，但不自动启用 Live；进程启动时 Live 始终关闭。
+不读取 .env、Codex 登录态或 ChatGPT 订阅凭据；API 费用与订阅分开。
 
-UI 选择 OpenAI API 后可提取结果候选或运行比较。发送内容包括本项目问题、页面提取文本、
-活动结果、观察与修订。返回解释始终是草稿。
-官方 SDK Responses.parse 使用 Pydantic 结构、store=false、max_retries=0、120 秒超时；
-记录返回的实际 model、request ID 和 token usage。费用未知。失败不产生科学判断；
-每次手工重试创建新的 Run，重启不自动重试。
-实现依据 [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses)
-和 [Responses](https://developers.openai.com/api/docs/guides/migrate-to-responses)。
+1. 选择 AI 服务，粘贴自己的 API Key，明确选择模型；点击“保存 AI 配置”。
+2. 可显式点击“测试连接”：只请求认证模型列表，不发送论文、不生成内容。
+   通过只证明认证和模型列表可见，不证明余额、Responses structured output 或生成质量。
+3. 阅读所选服务的数据发送说明，勾选确认，再显式启用本次会话 Live。
+4. 新建项目，上传 2–3 篇有权发送的文本 PDF；填写具体比较问题。
+5. 选择该服务 API 模式，点击“提取候选结果”，为每篇选定一个活动结果，再“运行分析”。
+6. 查看原文定位、独立修订，并导出。返回内容始终是需复核的 AI 草稿。
+
+Key 只保存在本地后台进程内存中：两家服务分别保存，session Key 优先于环境 Key。
+密码输入在保存 / 测试 / 切换 / 关闭设置后清空；GET 只返回“未配置 / 环境变量已配置 /
+本次会话已配置”，不返回密钥。Key 不进入数据库、项目、浏览器存储、导出或日志。
+关闭后台进程后 session Key 消失；重新启动须重新启用 Live 和确认每个服务的数据发送。
+“清除本次会话 Key”仅清除该服务；若其环境 Key 仍存在，将回退到环境变量。
+清除当前服务会关闭 Live；切换服务也会关闭 Live，再启用需确认对应服务。
+
+可选进程环境回退：OpenAI 用 OPENAI_API_KEY / COMPARISON_OPENAI_MODEL；DeepSeek 用
+DEEPSEEK_API_KEY / COMPARISON_DEEPSEEK_MODEL。请在进程环境配置，不写入或提交 .env。
+DISABLE_LIVE_API=true（或 1）是部署硬离线开关，禁止两家服务的生成与连接测试；
+session Key 无法绕过。缺省该变量只表示没有部署硬禁用，Live 仍默认关闭。
+
+### OpenAI
+
+明确填写自己账户可用、支持 Responses structured output 的模型 ID；没有“最佳模型”默认值。
+服务端固定官方 https://api.openai.com/v1；使用官方 SDK Responses.parse 和本地 Pydantic 校验。
+生成请求设置 store=false，关闭 Responses 应用存储；这不是服务零留存承诺。
+查看 [OpenAI 数据控制](https://developers.openai.com/api/docs/guides/your-data)。
+
+### DeepSeek
+
+服务端固定 https://api.deepseek.com，浏览器不能提交任意 endpoint。当前支持：
+
+| 模型 | 文本 | 图像理解 | 本工作台论文输入 |
+| --- | --- | --- | --- |
+| deepseek-flash（DeepSeek V4.1 Flash） | 支持 | 支持 | PDF 提取文本 |
+| deepseek-v4-pro | 支持 | 不支持 | PDF 提取文本 |
+
+能力依据 [DeepSeek 官方模型表](https://api-docs.deepseek.com/zh-cn/quick_start/pricing/)，
+核对日期 2026-10-05。模型能力随服务商变化，本版本只列以上两个 ID。
+两者使用 [Responses API](https://api-docs.deepseek.com/guides/responses_api/)，显式 JSON Schema，
+本地 Pydantic 校验为应用结构的最终边界。可选择服务默认或 none / low / high / max；
+选项映射 reasoning.effort，保存在非敏感运行来源中。OpenAI 不套用此参数。
+
+DeepSeek Responses 为无状态接口，不支持 store 设置；本工作台不发送该参数。
+无状态接口不等于整个服务零留存，请查看服务商现行数据政策。
+DeepSeek 不接受任意 PDF 文件输入；deepseek-flash 的图像理解能力不表示当前分析已经看到图表。
+本轮两家服务都只收到提取文本和相关结构化记录，未实现 PDF 页图、多模态或 OCR。
+本地 PDF.js 仍用于用户阅读源页，未将这些渲染图传给 API。
+
+### 运行来源与失败
+
+每次 live Run 保存 provider、请求模型、服务报告模型、实际 reasoning 选项、EXTRACTED_TEXT、
+request ID（服务提供时）、耗时、token usage、project revision 与含 source / active result ID 的快照。
+不保存 Key。API 输入上限 600,000 字符，超过明确拒绝、不截断；SDK 120 秒、max_retries=0。
+失败不产生科学判断；每次显式重试创建新 Run，重启不自动重试。
+费用保持 unknown，没有运行正式 provider 对比实验。本轮两家 API 均只用 mock 验证，未执行真实请求。
 
 更多见 [局限](LIMITATIONS.md)、[来源与修订](DATA_PROVENANCE.md)、[组会脚本](DEMO_SCRIPT.md)。

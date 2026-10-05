@@ -8,9 +8,10 @@ from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import FastAPI, File, Form, UploadFile
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
-from pydantic import Field
+from pydantic import Field, SecretStr
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from src.comparison_workspace.domain.models import EvidenceCandidate, Record, WorkspaceError
@@ -93,6 +94,15 @@ class ImportBody(RevisionBody):
     document: dict[str, Any]
 
 
+class AISettingsBody(Record):
+    provider: Literal["openai", "deepseek"]
+    api_key: SecretStr | None = Field(default=None, min_length=1, max_length=1024)
+    model: str | None = Field(default=None, min_length=1, max_length=200, pattern=r"^[A-Za-z0-9._-]+$")
+    reasoning_effort: Literal["none", "low", "high", "max"] | None = None
+    live_enabled: bool | None = None
+    acknowledge: bool = False
+
+
 def default_data_dir() -> Path:
     configured = os.getenv("COMPARISON_WORKSPACE_DATA_DIR")
     if configured:
@@ -112,7 +122,7 @@ def create_app(data_dir: Path | None = None, *, workspace: Workspace | None = No
         yield
         service.close()
 
-    app = FastAPI(title="SRTP Scientific Comparison Workspace", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="SRTP Scientific Comparison Workspace", version="0.1.1", lifespan=lifespan)
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"], www_redirect=False)
     app.state.workspace = service
 
@@ -125,6 +135,8 @@ def create_app(data_dir: Path | None = None, *, workspace: Workspace | None = No
             if urlsplit(origin).netloc != request.headers.get("host"):
                 return JSONResponse(status_code=403, content={"detail": "仅允许本地工作台同源写入。"})
         response = await call_next(request)
+        if request.url.path.startswith("/api/"):
+            response.headers["Cache-Control"] = "no-store"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; script-src 'self'; worker-src 'self' blob:; "
@@ -143,19 +155,37 @@ def create_app(data_dir: Path | None = None, *, workspace: Workspace | None = No
     # Parse validation errors at the domain boundary without printing source content.
     from pydantic import ValidationError
     @app.exception_handler(ValidationError)
+    @app.exception_handler(RequestValidationError)
     async def handle_contract_error(request, exc):
         return JSONResponse(status_code=422, content={"detail": "字段结构或取值无效，请检查输入。"})
 
     @app.get("/api/capabilities")
     def capabilities():
-        provider = service.providers.get("api")
-        enabled = bool(provider and provider.enabled)
-        return {"schema_version": "comparison-workspace/v0.1", "offline": not enabled,
-                "api_enabled": enabled, "api_model": getattr(provider, "model", None),
-                "modes": ["manual", "demo", "import"] + (["api"] if enabled else []),
+        settings = service.live_ai.status()
+        return {**settings, "schema_version": "comparison-workspace/v0.1",
+                "settings_version": "0.1.1",
+                "modes": ["manual", "demo", "import"] + (["api"] if settings["api_enabled"] else []),
                 "max_pdf_bytes": MAX_BYTES, "max_pdf_pages": 100, "max_papers": 10,
                 "pdf_support": "text-extractable; no OCR",
                 "notice": "合成演示不是真实研究证据；AI 草稿需人工复核。"}
+
+    @app.patch("/api/ai-settings")
+    def ai_settings(body: AISettingsBody):
+        service.live_ai.update(
+            body.provider, api_key=body.api_key.get_secret_value() if body.api_key else None,
+            model=body.model, reasoning_effort=body.reasoning_effort,
+            set_effort="reasoning_effort" in body.model_fields_set,
+            live_enabled=body.live_enabled, acknowledge=body.acknowledge)
+        return capabilities()
+
+    @app.delete("/api/ai-settings/{provider}/key")
+    def clear_key(provider: Literal["openai", "deepseek"]):
+        service.live_ai.clear(provider)
+        return capabilities()
+
+    @app.post("/api/ai-settings/test-connection")
+    def test_connection():
+        return service.live_ai.adapter(connection_test=True).test_connection()
 
     @app.get("/api/projects")
     def projects():

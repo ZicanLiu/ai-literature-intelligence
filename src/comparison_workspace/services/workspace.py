@@ -16,16 +16,19 @@ from ..pdf.sources import locate, parse_pdf, sha256, store_raw
 from ..providers.base import ProviderFailure, ProviderResult
 from ..providers.demo import DemoProvider
 from ..storage.repository import Repository
+from .live_ai import LiveAISettings
 
 
 class Workspace:
     def __init__(self, repo: Repository, providers: dict | None = None):
         self.repo = repo
         self.providers = {"demo": DemoProvider(), **(providers or {})}
+        self.live_ai = LiveAISettings()
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="comparison")
         repo.interrupt_unfinished()
 
     def close(self):
+        self.live_ai.close()
         self.executor.shutdown(wait=True)
 
     @staticmethod
@@ -269,7 +272,7 @@ class Workspace:
             raise WorkspaceError("未知运行模式。")
         if mode == "manual" and stage != "analysis":
             raise WorkspaceError("离线真实 PDF 请手工创建结果；未自动生成 AI 分析。")
-        selected = provider or self.providers.get(mode)
+        selected = provider or (self.live_ai.adapter() if mode == "api" else self.providers.get(mode))
         if mode != "manual" and selected is None:
             raise WorkspaceError("该提供方未启用；请使用手工流程或导入。")
         if mode != "manual" and any(paper.source.parse_status != "TEXT_EXTRACTED" for paper in p.papers):
@@ -279,8 +282,10 @@ class Workspace:
         if hasattr(selected, "ensure_enabled"):
             selected.ensure_enabled()
         run = Run(project_id=project_id, input_revision=p.revision, input_snapshot=self.snapshot(p),
-                  mode=mode, stage=stage, provider=type(selected).__name__ if selected else "Manual",
-                  model=getattr(selected, "model", None))
+                  mode=mode, stage=stage, provider=getattr(selected, "provider_id", type(selected).__name__) if selected else "Manual",
+                  model=getattr(selected, "model", None), requested_model=getattr(selected, "model", None),
+                  reasoning_effort=getattr(selected, "reasoning_effort", None),
+                  input_modality="EXTRACTED_TEXT" if mode == "api" else None)
         self.repo.add_run(run)
         self.executor.submit(self.execute, run.id, selected)
         return run
@@ -366,6 +371,7 @@ class Workspace:
                 response = provider.analyze_comparison(run.input_snapshot, active,
                                                        [c.model_dump(mode="json") for c in p.corrections])
             run.model, run.request_id, run.token_usage = response.model, response.request_id, response.token_usage
+            run.provider_reported_model = response.model
             run.output = self.validate_output(p, run, response)
             run.finished_at = current_timestamp()
             run.elapsed_seconds = round(time.monotonic() - started, 3)

@@ -46,3 +46,15 @@ Markdown / JSON / CSV 同时保留有效投影、原记录、corrections 与历�
 确定性演示状态不是 gold、真实研究证据或科研优越性结论。目标切换 / 用户修订后，
 演示不套用固定数值结论，改为提醒复核；不冒充任意 PDF 的离线自动 AI 分析。
 没有接触 W4/W5/W6 label、Hidden、冻结 evidence、historical first-look 或旧方法实验。
+
+## v0.1.1 live 运行
+
+provider 为 openai / deepseek，requested_model 固定请求配置，model 和 provider_reported_model
+保存服务报告模型；reasoning_effort 仅记录显式使用的 DeepSeek 参数，None 表示服务默认 / 未发送。
+input_modality=EXTRACTED_TEXT 表示实际发送的论文模态。source ID / hash 与 active result ID
+仍在不可变 input_snapshot 中；耗时、request ID、token usage 与工程状态保留。
+失败保留安全原因及可用的安全 request ID；不复制 SDK 原始异常或认证头。
+
+credential source、session Key、环境变量内容和数据发送确认不写入项目或 Run。
+确认只对当前进程 / provider 有效，不是人类批准模型输出，更不是 pure-human gold。
+请求、返回和 JSON Schema 通过不构成科学解释正确性证明。

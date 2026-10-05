@@ -171,6 +171,10 @@ class Run(Record):
     stage: Literal["extraction", "analysis"]
     provider: str
     model: str | None = None
+    requested_model: str | None = None
+    provider_reported_model: str | None = None
+    reasoning_effort: str | None = None
+    input_modality: Literal["EXTRACTED_TEXT"] | None = None
     status: Literal["QUEUED", "RUNNING", "COMPLETED", "STALE", "FAILED", "INTERRUPTED"] = "QUEUED"
     output: dict[str, Any] | None = None
     started_at: str = Field(default_factory=current_timestamp)

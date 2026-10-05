@@ -64,3 +64,27 @@ CI 增加产品依赖和浏览器步骤，原统一 unittest 仍只运行一次�
 失效会导致旧模型结论覆盖新输入。没有为普通源码增加 manifest 或自定义 Integrity Gate。
 独立复制测试只携带本产品模块、src.utils、包初始化文件和 API adapter，即可完成 demo，
 证明未依赖旧研究 artifact 或未合并的 sibling。
+
+## v0.1.1 BYO API
+
+services/live_ai.py 管理单后台进程的 provider / model / reasoning / consent / Live 状态。
+两家 session Key 是私有内存字典，不进入 Pydantic Project、Run 或 Repository。
+GET capabilities 返回两家安全状态；PATCH ai-settings 接收 SecretStr，拒绝额外字段与任意 base URL；
+DELETE ai-settings/{provider}/key 只清除一个 session Key；POST ai-settings/test-connection 仅显式 models.list。
+HTTP request validation errors 使用固定安全说明，避免 FastAPI 默认错误包含提交的秘密；API 响应 no-store。
+
+OpenAI / DeepSeek 共享声明输入、容量限制、安全错误及认证模型检查。
+DeepSeekProvider 独立实现 responses.create + text.format JSON Schema + 本地 Pydantic JSON 校验，
+仅它映射 reasoning.effort；OpenAI 保留 parse / store=false。服务端 URL 固定，无用户 endpoint。
+SDK 仍零自动重试；连接测试与生成都检查硬离线。
+
+Live 默认关闭，后端同时要求凭据、模型和 provider 数据发送确认。工作流 start_run 捕获新 adapter，
+冻结 Key / model / reasoning 与输入快照；执行前重新检查 Live、所选服务和硬离线。
+关闭 Live、切换服务或清除当前 Key 会阻止尚未开始的旧任务。已发出的请求不能撤回。
+同一 provider 在排队后改 model / reasoning，不改写该 Run 的配置。
+
+Run 的新可选字段 requested_model / provider_reported_model / reasoning_effort / input_modality
+允许旧 v0.1 记录继续读取；Project schema 仍 v0.1，没有修改冻结研究合同或历史 Run。
+workspace_input_mode 能力元数据固定 extracted_text，当前 Run 模态 EXTRACTED_TEXT。
+图像能力按具体 DeepSeek 模型标记；OpenAI 任意 ID 的 image / json_schema 能力保持未知，
+由用户选型与实际结构化请求验证，不自动宣称兼容。

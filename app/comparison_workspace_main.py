@@ -11,7 +11,7 @@ def main(argv=None):
     parser.add_argument("--data-dir", type=Path, help="本地 SQLite / 原始 PDF 目录（默认在仓库外）")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--rebuild", action="store_true", help="重新构建前端")
-    parser.add_argument("--enable-api", action="store_true", help="显式启用外部 API；还需环境配置及关闭硬离线开关")
+    parser.add_argument("--enable-api", action="store_true", help="兼容旧启动参数；Live 须在 AI 设置中确认并启用")
     args = parser.parse_args(argv)
     root = Path(__file__).resolve().parents[1]
     frontend = root / "web/comparison-workspace"
@@ -27,13 +27,9 @@ def main(argv=None):
     from app.comparison_workspace_api import create_app, default_data_dir
     import uvicorn
     repo = Repository(args.data_dir or default_data_dir())
-    providers = {}
-    if args.enable_api:
-        from src.comparison_workspace.providers.openai_provider import OpenAIProvider
-        providers["api"] = OpenAIProvider.from_environment(explicit_enabled=True)
-    service = Workspace(repo, providers)
+    service = Workspace(repo)
     app = create_app(workspace=service)
-    print(f"科研比较工作台 v0.1: http://127.0.0.1:{args.port}")
+    print(f"科研比较工作台 v0.1.1: http://127.0.0.1:{args.port}")
     uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="warning")
 
 

@@ -11,11 +11,11 @@
 - 加密 / 损坏、超过 25 MiB / 100 页的源明确拒绝。没有静默截断。
 - 提供 PDF 页跳转和提取文本 exact quote；不承诺任意 PDF 图像上的准确 bbox 高亮。
 - AI / 导入解释需要源审阅；structured output 和有效 quote 不能校准科学解释。
-  实际 OpenAI API 行为、账户可用模型、长文质量与费用本次未 live 验证。
+  实际 OpenAI / DeepSeek API 行为、账户可用模型、长文质量与费用本次未 live 验证。
 - API 最多发送 600,000 个字符，超限明确拒绝、不截断；SDK 单次 120 秒、max_retries=0。
   模型由用户配置。上下文窗口 / 实际服务约束可能更小，失败单独记录。
-- 默认 store=false 关闭 Responses 应用存储，不代表整个外部服务零留存；
-  使用者应查看 OpenAI 数据政策并只发送已获授权的论文文本。
+- OpenAI 使用 store=false 关闭 Responses 应用存储；DeepSeek Responses 为无状态接口，不发送 store。
+  两者都不代表整个外部服务零留存；使用者应查看所选服务的数据政策并只发送已获授权文本。
 - 本地单用户单后台，无认证、多用户权限或并发协作。操作者 local-user 是本机记录，
   不是研究身份认证。相同数据目录不要同时运行多个服务。
 - v0.1 使用聚合 SQLite 结构，无已有旧版本的数据迁移承诺。项目无自动删除 /
@@ -24,3 +24,10 @@
   分享前应审阅自身上传材料。报告的隐藏字符串不修改本地原件与源哈希。
 - 没有做云端部署、OCR、KG / GraphRAG、向量库、多 Agent、研究 benchmark 或旧 pilot
   重分析。历史 BM25 / MCA 证据保持原研究语境。
+
+- v0.1.1 只支持 OpenAI / DeepSeek，禁止浏览器任意兼容 endpoint。DeepSeek 列表仅有
+  deepseek-flash / deepseek-v4-pro；模型列表检查不验证实际生成、余额或分析质量。
+- deepseek-flash 支持图像理解，deepseek-v4-pro 不支持；当前两家论文分析仍仅用 PDF 提取文本。
+  没有 PDF 页图 / 图表视觉输入或 OCR；本地 PDF.js 渲染仅供用户原文检查。
+- 关闭 Live / 清除 Key 无法撤回已发出的请求；清除 session Key 后环境 Key 可能仍可用，
+  但需要再次确认并启用 Live。session 指本地后台进程，不是浏览器 tab 或用户账号隔离。
