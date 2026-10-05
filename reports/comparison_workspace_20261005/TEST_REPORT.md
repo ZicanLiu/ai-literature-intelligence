@@ -114,3 +114,28 @@ Git 在前端文本 staging 时提示 LF will be replaced by CRLF the next time 
   已去除项目行的重复子集合，保留各类独立记录，再次通过。未删除断言或放宽产品错误。
 - 最终统一验证须在本次修复的本地 clean commit 上执行一次；结果在执行后追加。
   未执行 live API，未读取私人 evidence，未运行 GitHub CI。
+
+### 独立终审最终统一顺序（已执行，全部 exit 0）
+
+精确代码 HEAD：5279bb4ee51597fc48bb3046a613ad9807b3c7c6。
+为满足已有测试的 clean Git 前置要求，本轮先精确提交修复、测试和补记，再运行一次完整 suite。
+
+1. `.venv/Scripts/python.exe -m unittest discover -s tests/automated -p "test_*.py" -q`
+   → Ran 1126 tests in 255.416s；OK (skipped=15)。
+2. `.venv/Scripts/python.exe -m app.quality_gate --level basic --skip-tests`
+   → 562 files；0 errors / 0 warnings；PASSED；测试明确 SKIPPED。
+3. `.venv/Scripts/python.exe -m app.quality_gate --level full --skip-tests`
+   → 562 files；0 errors / 3 historical warnings；PASSED；测试明确 SKIPPED。
+4. `git diff --check` 与 `git diff --check origin/main...HEAD` → 通过。
+
+15 项跳过及 3 条 Full 历史警告边界与前述一致，没有修改冻结记录使其消失。
+本次完整 suite 只执行一次；之后只有终审 / 就绪报告和本结果补记，没有产品代码变更。
+
+独立浏览器交互覆盖首页、三个问题、候选结果、矩阵、四类审查、原文高亮、PDF 第 2 页、
+并排阅读、人工判断修订、重跑保留、换问题后的历史分区、返回概览重开和 Markdown 实际下载。
+1440×900、1280×800、390×844 均检查；JS error / warn 日志为空。
+曾实际停止并重启本轮独立数据目录的服务，再重开同一项目验证持久化。
+JSON / CSV 下载及内容由 6 条浏览器流程验证。没有读取默认用户数据库或私人 PDF。
+
+结论及保留项见 [FINAL_ASTRA_REVIEW](FINAL_ASTRA_REVIEW.md) 和
+[FINAL_DEMO_READINESS](FINAL_DEMO_READINESS.md)。
