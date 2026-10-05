@@ -1,0 +1,11 @@
+export type Provenance = { mode: 'demo'|'manual'|'import'|'api'; actor: string; model: string|null; run_id: string|null; timestamp: string }
+export type Evidence = { id:string; paper_id:string; source_snapshot_id:string; page_index:number; page_text_sha256:string|null; start:number|null; end:number|null; quote:string; locator_status:'LOCATED'|'INVALID'; review_reason:string|null }
+export type Result = { id:string; paper_id:string; title:string; description:string; experiment_identity:string; evidence_ids:string[]; provenance:Provenance }
+export type Observation = { id:string; result_id:string; dimension:string; value:string; state:'PRESENT'|'NOT_LOCATED'|'AMBIGUOUS'|'NOT_APPLICABLE'; evidence_ids:string[]; provenance:Provenance }
+export type Finding = { id:string; category:string; affected_result_ids:string[]; scope:string; explanation:string; evidence_ids:string[]; provenance:Provenance; stale:boolean }
+export type Paper = { id:string; identity:Record<string,{value:string;source:string}>; results:Result[]; active_target_result_id:string|null; synthetic:boolean; source:{id:string;sha256:string;original_filename:string;parser:string;page_count:number;parse_status:string;errors:string[];pages:{page_index:number;text:string;text_sha256:string;error:string|null}[]} }
+export type Correction = {id:string;target_kind:string;target_id:string;before:Record<string,unknown>;after:Record<string,unknown>;rationale:string;evidence_ids:string[];operator:string;timestamp:string}
+export type Run = {id:string;stage:string;mode:string;status:string;input_revision:number;model:string|null;failure_reason:string|null;elapsed_seconds:number|null}
+export type Project = {id:string;title:string;question:string;scope:string;revision:number;updated_at:string;papers:Paper[];evidence:Evidence[];observations:Observation[];findings:Finding[];corrections:Correction[];analysis_stale:boolean;demo_question:string|null;runs:Run[];original_observations:Observation[]}
+export type Summary = {id:string;title:string;question:string;revision:number;updated_at:string;paper_count:number;synthetic:boolean}
+export type Capabilities = {api_enabled:boolean;api_model:string|null;offline:boolean;modes:string[]}

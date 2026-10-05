@@ -34,6 +34,20 @@ judged set `w4_query_relevance_pilot_v0.1.0` 已 approved 并通过 strict valid
 
 ## 2. MVP 的输入、处理过程和输出
 
+### 独立科研比较工作台 v0.1
+
+新增中文本地 Web 入口支持 2–10 篇 PDF、一个比较问题、单活动目标、原文证据、用户修订和
+Markdown / JSON / CSV 报告。三篇合成演示可无 Key / 无网络运行；真实 PDF 支持离线手工整理。
+它与历史 CLI / 研究 benchmark 分离。首次安装可选 requirements-workspace.txt 后运行：
+
+```powershell
+python -m app.comparison_workspace_main
+```
+
+首次启动自动构建前端（需要 Node.js / npm），打开 http://127.0.0.1:8765。
+准备好构建后只需一个本地后台服务。完整安装、组会演示与局限见
+[产品指南](docs/comparison_workspace/PRODUCT_GUIDE.md)。
+
 输入：
 
 - 用户关键词，例如 `machine learning astronomical spectra`
@@ -241,7 +255,8 @@ v0.2 没有使用 TF-IDF、Embedding、RAG、大模型 API、Crossref 二次校�
 
 ### 当前项目支持 PDF 解析吗？
 
-不支持。此前的 PDF 解析只是临时演示，已从公开仓库中删除；当前稳定基线只处理文献元数据和摘要。
+历史 CLI 稳定基线只处理文献元数据和摘要。新的独立科研比较工作台支持 PDF 上传和
+源页文本提取，使用单独依赖与入口；详见上面的产品指南。
 
 ## 13. 六人协作入口
 

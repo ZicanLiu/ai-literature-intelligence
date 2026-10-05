@@ -52,3 +52,11 @@ outputs/quality/*
 
 # Reasonix agent 本地配置（含个人绝对路径与权限规则，不提交）。
 reasonix.toml
+
+# Comparison workspace: local dependencies, builds, browser QA and private data.
+web/comparison-workspace/node_modules/
+web/comparison-workspace/dist/
+web/comparison-workspace/test-results/
+web/comparison-workspace/playwright-report/
+.comparison-workspace-data/
+web/comparison-workspace/tsconfig.tsbuildinfo
