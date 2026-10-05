@@ -37,6 +37,9 @@ jobs:
           # 仅安装核心依赖，不包含大模型及可选 GPU 依赖
           pip install -r requirements.txt
 
+      - name: Install Comparison Workspace Dependencies
+        run: pip install -r requirements-workspace.txt
+
       - name: W4 Approved Benchmark
         run: python -m app.validate_w4_benchmark
 
@@ -58,3 +61,18 @@ jobs:
 
       - name: W5 Artifact Reproducibility Check
         run: python scripts/check_w5_method_artifacts.py
+
+      - name: Set up Node for Comparison Workspace
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/comparison-workspace/package-lock.json
+
+      - name: Comparison Workspace Browser Regression
+        working-directory: web/comparison-workspace
+        run: |
+          npm ci
+          npm run build
+          npx playwright install --with-deps chromium
+          npm test
