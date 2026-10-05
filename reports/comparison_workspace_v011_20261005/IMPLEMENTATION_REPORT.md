@@ -34,6 +34,9 @@ Project schema 保持 v0.1；新 Run 字段为可选，旧记录仍可读。
 
 ## 验证
 
-定向 65 tests、前端构建和 9 条浏览器流程通过。完整 suite 与 Gate 结果见 TEST_REPORT。
+实现提交：065b43bd284562db22eb7f8b602f33c46916463f。
+定向 65 tests、前端构建和 9 条浏览器流程通过。完整 suite 在 clean 实现提交上运行一次：
+1146 tests / 15 skipped，260.473s；Basic / Full Gate PASS，tests 明确 SKIPPED。
+Full 有 3 条既有历史警告。完成后仅补记报告，未再修改源码。详见 TEST_REPORT。
 安全自检见 SECURITY_REVIEW；实际服务兼容限制见 PROVIDER_COMPATIBILITY / LIVE_SMOKE_TEST_STATUS。
 本报告是实施者自述，不冒充独立终审或真实服务验收。
