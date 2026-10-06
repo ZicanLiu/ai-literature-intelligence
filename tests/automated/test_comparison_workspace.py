@@ -622,6 +622,8 @@ class OpenAIAdapterTests(unittest.TestCase):
         self.client.responses.parse.return_value = SimpleNamespace(model="actual-model-snapshot",
             _request_id="req_mock", usage=usage, status="completed",
             output_parsed=AnalysisOutput(observations=[], findings=[]))
+        from tests.fixtures.comparison_workspace.mock_live_sdk import MockRawResponse
+        self.client.responses.with_raw_response.parse.side_effect = lambda **kw: MockRawResponse(self.client.responses.parse(**kw))
         self.env = patch.dict(os.environ, {"DISABLE_LIVE_API": "false"})
         self.env.start()
         self.addCleanup(self.env.stop)
@@ -664,6 +666,8 @@ class OpenAIAdapterTests(unittest.TestCase):
         for case in cases:
             with self.subTest(case=case):
                 client = Mock()
+                from tests.fixtures.comparison_workspace.mock_live_sdk import MockRawResponse
+                client.responses.with_raw_response.parse.side_effect = lambda **kw: MockRawResponse(client.responses.parse(**kw))
                 response = copy.copy(self.client.responses.parse.return_value)
                 if case == "timeout":
                     client.responses.parse.side_effect = APITimeoutError(request=httpx.Request("POST", "https://example.invalid"))

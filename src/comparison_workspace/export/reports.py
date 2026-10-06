@@ -92,7 +92,9 @@ def markdown(view: dict) -> str:
     lines += ["", "## 运行记录", ""]
     for r in view["runs"]:
         lines.append(f"- {r['id']} · {r['mode']} / {r['provider']} · {r['stage']} · {r['status']} · "
-                     f"revision={r['input_revision']} · model={r['model']} · request={r['request_id']} · "
+                     f"revision={r['input_revision']} · requested_model={clean(r.get('requested_model') or 'unknown')} · "
+                     f"provider_reported_model={clean(r.get('provider_reported_model') or '未取得服务端返回模型')} · "
+                     f"legacy model={clean(r['model'])}（仅兼容保留，来源不由此字段推断） · request={r['request_id']} · "
                      f"elapsed={r['elapsed_seconds']} · tokens={json.dumps(r['token_usage'])} · cost={r['cost']}")
     # Full original records are portable in all three formats.
     lines += ["", "## 原记录与完整快照", "", "```json",

@@ -76,15 +76,28 @@ HTTP request validation errors 使用固定安全说明，避免 FastAPI 默认�
 OpenAI / DeepSeek 共享声明输入、容量限制、安全错误及认证模型检查。
 DeepSeekProvider 独立实现 responses.create + text.format JSON Schema + 本地 Pydantic JSON 校验，
 仅它映射 reasoning.effort；OpenAI 保留 parse / store=false。服务端 URL 固定，无用户 endpoint。
-SDK 仍零自动重试；连接测试与生成都检查硬离线。
+SDK 仍零自动重试；连接测试与生成都在 SDK 调用入口做最终硬离线检查。
 
 Live 默认关闭，后端同时要求凭据、模型和 provider 数据发送确认。工作流 start_run 捕获新 adapter，
-冻结 Key / model / reasoning 与输入快照；执行前重新检查 Live、所选服务和硬离线。
-关闭 Live、切换服务或清除当前 Key 会阻止尚未开始的旧任务。已发出的请求不能撤回。
+冻结 Key / credential source / model / reasoning、provider 授权代次与输入快照。
+确认撤回、Live off、清 Key、替换凭据、切走 provider 与进程关闭递增相关代次，
+重新授权不恢复旧适配器。服务观察到硬离线开启也作废两家旧代次；部署环境的未被观察的
+开关变化不属于设置服务持有的状态，SDK 入口仍读取当前硬离线值。
+省略 acknowledge 不变，显式 false 撤回并关闭 Live，覆盖同请求里的 enable。
 同一 provider 在排队后改 model / reasoning，不改写该 Run 的配置。
+
+发送边界：声明输入序列化、JSON Schema / 客户端 / SDK 方法准备完成后，紧接 SDK 请求调用前，
+在短暂 settings 锁内核验 provider、授权代次、凭据值及来源、hard offline；生成再要求 Live 与确认。
+通过判定时进入 send_started 阶段，随后释放锁调用 SDK。撤回先于此判定完成则零发送；
+进入该阶段后的撤回不能承诺召回，请求可能已在进行。网络等待期间不持 settings 锁。
+连接适配器只持显式 metadata 操作授权，不要求论文确认；也检查代次、凭据、provider 与硬离线，
+不能借其执行内容生成。
+前端取消确认立即 PATCH false；保存成功使用后端响应同步，失败回读 capabilities，回读失败明确状态未确认。
 
 Run 的新可选字段 requested_model / provider_reported_model / reasoning_effort / input_modality
 允许旧 v0.1 记录继续读取；Project schema 仍 v0.1，没有修改冻结研究合同或历史 Run。
+requested_model 始终为入队配置；provider_reported_model 只来自实际响应，包括后处理失败的响应。
+SDK 无响应失败保持 unknown；legacy model 保留原值，不猜测其历史来源。
 workspace_input_mode 能力元数据固定 extracted_text，当前 Run 模态 EXTRACTED_TEXT。
 图像能力按具体 DeepSeek 模型标记；OpenAI 任意 ID 的 image / json_schema 能力保持未知，
 由用户选型与实际结构化请求验证，不自动宣称兼容。

@@ -24,7 +24,7 @@ from src.comparison_workspace.providers.openai_provider import OpenAIProvider
 from src.comparison_workspace.services.live_ai import LiveAISettings, model_capabilities
 from src.comparison_workspace.services.workspace import Workspace
 from src.comparison_workspace.storage.repository import Repository
-from tests.fixtures.comparison_workspace.mock_live_sdk import response_for
+from tests.fixtures.comparison_workspace.mock_live_sdk import MockRawResponse, response_for
 
 ROOT = Path(__file__).resolve().parents[2]
 # Assemble sentinels so configured complete secrets cannot occur in Git/build/reports.
@@ -245,6 +245,7 @@ class LiveHTTPTests(unittest.TestCase):
         self.addCleanup(lambda: self.client.__exit__(None, None, None))
         self.sdk = Mock()
         self.sdk.responses.parse.side_effect = response_for
+        self.sdk.responses.with_raw_response.parse.side_effect = lambda **kw: MockRawResponse(self.sdk.responses.parse(**kw))
         self.sdk.responses.create.side_effect = response_for
         self.sdk.models.list.return_value = SimpleNamespace(data=[SimpleNamespace(id=m) for m in MODELS.values()])
         constructor = patch("openai.OpenAI", return_value=self.sdk)
@@ -331,6 +332,39 @@ class LiveHTTPTests(unittest.TestCase):
             self.assertEqual(self.setup_provider(provider).status_code, 200)
         self.constructor.assert_not_called()
 
+    def test_explicit_false_withdraws_and_wins_over_enable_but_omission_preserves(self):
+        p = self.create_uploaded_project()
+        for provider in KEYS:
+            for enable in (None, True):
+                with self.subTest(provider=provider, conflicting_enable=enable):
+                    self.setup_provider(provider, live=True)
+                    self.sdk.reset_mock()
+                    captured = self.workspace.live_ai.adapter()
+                    body = {"provider": provider, "acknowledge": False}
+                    if enable is not None:
+                        body["live_enabled"] = enable
+                    response = self.client.patch("/api/ai-settings", json=body)
+                    self.assertEqual(response.status_code, 200)
+                    state = response.json()
+                    self.assertFalse(state["providers"][provider]["consent_acknowledged"])
+                    self.assertFalse(state["live_enabled"])
+                    self.assertFalse(state["api_enabled"])
+                    denied = self.client.post(f'/api/projects/{p["id"]}/extractions',
+                                              json={"expected_revision": p["revision"], "mode": "api"})
+                    self.assertEqual(denied.status_code, 422)
+                    with self.assertRaises(ProviderFailure):
+                        captured.extract_results(p)
+                    self.sdk.responses.with_raw_response.parse.assert_not_called()
+                    self.sdk.responses.create.assert_not_called()
+            self.setup_provider(provider, live=True)
+            body = {"provider": provider, "model": MODELS[provider]}
+            if provider == "deepseek":
+                body["reasoning_effort"] = "none"
+            response = self.client.patch("/api/ai-settings", json=body)
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.json()["providers"][provider]["consent_acknowledged"])
+            self.assertTrue(response.json()["api_enabled"])
+
     def test_disabled_live_no_automatic_calls_and_hard_offline_http(self):
         p = self.create_uploaded_project()
         for provider in KEYS:
@@ -369,7 +403,9 @@ class LiveHTTPTests(unittest.TestCase):
         # Persistence scan targets declared product inputs/outputs, not unrelated private workspace files.
         targets = [ROOT/"app/comparison_workspace_api.py", ROOT/"app/comparison_workspace_main.py"]
         for directory in ("src/comparison_workspace", "web/comparison-workspace/src", "web/comparison-workspace/dist",
-                          "reports/comparison_workspace_v011_20261005", "tests/fixtures/comparison_workspace"):
+                          "reports/comparison_workspace_v011_20261005", "reports/comparison_workspace_v011_live_fix_20261006",
+                          "tests/fixtures/comparison_workspace", "web/comparison-workspace/test-results",
+                          "web/comparison-workspace/playwright-report", "temp/workspace-live-browser-tests"):
             targets.extend(p for p in (ROOT/directory).rglob("*") if p.is_file() and "__pycache__" not in p.parts)
         for target in targets:
             for key in KEYS.values():

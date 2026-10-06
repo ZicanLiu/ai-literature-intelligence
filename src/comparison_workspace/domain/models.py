@@ -170,6 +170,7 @@ class Run(Record):
     mode: Mode
     stage: Literal["extraction", "analysis"]
     provider: str
+    # Legacy raw value is kept for read compatibility; never infer either explicit field from it.
     model: str | None = None
     requested_model: str | None = None
     provider_reported_model: str | None = None

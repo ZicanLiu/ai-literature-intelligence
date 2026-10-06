@@ -18,11 +18,14 @@ class DeepSeekProvider(OpenAIProvider):
         if self.reasoning_effort is not None:
             options["reasoning"] = {"effort": self.reasoning_effort}
         # DeepSeek documents text.format with name/schema, not responses.parse or store.
-        return client.responses.create(
+        options = dict(
             model=self.model, instructions=INSTRUCTIONS, input=payload,
             text={"format": {"type": "json_schema", "name": schema.__name__,
                              "schema": schema.model_json_schema()}},
             max_output_tokens=12000, **options)
+        request = client.responses.create
+        self._begin_send("generation")
+        return request(**options)
 
     def _parse_output(self, response, schema):
         return schema.model_validate_json(response.output_text)

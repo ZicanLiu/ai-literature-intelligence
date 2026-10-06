@@ -41,6 +41,7 @@ class OpenAIProvider:
         self._hard_offline = hard_offline
         self._client = client
         self._authorization = authorization
+        self.send_started = False
 
     @classmethod
     def from_environment(cls, *, explicit_enabled=False):
@@ -53,10 +54,18 @@ class OpenAIProvider:
 
     @property
     def enabled(self):
+        return self._authorized()
+
+    def _authorized(self, *, operation=None, begin_send=False):
         env_offline = os.getenv("DISABLE_LIVE_API")
         return bool(self._explicit_enabled and not self._hard_offline and self._api_key and self.model
                     and (env_offline is None or env_offline.casefold() not in {"true", "1"})
-                    and (self._authorization is None or self._authorization()))
+                    and (self._authorization is None or self._authorization(operation=operation, begin_send=begin_send)))
+
+    def _begin_send(self, operation):
+        if not self._authorized(operation=operation, begin_send=True):
+            raise ProviderFailure("发送前授权已失效或硬离线已启用；未发送，请显式创建新尝试。")
+        self.send_started = True
 
     def ensure_enabled(self):
         if not self.enabled:
@@ -68,8 +77,26 @@ class OpenAIProvider:
                                      max_retries=0, timeout=120.0)
 
     def _request(self, client, payload, schema):
-        return client.responses.parse(model=self.model, instructions=INSTRUCTIONS, input=payload,
-                                      text_format=schema, store=False, max_output_tokens=12000)
+        request = client.responses.with_raw_response.parse
+        options = dict(model=self.model, instructions=INSTRUCTIONS, input=payload,
+                       text_format=schema, store=False, max_output_tokens=12000)
+        self._begin_send("generation")
+        raw = request(**options)
+        # SDK parse may reject the schema before returning a ParsedResponse. Keep only
+        # safe response metadata first, without storing or exposing the raw body.
+        try:
+            data = raw.http_response.json()
+        except ValueError:
+            raise ProviderFailure(f"{self.display_name} 返回的结构化字段无效；项目输入已保留。",
+                                  request_id=self._safe_request_id(raw.headers.get("x-request-id"))) from None
+        if not isinstance(data, dict):
+            data = {}
+        metadata = self._metadata(data.get("model"), raw.headers.get("x-request-id"), data.get("usage"))
+        try:
+            return raw.parse()
+        except Exception:
+            raise ProviderFailure(f"{self.display_name} 返回的结构化字段无效；项目输入已保留。",
+                                  **metadata) from None
 
     def _parse_output(self, response, schema):
         return schema.model_validate(response.output_parsed)
@@ -86,8 +113,27 @@ class OpenAIProvider:
                       429: "请求限速或额度不足"}.get(exc.status_code, "请求被拒绝或服务返回错误")
         # Keep a safe request ID for troubleshooting; never forward exception bodies or headers.
         request_id = self._safe_request_id(getattr(exc, "request_id", None))
-        return ProviderFailure(f"{self.display_name} {reason}；未自动重试。", model=self.model,
+        return ProviderFailure(f"{self.display_name} {reason}；未自动重试。",
                                request_id=request_id)
+
+    def _metadata(self, model, request_id, usage):
+        # Provider fields are untrusted; retain numeric usage and safe identifiers only.
+        safe_usage = None
+        if isinstance(usage, dict):
+            safe_usage = {}
+            for name in ("input_tokens", "output_tokens", "total_tokens"):
+                value = usage.get(name)
+                if type(value) is int and value >= 0:
+                    safe_usage[name] = value
+            for name, field in (("input_tokens_details", "cached_tokens"),
+                                ("output_tokens_details", "reasoning_tokens")):
+                details = usage.get(name)
+                value = details.get(field) if isinstance(details, dict) else None
+                if type(value) is int and value >= 0:
+                    safe_usage[name] = {field: value}
+            safe_usage = safe_usage or None
+        return {"model": self._safe_request_id(model), "request_id": self._safe_request_id(request_id),
+                "token_usage": safe_usage}
 
     def _safe_request_id(self, value):
         if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9._-]{1,200}", value):
@@ -99,8 +145,13 @@ class OpenAIProvider:
     def test_connection(self):
         self.ensure_enabled()
         try:
-            models = self._make_client().models.list()
+            client = self._make_client()
+            request = client.models.list
+            self._begin_send("connection")
+            models = request()
             available = any(item.id == self.model for item in models.data)
+        except ProviderFailure:
+            raise
         except Exception as exc:
             raise self._safe_failure(exc) from None
         if not available:
@@ -121,20 +172,24 @@ class OpenAIProvider:
             raise ProviderFailure("输入文本超过 v0.1 API 容量限制；未截断，请缩小项目或手工整理。")
         try:
             response = self._request(self._make_client(), payload, schema)
+        except ProviderFailure:
+            raise
         except Exception as exc:
             raise self._safe_failure(exc) from None
-        actual_model = response.model
-        request_id = self._safe_request_id(getattr(response, "_request_id", None))
-        usage = response.usage.model_dump(mode="json") if response.usage else None
-        if response.status != "completed":
+        try:
+            usage = response.usage.model_dump(mode="json") if response.usage else None
+        except (AttributeError, TypeError, ValueError):
+            usage = None
+        metadata = self._metadata(getattr(response, "model", None), getattr(response, "_request_id", None), usage)
+        if getattr(response, "status", None) != "completed":
             raise ProviderFailure("模型拒绝、输出未完成或缺少结构化结果；请复核后再创建新尝试。",
-                                  model=actual_model, request_id=request_id, token_usage=usage)
+                                  **metadata)
         try:
             output = self._parse_output(response, schema)
         except (ValidationError, ValueError, TypeError, AttributeError):
             raise ProviderFailure(f"{self.display_name} 返回的结构化字段无效；项目输入已保留。",
-                                  model=actual_model, request_id=request_id, token_usage=usage) from None
-        return ProviderResult(output=output, model=actual_model, request_id=request_id, token_usage=usage)
+                                  **metadata) from None
+        return ProviderResult(output=output, **metadata)
 
     def extract_results(self, input_snapshot):
         return self._call(input_snapshot, ExtractionOutput, "extraction")

@@ -100,7 +100,7 @@ class AISettingsBody(Record):
     model: str | None = Field(default=None, min_length=1, max_length=200, pattern=r"^[A-Za-z0-9._-]+$")
     reasoning_effort: Literal["none", "low", "high", "max"] | None = None
     live_enabled: bool | None = None
-    acknowledge: bool = False
+    acknowledge: bool | None = None
 
 
 def default_data_dir() -> Path:

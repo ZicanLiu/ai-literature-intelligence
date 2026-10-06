@@ -20,7 +20,7 @@ class Provider(Protocol):
 
 
 class ProviderFailure(Exception):
-    """Safe failure reason only: never pass SDK exception text to the client."""
+    """Safe reason and actual response metadata only; model is never a requested fallback."""
     def __init__(self, message, *, model=None, request_id=None, token_usage=None):
         super().__init__(message)
         self.model = model

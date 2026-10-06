@@ -5,6 +5,21 @@ from types import SimpleNamespace
 from src.comparison_workspace.domain.models import AnalysisOutput, ExtractionOutput
 
 
+class MockRawResponse:
+    """SDK raw wrapper double, with response metadata available before local parsing."""
+    def __init__(self, response):
+        self.response = response
+        self.headers = {"x-request-id": response._request_id}
+        self.http_response = SimpleNamespace(json=self.json)
+
+    def json(self):
+        return {"model": self.response.model,
+                "usage": self.response.usage.model_dump() if self.response.usage else None}
+
+    def parse(self):
+        return self.response
+
+
 def response_for(**options):
     inputs = json.loads(options["input"])
     papers = inputs["papers"]

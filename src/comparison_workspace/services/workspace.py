@@ -283,7 +283,7 @@ class Workspace:
             selected.ensure_enabled()
         run = Run(project_id=project_id, input_revision=p.revision, input_snapshot=self.snapshot(p),
                   mode=mode, stage=stage, provider=getattr(selected, "provider_id", type(selected).__name__) if selected else "Manual",
-                  model=getattr(selected, "model", None), requested_model=getattr(selected, "model", None),
+                  requested_model=getattr(selected, "model", None),
                   reasoning_effort=getattr(selected, "reasoning_effort", None),
                   input_modality="EXTRACTED_TEXT" if mode == "api" else None)
         self.repo.add_run(run)
@@ -397,7 +397,8 @@ class Workspace:
         except Exception as exc:
             run.status = "FAILED"
             if isinstance(exc, ProviderFailure):
-                run.model = exc.model or run.model
+                run.model = exc.model
+                run.provider_reported_model = exc.model
                 run.request_id = exc.request_id
                 run.token_usage = exc.token_usage
             # SDK/parser messages can contain credentials, paths or source content.

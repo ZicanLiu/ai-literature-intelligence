@@ -49,12 +49,21 @@ Markdown / JSON / CSV 同时保留有效投影、原记录、corrections 与历�
 
 ## v0.1.1 live 运行
 
-provider 为 openai / deepseek，requested_model 固定请求配置，model 和 provider_reported_model
-保存服务报告模型；reasoning_effort 仅记录显式使用的 DeepSeek 参数，None 表示服务默认 / 未发送。
+provider 为 openai / deepseek，requested_model 固定入队时的请求配置；provider_reported_model
+只来自实际响应明确报告的模型。认证 / 超时 / 网络 / 发送前授权失败未取得响应时保持 null，
+不以 requested_model 补值；响应已报告模型但拒绝 / incomplete / 本地 schema 或身份校验失败时，
+仍保留安全模型标识、request ID 与数值 usage。OpenAI 通过同一次 SDK parse 的 raw-response
+包装在本地解析前取得元数据，不另发请求、不保存原始响应体。
+model 仅为兼容字段：新运行只写真实报告值，旧记录保留原值且来源不由此推断，不回填两个明确字段。
+UI 未取得报告值时显示“未取得服务端返回模型”；Markdown / JSON / CSV 区分请求与报告字段。
+reasoning_effort 仅记录显式使用的 DeepSeek 参数，None 表示服务默认 / 未发送。
 input_modality=EXTRACTED_TEXT 表示实际发送的论文模态。source ID / hash 与 active result ID
 仍在不可变 input_snapshot 中；耗时、request ID、token usage 与工程状态保留。
 失败保留安全原因及可用的安全 request ID；不复制 SDK 原始异常或认证头。
 
 credential source、session Key、环境变量内容和数据发送确认不写入项目或 Run。
 确认只对当前进程 / provider 有效，不是人类批准模型输出，更不是 pure-human gold。
+省略 acknowledge 不改变确认；显式 false 撤回确认并关闭 Live，即使同时提交 live_enabled=true。
+确认撤回、Live off、清 Key、换凭据、切走 provider 与进程关闭永久失效旧的未发送授权，
+以后重新确认 / 开启只授权新任务。授权代次与凭据只在进程内，不写入 Run 或数据库。
 请求、返回和 JSON Schema 通过不构成科学解释正确性证明。

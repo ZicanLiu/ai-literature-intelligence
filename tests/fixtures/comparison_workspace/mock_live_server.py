@@ -1,14 +1,16 @@
 """Browser-only mock server. Real provider adapters + actual API/storage; SDK transport replaced."""
 import argparse
 import os
+import threading
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Literal
 from unittest.mock import Mock, patch
 
 import uvicorn
 
 from app.comparison_workspace_api import create_app
-from tests.fixtures.comparison_workspace.mock_live_sdk import response_for
+from tests.fixtures.comparison_workspace.mock_live_sdk import MockRawResponse, response_for
 
 
 def main():
@@ -20,13 +22,59 @@ def main():
     for name in ("OPENAI_API_KEY", "DEEPSEEK_API_KEY", "COMPARISON_OPENAI_MODEL", "COMPARISON_DEEPSEEK_MODEL"):
         os.environ.pop(name, None)
     os.environ["DISABLE_LIVE_API"] = "false"
+    scenario = "success"
+    def respond(**options):
+        if scenario == "failure":
+            raise RuntimeError("Simulated failure before response")
+        result = response_for(**options)
+        if scenario == "schema":
+            result.output_parsed = {"observations": "invalid", "findings": []}
+            result.output_text = '{"observations":"invalid","findings":[]}'
+        return result
     sdk = Mock()
-    sdk.responses.parse.side_effect = response_for
-    sdk.responses.create.side_effect = response_for
+    sdk.responses.parse.side_effect = respond
+    sdk.responses.with_raw_response.parse.side_effect = lambda **kw: MockRawResponse(sdk.responses.parse(**kw))
+    sdk.responses.create.side_effect = respond
     sdk.models.list.return_value = SimpleNamespace(data=[SimpleNamespace(id=name) for name in
                                                     ("mock-openai", "deepseek-flash", "deepseek-v4-pro")])
     with patch("openai.OpenAI", return_value=sdk):
-        uvicorn.run(create_app(data_dir=args.data_dir), host="127.0.0.1", port=args.port, log_level="warning")
+        app = create_app(data_dir=args.data_dir)
+        frontend = next(route for route in app.routes if route.name == "frontend")
+        app.router.routes.remove(frontend)
+        release = threading.Event()
+        # Test-only controls live exclusively in this SDK-mocked fixture, never in the product API.
+        @app.post("/_test/pause-worker")
+        def pause_worker():
+            release.clear()
+            entered = threading.Event()
+            def hold():
+                entered.set()
+                if not release.wait(30):
+                    raise AssertionError("Browser worker barrier timed out")
+            app.state.workspace.executor.submit(hold)
+            if not entered.wait(5):
+                raise AssertionError("Browser worker did not reach barrier")
+            sdk.reset_mock()
+            return {"paused": True}
+
+        @app.post("/_test/release-worker")
+        def release_worker():
+            release.set()
+            return {"released": True}
+
+        @app.get("/_test/sdk-counts")
+        def counts():
+            return {"openai": sdk.responses.with_raw_response.parse.call_count,
+                    "deepseek": sdk.responses.create.call_count, "connection": sdk.models.list.call_count}
+
+        @app.post("/_test/scenario/{value}")
+        def set_scenario(value: Literal["success", "failure", "schema"]):
+            nonlocal scenario
+            scenario = value
+            return {"scenario": scenario}
+
+        app.router.routes.append(frontend)
+        uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="warning")
 
 
 if __name__ == "__main__":
