@@ -167,10 +167,7 @@ class DeepSeekAdapterTests(unittest.TestCase):
             self.provider.reasoning_effort = effort
             self.provider.analyze_comparison(self.snapshot, [], [])
             options = self.client.responses.create.call_args.kwargs
-            if effort is None:
-                self.assertNotIn("reasoning", options)
-            else:
-                self.assertEqual(options["reasoning"], {"effort": effort})
+            self.assertEqual(options["reasoning"], {"effort": effort if effort is not None else "high"})
 
     def test_invalid_incomplete_refused_output_is_rejected_without_retry(self):
         for text, status in (("not json", "completed"), ('{"observations":"invalid","findings":[]}', "completed"),

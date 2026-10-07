@@ -95,7 +95,14 @@ def markdown(view: dict) -> str:
                      f"revision={r['input_revision']} · requested_model={clean(r.get('requested_model') or 'unknown')} · "
                      f"provider_reported_model={clean(r.get('provider_reported_model') or '未取得服务端返回模型')} · "
                      f"legacy model={clean(r['model'])}（仅兼容保留，来源不由此字段推断） · request={r['request_id']} · "
+                     f"reasoning_effort={clean(r.get('reasoning_effort'))} · "
+                     f"provider_status={clean(r.get('provider_status') or 'unknown')} · "
+                     f"incomplete_details={clean(json.dumps(r.get('incomplete_details'), ensure_ascii=False))} · "
                      f"elapsed={r['elapsed_seconds']} · tokens={json.dumps(r['token_usage'])} · cost={r['cost']}")
+        if r.get("failure_reason"):
+            lines.append(f"  失败：{clean(r['failure_reason'])}")
+        if r.get("validation_diagnostic"):
+            lines.append(f"  本地校验：{clean(json.dumps(r['validation_diagnostic'], ensure_ascii=False))}")
     # Full original records are portable in all three formats.
     lines += ["", "## 原记录与完整快照", "", "```json",
               json.dumps(portable(view), ensure_ascii=False, indent=2), "```", ""]

@@ -6,7 +6,7 @@ import os
 import re
 
 from pydantic import ValidationError
-from ..domain.models import AnalysisOutput, ExtractionOutput
+from ..domain.models import AnalysisOutput, ExtractionOutput, ValidationDiagnostic
 from .base import ProviderFailure, ProviderResult
 
 INSTRUCTIONS = """
@@ -91,12 +91,15 @@ class OpenAIProvider:
                                   request_id=self._safe_request_id(raw.headers.get("x-request-id"))) from None
         if not isinstance(data, dict):
             data = {}
-        metadata = self._metadata(data.get("model"), raw.headers.get("x-request-id"), data.get("usage"))
+        metadata = self._metadata(data.get("model"), raw.headers.get("x-request-id"), data.get("usage"),
+                                  data.get("status"), data.get("incomplete_details"))
+        if metadata["provider_status"] and metadata["provider_status"] != "completed":
+            raise self._unfinished(metadata)
         try:
             return raw.parse()
-        except Exception:
+        except Exception as exc:
             raise ProviderFailure(f"{self.display_name} 返回的结构化字段无效；项目输入已保留。",
-                                  **metadata) from None
+                                  validation_diagnostic=self._schema_diagnostic(exc), **metadata) from None
 
     def _parse_output(self, response, schema):
         return schema.model_validate(response.output_parsed)
@@ -116,7 +119,7 @@ class OpenAIProvider:
         return ProviderFailure(f"{self.display_name} {reason}；未自动重试。",
                                request_id=request_id)
 
-    def _metadata(self, model, request_id, usage):
+    def _metadata(self, model, request_id, usage, status=None, incomplete_details=None):
         # Provider fields are untrusted; retain numeric usage and safe identifiers only.
         safe_usage = None
         if isinstance(usage, dict):
@@ -132,8 +135,40 @@ class OpenAIProvider:
                 if type(value) is int and value >= 0:
                     safe_usage[name] = {field: value}
             safe_usage = safe_usage or None
+        safe_status = status if isinstance(status, str) and status in {
+            "queued", "in_progress", "completed", "incomplete", "failed", "cancelled"} else None
+        reason = (incomplete_details.get("reason") if isinstance(incomplete_details, dict)
+                  else getattr(incomplete_details, "reason", None))
+        safe_details = {"reason": self._safe_request_id(reason)} if incomplete_details is not None else None
         return {"model": self._safe_request_id(model), "request_id": self._safe_request_id(request_id),
-                "token_usage": safe_usage}
+                "token_usage": safe_usage, "provider_status": safe_status, "incomplete_details": safe_details}
+
+    @staticmethod
+    def _schema_diagnostic(exc):
+        # Never persist Pydantic input, context, error messages or arbitrary extra-field names.
+        path = "$"
+        if isinstance(exc, ValidationError):
+            allowed = {"results", "observations", "findings", "paper_id", "source_snapshot_id", "page_index",
+                       "quote", "result_id", "dimension", "value", "state", "evidence", "category",
+                       "affected_result_ids", "scope", "explanation", "title", "description", "experiment_identity"}
+            errors = exc.errors(include_input=False, include_context=False, include_url=False)
+            for part in errors[0]["loc"] if errors else ():
+                if type(part) is int and 0 <= part < 100000:
+                    path += f"[{part}]"
+                elif isinstance(part, str) and part in allowed:
+                    path += "." + part
+                else:
+                    break
+        return ValidationDiagnostic(field_path=path, rule="structured_output_schema")
+
+    @staticmethod
+    def _unfinished(metadata):
+        status = metadata["provider_status"]
+        reason = (metadata["incomplete_details"] or {}).get("reason")
+        detail = f"（原因：{reason}）" if reason else ""
+        message = (f"提供方输出未完成{detail}" if status == "incomplete"
+                   else f"提供方未返回完成输出（状态：{status or 'unknown'}）")
+        return ProviderFailure(message + "；未自动重试，请复核后再创建新尝试。", **metadata)
 
     def _safe_request_id(self, value):
         if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9._-]{1,200}", value):
@@ -180,15 +215,15 @@ class OpenAIProvider:
             usage = response.usage.model_dump(mode="json") if response.usage else None
         except (AttributeError, TypeError, ValueError):
             usage = None
-        metadata = self._metadata(getattr(response, "model", None), getattr(response, "_request_id", None), usage)
+        metadata = self._metadata(getattr(response, "model", None), getattr(response, "_request_id", None), usage,
+                                  getattr(response, "status", None), getattr(response, "incomplete_details", None))
         if getattr(response, "status", None) != "completed":
-            raise ProviderFailure("模型拒绝、输出未完成或缺少结构化结果；请复核后再创建新尝试。",
-                                  **metadata)
+            raise self._unfinished(metadata)
         try:
             output = self._parse_output(response, schema)
-        except (ValidationError, ValueError, TypeError, AttributeError):
+        except (ValidationError, ValueError, TypeError, AttributeError) as exc:
             raise ProviderFailure(f"{self.display_name} 返回的结构化字段无效；项目输入已保留。",
-                                  **metadata) from None
+                                  validation_diagnostic=self._schema_diagnostic(exc), **metadata) from None
         return ProviderResult(output=output, **metadata)
 
     def extract_results(self, input_snapshot):

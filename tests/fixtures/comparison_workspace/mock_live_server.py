@@ -30,6 +30,12 @@ def main():
         if scenario == "schema":
             result.output_parsed = {"observations": "invalid", "findings": []}
             result.output_text = '{"observations":"invalid","findings":[]}'
+        elif scenario == "incomplete":
+            result.status = "incomplete"
+            result.incomplete_details = {"reason": "max_output_tokens"}
+        elif scenario == "identity":
+            result.output_parsed.observations[0].evidence = result.output_parsed.observations[1].evidence
+            result.output_text = result.output_parsed.model_dump_json()
         return result
     sdk = Mock()
     sdk.responses.parse.side_effect = respond
@@ -68,7 +74,7 @@ def main():
                     "deepseek": sdk.responses.create.call_count, "connection": sdk.models.list.call_count}
 
         @app.post("/_test/scenario/{value}")
-        def set_scenario(value: Literal["success", "failure", "schema"]):
+        def set_scenario(value: Literal["success", "failure", "schema", "incomplete", "identity"]):
             nonlocal scenario
             scenario = value
             return {"scenario": scenario}

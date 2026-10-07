@@ -234,6 +234,51 @@ for(const provider of ['openai','deepseek'] as const) {
     await expect(page.getByLabel('启用本次会话 Live',{exact:true})).not.toBeChecked()
   })
 
+  test(`${provider} incomplete and completed identity failures show specific safe diagnostics and retain project state`,async({page})=>{
+    await enableProvider(page,provider)
+    await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+    const id=await demoProject(page)
+    const before=await (await page.request.get('/api/projects/'+id)).json()
+    for(const scenario of ['incomplete','identity']) {
+      await control(page,'scenario/'+scenario)
+      const response=page.waitForResponse(r=>r.url().endsWith('/analyses')&&r.request().method()==='POST')
+      await page.getByRole('button',{name:'运行分析',exact:true}).click()
+      const runId=(await (await response).json()).run_id
+      await expect(page.getByRole('button',{name:'运行分析',exact:true})).toBeEnabled()
+      if(scenario==='incomplete') {
+        await expect(page.getByRole('alert')).toContainText('输出未完成')
+        await expect(page.getByRole('alert')).toContainText('max_output_tokens')
+      } else {
+        await expect(page.getByRole('alert')).toContainText('提供方已完成，本地校验失败')
+        await expect(page.getByRole('alert')).toContainText('$.observations[0].evidence[0].paper_id')
+      }
+      const run=await (await page.request.get('/api/runs/'+runId)).json()
+      expect(run.status).toBe('FAILED')
+      expect(run.output).toBeNull()
+      expect(run.provider_status).toBe(scenario==='incomplete'?'incomplete':'completed')
+      await page.getByRole('button',{name:'运行与修订记录',exact:true}).click()
+      const item=page.locator('.history-item').filter({has:page.locator('code',{hasText:runId})})
+      await expect(item).toContainText('提供方状态 '+run.provider_status)
+      if(scenario==='incomplete') {
+        expect(run.incomplete_details).toEqual({reason:'max_output_tokens'})
+        await expect(item).toContainText('未完成原因 max_output_tokens')
+      } else {
+        expect(run.validation_diagnostic.rule).toBe('evidence_paper_ownership')
+        await expect(item).toContainText('规则 evidence_paper_ownership')
+        await expect(item).toContainText('预期：paper '+before.papers[0].id+' · source '+before.papers[0].source.id)
+        await expect(item).toContainText('返回：paper '+before.papers[1].id+' · source '+before.papers[1].source.id)
+      }
+      await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+      const after=await (await page.request.get('/api/projects/'+id)).json()
+      for(const field of ['revision','papers','evidence','observations','findings','corrections'])expect(after[field]).toEqual(before[field])
+      const exported=await (await page.request.get('/api/projects/'+id+'/exports/json')).json()
+      const saved=exported.runs.find((record:{id:string})=>record.id===runId)
+      expect(saved.validation_diagnostic).toEqual(run.validation_diagnostic)
+      expect(saved.incomplete_details).toEqual(run.incomplete_details)
+      for(const key of Object.values(keys))expect(JSON.stringify(exported)).not.toContain(key)
+    }
+  })
+
   test(`${provider} success, pre-response failure and schema failure show and export requested/reported models separately`,async({page})=>{
     await enableProvider(page,provider)
     await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
@@ -270,3 +315,34 @@ for(const provider of ['openai','deepseek'] as const) {
     }
   })
 }
+
+test('DeepSeek operation defaults and explicit extraction override are visible and recorded',async({page})=>{
+  await enableProvider(page,'deepseek')
+  await page.getByLabel('思考强度',{exact:true}).selectOption('')
+  await page.getByRole('button',{name:'保存 AI 配置',exact:true}).click()
+  await expect(page.getByRole('dialog')).toContainText('结果提取 none，比较分析 high')
+  await expect(page.getByRole('dialog').getByRole('status')).toContainText('配置已保存')
+  await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+  await demoProject(page)
+  for(const [stage,button,effort] of [['extractions','提取候选结果','none'],['analyses','运行分析','high']]) {
+    const response=page.waitForResponse(r=>r.url().endsWith('/'+stage)&&r.request().method()==='POST')
+    await page.getByRole('button',{name:button,exact:true}).click()
+    const runId=(await (await response).json()).run_id
+    await expect.poll(async()=> (await (await page.request.get('/api/runs/'+runId)).json()).status).toBe('COMPLETED')
+    expect((await (await page.request.get('/api/runs/'+runId)).json()).reasoning_effort).toBe(effort)
+    await expect(page.getByRole('button',{name:'运行分析',exact:true})).toBeEnabled()
+    await page.getByRole('button',{name:'运行与修订记录',exact:true}).click()
+    await expect(page.locator('.history-item').filter({has:page.locator('code',{hasText:runId})})).toContainText('reasoning '+effort)
+    await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+  }
+  await page.getByRole('button',{name:'AI 设置',exact:true}).click()
+  await page.getByLabel('思考强度',{exact:true}).selectOption('low')
+  await page.getByRole('button',{name:'保存 AI 配置',exact:true}).click()
+  await expect(page.getByRole('dialog').getByRole('status')).toContainText('配置已保存')
+  await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+  const response=page.waitForResponse(r=>r.url().endsWith('/extractions')&&r.request().method()==='POST')
+  await page.getByRole('button',{name:'提取候选结果',exact:true}).click()
+  const runId=(await (await response).json()).run_id
+  await expect.poll(async()=> (await (await page.request.get('/api/runs/'+runId)).json()).status).toBe('COMPLETED')
+  expect((await (await page.request.get('/api/runs/'+runId)).json()).reasoning_effort).toBe('low')
+})

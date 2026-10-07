@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, CheckCircle2, ChevronDown, CircleHelp, Clock3, Download, FileText, FolderOpen, GitCompareArrows, History, Layers3, LoaderCircle, LockKeyhole, Maximize2, PencilLine, Pin, Plus, RefreshCw, Search, ShieldCheck, Sparkles, TriangleAlert, Upload, X } from 'lucide-react'
-import type { Capabilities, Correction, Evidence, Finding, Observation, Paper, Project, Summary } from './types'
+import type { Capabilities, Correction, Evidence, Finding, Observation, Paper, Project, Run, Summary } from './types'
 import AISettings from './AISettings'
 const PdfCanvas = lazy(()=>import('./PdfPage'))
 function PdfPage(props:{url:string;page:number}) { return <Suspense fallback={<p className="muted">正在加载 PDF 查看器…</p>}><PdfCanvas {...props}/></Suspense> }
@@ -33,6 +33,22 @@ async function api<T>(path:string, options:RequestInit={}):Promise<T> {
 const post = (body:unknown):RequestInit => ({method:'POST',body:JSON.stringify(body)})
 const short = (value:string, count=52) => value.length>count ? value.slice(0,count)+'…' : value
 const paperTitle = (paper:Paper) => paper.identity.title?.value || paper.source.original_filename
+
+function runFailureText(run:Run) {
+  const reason=run.failure_reason||'运行失败，输入已保留。'
+  return run.validation_diagnostic
+    ? `${run.provider_status==='completed'?'提供方已完成，本地校验失败。':''}${reason} 校验位置：${run.validation_diagnostic.field_path}`
+    : reason
+}
+
+function RunDiagnostics({run}:{run:Run}) {
+  const diagnostic=run.validation_diagnostic
+  const identity=(value:{paper_id:string|null;source_snapshot_id:string|null})=>`paper ${value.paper_id||'未知'} · source ${value.source_snapshot_id||'未知'}`
+  return <>
+    <small>提供方状态 {run.provider_status||'未知'}{run.incomplete_details?.reason?' · 未完成原因 '+run.incomplete_details.reason:''}</small>
+    {diagnostic&&<div className="run-diagnostic"><p>本地校验失败 · {diagnostic.field_path} · 规则 {diagnostic.rule}</p>{diagnostic.expected.length>0&&<p>预期：{diagnostic.expected.map(identity).join('；')}</p>}{diagnostic.returned&&<p>返回：{identity(diagnostic.returned)}（未知表示未匹配项目身份，原始值未保存）</p>}</div>}
+  </>
+}
 
 function Badge({mode, corrected=false}:{mode:string;corrected?:boolean}) {
   return <span className={`badge ${corrected?'manual':mode}`}>{corrected?<PencilLine size={11}/>:mode==='demo'?<Sparkles size={11}/>:<FileText size={11}/>} {corrected?'用户修订':modeLabels[mode]||mode}</span>
@@ -85,11 +101,11 @@ export default function App() {
     let stop=false, timer:ReturnType<typeof setTimeout>
     const poll=async()=>{
       try {
-        const r=await api<{status:string;failure_reason:string|null}>('/runs/'+runId)
+        const r=await api<Run>('/runs/'+runId)
         if(stop)return
         if(['QUEUED','RUNNING'].includes(r.status)){timer=setTimeout(poll,600);return}
         setProject(await api<Project>('/projects/'+project.id));setRunId(null);setSelection(null)
-        if(r.status==='FAILED')setError(r.failure_reason||'运行失败，输入已保留。')
+        if(r.status==='FAILED')setError(runFailureText(r))
         else setToast(r.status==='STALE'?'旧运行已保存，未覆盖新输入。':'对照记录已保存。')
       }catch(e){if(!stop){setError((e as Error).message);setRunId(null)}}
     }
@@ -209,7 +225,7 @@ export default function App() {
       }}/>}
     </Modal>}
     {showPins&&project&&<Modal title="并排阅读 · 两条原文证据" wide onClose={()=>setShowPins(false)}><div className="evidence-pair">{pinIds.map(id=><EvidenceCard key={id} project={project} evidence={project.evidence.find(e=>e.id===id)!} onPin={()=>{}} pinned/>)}</div></Modal>}
-    {showHistory&&project&&<Modal title="运行与修订记录" wide onClose={()=>setShowHistory(false)}><div className="modal-body history-content"><h3>运行记录</h3><p className="form-note">每次尝试有独立运行 ID。服务重启将中断未完成任务，不会自动重试外部请求。</p>{project.runs.map(r=><div className="history-item" key={r.id}><span><Badge mode={r.mode}/> <b>{runLabels[r.status]}</b> · {r.stage==='analysis'?'比较分析':'结果提取'} · Revision {r.input_revision}</span><small>{r.provider} · 请求 {r.requested_model||'未知'} · {r.provider_reported_model?'返回 '+r.provider_reported_model:'未取得服务端返回模型'}{r.model&&!r.requested_model&&!r.provider_reported_model?' · 历史 model '+r.model+'（来源不明）':''} · reasoning {r.reasoning_effort??'服务默认'} · {r.input_modality||'—'} · {r.elapsed_seconds??'—'} s · request {r.request_id||'—'} · tokens {JSON.stringify(r.token_usage)}</small><code>{r.id}</code>{r.failure_reason&&<p>{r.failure_reason}</p>}</div>)}{!project.runs.length&&<p className="muted">尚无运行。手工输入已单独保存。</p>}<h3>追加修订</h3>{project.corrections.map(c=><CorrectionItem key={c.id} correction={c}/>)}{!project.corrections.length&&<p className="muted">尚无修订。</p>}</div></Modal>}
+    {showHistory&&project&&<Modal title="运行与修订记录" wide onClose={()=>setShowHistory(false)}><div className="modal-body history-content"><h3>运行记录</h3><p className="form-note">每次尝试有独立运行 ID。服务重启将中断未完成任务，不会自动重试外部请求。</p>{project.runs.map(r=><div className="history-item" key={r.id}><span><Badge mode={r.mode}/> <b>{runLabels[r.status]}</b> · {r.stage==='analysis'?'比较分析':'结果提取'} · Revision {r.input_revision}</span><small>{r.provider} · 请求 {r.requested_model||'未知'} · {r.provider_reported_model?'返回 '+r.provider_reported_model:'未取得服务端返回模型'}{r.model&&!r.requested_model&&!r.provider_reported_model?' · 历史 model '+r.model+'（来源不明）':''} · reasoning {r.reasoning_effort??'服务默认'} · {r.input_modality||'—'} · {r.elapsed_seconds??'—'} s · request {r.request_id||'—'} · tokens {JSON.stringify(r.token_usage)}</small><RunDiagnostics run={r}/><code>{r.id}</code>{r.failure_reason&&<p>{r.failure_reason}</p>}</div>)}{!project.runs.length&&<p className="muted">尚无运行。手工输入已单独保存。</p>}<h3>追加修订</h3>{project.corrections.map(c=><CorrectionItem key={c.id} correction={c}/>)}{!project.corrections.length&&<p className="muted">尚无修订。</p>}</div></Modal>}
   </div>
 }
 

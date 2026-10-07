@@ -9,8 +9,9 @@ from pathlib import Path
 from src.utils import current_timestamp
 from ..demo.content import DEMO_SCOPE, PAPERS, QUESTIONS, pdf_path
 from ..domain.models import (
-    AnalysisOutput, Category, ConditionState, Correction, EvidenceCandidate, ExtractionOutput, Finding,
-    IdentityField, Mode, Observation, Paper, Project, Provenance, Result, Run, WorkspaceError,
+    AnalysisOutput, Category, ConditionState, Correction, EvidenceCandidate, EvidenceIdentity, ExtractionOutput, Finding,
+    IdentityField, Mode, Observation, OutputValidationFailure, Paper, Project, Provenance, Result, Run,
+    ValidationDiagnostic, WorkspaceError,
 )
 from ..pdf.sources import locate, parse_pdf, sha256, store_raw
 from ..providers.base import ProviderFailure, ProviderResult
@@ -284,7 +285,8 @@ class Workspace:
         run = Run(project_id=project_id, input_revision=p.revision, input_snapshot=self.snapshot(p),
                   mode=mode, stage=stage, provider=getattr(selected, "provider_id", type(selected).__name__) if selected else "Manual",
                   requested_model=getattr(selected, "model", None),
-                  reasoning_effort=getattr(selected, "reasoning_effort", None),
+                  reasoning_effort=(selected.reasoning_effort_for(stage) if hasattr(selected, "reasoning_effort_for")
+                                    else getattr(selected, "reasoning_effort", None)),
                   input_modality="EXTRACTED_TEXT" if mode == "api" else None)
         self.repo.add_run(run)
         self.executor.submit(self.execute, run.id, selected)
@@ -294,23 +296,41 @@ class Workspace:
         """Reject malformed identities; keep invalid locator candidates for review."""
         prov = Provenance(mode=run.mode, actor=run.provider, model=response.model, run_id=run.id)
         evidence = []
-        def bind(candidates, allowed_papers):
+        papers = {paper.id: paper for paper in p.papers}
+        source_ids = {paper.source.id for paper in p.papers}
+        def identity_failure(c, allowed_papers, path, rule, message):
+            # Unknown provider values can contain credentials or source text. Record only
+            # exact identities already present in this immutable project snapshot.
+            diagnostic = ValidationDiagnostic(
+                field_path=path, rule=rule,
+                expected=[EvidenceIdentity(paper_id=pid, source_snapshot_id=papers[pid].source.id)
+                          for pid in sorted(allowed_papers)],
+                returned=EvidenceIdentity(paper_id=c.paper_id if c.paper_id in papers else None,
+                                          source_snapshot_id=c.source_snapshot_id if c.source_snapshot_id in source_ids else None))
+            raise OutputValidationFailure(message, diagnostic)
+        def bind(candidates, allowed_papers, path):
             ids = []
-            for c in candidates:
+            for index, c in enumerate(candidates):
+                field_path = f"{path}[{index}]"
                 if c.paper_id not in allowed_papers:
-                    raise WorkspaceError("提供方引用了其他论文的证据。")
-                e = locate(c, self.paper(p, c.paper_id))
+                    identity_failure(c, allowed_papers, field_path + ".paper_id",
+                                     "evidence_paper_ownership", "提供方引用了其他论文的证据。")
+                try:
+                    e = locate(c, self.paper(p, c.paper_id))
+                except WorkspaceError:
+                    identity_failure(c, {c.paper_id}, field_path + ".source_snapshot_id",
+                                     "evidence_source_identity", "证据属于另一论文或源快照。")
                 evidence.append(e)
                 ids.append(e.id)
             return ids
         if run.stage == "extraction":
             parsed = ExtractionOutput.model_validate(response.output.model_dump())
             results = []
-            for c in parsed.results:
+            for index, c in enumerate(parsed.results):
                 self.paper(p, c.paper_id)
                 results.append(Result(paper_id=c.paper_id, title=c.title, description=c.description,
                                       experiment_identity=c.experiment_identity,
-                                      evidence_ids=bind(c.evidence, {c.paper_id}), provenance=prov))
+                                      evidence_ids=bind(c.evidence, {c.paper_id}, f"$.results[{index}].evidence"), provenance=prov))
             if not results:
                 raise WorkspaceError("未返回结果候选；请手工创建。")
             output = {"results": [r.model_dump(mode="json") for r in results],
@@ -320,7 +340,7 @@ class Workspace:
             active = {paper.active_target_result_id: paper.id for paper in p.papers}
             observations, findings = [], []
             seen = set()
-            for c in parsed.observations:
+            for index, c in enumerate(parsed.observations):
                 if c.result_id not in active:
                     raise WorkspaceError("分析引用了非活动目标结果。")
                 key = (c.result_id, c.dimension)
@@ -328,17 +348,18 @@ class Workspace:
                     raise WorkspaceError("分析包含重复结果维度。")
                 seen.add(key)
                 obs = Observation(result_id=c.result_id, dimension=c.dimension, value=c.value, state=c.state,
-                                  evidence_ids=bind(c.evidence, {active[c.result_id]}), provenance=prov)
+                                  evidence_ids=bind(c.evidence, {active[c.result_id]}, f"$.observations[{index}].evidence"), provenance=prov)
                 if obs.state == ConditionState.PRESENT and (not obs.evidence_ids or any(
                         e.id in obs.evidence_ids and e.locator_status != "LOCATED" for e in evidence)):
                     obs.state = ConditionState.AMBIGUOUS
                 observations.append(obs)
-            for c in parsed.findings:
+            for index, c in enumerate(parsed.findings):
                 if not c.affected_result_ids or any(rid not in active for rid in c.affected_result_ids):
                     raise WorkspaceError("分析结论引用了非活动目标结果。")
                 f = Finding(category=c.category, affected_result_ids=c.affected_result_ids, scope=c.scope,
                             explanation=c.explanation,
-                            evidence_ids=bind(c.evidence, {active[rid] for rid in c.affected_result_ids}),
+                            evidence_ids=bind(c.evidence, {active[rid] for rid in c.affected_result_ids},
+                                              f"$.findings[{index}].evidence"),
                             provenance=prov, stale=False)
                 # Unverified provider interpretation remains reviewable, never promoted to located support.
                 if f.category != Category.UNRESOLVED and (not f.evidence_ids or any(
@@ -372,6 +393,8 @@ class Workspace:
                                                        [c.model_dump(mode="json") for c in p.corrections])
             run.model, run.request_id, run.token_usage = response.model, response.request_id, response.token_usage
             run.provider_reported_model = response.model
+            run.provider_status = response.provider_status
+            run.incomplete_details = response.incomplete_details
             run.output = self.validate_output(p, run, response)
             run.finished_at = current_timestamp()
             run.elapsed_seconds = round(time.monotonic() - started, 3)
@@ -401,6 +424,11 @@ class Workspace:
                 run.provider_reported_model = exc.model
                 run.request_id = exc.request_id
                 run.token_usage = exc.token_usage
+                run.provider_status = exc.provider_status
+                run.incomplete_details = exc.incomplete_details
+                run.validation_diagnostic = exc.validation_diagnostic
+            if isinstance(exc, OutputValidationFailure):
+                run.validation_diagnostic = exc.diagnostic
             # SDK/parser messages can contain credentials, paths or source content.
             run.failure_reason = (str(exc) if isinstance(exc, (WorkspaceError, ProviderFailure))
                                   else "提供方结构无效或运行失败；项目输入已保留。")

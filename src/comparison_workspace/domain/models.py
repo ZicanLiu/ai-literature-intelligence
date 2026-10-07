@@ -162,6 +162,19 @@ class Project(Record):
     demo_question: str | None = None
 
 
+class EvidenceIdentity(Record):
+    # Only identities matched against the immutable project snapshot are retained.
+    paper_id: str | None = None
+    source_snapshot_id: str | None = None
+
+
+class ValidationDiagnostic(Record):
+    field_path: str
+    rule: Literal["structured_output_schema", "evidence_paper_ownership", "evidence_source_identity"]
+    expected: list[EvidenceIdentity] = Field(default_factory=list)
+    returned: EvidenceIdentity | None = None
+
+
 class Run(Record):
     id: str = Field(default_factory=lambda: new_id("run"))
     project_id: str
@@ -183,6 +196,9 @@ class Run(Record):
     elapsed_seconds: float | None = None
     request_id: str | None = None
     token_usage: dict[str, Any] | None = None
+    provider_status: str | None = None
+    incomplete_details: dict[str, str | None] | None = None
+    validation_diagnostic: ValidationDiagnostic | None = None
     failure_reason: str | None = None
     cost: str = "unknown"
 
@@ -242,3 +258,9 @@ class WorkspaceError(Exception):
     def __init__(self, message: str, status_code: int = 422):
         super().__init__(message)
         self.status_code = status_code
+
+
+class OutputValidationFailure(WorkspaceError):
+    def __init__(self, message: str, diagnostic: ValidationDiagnostic):
+        super().__init__(message)
+        self.diagnostic = diagnostic

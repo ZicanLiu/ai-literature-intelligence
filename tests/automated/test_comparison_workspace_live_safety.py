@@ -311,6 +311,8 @@ class LiveSafetyTests(unittest.TestCase):
                     self.assertEqual(failed.requested_model, MODELS[provider])
                     self.assertIsNone(failed.provider_reported_model)
                     self.assertIsNone(failed.model)
+                    self.assertIsNone(failed.provider_status)
+                    self.assertIsNone(failed.incomplete_details)
                     self.assertNotIn(KEYS[provider], failed.model_dump_json())
                     if isinstance(error, APIStatusError):
                         self.assertEqual(failed.request_id, "req_auth")
@@ -337,6 +339,7 @@ class LiveSafetyTests(unittest.TestCase):
                         return httpx.Response(200, headers={"x-request-id": "req_reported"}, json={
                             "id": "resp_mock", "object": "response", "created_at": 1,
                             "status": "incomplete" if case == "incomplete" else "completed",
+                            "incomplete_details": {"reason": "max_output_tokens"} if case == "incomplete" else None,
                             "model": None if case == "missing_model" else "provider-B",
                             "output": [{"id": "msg_mock", "type": "message", "role": "assistant",
                                         "status": "completed", "content": content}],
@@ -351,6 +354,8 @@ class LiveSafetyTests(unittest.TestCase):
                     self.assertEqual(finished.provider_reported_model, None if case == "missing_model" else "provider-B")
                     self.assertEqual(finished.request_id, "req_reported")
                     self.assertEqual(finished.token_usage["total_tokens"], 5)
+                    self.assertEqual(finished.provider_status, "incomplete" if case == "incomplete" else "completed")
+                    self.assertEqual(finished.incomplete_details, {"reason": "max_output_tokens"} if case == "incomplete" else None)
                     self.assertEqual(finished.status, "COMPLETED" if case in {"success", "missing_model"} else "FAILED")
                     view = self.workspace.view(self.project.id)
                     exported = portable(view)

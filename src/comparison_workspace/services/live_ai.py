@@ -55,6 +55,7 @@ class LiveAISettings:
                 providers[name] = {"credential_configured": bool(key), "credential_source": source,
                                    "model": model, "consent_acknowledged": self._acknowledged[name],
                                    "reasoning_effort": self._effort if name == "deepseek" else None,
+                                   "reasoning_defaults": DeepSeekProvider.DEFAULT_REASONING_EFFORT.copy() if name == "deepseek" else {},
                                    "model_capabilities": model_capabilities(name, model),
                                    "suggested_models": list(DEEPSEEK_MODELS) if name == "deepseek" else []}
             selected = providers[self.selected_provider]

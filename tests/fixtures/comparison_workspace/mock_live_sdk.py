@@ -13,8 +13,12 @@ class MockRawResponse:
         self.http_response = SimpleNamespace(json=self.json)
 
     def json(self):
+        details = getattr(self.response, "incomplete_details", None)
         return {"model": self.response.model,
-                "usage": self.response.usage.model_dump() if self.response.usage else None}
+                "usage": self.response.usage.model_dump() if self.response.usage else None,
+                "status": self.response.status,
+                "incomplete_details": (details if isinstance(details, dict) else
+                                       {"reason": details.reason} if details is not None else None)}
 
     def parse(self):
         return self.response
