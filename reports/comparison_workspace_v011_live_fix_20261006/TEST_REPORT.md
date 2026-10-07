@@ -1,10 +1,62 @@
 # 测试与本地验证报告
 
-日期：2026-10-06（Asia/Shanghai）。base：`4f7bf7a46a89fe3db5141a300889f4b008ce71fc`。
+初次报告：2026-10-06；最终 HEAD 复验：2026-10-07（Asia/Shanghai）。base：`4f7bf7a46a89fe3db5141a300889f4b008ce71fc`。
 最终实现：`cd43fccc1b6649b1ec93b76c989f469529426688`。
 只使用 sentinel / mock / 合成 PDF；真实 OpenAI / DeepSeek 请求 **0**。
 
-## 环境
+## 2026-10-07 最终 HEAD 复验（当前结果）
+
+用户明确授权在 HEAD `92140244325fb9d62fe8e1479bcffdb6fb7d654f` 重新运行一次完整 canonical suite。
+运行前核对 Git status / branch / log / HEAD / worktree list；D 盘原 linked worktree 的 `.git`
+仍指向真实 Git worktree 元数据，分支为 `codex/comparison-workspace-v011-live-safety-fix`，工作树 clean。
+原 v0.1.1 工作树 clean、HEAD 仍为 base。依赖版本与下方初次报告一致，没有安装或修改依赖。
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests/automated -p "test_*.py" -q
+```
+
+本轮完整运行 **1 次**；结果 **FAIL，1158 tests，379.525s，0 failures，5 errors，15 skipped，exit=1**。
+此前两项 W5 平台缓存失败未重现。五个 error 均来自同一个方法的五个 subTest：
+
+`test_pilot_selection_context.ExternalCoordinatorCliSequenceTests.test_real_cli_sequence_stays_external_and_git_clean`
+
+labels：`import`、`compare`、`adjudication_task`、`adjudication_import`、`final`。
+
+### 编码原因及诊断
+
+本轮启动设置了 `DISABLE_LIVE_API=true`，另为日志显示设置 `PYTHONIOENCODING=utf-8`。
+后者是本次验证启动引入的环境覆盖，不是仓库代码变化。
+该设置使 Python CLI 子进程的 stderr 输出 UTF-8，但测试中的
+`subprocess.run(capture_output=True, text=True)` 未指定 encoding，当前 Windows 默认解码为 cp936 / GBK。
+五次捕获 stderr 的读取线程均发生 `UnicodeDecodeError: 'gbk' codec ...`。
+CPython 读取线程未能填入 stderr buffer，`CompletedProcess.stderr` 因此为 None；
+随后 `assertIn("repository root 之外", result.stderr)` 在 1094 行产生 TypeError。
+
+精确检查位置：`tests/automated/test_pilot_selection_context.py:1076` 的子进程捕获、`:1094` 的消息断言，
+以及 `app/pilot_curator_workflow.py:278` 的 stderr 输出。
+这些文件相对 base 与被验 HEAD 均无本修复差异。
+已核对本地 CPython 的 `_text_encoding`、`_readerthread` 和 `_communicate`：默认使用 locale 编码，
+读取异常后空 buffer 转成 None；无需推测业务 CLI 未执行拒绝逻辑。
+
+两个只读 / 临时输出诊断均未修改功能或断言：
+
+1. 用原始字节捕获同一中文 stderr，保持父进程默认 cp936：强制子进程 UTF-8 时解码失败，
+   不强制时解码正确。结果保存为 `encoding_diagnosis.json`。
+2. 保持 `DISABLE_LIVE_API=true`，取消 `PYTHONIOENCODING` 覆盖，在同一 clean HEAD 单独运行原失败方法：
+   **1 test，8.627s，PASS，exit=0**，包含原有五个 subTest 及所有 Git-clean / 禁止仓内输出断言。
+
+诊断定位到验证环境的生产 / 解码编码不一致；不据单个方法 PASS 宣称完整 suite PASS。
+本轮没有追加第二次完整运行。按用户“全部通过后才运行 Gate”的条件，
+**本轮 Basic / Full Gate 均 NOT_RUN**；下方 2026-10-06 Gate PASS 仅为历史结果。
+下一次完整复验应避免仅强制 stdio UTF-8，保持子进程输出与父进程文本解码一致。
+
+本轮本地原始记录均在 `temp/live-safety-final-validation-20261007/`：
+`git_context.json`、`unittest_result.json`、`full_unittest.log`、`encoding_diagnosis.json`、
+`external_cli_encoding_diagnostic.log`。不覆盖初次失败日志，不提交含本机路径的原始日志。
+本轮只更新 TEST_REPORT 和 ASTRA_REVIEW_HANDOFF，源码、测试、依赖和冻结 artifact 均未修改。
+报告的 whitespace / Git diff 单独检查不构成测试验收；当前 `READY_FOR_ASTRA_DIFF_REVIEW = NO`。
+
+## 2026-10-06 环境（历史记录）
 
 Git CLI 在指定 D 盘创建真实 linked worktree，`.git` 为合法 worktree 元数据。
 新建被忽略的 `.venv`，使用 `python -m venv .venv --system-site-packages`，
@@ -15,7 +67,7 @@ Python 3.13.9；OpenAI SDK 2.54.0；FastAPI 0.142.2；Pydantic 2.12.4；httpx 0.
 Starlette 1.7.0；pypdf 6.19.0；uvicorn 0.54.0；Node 22.21.0；npm 10.9.4。
 `npm run build` PASS。SDK / frontend 运行依赖与构建未提交。
 
-## 定向与浏览器
+## 2026-10-06 定向与浏览器（历史记录，本轮未重跑）
 
 | 阶段 | 实际运行 | 结果 |
 | --- | --- | --- |
@@ -35,7 +87,7 @@ Python 新模块阻止 socket connect / connect_ex；实际 SDK 用 httpx.MockTr
 Windows ASGI TestClient 内部需要本地 socketpair，HTTP false 验收放在既有 HTTP 测试类，
 barrier / SDK 用例仍保持 socket guard。
 
-## 唯一一次完整 canonical unittest
+## 2026-10-06 首次完整 canonical unittest（历史记录）
 
 在实施提交 `771e423aa133624052422d840a99363afafab6d5`、Git-clean linked worktree 中执行：
 
@@ -44,7 +96,7 @@ barrier / SDK 用例仍保持 socket guard。
 ```
 
 设置进程 `DISABLE_LIVE_API=true`。结果：**FAIL，1158 tests，249.644s，2 failures，15 skipped，0 errors**。
-完整运行次数：**1**。本地原始日志：`temp/live-safety-validation/full_unittest.log`，不提交含本机临时路径的日志。
+当日完整运行次数：**1**。本地原始日志：`temp/live-safety-validation/full_unittest.log`，不提交含本机临时路径的日志。
 日志记录真实 revision / branch / `clean=True`；没有 archive 副本、伪 Git metadata 或历史测试数替代。
 
 失败方法：
@@ -63,14 +115,15 @@ barrier / SDK 用例仍保持 socket guard。
 实际产品代码、W5 validator、冻结 artifact、科研 identity / assertion 均未改。
 同进程安全模块后跟两个原失败方法已通过，见最终 79 项结果。
 
-按提示词“完整 canonical offline validation ONCE”约束未再次运行完整 suite。
-**这不是完整 suite PASS，定向复测和后续 Gate PASS 不能替代。需要成功完整复验才能闭合验收。**
+当日按提示词“完整 canonical offline validation ONCE”约束未再次运行完整 suite。
+**该次历史结果不是完整 suite PASS，定向复测和后续 Gate PASS 不能替代。**
+2026-10-07 的新授权与最终 HEAD 运行结果见第一节，两个日期的失败记录均保留。
 
 开发定向迭代还修正了 raw wrapper 的 HTTP JSON 读取位置、mock 控制路由被 static mount 遮挡，
 以及本机 Python 3.13 不提供平台缓存公开刷新 API；最终实现不调用该 API。
 没有删断言、降低错误或改历史 warning 来通过。
 
-## Gate / Git / 安全
+## 2026-10-06 Gate / Git / 安全（历史记录）
 
 完整结果记录后，修复污染并完成定向复测，再运行：
 
@@ -91,4 +144,5 @@ git status
 - sentinel 检查：0 findings，详见 [SECURITY_REGRESSION_REPORT](SECURITY_REGRESSION_REPORT.md)。
 - 最终报告提交后 `git status --short` 为空；源 v0.1.1 HEAD 与工作树不变。
 
-最终状态：`F1_F4_PASS_CANONICAL_RECHECK_REQUIRED`；`READY_FOR_ASTRA_DIFF_REVIEW = NO`。
+当前最终验证状态：`CANONICAL_ENVIRONMENT_RECHECK_REQUIRED`；`READY_FOR_ASTRA_DIFF_REVIEW = NO`。
+本轮真实 API 请求 **0**，未 push / PR / merge；后续仍需成功完整 canonical 复验及 Astra diff review。
