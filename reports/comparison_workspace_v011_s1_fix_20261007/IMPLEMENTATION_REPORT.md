@@ -2,6 +2,8 @@
 
 日期：2026-10-07（Asia/Shanghai）。基线 `d818eb1`；独立任务分支和 D 盘 linked worktree。
 任务允许本地中文 commit；没有 push、PR、merge、tag 或 release。真实 API 调用：**0**。
+业务实现提交：`e46f855252125babd7fe0a30d966a3260bcb543c`；后续 `b1b2289` 只将负例测试路径
+分段构造并记录验证，实际测试值与 executable bytecode 不变，业务源码无后续变化。
 
 ## 最终行为
 

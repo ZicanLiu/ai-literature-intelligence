@@ -60,8 +60,20 @@ OpenAI SDK 2.54.0、FastAPI 0.142.2、Pydantic 2.12.4、httpx 0.28.1、pypdf 6.1
 合成用户目录路径前缀被个人绝对路径扫描拒绝。Full 当时未运行。
 修复只将该测试的合成路径分段构造；实际测试值、编译后的测试 bytecode 和 constants 均核对相等。
 业务源码、断言、Gate 规则和冻结 artifact 没有改变。原方法定向复验：**1 test / 0.151s / PASS**。
-遵守任务完整 suite 仅一次的要求，不重复完整 unittest；两级 Gate 将在修复后的 clean commit 复验，
-明确 `--skip-tests`，不会以 Gate 替代测试。
+遵守任务完整 suite 仅一次的要求，不重复完整 unittest。两级 Gate 在修复后的 clean commit
+`b1b228978aae256024ab7ecf6ad9cca4605c196d` 复验，均明确 `--skip-tests`；不会以 Gate 替代测试。
+
+| 检查 | 最终实际结果 |
+| --- | --- |
+| Basic Gate | PASS；0 errors / 0 warnings；tests SKIPPED；exit=0 |
+| Full Gate | PASS；0 errors / 3 historical warnings；tests SKIPPED；exit=0 |
+| Git before / after Gate | 相同 b1b2289 HEAD，clean |
+| 全部业务源码相对完整测试 HEAD | 无差异；仅负例路径的等价构造与报告更新 |
+| 完整 unittest 次数 | 1；未在 Gate 内重复 |
+
+Full 的三条原有 warning 保留：W1 的 1 个 CSV 结构问题；19 个旧标注 ID 不在当前统一样例；
+已跟踪历史 experiments `openalex_stellar_spectra_60`。没有删断言、放宽错误、降低 warning 或改历史 evidence。
+最初 Basic 的失败 raw log 和最终两级 Gate raw logs 分开保存，不覆盖前次失败记录。
 
 ## 安全与交付检查
 
@@ -70,7 +82,10 @@ OpenAI SDK 2.54.0、FastAPI 0.142.2、Pydantic 2.12.4、httpx 0.28.1、pypdf 6.1
 未读取环境凭据值或 `.env`。广义 assignment 规则另有四个已人工核对的非敏感命中：
 两个基线测试占位字符串、未变 PDF.js worker 的两个 JS 变量表达式。
 没有豁免 sentinel 或真实密钥格式，也没有修改产品安全 validator；命中和复核结果如实记录。
+最终扫描包含完整测试及两级 Gate 的本地日志，共 **109 个文件，0 findings**；四个已复核的
+非敏感 assignment 命中单列保留。环境凭据值未被检查，`.env` 未读取。
 
-本地验证证据在 ignored `temp/s1-canonical-validation-20261007/`，raw logs 不提交。
+本地验证证据在 ignored `temp/s1-canonical-validation-20261007/` 与
+`temp/s1-gates-after-literal-fix-20261007/`，raw logs 不提交。
 原产品工作树仍为 `d818eb1` / clean；原入口工作树的既有未跟踪报告没有改动。
-最终两级 Gate 与提交后扫描结果待补充。
+最终报告提交后只检查报告 diff / whitespace、来源范围、Git-clean 和 sentinel，不重复已通过的测试。
