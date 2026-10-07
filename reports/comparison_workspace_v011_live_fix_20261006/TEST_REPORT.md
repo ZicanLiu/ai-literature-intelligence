@@ -1,10 +1,74 @@
 # 测试与本地验证报告
 
-初次报告：2026-10-06；最终 HEAD 复验：2026-10-07（Asia/Shanghai）。base：`4f7bf7a46a89fe3db5141a300889f4b008ce71fc`。
+初次报告：2026-10-06；最终 canonical 验收：2026-10-07（Asia/Shanghai）。base：`4f7bf7a46a89fe3db5141a300889f4b008ce71fc`。
 最终实现：`cd43fccc1b6649b1ec93b76c989f469529426688`。
 只使用 sentinel / mock / 合成 PDF；真实 OpenAI / DeepSeek 请求 **0**。
 
-## 2026-10-07 最终 HEAD 复验（当前结果）
+## 2026-10-07 最后一次 canonical validation（当前结果：PASS）
+
+被验 HEAD：`dfa507822036846b1ea33cc6b05d498c3b059263`。
+原 D 盘 linked worktree、分支 `codex/comparison-workspace-v011-live-safety-fix`；
+执行前和 suite / Gate 完成后均为该精确 HEAD，Git status clean，`.git` 元数据有效。
+本轮没有修改功能、测试、断言、依赖或冻结 artifact；没有使用 archive 副本或伪 Git metadata。
+
+### 实际关键环境
+
+本次 shell 明确执行 `$env:PYTHONIOENCODING = $null`，并检查该变量不存在。
+仅设置非编码开关 `DISABLE_LIVE_API=true`，没有新增 Python 编码环境变量。
+环境审计采用非敏感变量白名单，不读取或输出 API Key，也不读取 `.env`。
+
+| 项 | 实际值 |
+| --- | --- |
+| Python / OS / 架构 | 3.13.9 / Windows 11 / AMD64 |
+| locale / preferred encoding | cp936 / cp936 |
+| stdout / stderr encoding | gbk / gbk |
+| Python UTF-8 mode | 0 |
+| PYTHONIOENCODING / PYTHONUTF8 | 均未设置 |
+| PYTHONCOERCECLOCALE / PYTHONLEGACYWINDOWSSTDIO / PYTHONLEGACYWINDOWSFSENCODING | 均未设置 |
+| PROCESSOR_ARCHITECTURE / PROCESSOR_ARCHITEW6432 | AMD64 / 未设置 |
+| SYSTEMROOT / WINDIR | C:\Windows / C:\Windows（系统目录） |
+| DISABLE_LIVE_API | true |
+
+依赖版本与历史环境记录一致；没有安装或调整依赖。原始 stdout / stderr 直接写二进制日志，
+展示和汇总按实际 cp936 解码，不改变测试进程或它的子进程编码。
+
+### 严格顺序及结果
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests/automated -p "test_*.py" -q
+.\.venv\Scripts\python.exe -m app.quality_gate --level basic --skip-tests
+.\.venv\Scripts\python.exe -m app.quality_gate --level full --skip-tests
+git diff --check
+git status
+```
+
+| 步骤 | 本次实际结果 |
+| --- | --- |
+| 完整 canonical unittest | **PASS，1158 tests，335.733s，0 failures / 0 errors，15 skipped，exit=0** |
+| 本轮完整 suite 次数 | **1**；没有定向补跑或重复完整运行 |
+| Basic Gate | PASS，0 errors / 0 warnings；tests 明确 SKIPPED，exit=0 |
+| Full Gate | PASS，0 errors / 3 historical warnings；tests 明确 SKIPPED，exit=0 |
+| git diff --check | PASS，exit=0 |
+| git status | clean，exit=0 |
+
+Full Gate 仍保留三条历史警告：W1 的 1 个 CSV 结构问题；W1 的 19 个 ID 不在当前统一样例；
+已跟踪历史 experiments `openalex_stellar_spectra_60`。没有改变警告、验证器或断言。
+此前 W5 平台缓存问题和上一轮五个编码 error 均未重现。
+临时 Gate 汇总脚本曾有一条非阻断的 `SyntaxWarning: invalid escape sequence`，
+来自 stdin 脚本的结果提取正则；Gate 原始日志及实际退出码均 PASS，没有改仓库或重复运行 Gate。
+
+本次本地证据目录：`temp/live-safety-canonical-final-dfa5078/`。
+包含白名单 `environment.json`、`unittest_result.json`、`full_unittest.raw.log`、
+`basic_gate.raw.log` / `full_gate.raw.log`、两份 `*_gate_result.json` 和 `post_validation_git.json`。
+环境、完整 suite、两级 Gate 和 clean 状态都绑定同一 `dfa5078` HEAD。
+含临时本机路径的原始日志不提交；此前失败日志保持原样。
+
+本轮仅允许随后修改 TEST_REPORT 和 ASTRA_REVIEW_HANDOFF 的报告-only 提交；
+其余 Git 跟踪内容相对被验 HEAD 必须不变。报告更新的本地链接、安全及 diff 检查独立进行，
+不再重复完整 suite。当前状态：**`READY_FOR_ASTRA_DIFF_REVIEW = YES`**。
+此状态只表示离线工程验收完成并可交 Astra 复审；真实 API 未验证，S0 仍需单独明确授权。
+
+## 2026-10-07 在 9214024 的复验（历史编码失败）
 
 用户明确授权在 HEAD `92140244325fb9d62fe8e1479bcffdb6fb7d654f` 重新运行一次完整 canonical suite。
 运行前核对 Git status / branch / log / HEAD / worktree list；D 盘原 linked worktree 的 `.git`
@@ -15,7 +79,7 @@
 .\.venv\Scripts\python.exe -m unittest discover -s tests/automated -p "test_*.py" -q
 ```
 
-本轮完整运行 **1 次**；结果 **FAIL，1158 tests，379.525s，0 failures，5 errors，15 skipped，exit=1**。
+该轮完整运行 **1 次**；结果 **FAIL，1158 tests，379.525s，0 failures，5 errors，15 skipped，exit=1**。
 此前两项 W5 平台缓存失败未重现。五个 error 均来自同一个方法的五个 subTest：
 
 `test_pilot_selection_context.ExternalCoordinatorCliSequenceTests.test_real_cli_sequence_stays_external_and_git_clean`
@@ -24,8 +88,8 @@ labels：`import`、`compare`、`adjudication_task`、`adjudication_import`、`f
 
 ### 编码原因及诊断
 
-本轮启动设置了 `DISABLE_LIVE_API=true`，另为日志显示设置 `PYTHONIOENCODING=utf-8`。
-后者是本次验证启动引入的环境覆盖，不是仓库代码变化。
+该轮启动设置了 `DISABLE_LIVE_API=true`，另为日志显示设置 `PYTHONIOENCODING=utf-8`。
+后者是该次验证启动引入的环境覆盖，不是仓库代码变化。
 该设置使 Python CLI 子进程的 stderr 输出 UTF-8，但测试中的
 `subprocess.run(capture_output=True, text=True)` 未指定 encoding，当前 Windows 默认解码为 cp936 / GBK。
 五次捕获 stderr 的读取线程均发生 `UnicodeDecodeError: 'gbk' codec ...`。
@@ -46,15 +110,15 @@ CPython 读取线程未能填入 stderr buffer，`CompletedProcess.stderr` 因�
    **1 test，8.627s，PASS，exit=0**，包含原有五个 subTest 及所有 Git-clean / 禁止仓内输出断言。
 
 诊断定位到验证环境的生产 / 解码编码不一致；不据单个方法 PASS 宣称完整 suite PASS。
-本轮没有追加第二次完整运行。按用户“全部通过后才运行 Gate”的条件，
-**本轮 Basic / Full Gate 均 NOT_RUN**；下方 2026-10-06 Gate PASS 仅为历史结果。
-下一次完整复验应避免仅强制 stdio UTF-8，保持子进程输出与父进程文本解码一致。
+该轮没有追加第二次完整运行。按当时用户“全部通过后才运行 Gate”的条件，
+**该轮 Basic / Full Gate 均 NOT_RUN**；没有以 2026-10-06 Gate PASS 替代该轮失败。
+本次最新授权后的完整复验已保持输出 / 解码一致并 PASS，见第一节；历史失败结果不改写。
 
-本轮本地原始记录均在 `temp/live-safety-final-validation-20261007/`：
+该轮本地原始记录均在 `temp/live-safety-final-validation-20261007/`：
 `git_context.json`、`unittest_result.json`、`full_unittest.log`、`encoding_diagnosis.json`、
 `external_cli_encoding_diagnostic.log`。不覆盖初次失败日志，不提交含本机路径的原始日志。
-本轮只更新 TEST_REPORT 和 ASTRA_REVIEW_HANDOFF，源码、测试、依赖和冻结 artifact 均未修改。
-报告的 whitespace / Git diff 单独检查不构成测试验收；当前 `READY_FOR_ASTRA_DIFF_REVIEW = NO`。
+该轮只更新 TEST_REPORT 和 ASTRA_REVIEW_HANDOFF，源码、测试、依赖和冻结 artifact 均未修改。
+报告的 whitespace / Git diff 单独检查不构成测试验收；当时 `READY_FOR_ASTRA_DIFF_REVIEW = NO`。
 
 ## 2026-10-06 环境（历史记录）
 
@@ -117,7 +181,7 @@ barrier / SDK 用例仍保持 socket guard。
 
 当日按提示词“完整 canonical offline validation ONCE”约束未再次运行完整 suite。
 **该次历史结果不是完整 suite PASS，定向复测和后续 Gate PASS 不能替代。**
-2026-10-07 的新授权与最终 HEAD 运行结果见第一节，两个日期的失败记录均保留。
+2026-10-07 两次分别授权的复验结果见前文，各次失败记录及最终 PASS 均保留。
 
 开发定向迭代还修正了 raw wrapper 的 HTTP JSON 读取位置、mock 控制路由被 static mount 遮挡，
 以及本机 Python 3.13 不提供平台缓存公开刷新 API；最终实现不调用该 API。
@@ -144,5 +208,5 @@ git status
 - sentinel 检查：0 findings，详见 [SECURITY_REGRESSION_REPORT](SECURITY_REGRESSION_REPORT.md)。
 - 最终报告提交后 `git status --short` 为空；源 v0.1.1 HEAD 与工作树不变。
 
-当前最终验证状态：`CANONICAL_ENVIRONMENT_RECHECK_REQUIRED`；`READY_FOR_ASTRA_DIFF_REVIEW = NO`。
-本轮真实 API 请求 **0**，未 push / PR / merge；后续仍需成功完整 canonical 复验及 Astra diff review。
+当前最终验证状态：**`READY_FOR_ASTRA_DIFF_REVIEW = YES`**。
+本轮真实 API 请求 **0**，未 push / PR / merge；后续为 Astra diff review，S0 需另行明确授权。
