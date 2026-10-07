@@ -38,7 +38,39 @@ npm test -- tests/live-ai.spec.ts --grep 'operation defaults'
 新增两家 provider incomplete / completed identity 诊断、项目状态不变、默认 effort 与显式 override；
 既有手工/合成演示、撤回授权、历史 model、导出和布局用例保留。
 
-## 完整验收
+## 完整 canonical unittest（一次）
 
-完整 canonical unittest 一次、Basic / Full `--skip-tests` 和最终 secret sentinel scan 尚待运行。
-完整业务、前端、测试和报告 diff 已逐项检查；本报告将在最终 clean HEAD 验收后更新。
+被验 clean HEAD：`e46f855252125babd7fe0a30d966a3260bcb543c`；真实 D 盘 linked worktree。
+用已审核 `.venv` 解释器执行标准命令，移除子进程 provider 环境凭据、设置 `DISABLE_LIVE_API=true`，
+不读取 `.env`，不改变 Python 输出编码。
+
+```powershell
+python -m unittest discover -s tests/automated -p "test_*.py" -q
+python -m app.quality_gate --level basic --skip-tests
+python -m app.quality_gate --level full --skip-tests
+git diff --check
+```
+
+完整 unittest：**1169 tests，285.106s，OK（15 skipped），exit=0**。
+本任务完整 suite 次数 **1**。前后均为同一 HEAD，Git-clean；没有 archive 副本或伪 Git metadata。
+Python 3.13.9；stdout=gbk，preferred encoding=cp936，UTF-8 mode=0，PYTHONIOENCODING 未设置。
+OpenAI SDK 2.54.0、FastAPI 0.142.2、Pydantic 2.12.4、httpx 0.28.1、pypdf 6.19.0、uvicorn 0.54.0。
+
+随后首次 Basic Gate：**FAIL，1 error，0 warnings，tests 明确 SKIPPED**；错误为新负例测试源码的
+合成用户目录路径前缀被个人绝对路径扫描拒绝。Full 当时未运行。
+修复只将该测试的合成路径分段构造；实际测试值、编译后的测试 bytecode 和 constants 均核对相等。
+业务源码、断言、Gate 规则和冻结 artifact 没有改变。原方法定向复验：**1 test / 0.151s / PASS**。
+遵守任务完整 suite 仅一次的要求，不重复完整 unittest；两级 Gate 将在修复后的 clean commit 复验，
+明确 `--skip-tests`，不会以 Gate 替代测试。
+
+## 安全与交付检查
+
+完整业务、前端、新旧测试、mock 和四份报告 diff 已逐项检查，whitespace PASS。
+提交前安全扫描 98 个任务文件/产品构建/合成浏览器数据库与结果，sentinel / 真实密钥格式命中 **0**，
+未读取环境凭据值或 `.env`。广义 assignment 规则另有四个已人工核对的非敏感命中：
+两个基线测试占位字符串、未变 PDF.js worker 的两个 JS 变量表达式。
+没有豁免 sentinel 或真实密钥格式，也没有修改产品安全 validator；命中和复核结果如实记录。
+
+本地验证证据在 ignored `temp/s1-canonical-validation-20261007/`，raw logs 不提交。
+原产品工作树仍为 `d818eb1` / clean；原入口工作树的既有未跟踪报告没有改动。
+最终两级 Gate 与提交后扫描结果待补充。

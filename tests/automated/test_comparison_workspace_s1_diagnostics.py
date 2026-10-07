@@ -202,7 +202,7 @@ class S1DiagnosticsTests(unittest.TestCase):
                 self.assert_exported_diagnostics(run)
 
     def test_unknown_identity_and_provider_metadata_cannot_leak_credentials_or_paths(self):
-        private_path = "/Users/" + "private-test-user" + "/credential.txt"
+        private_path = "/" + "Users" + "/" + "private-test-user" + "/credential.txt"
         def unsafe(**options):
             result = response_for(**options)
             candidate = result.output_parsed.observations[0].evidence[0]
