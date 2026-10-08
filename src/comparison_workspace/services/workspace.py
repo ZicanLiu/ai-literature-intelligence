@@ -287,6 +287,8 @@ class Workspace:
                   requested_model=getattr(selected, "model", None),
                   reasoning_effort=(selected.reasoning_effort_for(stage) if hasattr(selected, "reasoning_effort_for")
                                     else getattr(selected, "reasoning_effort", None)),
+                  max_output_tokens=(selected.max_output_tokens_for(stage) if hasattr(selected, "max_output_tokens_for")
+                                     else None),
                   input_modality="EXTRACTED_TEXT" if mode == "api" else None)
         self.repo.add_run(run)
         self.executor.submit(self.execute, run.id, selected)

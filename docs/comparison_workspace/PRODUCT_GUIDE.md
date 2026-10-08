@@ -117,7 +117,8 @@ session Key 无法绕过。缺省该变量只表示没有部署硬禁用，Live 
 能力依据 [DeepSeek 官方模型表](https://api-docs.deepseek.com/zh-cn/quick_start/pricing/)，
 核对日期 2026-10-05。模型能力随服务商变化，本版本只列以上两个 ID。
 两者使用 [Responses API](https://api-docs.deepseek.com/guides/responses_api/)，显式 JSON Schema，
-本地 Pydantic 校验为应用结构的最终边界。可选择服务默认或 none / low / high / max；
+本地 Pydantic 校验为应用结构的最终边界。DeepSeek 按操作默认：提取 none / 12000 output tokens，
+分析 high / 32000 output tokens。可显式选择 none / low / high / max 覆盖两种操作的思考强度；
 选项映射 reasoning.effort，保存在非敏感运行来源中。OpenAI 不套用此参数。
 
 DeepSeek Responses 为无状态接口，不支持 store 设置；本工作台不发送该参数。
@@ -128,7 +129,7 @@ DeepSeek 不接受任意 PDF 文件输入；deepseek-flash 的图像理解能力
 
 ### 运行来源与失败
 
-每次 live Run 保存 provider、请求模型、服务报告模型、实际 reasoning 选项、EXTRACTED_TEXT、
+每次 live Run 保存 provider、请求模型、服务报告模型、实际 reasoning 选项、max_output_tokens、EXTRACTED_TEXT、
 request ID（服务提供时）、耗时、token usage、project revision 与含 source / active result ID 的快照。
 不保存 Key。API 输入上限 600,000 字符，超过明确拒绝、不截断；SDK 120 秒、max_retries=0。
 失败不产生科学判断；每次显式重试创建新 Run，重启不自动重试。

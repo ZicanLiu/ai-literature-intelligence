@@ -56,6 +56,7 @@ class LiveAISettings:
                                    "model": model, "consent_acknowledged": self._acknowledged[name],
                                    "reasoning_effort": self._effort if name == "deepseek" else None,
                                    "reasoning_defaults": DeepSeekProvider.DEFAULT_REASONING_EFFORT.copy() if name == "deepseek" else {},
+                                   "output_budget_defaults": PROVIDERS[name].DEFAULT_MAX_OUTPUT_TOKENS.copy(),
                                    "model_capabilities": model_capabilities(name, model),
                                    "suggested_models": list(DEEPSEEK_MODELS) if name == "deepseek" else []}
             selected = providers[self.selected_provider]

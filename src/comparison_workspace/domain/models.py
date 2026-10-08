@@ -188,6 +188,7 @@ class Run(Record):
     requested_model: str | None = None
     provider_reported_model: str | None = None
     reasoning_effort: str | None = None
+    max_output_tokens: int | None = Field(default=None, gt=0)
     input_modality: Literal["EXTRACTED_TEXT"] | None = None
     status: Literal["QUEUED", "RUNNING", "COMPLETED", "STALE", "FAILED", "INTERRUPTED"] = "QUEUED"
     output: dict[str, Any] | None = None

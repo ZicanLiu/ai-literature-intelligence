@@ -96,6 +96,7 @@ def markdown(view: dict) -> str:
                      f"provider_reported_model={clean(r.get('provider_reported_model') or '未取得服务端返回模型')} · "
                      f"legacy model={clean(r['model'])}（仅兼容保留，来源不由此字段推断） · request={r['request_id']} · "
                      f"reasoning_effort={clean(r.get('reasoning_effort'))} · "
+                     f"max_output_tokens={r.get('max_output_tokens')} · "
                      f"provider_status={clean(r.get('provider_status') or 'unknown')} · "
                      f"incomplete_details={clean(json.dumps(r.get('incomplete_details'), ensure_ascii=False))} · "
                      f"elapsed={r['elapsed_seconds']} · tokens={json.dumps(r['token_usage'])} · cost={r['cost']}")

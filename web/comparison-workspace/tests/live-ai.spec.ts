@@ -321,6 +321,7 @@ test('DeepSeek operation defaults and explicit extraction override are visible a
   await page.getByLabel('思考强度',{exact:true}).selectOption('')
   await page.getByRole('button',{name:'保存 AI 配置',exact:true}).click()
   await expect(page.getByRole('dialog')).toContainText('结果提取 none，比较分析 high')
+  await expect(page.getByRole('dialog')).toContainText('结果提取 12000，比较分析 32000')
   await expect(page.getByRole('dialog').getByRole('status')).toContainText('配置已保存')
   await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
   await demoProject(page)
@@ -330,9 +331,12 @@ test('DeepSeek operation defaults and explicit extraction override are visible a
     const runId=(await (await response).json()).run_id
     await expect.poll(async()=> (await (await page.request.get('/api/runs/'+runId)).json()).status).toBe('COMPLETED')
     expect((await (await page.request.get('/api/runs/'+runId)).json()).reasoning_effort).toBe(effort)
+    const budget=stage==='extractions'?12000:32000
+    expect((await (await page.request.get('/api/runs/'+runId)).json()).max_output_tokens).toBe(budget)
     await expect(page.getByRole('button',{name:'运行分析',exact:true})).toBeEnabled()
     await page.getByRole('button',{name:'运行与修订记录',exact:true}).click()
     await expect(page.locator('.history-item').filter({has:page.locator('code',{hasText:runId})})).toContainText('reasoning '+effort)
+    await expect(page.locator('.history-item').filter({has:page.locator('code',{hasText:runId})})).toContainText('max_output_tokens '+budget)
     await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
   }
   await page.getByRole('button',{name:'AI 设置',exact:true}).click()

@@ -8,6 +8,7 @@ class DeepSeekProvider(OpenAIProvider):
     display_name = "DeepSeek"
     base_url = "https://api.deepseek.com"
     DEFAULT_REASONING_EFFORT = {"extraction": "none", "analysis": "high"}
+    DEFAULT_MAX_OUTPUT_TOKENS = {"extraction": 12000, "analysis": 32000}
 
     def __init__(self, *, reasoning_effort=None, **kwargs):
         super().__init__(**kwargs)
@@ -25,7 +26,7 @@ class DeepSeekProvider(OpenAIProvider):
             model=self.model, instructions=INSTRUCTIONS, input=payload,
             text={"format": {"type": "json_schema", "name": schema.__name__,
                              "schema": schema.model_json_schema()}},
-            max_output_tokens=12000, reasoning={"effort": self.reasoning_effort_for(stage)})
+            max_output_tokens=self.max_output_tokens_for(stage), reasoning={"effort": self.reasoning_effort_for(stage)})
         request = client.responses.create
         self._begin_send("generation")
         return request(**options)

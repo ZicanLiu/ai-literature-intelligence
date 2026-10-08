@@ -32,6 +32,7 @@ class OpenAIProvider:
     provider_id = "openai"
     display_name = "OpenAI"
     base_url = "https://api.openai.com/v1"
+    DEFAULT_MAX_OUTPUT_TOKENS = {"extraction": 12000, "analysis": 12000}
 
     def __init__(self, *, explicit_enabled=False, api_key=None, model=None, hard_offline=True,
                  client=None, authorization=None):
@@ -76,10 +77,14 @@ class OpenAIProvider:
         return self._client or OpenAI(api_key=self._api_key, base_url=self.base_url,
                                      max_retries=0, timeout=120.0)
 
+    def max_output_tokens_for(self, stage):
+        return self.DEFAULT_MAX_OUTPUT_TOKENS[stage]
+
     def _request(self, client, payload, schema):
+        stage = "extraction" if schema is ExtractionOutput else "analysis"
         request = client.responses.with_raw_response.parse
         options = dict(model=self.model, instructions=INSTRUCTIONS, input=payload,
-                       text_format=schema, store=False, max_output_tokens=12000)
+                       text_format=schema, store=False, max_output_tokens=self.max_output_tokens_for(stage))
         self._begin_send("generation")
         raw = request(**options)
         # SDK parse may reject the schema before returning a ParsedResponse. Keep only

@@ -67,34 +67,42 @@ class S1DiagnosticsTests(unittest.TestCase):
         csv_item = next(json.loads(row["record_json"]) for row in csv.DictReader(io.StringIO(csv_report(view)))
                         if row["record_type"] == "runs" and row["id"] == run.id)
         for record in (exported, csv_item):
+            self.assertEqual(record["max_output_tokens"], run.max_output_tokens)
             self.assertEqual(record["provider_status"], run.provider_status)
             self.assertEqual(record["incomplete_details"], run.incomplete_details)
             self.assertEqual(record["validation_diagnostic"], run.validation_diagnostic.model_dump() if run.validation_diagnostic else None)
         self.assertIn("provider_status=" + (run.provider_status or "unknown"), markdown(view))
+        self.assertIn("max_output_tokens=" + str(run.max_output_tokens), markdown(view))
         if run.validation_diagnostic:
             self.assertIn(run.validation_diagnostic.field_path, markdown(view))
 
     def test_extraction_defaults_to_none_and_analysis_to_high_with_actual_run_provenance(self):
-        for stage, expected in (("extraction", "none"), ("analysis", "high")):
+        for stage, expected, budget in (("extraction", "none", 12000), ("analysis", "high", 32000)):
             with self.subTest(stage=stage):
                 _, run = self.run_attempt("deepseek", stage)
                 self.assertEqual(run.status, "COMPLETED")
                 self.assertEqual(run.reasoning_effort, expected)
                 request = self.sdk.responses.create.call_args.kwargs
                 self.assertEqual(request["reasoning"], {"effort": expected})
-                self.assertEqual(request["max_output_tokens"], 12000)
+                self.assertEqual(request["max_output_tokens"], budget)
+                self.assertEqual(run.max_output_tokens, budget)
+                self.assertEqual(self.repo.get_run(run.id).max_output_tokens, budget)
+                self.assert_exported_diagnostics(run)
         settings = self.workspace.live_ai.status()["providers"]["deepseek"]
         self.assertIsNone(settings["reasoning_effort"])
         self.assertEqual(settings["reasoning_defaults"], {"extraction": "none", "analysis": "high"})
+        self.assertEqual(settings["output_budget_defaults"], {"extraction": 12000, "analysis": 32000})
 
-    def test_explicit_extraction_override_wins_and_clearing_restores_operation_default(self):
-        for effort in ("none", "low", "high", "max", None):
-            with self.subTest(effort=effort):
-                _, run = self.run_attempt("deepseek", "extraction", effort)
-                expected = effort if effort is not None else "none"
-                self.assertEqual(run.status, "COMPLETED")
-                self.assertEqual(run.reasoning_effort, expected)
-                self.assertEqual(self.sdk.responses.create.call_args.kwargs["reasoning"], {"effort": expected})
+    def test_explicit_override_wins_and_clearing_restores_operation_default(self):
+        for stage, default, budget in (("extraction", "none", 12000), ("analysis", "high", 32000)):
+            for effort in ("none", "low", "high", "max", None):
+                with self.subTest(stage=stage, effort=effort):
+                    _, run = self.run_attempt("deepseek", stage, effort)
+                    expected = effort if effort is not None else default
+                    self.assertEqual(run.status, "COMPLETED")
+                    self.assertEqual(run.reasoning_effort, expected)
+                    self.assertEqual(self.sdk.responses.create.call_args.kwargs["reasoning"], {"effort": expected})
+                    self.assertEqual(run.max_output_tokens, budget)
 
     def test_incomplete_response_persists_status_reason_usage_and_never_mutates_project(self):
         def incomplete(**options):
