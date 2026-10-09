@@ -615,13 +615,14 @@ class WorkspaceTests(unittest.TestCase):
 
 class OpenAIAdapterTests(unittest.TestCase):
     def setUp(self):
+        from src.comparison_workspace.providers.evidence_handles import APIAnalysisOutput
         self.snapshot = {"id": "project", "revision": 0, "question": "question", "scope": "",
                          "papers": [], "observations": [], "evidence": []}
         self.client = Mock()
         usage = SimpleNamespace(model_dump=lambda **kw: {"input_tokens": 20, "output_tokens": 10, "total_tokens": 30})
         self.client.responses.parse.return_value = SimpleNamespace(model="actual-model-snapshot",
             _request_id="req_mock", usage=usage, status="completed",
-            output_parsed=AnalysisOutput(observations=[], findings=[]))
+            output_parsed=APIAnalysisOutput(observations=[], findings=[]))
         from tests.fixtures.comparison_workspace.mock_live_sdk import MockRawResponse
         self.client.responses.with_raw_response.parse.side_effect = lambda **kw: MockRawResponse(self.client.responses.parse(**kw))
         self.env = patch.dict(os.environ, {"DISABLE_LIVE_API": "false"})
@@ -645,7 +646,8 @@ class OpenAIAdapterTests(unittest.TestCase):
         result = self.provider.analyze_comparison(self.snapshot, [], [])
         kwargs = self.client.responses.parse.call_args.kwargs
         self.assertFalse(kwargs["store"])
-        self.assertEqual(kwargs["text_format"], AnalysisOutput)
+        from src.comparison_workspace.providers.evidence_handles import APIAnalysisOutput
+        self.assertEqual(kwargs["text_format"], APIAnalysisOutput)
         self.assertEqual(result.model, "actual-model-snapshot")
         self.assertEqual(result.request_id, "req_mock")
         self.assertEqual(result.token_usage["total_tokens"], 30)

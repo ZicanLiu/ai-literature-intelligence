@@ -1,0 +1,21 @@
+{
+  "description": "Safe fields copied from the saved S1-B Run; no failed model proposal was persisted.",
+  "run_id": "run_c200c013f11c49ec9d0afb3b4f3731fa",
+  "stage": "extraction",
+  "status": "FAILED",
+  "provider_status": "completed",
+  "validation_diagnostic": {
+    "field_path": "$.results[2].evidence[0].paper_id",
+    "rule": "evidence_paper_ownership",
+    "expected": [
+      {
+        "paper_id": "paper_ecf690c996fc403180a3f1af2bbaebb9",
+        "source_snapshot_id": "src_4ccb9120233547a08192963408913c6a"
+      }
+    ],
+    "returned": {
+      "paper_id": "paper_7ec367ccb6ee48b5b758929cf4db28b1",
+      "source_snapshot_id": "src_b4e7474049e94f4f8455b627f0e0375e"
+    }
+  }
+}

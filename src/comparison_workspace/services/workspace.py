@@ -374,7 +374,10 @@ class Workspace:
                       "evidence": [e.model_dump(mode="json") for e in evidence]}
         # Keep the original proposal before locator validation changes a review category.
         # Run detail and all exports consume this, independently of the validated projection.
-        output["provider_output"] = parsed.model_dump(mode="json")
+        output["provider_output"] = (response.provider_output if response.provider_output is not None
+                                     else parsed.model_dump(mode="json"))
+        if response.evidence_handle_sources is not None:
+            output["evidence_handle_sources"] = response.evidence_handle_sources
         return output
 
     def execute(self, run_id, provider):

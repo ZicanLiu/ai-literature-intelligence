@@ -1,6 +1,6 @@
 """DeepSeek Responses contract: explicit JSON Schema, stateless, text inputs only."""
 from .openai_provider import INSTRUCTIONS, OpenAIProvider
-from ..domain.models import ExtractionOutput
+from .evidence_handles import APIExtractionOutput
 
 
 class DeepSeekProvider(OpenAIProvider):
@@ -20,7 +20,7 @@ class DeepSeekProvider(OpenAIProvider):
         return self.reasoning_effort if self.reasoning_effort is not None else self.DEFAULT_REASONING_EFFORT[stage]
 
     def _request(self, client, payload, schema):
-        stage = "extraction" if schema is ExtractionOutput else "analysis"
+        stage = "extraction" if schema is APIExtractionOutput else "analysis"
         # DeepSeek documents text.format with name/schema, not responses.parse or store.
         options = dict(
             model=self.model, instructions=INSTRUCTIONS, input=payload,

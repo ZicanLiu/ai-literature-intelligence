@@ -101,3 +101,20 @@ SDK 无响应失败保持 unknown；legacy model 保留原值，不猜测其历�
 workspace_input_mode 能力元数据固定 extracted_text，当前 Run 模态 EXTRACTED_TEXT。
 图像能力按具体 DeepSeek 模型标记；OpenAI 任意 ID 的 image / json_schema 能力保持未知，
 由用户选型与实际结构化请求验证，不自动宣称兼容。
+
+## API 证据身份边界
+
+providers/evidence_handles.py 为每次请求的源页面创建独立随机 handle，校验页面顺序、文本哈希和
+paper/source 唯一性。API 专用 schema 的证据只含 evidence_handle / quote；模型仍选择明确的
+result.paper_id、observation.result_id 和 finding.affected_result_ids。程序从当前输入页面的
+查表关系绑定 paper/source/page，再交给原 Workspace ownership、active-result 和 exact locator
+校验。引用其他论文的合法 handle 仍硬拒绝；不根据语义猜来源、不覆盖模型选择的结果归属。
+
+未知、伪造、其他请求的 handle 与同一候选中重复的 handle/quote 引用硬拒绝；同一页的不同
+quote 以及不同候选的引用可以复用页面 handle，各自生成独立 EvidenceSpan ID。handle 是页面
+来源引用，不等于已验证的引文。引文无法精确定位仍按原合同保留 INVALID 并降为待复核。
+
+仅 API 的 wire schema 改变，Demo / Import / 手工 / 历史 Project 与 Run 合同保持兼容。
+没有增加调用、自动重试或 per-paper pipeline。接受的 Run.output 同时保存原始 wire
+provider_output 和 evidence_handle_sources 查表记录，导出消费者可以直接审计来源关系。
+这份查表用于解释实际 raw proposal，不是普通源码的额外 integrity manifest。

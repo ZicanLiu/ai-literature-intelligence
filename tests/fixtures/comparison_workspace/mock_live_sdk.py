@@ -2,7 +2,7 @@
 import json
 from types import SimpleNamespace
 
-from src.comparison_workspace.domain.models import AnalysisOutput, ExtractionOutput
+from src.comparison_workspace.providers.evidence_handles import APIAnalysisOutput, APIExtractionOutput
 
 
 class MockRawResponse:
@@ -30,14 +30,13 @@ def response_for(**options):
     def evidence(paper):
         page = paper["source"]["pages"][0]
         quote = next(line for line in page["text"].splitlines() if line.strip())
-        return {"paper_id": paper["id"], "source_snapshot_id": paper["source"]["id"],
-                "page_index": page["page_index"], "quote": quote}
+        return {"evidence_handle": page["evidence_handle"], "quote": quote}
     if inputs["stage"] == "extraction":
-        output = ExtractionOutput(results=[
+        output = APIExtractionOutput(results=[
             {"paper_id": paper["id"], "title": "Mock main experiment", "description": "Mock extraction",
              "experiment_identity": "mock-primary", "evidence": [evidence(paper)]} for paper in papers])
     else:
-        output = AnalysisOutput(observations=[
+        output = APIAnalysisOutput(observations=[
             {"result_id": paper["active_target_result_id"], "dimension": "原文依据", "value": "Mock text evidence",
              "state": "PRESENT", "evidence": [evidence(paper)]} for paper in papers], findings=[
             {"category": "SUPPORTED_PREREQUISITE", "affected_result_ids": [p["active_target_result_id"] for p in papers],

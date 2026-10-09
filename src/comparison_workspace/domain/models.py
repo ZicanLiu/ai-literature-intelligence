@@ -170,7 +170,8 @@ class EvidenceIdentity(Record):
 
 class ValidationDiagnostic(Record):
     field_path: str
-    rule: Literal["structured_output_schema", "evidence_paper_ownership", "evidence_source_identity"]
+    rule: Literal["structured_output_schema", "evidence_paper_ownership", "evidence_source_identity",
+                  "evidence_handle_identity"]
     expected: list[EvidenceIdentity] = Field(default_factory=list)
     returned: EvidenceIdentity | None = None
 

@@ -20,6 +20,7 @@ from src.comparison_workspace.demo.content import pdf_path
 from src.comparison_workspace.domain.models import AnalysisOutput, WorkspaceError
 from src.comparison_workspace.providers.base import ProviderFailure
 from src.comparison_workspace.providers.deepseek_provider import DeepSeekProvider
+from src.comparison_workspace.providers.evidence_handles import APIAnalysisOutput
 from src.comparison_workspace.providers.openai_provider import OpenAIProvider
 from src.comparison_workspace.services.live_ai import LiveAISettings, model_capabilities
 from src.comparison_workspace.services.workspace import Workspace
@@ -153,7 +154,7 @@ class DeepSeekAdapterTests(unittest.TestCase):
     def test_schema_local_validation_reasoning_and_text_only(self):
         result = self.provider.analyze_comparison(self.snapshot, [], [])
         options = self.client.responses.create.call_args.kwargs
-        self.assertEqual(options["text"]["format"]["schema"], AnalysisOutput.model_json_schema())
+        self.assertEqual(options["text"]["format"]["schema"], APIAnalysisOutput.model_json_schema())
         self.assertEqual(options["reasoning"], {"effort": "high"})
         self.assertNotIn("store", options)
         self.assertNotIn(KEYS["deepseek"], json.dumps(options))

@@ -179,18 +179,20 @@ class S1DiagnosticsTests(unittest.TestCase):
         self.assertEqual(run.validation_diagnostic.field_path, "$.findings[0].evidence[0].paper_id")
         self.assertEqual(run.validation_diagnostic.rule, "evidence_paper_ownership")
 
-    def test_source_snapshot_mismatch_remains_rejected_with_safe_source_diagnostic(self):
+    def test_model_cannot_override_host_owned_source_identity(self):
         def foreign_source(**options):
             result = response_for(**options)
-            result.output_parsed.observations[0].evidence[0].source_snapshot_id = result.output_parsed.observations[1].evidence[0].source_snapshot_id
-            result.output_text = result.output_parsed.model_dump_json()
+            raw = result.output_parsed.model_dump(mode="json")
+            raw["observations"][0]["evidence"][0]["source_snapshot_id"] = json.loads(options["input"])["papers"][1]["source"]["id"]
+            result.output_parsed = raw
+            result.output_text = json.dumps(raw)
             return result
         self.respond = foreign_source
         before, run = self.run_attempt("deepseek")
         self.assert_failed_state_unchanged(before, run)
         self.assertEqual(run.validation_diagnostic.field_path, "$.observations[0].evidence[0].source_snapshot_id")
-        self.assertEqual(run.validation_diagnostic.rule, "evidence_source_identity")
-        self.assertEqual(run.validation_diagnostic.returned.source_snapshot_id, before["papers"][1]["source"]["id"])
+        self.assertEqual(run.validation_diagnostic.rule, "structured_output_schema")
+        self.assertIsNone(run.validation_diagnostic.returned)
 
     def test_completed_schema_failure_persists_only_safe_field_path(self):
         def malformed(**options):
@@ -214,7 +216,7 @@ class S1DiagnosticsTests(unittest.TestCase):
         def unsafe(**options):
             result = response_for(**options)
             candidate = result.output_parsed.observations[0].evidence[0]
-            candidate.paper_id, candidate.source_snapshot_id, candidate.quote = KEYS["deepseek"], private_path, KEYS["deepseek"]
+            candidate.evidence_handle, candidate.quote = private_path, KEYS["deepseek"]
             result.output_text = result.output_parsed.model_dump_json()
             result.model = result._request_id = KEYS["deepseek"]
             result.incomplete_details = {"reason": KEYS["deepseek"], "private_body": private_path}
@@ -225,7 +227,8 @@ class S1DiagnosticsTests(unittest.TestCase):
         self.assertIsNone(run.provider_reported_model)
         self.assertIsNone(run.request_id)
         self.assertEqual(run.incomplete_details, {"reason": None})
-        self.assertEqual(run.validation_diagnostic.returned.model_dump(), {"paper_id": None, "source_snapshot_id": None})
+        self.assertEqual(run.validation_diagnostic.rule, "evidence_handle_identity")
+        self.assertIsNone(run.validation_diagnostic.returned)
         view = self.workspace.view(self.project.id)
         for output in (run.model_dump_json(), json.dumps(portable(view)), markdown(view), csv_report(view)):
             self.assertNotIn(private_path, output)

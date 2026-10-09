@@ -67,3 +67,10 @@ credential source、session Key、环境变量内容和数据发送确认不写�
 确认撤回、Live off、清 Key、换凭据、切走 provider 与进程关闭永久失效旧的未发送授权，
 以后重新确认 / 开启只授权新任务。授权代次与凭据只在进程内，不写入 Run 或数据库。
 请求、返回和 JSON Schema 通过不构成科学解释正确性证明。
+
+API 证据采用本次请求的页面 evidence_handle / quote。paper/source/page 由输入快照中的真实
+页面关系确定性查表绑定；该 handle 只确认候选页来源，exact locator 另外验证引文出现位置。
+Run.output.provider_output 保存该 wire 提议，evidence_handle_sources 保存对应查表，验证投影
+仍含明确 paper/source/page/hash/offset 与 host 分配的 EvidenceSpan ID。其他论文的 handle 不会
+被强行改到当前论文；未知/伪造/跨请求 handle 和重复引用均拒绝。既有历史提议及 Import
+继续使用原身份合同，不迁移或重写。失败响应原文仍不持久化，安全诊断不能替代缺失的 raw。
