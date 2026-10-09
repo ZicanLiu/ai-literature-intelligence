@@ -28,9 +28,8 @@ def response_for(**options):
     inputs = json.loads(options["input"])
     papers = inputs["papers"]
     def evidence(paper):
-        page = paper["source"]["pages"][0]
-        quote = next(line for line in page["text"].splitlines() if line.strip())
-        return {"evidence_handle": page["evidence_handle"], "quote": quote}
+        page = next(page for page in paper["source"]["pages"] if page["evidence_handle"] is not None)
+        return {"evidence_handle": page["evidence_handle"]}
     if inputs["stage"] == "extraction":
         output = APIExtractionOutput(results=[
             {"paper_id": paper["id"], "title": "Mock main experiment", "description": "Mock extraction",

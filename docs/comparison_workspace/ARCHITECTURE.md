@@ -104,17 +104,20 @@ workspace_input_mode 能力元数据固定 extracted_text，当前 Run 模态 EX
 
 ## API 证据身份边界
 
-providers/evidence_handles.py 为每次请求的源页面创建独立随机 handle，校验页面顺序、文本哈希和
-paper/source 唯一性。API 专用 schema 的证据只含 evidence_handle / quote；模型仍选择明确的
-result.paper_id、observation.result_id 和 finding.affected_result_ids。程序从当前输入页面的
-查表关系绑定 paper/source/page，再交给原 Workspace ownership、active-result 和 exact locator
-校验。引用其他论文的合法 handle 仍硬拒绝；不根据语义猜来源、不覆盖模型选择的结果归属。
+providers/evidence_handles.py 使用 source-span/v0：验证源身份和页 hash，为当前 canonical text
+的连续原样范围创建独立随机 handle。API 专用 schema 的证据只含 evidence_handle，不接收 quote、
+identity、hash 或 offset。程序按可信映射填充 quote/paper/source/page，再交给原 Workspace
+ownership、active-result 和 exact locator。模型仍选择明确的 Result/active-result 归属；
+引用其他论文的合法 span 仍硬拒绝，不根据语义猜来源或改写结果归属。
 
-未知、伪造、其他请求的 handle 与同一候选中重复的 handle/quote 引用硬拒绝；同一页的不同
-quote 以及不同候选的引用可以复用页面 handle，各自生成独立 EvidenceSpan ID。handle 是页面
-来源引用，不等于已验证的引文。引文无法精确定位仍按原合同保留 INVALID 并降为待复核。
+每页以最多 3000 code points 的有序非重叠块发送原文一次，并保留整页 context handle，
+用于表头、单位、列和脚注的共同引用。重复块不提供可引用 ID；超过原 10000 引文上限的页面
+保留完整上下文并明确不可引用，不截断或提供不完整表格引用。规则详见
+[Span v0 contract](EVIDENCE_SPAN_PROTOCOL_V0.md)。定位有效不等于科学相关或人类批准。
 
 仅 API 的 wire schema 改变，Demo / Import / 手工 / 历史 Project 与 Run 合同保持兼容。
 没有增加调用、自动重试或 per-paper pipeline。接受的 Run.output 同时保存原始 wire
-provider_output 和 evidence_handle_sources 查表记录，导出消费者可以直接审计来源关系。
+provider_output、evidence_handle_sources（含页 hash/start/end/context_handle）和 evidence_protocol，
+导出消费者可从 immutable input_snapshot 直接重建来源。旧 canonical/历史输出不迁移，旧 INVALID
+也不转换为新协议的通过。未知、伪造、跨请求和候选内重复 handle 继续拒绝。
 这份查表用于解释实际 raw proposal，不是普通源码的额外 integrity manifest。

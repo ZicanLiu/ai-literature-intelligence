@@ -216,7 +216,7 @@ class S1DiagnosticsTests(unittest.TestCase):
         def unsafe(**options):
             result = response_for(**options)
             candidate = result.output_parsed.observations[0].evidence[0]
-            candidate.evidence_handle, candidate.quote = private_path, KEYS["deepseek"]
+            candidate.evidence_handle = private_path
             result.output_text = result.output_parsed.model_dump_json()
             result.model = result._request_id = KEYS["deepseek"]
             result.incomplete_details = {"reason": KEYS["deepseek"], "private_body": private_path}

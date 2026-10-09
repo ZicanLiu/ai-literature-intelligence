@@ -16,8 +16,9 @@ from src.comparison_workspace.domain.models import (
 )
 from src.comparison_workspace.providers.base import ProviderResult
 from src.comparison_workspace.providers.deepseek_provider import DeepSeekProvider
-from src.comparison_workspace.providers.evidence_handles import APIAnalysisOutput, APIExtractionOutput
+from src.comparison_workspace.providers.evidence_handles import APIAnalysisOutput, APIExtractionOutput, EvidenceHandles
 from src.comparison_workspace.providers.openai_provider import OpenAIProvider
+from src.comparison_workspace.export.reports import portable
 from src.comparison_workspace.services.workspace import Workspace
 from src.comparison_workspace.storage.repository import Repository
 from tests.automated.test_comparison_workspace_live_ai import KEYS, MODELS, wait_run
@@ -82,10 +83,14 @@ class EvidenceHandleTests(unittest.TestCase):
                         self.assertEqual(item["locator_status"], "LOCATED")
                     raw = run.output["provider_output"]
                     reference = raw[self.first_group(stage)][0]["evidence"][0]
-                    self.assertEqual(set(reference), {"evidence_handle", "quote"})
+                    self.assertEqual(set(reference), {"evidence_handle"})
+                    self.assertEqual(run.output["evidence_protocol"], "source-span/v0")
+                    self.assertEqual(self.workspace.repo.get_run(run.id).output, run.output)
+                    exported = next(item for item in portable(self.workspace.view(self.project.id))["runs"] if item["id"] == run.id)
+                    self.assertEqual(exported["output"]["evidence_handle_sources"], run.output["evidence_handle_sources"])
                     binding = run.output["evidence_handle_sources"][reference["evidence_handle"]]
-                    self.assertEqual(binding, {key: run.output["evidence"][0][key]
-                                               for key in ("paper_id", "source_snapshot_id", "page_index")})
+                    for key in ("paper_id", "source_snapshot_id", "page_index", "page_text_sha256", "start", "end"):
+                        self.assertEqual(binding[key], run.output["evidence"][0][key])
                     if stage == "analysis":
                         self.assertEqual(run.output["findings"][0]["category"], "SUPPORTED_PREREQUISITE")
                         self.assertEqual(len(run.output["findings"][0]["affected_result_ids"]), 3)
@@ -192,41 +197,37 @@ class EvidenceHandleTests(unittest.TestCase):
         before, run = self.attempt("deepseek", "extraction")
         self.assert_rejected(before, run, "evidence_handle_identity")
 
-    def test_false_quote_does_not_trigger_identity_or_text_repair(self):
+    def test_model_cannot_supply_or_rewrite_quote(self):
         for stage in ("extraction", "analysis"):
             group = self.first_group(stage)
             def wrong_quote(**options):
                 result = response_for(**options)
-                # The other paper's complete page is not a quote from this paper.
-                other = json.loads(options["input"])["papers"][1]["source"]["pages"][0]["text"]
-                getattr(result.output_parsed, group)[0].evidence[0].quote = other
-                result.output_text = result.output_parsed.model_dump_json()
+                raw = result.output_parsed.model_dump(mode="json")
+                raw[group][0]["evidence"][0]["quote"] = "Model-authored replacement quote"
+                result.output_parsed, result.output_text = raw, json.dumps(raw)
                 return result
             self.respond = wrong_quote
             before, run = self.attempt("deepseek", stage)
-            self.assertEqual(run.status, "COMPLETED")
-            evidence = run.output["evidence"][0]
-            self.assertEqual(evidence["paper_id"], before["papers"][0]["id"])
-            self.assertEqual(evidence["source_snapshot_id"], before["papers"][0]["source"]["id"])
-            self.assertEqual(evidence["locator_status"], "INVALID")
-            self.assertIsNone(evidence["start"])
-            if stage == "analysis":
-                self.assertEqual(run.output["observations"][0]["state"], "AMBIGUOUS")
+            self.assert_rejected(before, run, "structured_output_schema")
+            self.assertEqual(run.validation_diagnostic.field_path, f"$.{group}[0].evidence[0].quote")
 
-    def test_same_page_can_support_distinct_quotes_without_duplicate_references(self):
+    def test_same_page_can_support_distinct_host_spans(self):
         def distinct(**options):
             result = response_for(**options)
             refs = result.output_parsed.results[0].evidence
-            text = json.loads(options["input"])["papers"][0]["source"]["pages"][0]["text"]
-            quote = next(line for line in text.splitlines() if line.strip() and line != refs[0].quote and text.count(line) == 1)
-            refs.append(refs[0].model_copy(update={"quote": quote}))
+            page = json.loads(options["input"])["papers"][0]["source"]["pages"][0]
+            handle = next(span["evidence_handle"] for span in page["evidence_spans"]
+                          if span["evidence_handle"] and span["evidence_handle"] != refs[0].evidence_handle)
+            refs.append(refs[0].model_copy(update={"evidence_handle": handle}))
             result.output_text = result.output_parsed.model_dump_json()
             return result
         self.respond = distinct
-        _, run = self.attempt("deepseek", "extraction")
+        with patch.object(EvidenceHandles, "BLOCK_CHARACTERS", 100):
+            _, run = self.attempt("deepseek", "extraction")
         self.assertEqual(run.status, "COMPLETED")
         self.assertEqual([e["locator_status"] for e in run.output["evidence"][:2]], ["LOCATED", "LOCATED"])
         self.assertNotEqual(run.output["evidence"][0]["id"], run.output["evidence"][1]["id"])
+        self.assertNotEqual(run.output["evidence"][0]["quote"], run.output["evidence"][1]["quote"])
 
     def test_ambiguous_snapshot_identity_and_tampered_page_fail_before_sending(self):
         for case in ("paper", "source", "page", "hash"):
@@ -281,43 +282,27 @@ class EvidenceHandleTests(unittest.TestCase):
 
 @unittest.skipUnless(os.getenv("COMPARISON_IDENTITY_REPLAY_ROOT"), "Optional external S1-A captures not configured")
 class HistoricalIdentityReplayTests(unittest.TestCase):
-    def test_saved_s1a_proposals_roundtrip_both_adapters_without_identity_or_locator_changes(self):
+    def test_saved_s1a_canonical_proposals_remain_compatible_without_rewriting_quotes(self):
         root = Path(os.environ["COMPARISON_IDENTITY_REPLAY_ROOT"]) / "captures"
         runs = [Run.model_validate_json(path.read_text(encoding="utf-8")) for path in root.glob("run_*.json")]
         successful = [run for run in runs if run.status == "COMPLETED"]
         self.assertEqual({run.stage for run in successful}, {"extraction", "analysis"})
         with tempfile.TemporaryDirectory() as temp:
             workspace = Workspace(Repository(Path(temp)))
-            self.addCleanup(workspace.close)
-            for run in successful:
-                original = run.output["provider_output"]
-                canonical_schema = ExtractionOutput if run.stage == "extraction" else AnalysisOutput
-                wire_schema = APIExtractionOutput if run.stage == "extraction" else APIAnalysisOutput
-                def replay(**options):
-                    inputs = json.loads(options["input"])
-                    lookup = {(p["id"], p["source"]["id"], page["page_index"]): page["evidence_handle"]
-                              for p in inputs["papers"] for page in p["source"]["pages"]}
-                    wire = copy.deepcopy(original)
-                    for candidates in wire.values():
-                        for candidate in candidates:
-                            candidate["evidence"] = [{"evidence_handle": lookup[(e["paper_id"], e["source_snapshot_id"], e["page_index"])],
-                                                      "quote": e["quote"]} for e in candidate["evidence"]]
-                    return SimpleNamespace(output_parsed=wire_schema.model_validate(wire), output_text=json.dumps(wire),
-                                           model=run.provider_reported_model, _request_id=run.request_id, usage=None, status="completed")
-                for adapter_type in (OpenAIProvider, DeepSeekProvider):
-                    with self.subTest(stage=run.stage, adapter=adapter_type.__name__), patch.dict(os.environ, {"DISABLE_LIVE_API": "false"}), \
-                            patch("socket.socket.connect", side_effect=AssertionError("Network forbidden")):
-                        sdk = Mock()
-                        sdk.responses.create.side_effect = replay
-                        sdk.responses.with_raw_response.parse.side_effect = lambda **kw: MockRawResponse(replay(**kw))
-                        adapter = adapter_type(explicit_enabled=True, hard_offline=False, api_key="mock-placeholder", model="mock", client=sdk)
-                        snapshot = copy.deepcopy(run.input_snapshot)
-                        response = (adapter.extract_results(snapshot) if run.stage == "extraction"
-                                    else adapter.analyze_comparison(snapshot, [], []))
-                        self.assertEqual(response.output.model_dump(mode="json"), canonical_schema.model_validate(original).model_dump(mode="json"))
-                        self.assertEqual(snapshot, run.input_snapshot)
-                        output = workspace.validate_output(Project.model_validate(snapshot), run, response)
-                        # New IDs/timestamps are expected. Compare every original source binding and locator exactly.
+            try:
+                for run in successful:
+                    with self.subTest(stage=run.stage):
+                        original = run.output["provider_output"]
+                        schema = ExtractionOutput if run.stage == "extraction" else AnalysisOutput
+                        response = ProviderResult(schema.model_validate(original), model=run.provider_reported_model)
+                        output = workspace.validate_output(Project.model_validate(run.input_snapshot), run, response)
+                        self.assertEqual(output["provider_output"], original)
+                        # New source controls cover old LOCATED text; they are not old/new model decisions.
+                        source_map = EvidenceHandles(run.input_snapshot["papers"]).sources()
+                        for span in run.output["evidence"]:
+                            if span["locator_status"] == "LOCATED":
+                                self.assertTrue(any(v["paper_id"] == span["paper_id"] and v["page_index"] == span["page_index"]
+                                    and v["start"] <= span["start"] and v["end"] >= span["end"] for v in source_map.values()))
                         def evidence_values(items):
                             return [{key: value for key, value in item.items() if key != "id"} for item in items]
                         self.assertEqual(evidence_values(output["evidence"]), evidence_values(run.output["evidence"]))
@@ -325,6 +310,9 @@ class HistoricalIdentityReplayTests(unittest.TestCase):
                             def semantic_values(items):
                                 return [{k: v for k, v in item.items() if k not in {"id", "evidence_ids", "provenance"}} for item in items]
                             self.assertEqual(semantic_values(output[group]), semantic_values(run.output[group]))
+                        self.assertEqual(Run.model_validate_json(run.model_dump_json()).output, run.output)
+            finally:
+                workspace.close()
 
 
 if __name__ == "__main__":

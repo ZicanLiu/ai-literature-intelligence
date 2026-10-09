@@ -378,6 +378,8 @@ class Workspace:
                                      else parsed.model_dump(mode="json"))
         if response.evidence_handle_sources is not None:
             output["evidence_handle_sources"] = response.evidence_handle_sources
+        if response.evidence_protocol is not None:
+            output["evidence_protocol"] = response.evidence_protocol
         return output
 
     def execute(self, run_id, provider):

@@ -16,6 +16,7 @@ class ProviderResult:
     # API wire proposal before deterministic identity resolution; legacy providers omit it.
     provider_output: dict | None = None
     evidence_handle_sources: dict | None = None
+    evidence_protocol: str | None = None
 
 
 class Provider(Protocol):

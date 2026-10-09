@@ -1,0 +1,32 @@
+{
+  "provenance": "AI_ASSISTED_SYNTHETIC_REVIEW_FIXTURE_NOT_HUMAN_GOLD",
+  "cases": [
+    {
+      "id": "internal_as_external",
+      "source_text": "SYNTHETIC REVIEW FIXTURE. Internal DR19 [M/H]-[Fe/H]: median 0.01, scatter 0.03. This is not an external survey comparison.",
+      "claim": "The MWM-GALAH external scatter is 0.03.",
+      "review_issue": "Internal and external comparison objects differ.",
+      "source_locator_expected": "LOCATED",
+      "scientific_support_status": "UNCONFIRMED",
+      "human_verified": false
+    },
+    {
+      "id": "reference_sample_as_plot_sample",
+      "source_text": "SYNTHETIC REVIEW FIXTURE. Table 1 reference common sample N=63136; Figure 10 plotted sample n=33901. Their selection relationship is unknown here.",
+      "claim": "The Figure 10 median was computed from exactly 63136 stars.",
+      "review_issue": "The table count does not establish the figure sample or median denominator.",
+      "source_locator_expected": "LOCATED",
+      "scientific_support_status": "UNCONFIRMED",
+      "human_verified": false
+    },
+    {
+      "id": "range_as_specific_value",
+      "source_text": "SYNTHETIC REVIEW FIXTURE. Across several comparisons, median differences range from 0.0 to 0.02 dex.",
+      "claim": "This range independently establishes GALAH's exact median as 0.01 dex.",
+      "review_issue": "An aggregate range does not establish a named comparison's exact value.",
+      "source_locator_expected": "LOCATED",
+      "scientific_support_status": "UNCONFIRMED",
+      "human_verified": false
+    }
+  ]
+}
