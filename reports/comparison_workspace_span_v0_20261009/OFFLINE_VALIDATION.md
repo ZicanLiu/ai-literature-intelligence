@@ -1,7 +1,8 @@
 # Evidence Span Handles v0：离线实现与验收
 
 日期：2026-10-09，Asia/Shanghai。基线：codex/comparison-workspace-identity-robustness / 5a1e06d。
-没有修改 main、既有未推送分支、历史 Run、Recovery Gate 或冻结科研材料；本轮零真实 provider 调用。
+代码提交：69a8f93f19b7cffdddc5b742a8c00fa3326d0c72。验收状态：**SPAN_PROTOCOL_OFFLINE_VALIDATED**。
+没有重置 main 或覆盖既有未推送工作；历史 Run、Recovery Gate 和冻结科研材料不变；本轮零真实 provider 调用。
 
 ## 协议与取舍
 
@@ -79,9 +80,37 @@ provenance，不保存为历史 Run，也不声称模型会选择它们。67 个
 
 定向回归：112 tests，PASS。包含 spans、identity、S1 diagnostics、live adapter/safety、Workspace；
 外部 S1-A/S1-B replay 均显式启用，网络禁用，验证前后 67 个受保护文件 hash 不变。
-`git diff --check` 通过。完整 suite 与 Basic/Full Gate 等待 clean 本地代码提交后运行；
-完整 suite 只运行一次，两个 Gate 均 `--skip-tests`，随后仅补验收记录，不重复完整 suite。
-本轮不 push / merge / 修改 PR。
+
+按 CONTRIBUTING 的顺序在 clean 代码提交 69a8f93 上执行：
+
+```text
+python -m unittest discover -s tests/automated -p "test_*.py" -q
+python -m app.quality_gate --level basic --skip-tests
+python -m app.quality_gate --level full --skip-tests
+git diff 5a1e06d..HEAD --check
+```
+
+| 检查 | 实际结果 |
+| --- | --- |
+| 完整离线 unittest（只执行一次） | 1193 tests，OK，skipped=15，255.674 秒，无失败 |
+| Basic Gate | PASSED，599 files，0 error / 0 warning，tests 明确跳过 |
+| Full Gate | PASSED，599 files，0 error / 3 warning，tests 明确跳过 |
+| task 完整 diff / whitespace | 通过 |
+| 历史保护 | 定向/full/两个 Gate 前后 67 个文件 hash 全部相同 |
+| 真实 OpenAI / DeepSeek 生成调用 | 0 |
+
+15 个条件性跳过没有隐藏本轮真实材料回放：本轮 S1-A/S1-B optional replay 均启用，定向 112 tests
+无 skip。Full Gate 的三个历史警告为 W1 CSV 结构、W1 19 个 ID 未在统一样例中找到、历史已跟踪
+openalex_stellar_spectra_60 experiment；本轮未改写这些历史数据。
+
+验证 helper 移除 provider API Key/model 环境值并设置 DISABLE_LIVE_API=true；adapter 测试使用
+mock/内存 HTTP transport，网络 guard 生效。既有独立工作树/v0.1.1 提交链保留，原工作目录的
+docs/reports/reentry_20261002/ 未跟踪内容保持不动。报告以外未再改代码，不重复完整 suite。
+
+新的仓外 evidence_span_v0_offline_20261009/ 保存 phase1_feasibility.json、production_measurement.json、
+s1a_source_coverage.json、protected_inputs_before.json 和 verification/ 的四组日志/结果；不提交源 PDF、
+完整响应、数据库或临时配置。新测试日志的用户目录前缀已脱敏；历史日志未触碰。
+本轮不 push / merge / 修改 PR，不把新协议控制用例写回历史 Run。
 
 ## 尚未验证及下一轮条件
 
