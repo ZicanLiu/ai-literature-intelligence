@@ -1,6 +1,7 @@
 # S1-B 科学审阅收口与长页 span 边界
 
 日期：2026-10-09。起始 HEAD 15b7cb8；原 Run run_4dddc42080ea4168a41eb9bad15166bd。
+代码提交：57fe2da1ba2e4b7ee61db7438a1b6a2a8d29c2d7。边界状态：LONG_PAGE_SPANS_OFFLINE_VALIDATED。
 本轮零真实 OpenAI/DeepSeek 请求，未创建 Analysis，未改原生 Run/Project/冻结材料，未 push/merge。
 
 ## 独立科学审阅
@@ -43,7 +44,29 @@ S1-B 候选 167→171，所有 53 页均有合法片段，整页 handle 仍只�
 新增覆盖 10000/10001/30001 边界、长表上下文、重复长页拒绝、long-page hash/跨请求/ownership/
 active-result 拒绝，以及真实 p6 完整 caveat 和原 Run 五条引用不变。
 165 个旧文件在验证前后 hash 一致，包括旧 live ledger/Run/PDF/报告；原 Run state hash 保持不变。
-完整 suite 和两个 skip-tests Gate 将在 clean 本地代码提交后按 CONTRIBUTING 顺序运行一次。
+在 clean 代码提交 57fe2da 上按 CONTRIBUTING 顺序完成：
+
+```text
+python -m unittest discover -s tests/automated -p "test_*.py" -q
+python -m app.quality_gate --level basic --skip-tests
+python -m app.quality_gate --level full --skip-tests
+git diff 15b7cb8..HEAD --check
+```
+
+| 验证 | 结果 |
+| --- | --- |
+| 完整离线 unittest（一次） | 1197 tests，OK，15 skipped，387.325 秒；无失败 |
+| Basic Gate | PASSED；600 files；0 error / 0 warning；tests 明确跳过 |
+| Full Gate | PASSED；600 files；0 error / 3 warning；tests 明确跳过 |
+| task 完整 diff / whitespace | 通过 |
+| 历史材料保护 | 定向/full/两个 Gate 前后 165 份文件 hash 一致 |
+| 实际模型请求 / Analysis | 0 / 0 |
+
+15 个条件性跳过不包含本轮声明的真实 S1-A、原 S1-B 和最新 span v0 Run 回放：均已显式配置，
+定向 116 tests 无 skip。Full 的三条历史警告为 W1 CSV 结构、19 个历史 annotation ID 不在统一
+样例、已跟踪旧 openalex_stellar_spectra_60 experiment；本轮未改这些材料。
+验证 helper 移除 provider 凭据并设置 DISABLE_LIVE_API=true；新 source/control 脚本另外阻断 socket。
+source validator、locator、provider prompt/schema/预算没有修改；报告提交后不重复完整 suite。
 
 ## Analysis 准入结论
 
