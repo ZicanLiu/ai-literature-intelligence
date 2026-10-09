@@ -1,6 +1,7 @@
 # 本轮离线验证
 
-日期：2026-10-09，Asia/Shanghai。代码基线 867a0db；当前补丁详见 DIAGNOSIS_AND_REPAIR.md。
+日期：2026-10-09，Asia/Shanghai。代码基线 867a0db；被验代码提交
+0fec1e09265d9611f81a525dd3c3b1715a0aed94；补丁详见 DIAGNOSIS_AND_REPAIR.md。
 使用既有 live-safety Python 3.13 环境，仅复用安装依赖，cwd 为本任务独立工作树。
 所有 SDK 调用均 mock / in-memory HTTP transport；新增回归同时阻断 socket connect。
 子进程移除 provider Key / model 环境并设置 DISABLE_LIVE_API=true，不读取 .env。
@@ -29,11 +30,28 @@ python -m app.quality_gate --level full --skip-tests
 git diff --check
 ```
 
-完整 suite / Gate 尚待本地提交后执行；此处不提前声明通过。最终结果将在验证完成后补记。
-完整 suite 只运行一次，Gate 均跳过重复 unittest。
+| 检查 | 本轮结果 |
+| --- | --- |
+| 完整离线 unittest（仅一次） | 1181 tests / 255.699s / OK，15 skipped；exit 0 |
+| 完整包装进程 | 262.535s；开始时 Git clean |
+| Basic Gate --skip-tests | PASS，0 errors / 0 warnings；明确 SKIPPED unittest |
+| Full Gate --skip-tests | PASS，0 errors / 3 既有 warnings；明确 SKIPPED unittest |
+| compileall / 完整 diff / whitespace | PASS |
+| 相关原 pilot capture / PDF / SQLite | 每步前后 13 个文件 SHA256 一致 |
+
+Full 的三条警告仍为历史 W1 CSV 结构、19 个历史 ID 不在统一样例及已跟踪旧 experiment；
+没有修改这些历史材料。15 项 skipped 不算已验证；本任务配置的 S1-A 外部 replay 实际运行通过，
+不是其中的 skipped。新增永久测试共 12 项，产品定向总数由 88 增至 100。
+
+完整 suite 只运行一次，随后顺序执行两个 Gate，均跳过重复 unittest。最后只补记本报告和
+文件清单，不改变已验源码/测试；不为文档收口重复完整 suite。剩余失败数为 0。
+没有运行前端构建/浏览器回归，本次未改前端；实际远端 API / 新模型生成效果仍未验证。
 
 可选外部 replay 需配置 COMPARISON_IDENTITY_REPLAY_ROOT 为已有双族 pilot 目录；未配置时
 只跳过该一个历史回放测试，核心合成离线回归仍执行。不提交私人绝对路径或外部原文。
 
-已见既有环境输出：Starlette httpx deprecation、损坏 PDF 负面测试的 EOF marker。
-它们不代表模型调用或身份校验失败。本轮没有删除断言、放宽 validator 或改历史 evidence。
+已见既有环境输出：Starlette httpx deprecation、损坏 PDF 负面测试的 EOF marker，以及
+冻结证据/Boundary method 缺失输入负例的 fail-closed 日志；完整 suite 的真实退出码为 0。
+它们不代表模型调用或新增回归失败。本轮没有删除断言、放宽 validator 或改历史 evidence。
+
+原始本轮验证日志和 result JSON 仅在 ignored temp/identity_validation/，未提交普通测试产物。

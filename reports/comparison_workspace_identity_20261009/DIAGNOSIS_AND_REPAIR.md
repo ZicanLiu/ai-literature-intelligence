@@ -81,6 +81,18 @@ page_index，而程序已持有这些关系；schema 允许彼此独立组合，
 调用关系先搜再改；无前端行为、数据库结构、科研冻结数据或第三论文族任务变更。
 新查表的真实消费者是身份转换与 raw proposal 审计；若不能查到来源则拒绝，避免无可审计归属。
 
+实际修改文件（相对 867a0db，共 16 个）：
+
+| 范围 | 文件 |
+| --- | --- |
+| domain | src/comparison_workspace/domain/models.py |
+| provider | src/comparison_workspace/providers/base.py、evidence_handles.py、openai_provider.py、deepseek_provider.py |
+| service | src/comparison_workspace/services/workspace.py |
+| regression | tests/automated/test_comparison_workspace.py、test_comparison_workspace_live_ai.py、test_comparison_workspace_s1_diagnostics.py、test_comparison_workspace_identity.py |
+| fixture | tests/fixtures/comparison_workspace/mock_live_sdk.py、s1b_identity_diagnostic_20261008.json |
+| maintained docs | docs/comparison_workspace/ARCHITECTURE.md、DATA_PROVENANCE.md |
+| delivery | reports/comparison_workspace_identity_20261009/DIAGNOSIS_AND_REPAIR.md、TEST_REPORT.md |
+
 ## 离线验证范围
 
 产品定向回归包括两家适配器 / 两阶段、正确跨论文 finding、另一论文合法 handle、
