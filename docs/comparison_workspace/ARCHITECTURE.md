@@ -110,9 +110,10 @@ identity、hash 或 offset。程序按可信映射填充 quote/paper/source/page
 ownership、active-result 和 exact locator。模型仍选择明确的 Result/active-result 归属；
 引用其他论文的合法 span 仍硬拒绝，不根据语义猜来源或改写结果归属。
 
-每页以最多 3000 code points 的有序非重叠块发送原文一次，并保留整页 context handle，
-用于表头、单位、列和脚注的共同引用。重复块不提供可引用 ID；超过原 10000 引文上限的页面
-保留完整上下文并明确不可引用，不截断或提供不完整表格引用。规则详见
+每页以最多 3000 code points 的有序非重叠块发送原文一次。10000 字符内的页保留整页 context handle，
+用于表头、单位、列和脚注的共同引用；更长页不提供整页 handle（context_handle=null），其中合法
+短块仍可引用，完整上下文仍在原 input_snapshot。重复块不提供可引用 ID；长表的科学语义必须另审，
+不自动拼接短块或把孤立数值当科学支持。规则详见
 [Span v0 contract](EVIDENCE_SPAN_PROTOCOL_V0.md)。定位有效不等于科学相关或人类批准。
 
 仅 API 的 wire schema 改变，Demo / Import / 手工 / 历史 Project 与 Run 合同保持兼容。

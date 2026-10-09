@@ -72,17 +72,20 @@ class EvidenceHandles:
                         sha256(page["text"].encode("utf-8")).hexdigest() != page["text_sha256"]):
                     raise ProviderFailure("输入源页面身份或文本哈希不匹配；未发送。")
                 text = page.pop("text")
-                if page.get("error") or not text.strip() or len(text) > self.MAX_QUOTE_CHARACTERS:
-                    # Keep all context; do not silently truncate or split an oversized table.
+                if page.get("error") or not text.strip():
                     page.update(text=text, evidence_handle=None, evidence_spans=[],
                                 evidence_unavailable_reason="page_not_citable_within_quote_limit")
                     continue
-                context = new_id("span")
+                context = new_id("span") if len(text) <= self.MAX_QUOTE_CHARACTERS else None
                 identity = {
                     "paper_id": paper["id"], "source_snapshot_id": source["id"], "page_index": index,
                     "page_text_sha256": page["text_sha256"],
                 }
-                self._add(context, identity, text, 0, len(text), context)
+                if context is not None:
+                    self._add(context, identity, text, 0, len(text), context)
+                else:
+                    # Only the full-page quote is too long; short exact blocks remain eligible.
+                    page["evidence_unavailable_reason"] = "whole_page_quote_exceeds_limit"
                 spans = []
                 start = 0
                 while start < len(text):
@@ -96,12 +99,13 @@ class EvidenceHandles:
                     if quote.strip() and text.find(quote) == start and text.find(quote, start + 1) < 0:
                         handle = context if start == 0 and end == len(text) else new_id("span")
                         self._add(handle, identity, text, start, end, context)
+                        citable = True
                     # Non-overlapping blocks preserve every character exactly once in the input.
                     # A repeated block remains visible as context but has no citable handle.
                     spans.append({"evidence_handle": handle, "text": quote})
                     start = end
                 page.update(evidence_handle=context, evidence_spans=spans)
-                citable = True
+                citable = citable or context is not None
             if not citable:
                 raise ProviderFailure("该论文没有可在原引文上限内唯一定位的来源 span；未发送。")
 

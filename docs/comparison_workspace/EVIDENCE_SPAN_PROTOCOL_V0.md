@@ -12,13 +12,15 @@ source text、offset 均采用 Python Unicode code points；不做空白、连�
 拼接后逐字符等于 canonical page text，没有重叠复制或删除。API 输入页用 evidence_spans 的 text
 替代重复的 page.text；page metadata 和原始 Run.input_snapshot 保留。
 
-每页同时有一个引用整页原文的 context handle，作为该页的 evidence_handle；每个可引用块也有
-独立 handle，映射的 context_handle 指向完整页面。表格必须审阅整页 context（标题、列头、单位、
-脚注），需要时直接引用整页 handle；切块不会删除这些内容，也不自动判断表格科学解释是否成立。
+不超过 10000 字符的页同时有引用整页原文的 context handle，作为该页的 evidence_handle；可引用块
+有独立 handle，映射的 context_handle 指向该整页引用。超长页的 evidence_handle/context_handle 为
+null：没有超限的整页引用，仍可选择其中合法短块；完整页由 source/page/hash 定位到 input_snapshot。
+表格必须审阅整页上下文（标题、列头、单位、脚注）。长表若无法用单个合法片段保留必要语义，不能
+把孤立数字的 LOCATED 当科学支持；可分别审阅多个引用，不自动合成引文或批准科学解释。
 
-重复或空白块仍显示为上下文，但不分配可引用 handle。整页若超过既有 quote 最大 10000 字符、
-页面文本空白或有提取错误，保留原 text 并声明不可引用，不默默截断或拆成丢失表头的表格证据。
-一篇论文完全没有可引用页则在发送前失败。这个 v0 限制明确牺牲长页引用覆盖，未引入检索/复杂索引。
+重复或空白块仍显示为上下文，但不分配可引用 handle。超过既有 quote 最大 10000 字符只禁止整页
+quote（whole_page_quote_exceeds_limit），其唯一、连续短块继续可引用，原文仍按顺序完整发送一次。
+空白/提取错误页保持不可引用；若一篇论文没有合法整页或短块，发送前失败。没有截断、检索或复杂索引。
 
 输出 EvidenceReference 仅含 evidence_handle；quote、source、hash、offset 等额外字段一律拒绝。
 host 按映射取 canonical text[start:end] 并形成原 EvidenceCandidate，再执行现有 Workspace guard。
@@ -44,15 +46,18 @@ HUMAN_VERIFIED 或 human gold。独立审查必须区分内部/跨巡天、样�
 
 ## 预算与已知范围
 
-S1-B 离线可行性：53 页中 52 页可引用，167 个候选；唯一不可引用页长 11444 字符。
-六处经审计来源均有覆盖，两个关键表格可整页引用。producer 不含论文、页码、数字或 quote 特判。
-原文只发送一次，extraction 输入字符约增加 3.05%；一个六引用 host 控制的 analysis 场景约增加
-9.25%（较宽 canonical 引文被作为已有 evidence 再发送）。这不是新模型实际选择，也不是通用最坏上限。
+首版 S1-B 离线快照曾为 53 页中 52 页可引用、167 个候选；长页边界修复后 53 页均有合法片段，
+171 个候选，整页 handle 仍只有 52 个。11444 字符页的 4 个短块各自精确定位，校准说明完整落在
+一个 2632 字符块内。producer 没有论文/页码/数字/quote 特判。旧 live Run 的 5 条引用和未引用的
+校准 caveat 不因新覆盖而改写；新片段只在独立离线 host control 中验证，不冒充旧模型选择。
+原文只发送一次。首版相对 page-handle 的 extraction 输入字符约增加 3.05%；长页补丁在首版上再增
+277 字符（0.0859%）。先前一个六引用 host 控制的 analysis 场景约增加 9.25%（较宽 canonical 引文
+作为已有 evidence 再发送）；这不是本补丁的新模型实际选择，也不是通用最坏上限。
 没有本地 DeepSeek tokenizer，不能声称实际 token 增量；原 600000 输入字符上限继续 fail closed。
 长页、许多宽引用、重复运行的 history 可增加输入/导出体积，不截断、不自动涨预算。
 
 生成只扫描已有页面并做页内精确唯一性检查：哈希/切块随文本长度增长，唯一性检查为每页
-O(页字符数 × 块数)，可引用页字符数受 10000 上限约束。查表每条引用平均 O(1)，另有 quote
+O(页字符数 × 块数)，单条 quote 仍受 10000 上限约束。查表每条引用平均 O(1)，另有 quote
 序列化成本；映射/原文存储随文本与候选数增长，没有持久索引、检索阶段或额外模型调用。
 
 离线通过只允许标记 SPAN_PROTOCOL_OFFLINE_VALIDATED。服务端实际兼容性、模型选择正确率、科学支持

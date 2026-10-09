@@ -102,17 +102,85 @@ class SpanProtocolTests(unittest.TestCase):
         self.assertEqual(locate(candidate, paper).locator_status, "INVALID")
         self.assertEqual(len(handles.sources()), 1)  # The complete page is unique, unlike its repeated blocks.
 
-    def test_oversized_page_is_not_truncated_or_silently_split_into_citations(self):
+    def test_long_repeated_page_remains_uncitable_without_truncation(self):
         text = "L" * 10001
         paper = paper_with_text([text, "A unique citable page"])
         handles = EvidenceHandles([paper.model_dump(mode="json")])
         page = handles.papers[0]["source"]["pages"][0]
-        self.assertEqual(page["text"], text)
+        self.assertNotIn("text", page)
+        self.assertEqual("".join(s["text"] for s in page["evidence_spans"]), text)
         self.assertIsNone(page["evidence_handle"])
-        self.assertEqual(page["evidence_spans"], [])
+        self.assertTrue(all(s["evidence_handle"] is None for s in page["evidence_spans"]))
         self.assertTrue(all(identity["page_index"] == 1 for identity in handles.sources().values()))
         with self.assertRaises(ProviderFailure):
             EvidenceHandles([paper_with_text([text]).model_dump(mode="json")])
+
+    def test_quote_limit_boundary_allows_unique_short_blocks_from_long_pages(self):
+        for length in (10000, 10001, 30001):
+            with self.subTest(length=length):
+                text = "".join(f"unique source row {i:05d}\n" for i in range(2000))[:length]
+                paper = paper_with_text([text])
+                handles = EvidenceHandles([paper.model_dump(mode="json")])
+                page = handles.papers[0]["source"]["pages"][0]
+                self.assertEqual("".join(s["text"] for s in page["evidence_spans"]), text)
+                self.assertEqual(page["evidence_handle"] is None, length > 10000)
+                for handle, identity in handles.sources().items():
+                    span = self.validate([paper], handles, extraction(paper.id, [handle]))["evidence"][0]
+                    self.assertEqual(span["locator_status"], "LOCATED")
+                    self.assertEqual(span["quote"], text[identity["start"]:identity["end"]])
+                    for key in ("paper_id", "source_snapshot_id", "page_index", "page_text_sha256", "start", "end"):
+                        self.assertEqual(span[key], identity[key])
+                    self.assertLessEqual(len(span["quote"]), 10000)
+                    if length > 10000:
+                        self.assertIsNone(identity["context_handle"])
+                        self.assertLessEqual(len(span["quote"]), 3000)
+                if length > 10000:
+                    with self.assertRaises(ValidationError):
+                        EvidenceCandidate(paper_id=paper.id, source_snapshot_id=paper.source.id, page_index=0, quote=text)
+
+    def test_long_table_keeps_all_context_but_never_creates_an_oversized_quote(self):
+        text = "Table: A minus B; unit [dex]; N is filtered sample.\n" + "".join(
+            f"unique table row {i:04d}: A={i}.1 B={i}.2\n" for i in range(500)) + "Footnote: excludes BAD flags in A only.\n"
+        paper = paper_with_text([text])
+        handles = EvidenceHandles([paper.model_dump(mode="json")])
+        page = handles.papers[0]["source"]["pages"][0]
+        self.assertGreater(len(text), 10000)
+        self.assertIsNone(page["evidence_handle"])
+        self.assertEqual("".join(s["text"] for s in page["evidence_spans"]), text)
+        output = self.validate([paper], handles, extraction(paper.id, list(handles.sources())))
+        self.assertTrue(all(e["locator_status"] == "LOCATED" for e in output["evidence"]))
+        self.assertTrue(any("unit [dex]" in e["quote"] for e in output["evidence"]))
+        self.assertTrue(any("Footnote:" in e["quote"] for e in output["evidence"]))
+        self.assertTrue(all(len(e["quote"]) <= 3000 for e in output["evidence"]))
+        self.assertFalse(any("Table:" in e["quote"] and "Footnote:" in e["quote"] for e in output["evidence"]))
+        self.assertNotIn("HUMAN_VERIFIED", json.dumps(output))
+        # All context is visible, but no composite quote or scientific approval is manufactured.
+        with self.assertRaises(ProviderFailure):
+            handles.resolve(extraction(paper.id, ["+".join(handles.sources())]))
+
+    def test_long_page_hash_request_and_ownership_guards_remain_strict(self):
+        a = paper_with_text(["".join(f"unique line {i:05d}\n" for i in range(1000))])
+        b = paper_with_text(["Other paper evidence"])
+        papers = [a.model_dump(mode="json"), b.model_dump(mode="json")]
+        tampered = copy.deepcopy(papers)
+        tampered[0]["source"]["pages"][0]["text"] += "changed"
+        with self.assertRaises(ProviderFailure):
+            EvidenceHandles(tampered)
+        handles = EvidenceHandles(papers)
+        handle = next(h for h,v in handles.sources().items() if v["paper_id"] == a.id)
+        other_request = next(h for h,v in EvidenceHandles(papers).sources().items() if v["paper_id"] == a.id)
+        for refs in ([other_request], [handle+"-forged"], [handle, handle]):
+            with self.assertRaises(ProviderFailure):
+                handles.resolve(extraction(a.id, refs))
+        with self.assertRaises(OutputValidationFailure):
+            self.validate([a,b], handles, extraction(b.id, [handle]))
+        wire = APIAnalysisOutput(observations=[dict(result_id=b.active_target_result_id, dimension="x", value="x", state="PRESENT",
+            evidence=[{"evidence_handle":handle}])], findings=[])
+        with self.assertRaises(OutputValidationFailure):
+            self.validate([a,b], handles, wire, "analysis")
+        wire.observations[0].result_id = "not-active"
+        with self.assertRaises(WorkspaceError):
+            self.validate([a,b], handles, wire, "analysis")
 
     def test_line_break_ligature_glyph_and_unicode_offsets_are_not_normalized(self):
         text = "😀 We ﬁnd di ﬀerences; di ffer-\nence. ∆rM{Hsc 0.023˘0.105.\n"
@@ -274,6 +342,55 @@ class CapturedSpanTests(unittest.TestCase):
         self.assertEqual(returned.page_index, old["page_index"])
         self.assertNotIn(old["quote"], returned.quote)
         self.assertEqual(old["locator_status"], "INVALID")
+
+
+@unittest.skipUnless(os.getenv("COMPARISON_SPAN_LIVE_REPLAY_ROOT"), "Optional span v0 live Run not configured")
+class LongPageCapturedTests(unittest.TestCase):
+    def test_real_calibration_block_is_new_host_control_and_historical_run_stays_unchanged(self):
+        root = Path(os.environ["COMPARISON_SPAN_LIVE_REPLAY_ROOT"])
+        files = [p for p in root.rglob("*") if p.is_file()]
+        before = {str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
+        conn = sqlite3.connect((root/"runtime/workspace.sqlite3").as_uri()+"?mode=ro&immutable=1", uri=True)
+        raw = conn.execute("select state from runs where id=?", ("run_4dddc42080ea4168a41eb9bad15166bd",)).fetchone()[0]
+        conn.close()
+        run = Run.model_validate_json(raw)
+        project = Project.model_validate(run.input_snapshot)
+        paper = next(p for p in project.papers if p.source.original_filename == "2506.07845.pdf")
+        text = paper.source.pages[5].text
+        self.assertEqual(len(text), 11444)
+        self.assertFalse(any(e["paper_id"] == paper.id and e["page_index"] == 5 for e in run.output["evidence"]))
+        handles = EvidenceHandles(run.input_snapshot["papers"])
+        page = next(p for p in handles.papers if p["id"] == paper.id)["source"]["pages"][5]
+        self.assertIsNone(page["evidence_handle"])
+        self.assertEqual("".join(s["text"] for s in page["evidence_spans"]), text)
+        start = text.index("calibrated to independent measurements")
+        end = text.index("Section 4 for details).", start)+len("Section 4 for details).")
+        handle = next(h for h,v in handles.sources().items() if v["paper_id"] == paper.id and v["page_index"] == 5
+                      and v["start"] <= start and v["end"] >= end)
+        control = handles.resolve(extraction(paper.id, [handle]))
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Workspace(Repository(Path(temp)))
+            try:
+                observed = run.model_copy(update={"id":"offline-long-page-control", "provider":"offline-host-control"})
+                output = workspace.validate_output(project, observed, ProviderResult(control))
+                e = output["evidence"][0]
+                self.assertEqual(e["locator_status"], "LOCATED")
+                self.assertEqual((e["start"],e["end"]), (8812,11444))
+                self.assertEqual(e["page_text_sha256"], paper.source.pages[5].text_sha256)
+                self.assertIn(text[start:end], e["quote"])
+                self.assertIn("Metallicity is\nnot calibrated in DR19", e["quote"])
+                self.assertEqual(output["results"][0]["provenance"]["actor"], "offline-host-control")
+                originals = {e["id"]:e for e in run.output["evidence"]}
+                canonical = ExtractionOutput(results=[{**{k:r[k] for k in ("paper_id","title","description","experiment_identity")},
+                    "evidence":[{k:originals[eid][k] for k in ("paper_id","source_snapshot_id","page_index","quote")}
+                                for eid in r["evidence_ids"]]} for r in run.output["results"]])
+                replay = workspace.validate_output(project, run, ProviderResult(canonical, model=run.provider_reported_model))
+                self.assertEqual([e["locator_status"] for e in replay["evidence"]], ["LOCATED"]*5)
+                self.assertEqual([e["quote"] for e in replay["evidence"]], [e["quote"] for e in run.output["evidence"]])
+                self.assertFalse(any(e["paper_id"] == paper.id and e["page_index"] == 5 for e in replay["evidence"]))
+            finally:
+                workspace.close()
+        self.assertEqual(before, {str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in files})
 
 
 if __name__ == "__main__":
