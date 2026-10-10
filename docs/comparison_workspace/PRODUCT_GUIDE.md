@@ -6,7 +6,8 @@ Windows 组员请先看 [团队预览指南](TEAM_PREVIEW.md)，可用强制离�
 
 ## 安装与一条命令启动
 
-需要 Python 3.10+、Node.js 22.13+ 和 npm。本次验收使用 Python 3.13.9 / Node.js 22.21.0。
+需要 Python 3.10+、Node.js 22.13+ 和 npm。v2 开发回归使用 Python 3.13.9，干净安装使用 Python 3.13.11；
+两者 Node.js 均为 22.21.0。其他环境仍需组员实际验证。
 在本功能分支根目录运行（首次安装需要网络）：
 
 ```powershell

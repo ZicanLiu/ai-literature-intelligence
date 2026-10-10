@@ -4,7 +4,7 @@
 不产生模型费用。Synthetic Demo 的论文、数字和判断全部自制，不是科研实验或 Human Gold。
 真实 S1-B 仅完成有限 Extraction 技术观察；科学人工确认与 S1-B Analysis 均未完成，不能称 recovered。
 
-本页说明本地 v2 候选，**尚未发布到 GitHub**。已发布的
+本页对应 v2 候选；安装前请确认组长已宣布下方 v2 分支与候选 SHA 发布，本地验收不代表远端发布。已发布的
 `preview/comparison-workspace-team-20261010`（3b3b984）是旧预览，不包含本页的新候选展示与运行前检查。
 组长确认发布 v2 后，再使用下面的新分支命令；不要覆盖旧安装目录或自己的项目。
 
@@ -26,19 +26,20 @@ cd comparison-workspace-team-v2
 浏览器打开 http://127.0.0.1:8765 。终端保持开启，按 Ctrl+C 停止。脚本始终强制硬离线，
 不加载 `.env`，也不允许“测试连接”。无需激活虚拟环境或调整 PowerShell 执行策略。
 
-可选：`.\start-team-preview.cmd --port 8766 --data-dir "$env:LOCALAPPDATA\SRTP\TeamPreview"`。
+可选：`.\start-team-preview.cmd --port 8766 --data-dir "$env:LOCALAPPDATA\SRTP\TeamPreviewV2"`。
 只有一个后台可以使用同一数据目录。端口占用时先停止旧服务或使用不同端口。
 
 更新时确认没有自己的源码改动，再执行：
 
 ```powershell
 git pull --ff-only
-.\start-team-preview.cmd --install --rebuild
+.\start-team-preview.cmd --install --rebuild --data-dir "$env:LOCALAPPDATA\SRTP\TeamPreviewV2"
 ```
 
 普通再次启动无需 `--install`；离线时不要运行它。Python 依赖使用仓库版本范围，npm 使用
 package-lock.json；以后重新安装的 Python 补丁版本可能不同。不要复制其他成员的虚拟环境。
-若依赖安装失败，保留报错，确认网络与版本后用 `--install --rebuild` 重试；不会删除项目。
+若依赖安装失败，保留报错，确认网络与版本后用同一数据目录加 `--install --rebuild` 重试；不会删除项目。
+每次启动应沿用同一个 `--data-dir`。如果换成双击启动却看不到项目，先核对是否打开了下文的默认目录。
 
 ## 五分钟无 Key 演示
 
