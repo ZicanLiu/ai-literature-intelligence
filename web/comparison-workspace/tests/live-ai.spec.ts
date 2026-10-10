@@ -185,6 +185,32 @@ test.afterEach(async({request})=>{
   for(const provider of ['openai','deepseek'])await request.delete('/api/ai-settings/'+provider+'/key')
 })
 
+for(const provider of ['openai','deepseek'] as const){
+  test(`${provider} page refresh keeps backend session but demo mode remains free`,async({page})=>{
+    await enableProvider(page,provider)
+    await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+    const id=await demoProject(page)
+    const counts=await (await page.request.get('/_test/sdk-counts')).json()
+    await page.reload()
+    await expect(page.getByLabel('分析模式')).toHaveValue('demo')
+    await page.getByRole('button',{name:'AI 设置',exact:true}).click()
+    await expect(page.getByRole('dialog')).toContainText('本次会话已配置')
+    await expect(page.getByLabel('API Key',{exact:true})).toHaveValue('')
+    await expect(page.getByLabel('确认数据发送',{exact:true})).toBeChecked()
+    await expect(page.getByLabel('启用本次会话 Live',{exact:true})).toBeChecked()
+    await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+    const response=page.waitForResponse(r=>r.url().endsWith('/analyses')&&r.request().method()==='POST')
+    await page.getByRole('button',{name:'运行分析',exact:true}).click()
+    const runId=(await (await response).json()).run_id
+    await expect.poll(async()=> (await (await page.request.get('/api/runs/'+runId)).json()).status).toBe('COMPLETED')
+    const project=await (await page.request.get('/api/projects/'+id)).json()
+    const run=project.runs.find((r:{id:string})=>r.id===runId)
+    expect(run.mode).toBe('demo')
+    expect(run.provider).toBe('DemoProvider')
+    expect(await (await page.request.get('/_test/sdk-counts')).json()).toEqual(counts)
+  })
+}
+
 for(const provider of ['openai','deepseek'] as const) {
   test(`${provider} BYO setup → connection → explicit Live → PDF upload → extraction → targets → analysis → evidence → correction → export`,async({page})=>{
     const remote:string[]=[]

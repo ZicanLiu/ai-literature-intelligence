@@ -1,6 +1,8 @@
 # 科研比较工作台 v0.1.1 使用指南
 
 Windows 组员请先看 [团队预览指南](TEAM_PREVIEW.md)，可用强制离线的一键启动脚本。
+该指南分为离线与 Live 两条流程，沿用同一 --data-dir 可保留项目；可选真实任务见
+[AI 体验指南](AI_TRIAL_GUIDE.md)，不要求成员付费或共享 Key。
 
 这是独立的本地产品入口。历史文献获取、排序、benchmark 和 Pipeline 保持原接口。
 
