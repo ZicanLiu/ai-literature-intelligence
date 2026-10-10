@@ -1,8 +1,10 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, CheckCircle2, ChevronDown, CircleHelp, Clock3, Download, FileText, FolderOpen, GitCompareArrows, History, Layers3, LoaderCircle, LockKeyhole, Maximize2, PencilLine, Pin, Plus, RefreshCw, Search, ShieldCheck, Sparkles, TriangleAlert, Upload, X } from 'lucide-react'
-import type { Capabilities, Correction, Evidence, Finding, Observation, Paper, Project, Run, Summary } from './types'
+import type { Capabilities, Correction, Evidence, Finding, Observation, Paper, Project, Result, Run, Summary } from './types'
 import AISettings from './AISettings'
 import EvidenceQuote from './EvidenceQuote'
+import { CandidateDetails, CandidateOverview, candidateLabel } from './ResultCandidates'
+import AnalysisReview, { analysisOptions, type AnalysisCheck } from './AnalysisReview'
 const PdfCanvas = lazy(()=>import('./PdfPage'))
 function PdfPage(props:{url:string;page:number}) { return <Suspense fallback={<p className="muted">正在加载 PDF 查看器…</p>}><PdfCanvas {...props}/></Suspense> }
 
@@ -100,8 +102,11 @@ export default function App() {
   const [audit,setAudit]=useState('SUPPORTED_PREREQUISITE')
   const [runMode,setRunMode]=useState('manual')
   const [exportOpen,setExportOpen]=useState(false)
+  const [candidate,setCandidate]=useState<{paperId:string;resultId:string}|null>(null)
+  const [analysisCheck,setAnalysisCheck]=useState<AnalysisCheck|null>(null)
+  const startingRun=useRef(false)
   const navigate=useCallback(async(id?:string, pushHistory=true)=>{
-    setLoading(true);setError('');setSelection(null);setPinIds([])
+    setLoading(true);setError('');setSelection(null);setPinIds([]);setCandidate(null);setAnalysisCheck(null);setRunId(null)
     if(pushHistory)window.history.pushState({},'',id?`?project=${id}`:'/');setExportOpen(false)
     try {
       if(id) {const p=await api<Project>('/projects/'+id);setProject(p);setRunMode(p.demo_question?'demo':'manual')}
@@ -124,9 +129,11 @@ export default function App() {
         const r=await api<Run>('/runs/'+runId)
         if(stop)return
         if(['QUEUED','RUNNING'].includes(r.status)){timer=setTimeout(poll,600);return}
-        setProject(await api<Project>('/projects/'+project.id));setRunId(null);setSelection(null)
+        const updated=await api<Project>('/projects/'+project.id)
+        if(stop)return
+        setProject(updated);setRunId(null);setSelection(null)
         if(r.status==='FAILED')setError(runFailureText(r))
-        else setToast(r.status==='STALE'?'旧运行已保存，未覆盖新输入。':'对照记录已保存。')
+        else setToast(r.status==='STALE'?'旧运行已保存，未覆盖新输入。':r.stage==='extraction'?'候选已保存，请查看结果候选并选择活动目标。':'对照记录已保存。')
       }catch(e){if(!stop){setError((e as Error).message);setRunId(null)}}
     }
     void poll();return()=>{stop=true;clearTimeout(timer)}
@@ -149,12 +156,28 @@ export default function App() {
     try{const d=await api<{project_id:string;run_id:string}>('/demo',post({question_key:key,expected_revision:0}));await navigate(d.project_id);setRunId(d.run_id)}
     catch(e){setError((e as Error).message)}finally{setBusy(false)}
   }
-  const startRun=async(stage='analyses')=>{
-    if(!project)return
-    setError('')
-    try{const r=await api<{run_id:string}>('/projects/'+project.id+'/'+stage,post({expected_revision:project.revision,mode:runMode}));setRunId(r.run_id)}
-    catch(e){setError((e as Error).message)}
+  const startRun=async(stage='analyses',check?:AnalysisCheck)=>{
+    if(!project||startingRun.current||runId)return
+    if(check&&(!caps?.api_enabled||runMode!=='api'||check.project.id!==project.id||check.project.revision!==project.revision||JSON.stringify(check.options)!==JSON.stringify(analysisOptions(caps)))){
+      setAnalysisCheck(null);setError('项目或 AI 配置已变化，请重新检查比较对象。');return
+    }
+    startingRun.current=true;setBusy(true);setError('');setAnalysisCheck(null)
+    try{
+      if(check){
+        const current=await api<Capabilities>('/capabilities')
+        setCaps(current)
+        if(!current.api_enabled||JSON.stringify(check.options)!==JSON.stringify(analysisOptions(current))){setError('AI 配置已变化，请重新检查比较对象。');return}
+      }
+      const r=await api<{run_id:string}>('/projects/'+project.id+'/'+stage,post({expected_revision:check?.project.revision??project.revision,mode:runMode}));setRunId(r.run_id)
+    }
+    catch(e){
+      setError((e as Error).message)
+      const refreshed=await Promise.allSettled([api<Project>('/projects/'+project.id),api<Capabilities>('/capabilities')])
+      if(refreshed[0].status==='fulfilled')setProject(refreshed[0].value)
+      if(refreshed[1].status==='fulfilled')setCaps(refreshed[1].value)
+    }finally{startingRun.current=false;setBusy(false)}
   }
+  const previewCandidate=(paper:Paper,result:Result)=>{setAnalysisCheck(null);setCandidate({paperId:paper.id,resultId:result.id})}
   const upload=async(file:File)=>{
     if(!project)return
     const form=new FormData();form.append('file',file);form.append('expected_revision',String(project.revision))
@@ -176,6 +199,9 @@ export default function App() {
   const corrected=(id:string)=>!!project?.corrections.some(c=>c.target_id===id)
   const currentFindings=project?.findings.filter(f=>!f.stale)||[]
   const staleFindings=project?.findings.filter(f=>f.stale)||[]
+  const candidateCount=project?.papers.reduce((count,p)=>count+p.results.length,0)||0
+  const candidatePaper=project?.papers.find(p=>p.id===candidate?.paperId)
+  const candidateResult=candidatePaper?.results.find(r=>r.id===candidate?.resultId)
 
   return <div className="app-shell">
     <aside className="sidebar">
@@ -207,12 +233,14 @@ export default function App() {
           {project.papers.some(p=>p.synthetic)&&<div className="demo-strip"><span><Sparkles size={13}/><strong>含合成演示材料</strong> · SYNTHETIC DEMO / NOT RESEARCH EVIDENCE</span>{project.demo_question&&<label>切换问题 <select aria-label="演示问题" value={project.demo_question} onChange={e=>{void mutate('',{demo_question:e.target.value},'PATCH');setSelection(null)}} disabled={busy||pending}>{questions.map(q=><option key={q[0]} value={q[0]}>{q[1]}</option>)}</select></label>}</div>}
         </section>
         {project.analysis_stale&&<div className="notice stale"><Clock3 size={17}/><span><b>STALE · 输入已变更</b>　旧分析或判断仅供追溯。请重新运行分析，并逐条复核过期的手工判断。</span></div>}
-        <div className="workspace-toolbar"><div><h2>文献对照矩阵</h2><span>{project.papers.length} 篇文献 <span className="dot-separator">·</span> {project.papers.filter(p=>p.active_target_result_id).length}/{project.papers.length} 已选择目标</span></div><div className="toolbar-actions"><button className="button small" onClick={()=>setEditor({kind:'upload'})} disabled={busy||project.papers.length>=10}><Plus size={15}/>添加 PDF</button><select aria-label="分析模式" className="mode-select" value={runMode} onChange={e=>setRunMode(e.target.value)}><option value="manual">手工模式</option>{project.demo_question&&<option value="demo">合成演示</option>}{caps?.api_enabled&&<option value="api">{caps.selected_provider==='deepseek'?'DeepSeek':'OpenAI'} API</option>}</select><button className="button primary small" onClick={()=>void startRun()} disabled={!ready||pending||busy}>{pending?<LoaderCircle size={15} className="spin"/>:<RefreshCw size={15}/>} {pending?'正在整理…':runMode==='manual'?'保存手工对照':'运行分析'}</button></div></div>
+        <div className="workspace-toolbar"><div><h2>文献对照矩阵</h2><span>{project.papers.length} 篇文献 <span className="dot-separator">·</span> {project.papers.filter(p=>p.active_target_result_id).length}/{project.papers.length} 已选择目标</span></div><div className="toolbar-actions"><button className="button small" onClick={()=>setEditor({kind:'upload'})} disabled={busy||project.papers.length>=10}><Plus size={15}/>添加 PDF</button><select aria-label="分析模式" className="mode-select" value={runMode} onChange={e=>setRunMode(e.target.value)}><option value="manual">手工模式</option>{project.demo_question&&<option value="demo">合成演示</option>}{caps?.api_enabled&&<option value="api">{caps.selected_provider==='deepseek'?'DeepSeek':'OpenAI'} API</option>}</select>{runMode==='api'&&<button className="button small" disabled={pending||busy||project.papers.length<2} onClick={()=>void startRun('extractions')}><Sparkles size={14}/>提取候选结果</button>}<button className="button primary small" onClick={()=>runMode==='api'&&caps?setAnalysisCheck({project,options:analysisOptions(caps)}):void startRun()} disabled={!ready||pending||busy}>{pending?<LoaderCircle size={15} className="spin"/>:<RefreshCw size={15}/>} {pending?'正在整理…':runMode==='manual'?'保存手工对照':'运行分析'}</button></div></div>
+        <p className="mode-hint">{runMode==='manual'?'手工模式：保存你填写的结果与观察，不调用模型。上传 PDF 不会自动产生候选；可在下方手工添加。':runMode==='demo'?'合成演示：使用内置自制材料，不调用外部模型，不代表真实科研验证。':'Live 模式：提取与分析是两次独立的显式请求，可能分别计费；不会自动连续运行。'}{caps?.hard_offline&&' 当前为硬离线启动，Live 和连接测试均被禁用；可完整体验演示与手工审查。'}</p>
         {runMode==='api'&&<div className="notice api-notice"><Sparkles size={15}/><span>运行将把本项目的问题、PDF 提取文本与相关结构化记录发送至 {caps?.selected_provider==='deepseek'?'DeepSeek':'OpenAI'} API。当前输入为提取文本，无 PDF 页图 / 表格视觉输入。费用未知；返回结果为待复核草稿。</span></div>}
+        {project.papers.length>0&&<CandidateOverview project={project} onPreview={previewCandidate}/>}
         <div className={`workspace-grid ${selection?'has-inspector':''}`}><section className="comparison-area">
-          <div className="matrix-card">{project.papers.length?<div className="matrix-scroll"><table className="comparison-table"><colgroup><col className="dimension-col"/>{project.papers.map(p=><col key={p.id}/>)}</colgroup><thead><tr><th><span className="caption">比较维度</span><p>每篇文献选择<br/>一个活动目标结果</p></th>{project.papers.map((p,i)=><th key={p.id}><div className="paper-heading"><span className={`paper-token tone-${i%3}`}>{String.fromCharCode(65+i)}</span><span className="caption">{p.synthetic?'SYNTHETIC PAPER':'USER PDF'}</span><button className="icon-button push" title="阅读源 PDF" aria-label={`阅读论文 ${i+1}`} onClick={()=>setSelection({paper:p,evidenceIds:[]})}><BookOpen size={14}/></button></div><h3 title={paperTitle(p)}>{paperTitle(p)}</h3><div className="source-state"><CheckCircle2 size={12}/>{p.source.parse_status==='TEXT_EXTRACTED'?'文本已提取':'文本提取受限'} · {p.source.page_count} 页</div><select aria-label={`论文 ${i+1} 活动结果`} value={p.active_target_result_id||''} onChange={e=>void mutate('/papers/'+p.id+'/active-result',{result_id:e.target.value||null},'PATCH')} disabled={busy}><option value="">选择目标结果…</option>{p.results.map(r=><option key={r.id} value={r.id}>{r.title} · {short(r.description,36)}</option>)}</select><div className="candidate-note"><span>{p.results.length} 个候选</span>{p.active_target_result_id&&<button aria-label={`修订论文 ${i+1} 目标结果`} onClick={()=>setEditor({kind:'correct-result',paper:p,targetId:p.active_target_result_id!})}><PencilLine size={11}/>修订</button>}<button onClick={()=>setEditor({kind:'result',paper:p})}><Plus size={11}/>手工添加</button></div></th>)}</tr></thead><tbody>
+          <div className="matrix-card">{project.papers.length?<div className="matrix-scroll"><table className="comparison-table"><colgroup><col className="dimension-col"/>{project.papers.map(p=><col key={p.id}/>)}</colgroup><thead><tr><th><span className="caption">比较维度</span><p>每篇文献选择<br/>一个活动目标结果</p></th>{project.papers.map((p,i)=><th key={p.id}><div className="paper-heading"><span className={`paper-token tone-${i%3}`}>{String.fromCharCode(65+i)}</span><span className="caption">{p.synthetic?'SYNTHETIC PAPER':'USER PDF'}</span><button className="icon-button push" title="阅读源 PDF" aria-label={`阅读论文 ${i+1}`} onClick={()=>setSelection({paper:p,evidenceIds:[]})}><BookOpen size={14}/></button></div><h3 title={paperTitle(p)}>{paperTitle(p)}</h3><div className="source-state"><CheckCircle2 size={12}/>{p.source.parse_status==='TEXT_EXTRACTED'?'文本已提取':'文本提取受限'} · {p.source.page_count} 页</div><select aria-label={`论文 ${i+1} 活动结果`} value={p.active_target_result_id||''} onChange={e=>void mutate('/papers/'+p.id+'/active-result',{result_id:e.target.value||null},'PATCH')} disabled={busy}><option value="">选择目标结果…</option>{p.results.map((r,index)=><option key={r.id} value={r.id}>{candidateLabel(p,r,index)}</option>)}</select><div className="candidate-note"><span>{p.results.length} 个候选</span>{p.results.length>0&&<button aria-label={`查看论文 ${i+1} 候选详情`} onClick={()=>previewCandidate(p,p.results.find(r=>r.id===p.active_target_result_id)||p.results[0])}>候选详情</button>}{p.active_target_result_id&&<button aria-label={`修订论文 ${i+1} 目标结果`} onClick={()=>setEditor({kind:'correct-result',paper:p,targetId:p.active_target_result_id!})}><PencilLine size={11}/>修订</button>}<button onClick={()=>setEditor({kind:'result',paper:p})}><Plus size={11}/>手工添加</button></div></th>)}</tr></thead><tbody>
             {dimensions.map(d=><tr key={d}><th>{d}</th>{project.papers.map(p=>{const o=observations.find(o=>o.result_id===p.active_target_result_id&&o.dimension===d);return <td key={p.id}>{o?<button className={`matrix-cell ${selection?.observation?.id===o.id?'selected':''}`} onClick={()=>openObservation(o,p)}><Status state={o.state}/><div className={`cell-value ${d==='报告结果'?'result-number':''}`}>{o.state==='PRESENT'?(d==='报告结果'&&o.value.match(/\d+(\.\d+)?%/)?.[0]||o.value):o.value||'原文证据尚未定位'}</div><div className="cell-footer"><Badge mode={o.provenance.mode} corrected={corrected(o.id)}/><span>{o.evidence_ids.length>0&&o.evidence_ids.every(id=>project.evidence.find(e=>e.id===id)?.locator_status==='LOCATED')?<><FileText size={11}/>原文已定位</>:<><CircleHelp size={11}/>待复核</>}</span></div></button>:<button className="empty-cell" disabled={!p.active_target_result_id} onClick={()=>setEditor({kind:'observation',paper:p})}><Plus size={13}/>添加观察</button>}</td>})}</tr>)}
-            {!dimensions.length&&<tr><td colSpan={project.papers.length+1}><div className="matrix-empty"><FileText size={25}/><h3>先定位目标结果，再整理比较条件</h3><p>真实 PDF 的离线模式支持手工字段；不会生成未经分析的 AI 结果。</p>{ready&&<button className="button small" onClick={()=>setEditor({kind:'observation',paper:project.papers[0]})}><Plus size={14}/>添加第一个观察</button>}</div></td></tr>}
+            {!dimensions.length&&<tr><td colSpan={project.papers.length+1}><div className="matrix-empty"><FileText size={25}/><h3>{candidateCount?'已有结果候选，尚未生成比较观察':'先定位目标结果，再整理比较条件'}</h3><p>{candidateCount?`上方已保存 ${candidateCount} 个候选和 ${project.evidence.length} 条 Evidence。先预览并选择活动目标，再手工添加观察或显式运行分析。`:'真实 PDF 的离线模式支持手工字段；不会生成未经分析的 AI 结果。'}</p>{ready&&<button className="button small" onClick={()=>setEditor({kind:'observation',paper:project.papers[0]})}><Plus size={14}/>添加第一个观察</button>}</div></td></tr>}
           </tbody></table></div>:<div className="matrix-empty"><Upload size={28}/><h3>添加用于比较的论文</h3><p>2–10 篇文本 PDF · 每篇最多 25 MiB / 100 页</p><button className="button primary" onClick={()=>setEditor({kind:'upload'})}>上传 PDF</button></div>}
           <footer className="matrix-footer"><span><FileText size={13}/>点击单元格查看原文与修订</span><button className="text-button" disabled={!ready} onClick={()=>setEditor({kind:'observation',paper:project.papers[0]})}><Plus size={13}/>添加比较维度</button></footer></div>
           <section className="audit-area"><div className="section-heading"><div><h2>问题相关的审查</h2><p>条件差异的意义，由当前问题与证据决定。</p></div><button className="text-button" disabled={!ready} onClick={()=>setEditor({kind:'finding'})}><Plus size={14}/>记录手工判断</button></div><div className="audit-tabs" role="tablist">{categories.map(([key,label,Icon,tone])=><button role="tab" aria-selected={audit===key} className={`audit-tab ${tone} ${audit===key?'active':''}`} key={key} onClick={()=>setAudit(key)}><Icon size={16}/><span>{label}</span><b>{currentFindings.filter(f=>f.category===key).length}</b></button>)}</div><div className="finding-list">{currentFindings.filter(f=>f.category===audit).map(f=><button className="finding-card" key={f.id} onClick={()=>inspectFinding(f)}><div><Badge mode={f.provenance.mode} corrected={corrected(f.id)}/><span className="caption">{f.affected_result_ids.length} 个目标结果</span></div><p>{f.explanation}</p><footer><span><FileText size={12}/>{f.evidence_ids.length} 条证据 · 点击复核</span><ArrowUpRight size={16}/></footer></button>)}{!currentFindings.some(f=>f.category===audit)&&<div className="empty-findings"><CircleHelp size={19}/><p>尚无{categories.find(c=>c[0]===audit)?.[1]}记录。空白不表示条件已通过。</p></div>}</div>{staleFindings.length>0&&<details className="stale-findings"><summary>STALE · 历史判断（{staleFindings.length}）</summary><p className="form-note">以下记录保留原有问题和目标，仅供追溯；复核后可通过修订确认。</p>{staleFindings.map(f=><button className="finding-card" key={f.id} onClick={()=>inspectFinding(f)}><div><Badge mode={f.provenance.mode} corrected={corrected(f.id)}/><span className="caption">STALE</span></div><p>{f.explanation}</p><footer>原范围：{f.scope}</footer></button>)}</details>}</section>
@@ -222,10 +250,12 @@ export default function App() {
           {selection?<Inspector project={project} selection={selection} pinIds={pinIds} onPin={id=>{setPinIds(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev.slice(-1),id]);setToast('已更新并排证据')}} onEdit={()=>setEditor(selection.observation?{kind:'correct-observation',obs:selection.observation}:{kind:'correct-finding',finding:selection.finding})} onEvidence={paper=>setEditor({kind:'evidence',paper})} onIdentity={paper=>setEditor({kind:'identity',paper})}/>:<div className="inspector-empty"><div className="evidence-illustration"><FileText size={31}/><Search size={19}/></div><h3>每个判断，都能回到原文</h3><p>点击矩阵单元格或审查记录，<br/>查看 PDF 页码、精确片段与来源。</p><div className="inspector-tips"><span><CheckCircle2 size={14}/>核对原文是否支持解释</span><span><Pin size={14}/>固定两条证据并排阅读</span><span><PencilLine size={14}/>修订保留原记录和理由</span></div></div>}
           {pinIds.length>0&&<div className="pinned-bar"><Pin size={14}/><span>已固定 {pinIds.length}/2 条</span><button className="text-button" disabled={pinIds.length!==2} onClick={()=>setShowPins(true)}>并排查看<Maximize2 size={13}/></button></div>}
         </aside></div>
-        <footer className="workspace-footer"><span><ShieldCheck size={14}/>定位证明原文出现，解释需复核</span><button className="text-button" onClick={()=>setShowHistory(true)}><History size={14}/>运行与修订记录</button><button className="text-button" onClick={()=>setEditor({kind:'import'})}><Upload size={14}/>导入结构化分析</button>{runMode==='api'&&<button className="text-button" disabled={pending||project.papers.length<2} onClick={()=>void startRun('extractions')}><Sparkles size={14}/>提取候选结果</button>}<span className="push"><Check size={13}/>本地已保存 · Revision {project.revision}</span></footer>
+        <footer className="workspace-footer"><span><ShieldCheck size={14}/>定位证明原文出现，解释需复核</span><button className="text-button" onClick={()=>setShowHistory(true)}><History size={14}/>运行与修订记录</button><button className="text-button" onClick={()=>setEditor({kind:'import'})}><Upload size={14}/>导入结构化分析</button><span className="push"><Check size={13}/>本地已保存 · Revision {project.revision}</span></footer>
       </>}
     </main>
     {showAISettings&&caps&&<Modal title="AI 设置" onClose={()=>setShowAISettings(false)}><AISettings caps={caps} onChange={setCaps}/></Modal>}
+    {candidatePaper&&candidateResult&&project&&<Modal title="候选详情 · 只读预览" wide onClose={()=>setCandidate(null)}><CandidateDetails project={project} paper={candidatePaper} result={candidateResult} disabled={busy||pending} onChoose={()=>void mutate('/papers/'+candidatePaper.id+'/active-result',{result_id:candidateResult.id},'PATCH').then(p=>{if(p)setCandidate(null)})} renderEvidence={e=><EvidenceCard project={project} evidence={e} onPin={()=>setPinIds(prev=>prev.includes(e.id)?prev.filter(id=>id!==e.id):[...prev.slice(-1),e.id])} pinned={pinIds.includes(e.id)}/>}/></Modal>}
+    {analysisCheck&&<Modal title="运行前检查比较对象" wide onClose={()=>setAnalysisCheck(null)}><AnalysisReview check={analysisCheck} disabled={busy||pending} onBack={()=>setAnalysisCheck(null)} onConfirm={()=>void startRun('analyses',analysisCheck)} onPreview={previewCandidate}/></Modal>}
     {editor&&<Modal title={({'create':'新建比较项目','project':'编辑问题与范围','upload':'添加论文 PDF','result':'手工创建目标结果','observation':'添加比较观察','finding':'记录问题相关判断','correct-result':'修订目标结果 · 保留原记录','correct-observation':'修订观察 · 保留原记录','correct-finding':'修订判断 · 保留原记录','evidence':'定位原文证据','identity':'修订论文身份','import':'导入预计算分析'} as Record<string,string>)[editor.kind]} onClose={()=>setEditor(null)}>
       {editor.kind==='upload'?<div className="modal-body"><div className="upload-area"><Upload size={28}/><h3>上传原始 PDF</h3><p>每篇最多 25 MiB / 100 页，不截断文件。</p><label className="button primary">选择 PDF<input aria-label="选择 PDF" type="file" accept=".pdf,application/pdf" hidden disabled={busy} onChange={e=>{if(e.target.files?.[0])void upload(e.target.files[0])}}/></label></div><p className="form-note">扫描件或提取受限的 PDF 可手工阅读和整理；v0.1 不提供 OCR。原始源文件保留原字节。</p>{busy&&<p className="muted">正在提取页面文本…</p>}</div>:<EditorForm editor={editor} project={project} busy={busy} onSave={async data=>{
         if(editor.kind==='create'){setBusy(true);try{const p=await api<Project>('/projects',post({...data,expected_revision:0}));setEditor(null);await navigate(p.id)}catch(e){setError((e as Error).message)}finally{setBusy(false)};return}

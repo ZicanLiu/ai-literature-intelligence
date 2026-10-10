@@ -205,6 +205,55 @@ test('browser back and forward retain the home/project history',async({page})=>{
   await expect(page).toHaveURL(projectUrl)
 })
 
+test('read-only candidate details close on browser navigation and show revisions without human confirmation',async({page})=>{
+  await openDemo(page)
+  const endpoint='/api/projects/'+new URL(page.url()).searchParams.get('project')
+  const before=await (await page.request.get(endpoint)).json()
+  await page.getByLabel('查看论文 1 候选详情',{exact:true}).click()
+  await expect(page.getByRole('dialog')).toContainText('实验身份')
+  await expect(page.getByRole('dialog')).toContainText('独立人工确认未记录')
+  expect(await (await page.request.get(endpoint)).json()).toEqual(before)
+  await page.goBack()
+  await expect(page.getByRole('heading',{name:'让文献比较，有据可循。',exact:true})).toBeVisible()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.goForward()
+  await page.getByLabel('修订论文 1 目标结果').click()
+  await page.getByLabel('实验 / 结果身份').fill('用户补充的实验身份，科学支持仍待审阅')
+  await page.getByLabel('修订理由').fill('只复核记录，不标为人工金标准。')
+  await page.getByRole('button',{name:'保存修订',exact:true}).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.getByLabel('查看论文 1 候选详情',{exact:true}).click()
+  const detail=page.getByRole('dialog')
+  await expect(detail).toContainText('用户补充的实验身份')
+  await expect(detail.locator('.result-badges')).toContainText('用户修订')
+  await expect(detail).toContainText('独立人工确认未记录')
+})
+
+test('a late project refresh after a completed demo run cannot reopen a project after navigation',async({page})=>{
+  await openDemo(page)
+  const endpoint='/api/projects/'+new URL(page.url()).searchParams.get('project')
+  let entered=false,release!:()=>void
+  const held=new Promise<void>(resolve=>release=resolve)
+  await page.route('**'+endpoint,async route=>{
+    const response=await route.fetch()
+    entered=true
+    await held
+    await route.fulfill({response})
+  })
+  try{
+    await page.getByRole('button',{name:'运行分析',exact:true}).click()
+    await expect.poll(()=>entered).toBe(true)
+    await page.getByRole('button',{name:'全部项目',exact:true}).click()
+    await expect(page.getByRole('heading',{name:'让文献比较，有据可循。',exact:true})).toBeVisible()
+    const refreshed=page.waitForResponse(r=>r.url().endsWith(endpoint))
+    release()
+    await refreshed
+    await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))))
+    await expect(page.getByRole('heading',{name:'让文献比较，有据可循。',exact:true})).toBeVisible()
+    await expect(page.getByRole('button',{name:'全部项目',exact:true})).toHaveCount(0)
+  }finally{release()}
+})
+
 test('long canonical quotes disclose independently, preserve sources and fit narrow pairs',async({page},testInfo)=>{
   await openDemo(page)
   const id=new URL(page.url()).searchParams.get('project')!

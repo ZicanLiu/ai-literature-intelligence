@@ -12,6 +12,7 @@ import uvicorn
 
 from app.comparison_workspace_api import create_app
 from tests.fixtures.comparison_workspace.mock_live_sdk import MockRawResponse, response_for
+from src.comparison_workspace.providers.evidence_handles import APIExtractionOutput
 
 
 def main():
@@ -52,6 +53,19 @@ def main():
         elif scenario == "root-shape":
             result.output_parsed = []
             result.output_text = '[]'
+        elif scenario == "same-title-candidates":
+            inputs = json.loads(options["input"])
+            if inputs["stage"] == "extraction":
+                variants = [("报告主实验性能，指标和评价划分仍需核查。", "主实验性能 / 测试集 / 指标待核查"),
+                            ("描述模型架构和训练条件，不是独立性能结论。", "架构与训练配置 / 模型组件"),
+                            ("记录数据集和评价条件，样本与划分仍需确认。", "数据与评价条件 / 样本和划分")]
+                result.output_parsed = APIExtractionOutput(results=[
+                    {"paper_id": p["id"], "title": "Shared paper title: " + p["identity"]["title"]["value"],
+                     "description": description, "experiment_identity": identity,
+                     "evidence": [{"evidence_handle": page["evidence_handle"]}
+                                  for page in p["source"]["pages"] if page["evidence_handle"] is not None]}
+                    for p in inputs["papers"] for description, identity in variants])
+                result.output_text = result.output_parsed.model_dump_json()
         return result
     sdk = Mock()
     sdk.responses.parse.side_effect = respond
@@ -91,7 +105,7 @@ def main():
 
         @app.post("/_test/scenario/{value}")
         def set_scenario(value: Literal["success", "failure", "schema", "incomplete", "identity",
-                                       "unknown-handle", "duplicate-handle", "empty-extraction", "json-syntax", "root-shape"]):
+                                       "unknown-handle", "duplicate-handle", "empty-extraction", "json-syntax", "root-shape", "same-title-candidates"]):
             nonlocal scenario
             scenario = value
             return {"scenario": scenario}

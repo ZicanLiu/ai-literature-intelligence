@@ -39,6 +39,146 @@ async function demoProject(page:Page) {
   return created.project_id as string
 }
 
+async function confirmAnalysis(page:Page) {
+  await page.getByRole('button',{name:'运行分析',exact:true}).click()
+  await expect(page.getByRole('dialog',{name:'运行前检查比较对象',exact:true})).toBeVisible()
+  await page.getByRole('button',{name:'确认对象并运行一次分析',exact:true}).click()
+}
+
+async function sameTitleExtraction(page:Page) {
+  await enableProvider(page,'deepseek')
+  await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+  await control(page,'scenario/same-title-candidates')
+  let project=await (await page.request.post('/api/projects',{data:{title:'同名候选体验 · 合成材料',question:'比较主实验报告的指标与条件',scope:'保留未确认的评价条件',expected_revision:0}})).json()
+  for(const letter of ['A','B']){
+    project=await (await page.request.post('/api/projects/'+project.id+'/papers',{multipart:{
+      expected_revision:String(project.revision),file:{name:'paper_'+letter+'.pdf',mimeType:'application/pdf',buffer:await fs.readFile(path.resolve(import.meta.dirname,'../../../src/comparison_workspace/demo/fixtures/paper_'+letter+'.pdf'))}
+    }})).json()
+  }
+  await page.goto('/?project='+project.id)
+  await page.getByLabel('分析模式').selectOption('api')
+  await page.getByRole('button',{name:'提取候选结果',exact:true}).click()
+  await expect(page.locator('.candidate-card')).toHaveCount(6)
+  return project.id as string
+}
+
+test('same-title extraction is readable before Analysis; previews preserve data and targets survive reload',async({page},testInfo)=>{
+  const id=await sameTitleExtraction(page)
+  const endpoint='/api/projects/'+id
+  const before=await (await page.request.get(endpoint)).json()
+  const counts=await (await page.request.get('/_test/sdk-counts')).json()
+  expect(before.observations).toEqual([])
+  expect(before.findings).toEqual([])
+  await expect(page.locator('.matrix-empty')).toContainText('已有结果候选，尚未生成比较观察')
+  for(let i=0;i<2;i++){
+    expect(new Set(before.papers[i].results.map((r:{title:string})=>r.title)).size).toBe(1)
+    expect(before.papers[i].results[0].title).not.toBe(before.papers[i].identity.title.value)
+    const labels=await page.getByLabel(`论文 ${i+1} 活动结果`).locator('option').allTextContents()
+    expect(new Set(labels.slice(1)).size).toBe(3)
+    expect(labels.join(' ')).toContain('主实验性能')
+    expect(labels.join(' ')).toContain('架构与训练配置')
+    expect(labels.join(' ')).toContain('数据与评价条件')
+  }
+  await page.screenshot({path:testInfo.outputPath('v2-extraction-candidates.png'),fullPage:true})
+  await page.getByRole('button',{name:'预览论文 1 候选 2',exact:true}).click()
+  const detail=page.getByRole('dialog',{name:'候选详情 · 只读预览',exact:true})
+  await expect(detail).toContainText('架构与训练配置')
+  await expect(detail).toContainText('独立人工确认未记录')
+  await expect(detail).toContainText('科学支持待核查')
+  await detail.getByText(/^展开关联原文证据/).click()
+  const card=detail.locator('.evidence-card').first()
+  await card.getByRole('button',{name:'展开完整原文',exact:true}).click()
+  const first=before.evidence.find((e:{id:string})=>e.id===before.papers[0].results[1].evidence_ids[0])
+  expect(await card.locator('blockquote').textContent()).toBe(first.quote)
+  await card.getByRole('button',{name:'查看 PDF 第 1 页',exact:true}).click()
+  await expect(card.locator('.pdf-page canvas')).toBeVisible()
+  await page.screenshot({path:testInfo.outputPath('v2-candidate-detail.png'),fullPage:true})
+  await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+  expect(await (await page.request.get(endpoint)).json()).toEqual(before)
+  expect(await (await page.request.get('/_test/sdk-counts')).json()).toEqual(counts)
+  for(const [paper,variant] of [[1,1],[2,2]]){
+    await page.getByRole('button',{name:`预览论文 ${paper} 候选 ${variant}`,exact:true}).click()
+    await page.getByRole('button',{name:'设为活动目标',exact:true}).click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+  }
+  const after=await (await page.request.get(endpoint)).json()
+  expect(after.papers[0].active_target_result_id).toBe(before.papers[0].results[0].id)
+  expect(after.papers[1].active_target_result_id).toBe(before.papers[1].results[1].id)
+  expect(after.observations).toEqual([])
+  expect(after.findings).toEqual([])
+  await page.reload()
+  for(let i=0;i<2;i++)await expect(page.getByLabel(`论文 ${i+1} 活动结果`)).toHaveValue(after.papers[i].active_target_result_id)
+  await page.getByLabel('分析模式').selectOption('api')
+  await page.getByRole('button',{name:'运行分析',exact:true}).click()
+  const check=page.getByRole('dialog',{name:'运行前检查比较对象',exact:true})
+  await expect(check).toContainText('主实验性能')
+  await expect(check).toContainText('架构与训练配置')
+  await expect(check).toContainText('尚未生成比较观察')
+  await page.screenshot({path:testInfo.outputPath('v2-analysis-check.png')})
+  await page.setViewportSize({width:390,height:844})
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false)
+  expect(await check.evaluate(el=>el.scrollWidth>el.clientWidth)).toBe(false)
+  await page.screenshot({path:testInfo.outputPath('v2-analysis-check-narrow.png')})
+  await page.getByRole('button',{name:'返回修改目标',exact:true}).scrollIntoViewIfNeeded()
+  await page.screenshot({path:testInfo.outputPath('v2-analysis-check-narrow-actions.png')})
+  await page.getByRole('button',{name:'返回修改目标',exact:true}).click()
+  expect(await (await page.request.get(endpoint)).json()).toEqual(after)
+  expect(await (await page.request.get('/_test/sdk-counts')).json()).toEqual(counts)
+})
+
+test('Analysis check sends nothing on cancel or preview and one request after confirmation',async({page})=>{
+  await enableProvider(page,'deepseek')
+  await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+  const id=await demoProject(page)
+  const before=await (await page.request.get('/api/projects/'+id)).json()
+  const counts=await (await page.request.get('/_test/sdk-counts')).json()
+  let posts=0
+  page.on('request',r=>{if(r.method()==='POST'&&r.url().endsWith('/analyses'))posts++})
+  await page.getByRole('button',{name:'运行分析',exact:true}).click()
+  await page.getByRole('button',{name:'返回修改目标',exact:true}).click()
+  await page.getByRole('button',{name:'运行分析',exact:true}).click()
+  await page.getByRole('button',{name:'查看该候选与原文',exact:true}).first().click()
+  await expect(page.getByRole('dialog',{name:'候选详情 · 只读预览',exact:true})).toBeVisible()
+  await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+  expect(await (await page.request.get('/api/projects/'+id)).json()).toEqual(before)
+  expect(posts).toBe(0)
+  expect(await (await page.request.get('/_test/sdk-counts')).json()).toEqual(counts)
+  let release!:()=>void
+  const held=new Promise<void>(resolve=>release=resolve)
+  await page.route('**/analyses',async route=>{await held;await route.continue()})
+  try{
+    await confirmAnalysis(page)
+    await expect(page.getByRole('button',{name:'运行分析',exact:true})).toBeDisabled()
+    await expect.poll(()=>posts).toBe(1)
+  }finally{release()}
+  await expect(page.getByRole('button',{name:'运行分析',exact:true})).toBeEnabled()
+  const after=await (await page.request.get('/_test/sdk-counts')).json()
+  expect(after.deepseek-counts.deepseek).toBe(1)
+  expect(posts).toBe(1)
+})
+
+test('stale revision or changed provider settings require a new Analysis check without generation',async({page})=>{
+  await enableProvider(page,'deepseek')
+  await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+  const id=await demoProject(page)
+  const before=await (await page.request.get('/api/projects/'+id)).json()
+  const counts=await (await page.request.get('/_test/sdk-counts')).json()
+  await page.getByRole('button',{name:'运行分析',exact:true}).click()
+  expect((await page.request.patch('/api/projects/'+id,{data:{expected_revision:before.revision,question:'另一个窗口保存的新问题'}})).ok()).toBe(true)
+  await page.getByRole('button',{name:'确认对象并运行一次分析',exact:true}).click()
+  await expect(page.getByRole('alert')).toContainText('项目已更新')
+  await expect(page.locator('.question-box')).toContainText('另一个窗口保存的新问题')
+  expect(await (await page.request.get('/_test/sdk-counts')).json()).toEqual(counts)
+  await page.getByRole('button',{name:'运行分析',exact:true}).click()
+  expect((await page.request.patch('/api/ai-settings',{data:{provider:'deepseek',reasoning_effort:'none'}})).ok()).toBe(true)
+  await page.getByRole('button',{name:'确认对象并运行一次分析',exact:true}).click()
+  await expect(page.getByRole('alert')).toContainText('AI 配置已变化')
+  expect(await (await page.request.get('/_test/sdk-counts')).json()).toEqual(counts)
+  const after=await (await page.request.get('/api/projects/'+id)).json()
+  expect(after.runs.map((r:{id:string})=>r.id)).toEqual(before.runs.map((r:{id:string})=>r.id))
+  expect(after.runs[0].status).toBe('STALE') // Revision changes invalidate the prior analysis view.
+})
+
 test.afterEach(async({request})=>{
   expect((await request.post('/_test/release-worker')).ok()).toBe(true)
   expect((await request.post('/_test/scenario/success')).ok()).toBe(true)
@@ -98,7 +238,7 @@ for(const provider of ['openai','deepseek'] as const) {
       await page.getByLabel(`论文 ${index} 活动结果`).selectOption({index:1})
       await expect(page.getByLabel(`论文 ${index} 活动结果`)).toBeEnabled()
     }
-    await page.getByRole('button',{name:'运行分析',exact:true}).click()
+    await confirmAnalysis(page)
     await expect(page.locator('.matrix-cell')).toHaveCount(2)
     await expect(page.locator('.matrix-cell').first()).toContainText('原文已定位')
     await page.locator('.matrix-cell').first().click()
@@ -186,7 +326,7 @@ for(const provider of ['openai','deepseek'] as const) {
     await control(page,'pause-worker')
     try {
       const response=page.waitForResponse(r=>r.url().endsWith('/analyses')&&r.request().method()==='POST')
-      await page.getByRole('button',{name:'运行分析',exact:true}).click()
+      await confirmAnalysis(page)
       const old=(await (await response).json()).run_id
       expect((await (await page.request.get('/api/runs/'+old)).json()).status).toBe('QUEUED')
       await page.getByRole('button',{name:'AI 设置',exact:true}).click()
@@ -211,7 +351,7 @@ for(const provider of ['openai','deepseek'] as const) {
       expect(await (await page.request.get('/_test/sdk-counts')).json()).toEqual({openai:0,deepseek:0,connection:0})
       await expect(page.getByRole('button',{name:'保存手工对照',exact:true})).toBeEnabled()
       await page.getByLabel('分析模式').selectOption('api')
-      await page.getByRole('button',{name:'运行分析',exact:true}).click()
+      await confirmAnalysis(page)
       await expect.poll(async()=> (await (await page.request.get('/_test/sdk-counts')).json())[provider]).toBe(1)
     } finally {await control(page,'release-worker')}
   })
@@ -242,7 +382,7 @@ for(const provider of ['openai','deepseek'] as const) {
     for(const scenario of ['incomplete','identity']) {
       await control(page,'scenario/'+scenario)
       const response=page.waitForResponse(r=>r.url().endsWith('/analyses')&&r.request().method()==='POST')
-      await page.getByRole('button',{name:'运行分析',exact:true}).click()
+      await confirmAnalysis(page)
       const runId=(await (await response).json()).run_id
       await expect(page.getByRole('button',{name:'运行分析',exact:true})).toBeEnabled()
       if(scenario==='incomplete') {
@@ -286,7 +426,7 @@ for(const provider of ['openai','deepseek'] as const) {
     for(const scenario of ['success','failure','schema']) {
       await control(page,'scenario/'+scenario)
       const response=page.waitForResponse(r=>r.url().endsWith('/analyses')&&r.request().method()==='POST')
-      await page.getByRole('button',{name:'运行分析',exact:true}).click()
+      await confirmAnalysis(page)
       const runId=(await (await response).json()).run_id
       await expect(page.getByRole('button',{name:'运行分析',exact:true})).toBeEnabled()
       await page.getByRole('button',{name:'运行与修订记录',exact:true}).click()
@@ -383,7 +523,7 @@ test('DeepSeek analysis distinguishes JSON syntax from root schema errors withou
   for(const [scenario,issue] of [['json-syntax','JSON_SYNTAX'],['root-shape','SCHEMA_VALIDATION']] as const){
     await control(page,'scenario/'+scenario)
     const response=page.waitForResponse(r=>r.url().endsWith('/analyses')&&r.request().method()==='POST')
-    await page.getByRole('button',{name:'运行分析',exact:true}).click()
+    await confirmAnalysis(page)
     lastRunId=(await (await response).json()).run_id
     await expect(page.getByRole('alert')).toContainText(issue)
     await expect(page.getByRole('alert')).toContainText('本次分析未入库')
@@ -427,7 +567,8 @@ test('DeepSeek operation defaults and explicit extraction override are visible a
   await demoProject(page)
   for(const [stage,button,effort] of [['extractions','提取候选结果','none'],['analyses','运行分析','high']]) {
     const response=page.waitForResponse(r=>r.url().endsWith('/'+stage)&&r.request().method()==='POST')
-    await page.getByRole('button',{name:button,exact:true}).click()
+    if(stage==='analyses')await confirmAnalysis(page)
+    else await page.getByRole('button',{name:button,exact:true}).click()
     const runId=(await (await response).json()).run_id
     await expect.poll(async()=> (await (await page.request.get('/api/runs/'+runId)).json()).status).toBe('COMPLETED')
     expect((await (await page.request.get('/api/runs/'+runId)).json()).reasoning_effort).toBe(effort)

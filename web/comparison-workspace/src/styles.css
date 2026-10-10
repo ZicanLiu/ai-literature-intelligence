@@ -20,3 +20,44 @@
 .ai-settings{display:flex;flex-direction:column;gap:16px}.ai-settings .check-label{display:flex;align-items:flex-start;gap:10px;line-height:1.8}.ai-settings .check-label input{width:auto;margin-top:5px}.ai-actions{display:flex;flex-wrap:wrap;gap:12px}.credential-status{font-size:12px;color:#456387}.history-item small{overflow-wrap:anywhere}
 
 .evidence-card blockquote{white-space:pre-wrap}.quote-note{font-size:11px;line-height:1.8;color:#607a9c;margin-top:12px}.quote-toggle{font-size:12px;padding:6px 0;margin-bottom:12px}
+
+/* Existing result records stay separate from comparison observations and findings. */
+.workspace-toolbar,.toolbar-actions{flex-wrap:wrap}
+.mode-hint{font-size:12px;line-height:1.8;color:#5f7592;margin:0 0 15px;overflow-wrap:anywhere}
+.results-overview{margin:0 0 22px}
+.results-overview .section-heading{margin:16px 0 12px}
+.results-overview .section-heading p{font-size:12px;line-height:1.8;color:#617793}
+.candidate-papers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.candidate-paper{background:#fff;border:1px solid #dce5f0;border-radius:9px;padding:16px;min-width:0}
+.candidate-paper>header{display:flex;align-items:flex-start;gap:10px}
+.candidate-paper h3{font-size:14px;line-height:1.6;color:#405977;overflow-wrap:anywhere}
+.active-result-label{font-size:12px;line-height:1.8;color:#3b618e;margin:12px 0;overflow-wrap:anywhere}
+.candidate-paper summary,.candidate-detail summary{cursor:pointer;font-size:12px;color:#56749a;line-height:1.8;padding:8px 0}
+.candidate-list{display:grid;gap:9px;margin-top:8px}
+.candidate-card{display:block;text-align:left;width:100%;padding:13px;background:#fbfcff;border:1px solid #e1e8f2;border-radius:7px;min-width:0}
+.candidate-card:hover{border-color:#9db8dc;background:#f4f8ff}
+.candidate-card.active{border-color:#8faed5;background:#f3f7fe}
+.candidate-card-title{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.candidate-card-title strong{font-size:13px;line-height:1.7;color:#365779;overflow-wrap:anywhere;font-weight:550}
+.candidate-card-title>span{font-size:10px;line-height:1.8;color:#537aa5;white-space:nowrap}
+.result-summary{margin-top:12px;min-width:0}
+.result-badges{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.result-summary dl,.result-provenance dl{display:grid;grid-template-columns:64px minmax(0,1fr);gap:9px;margin:12px 0;font-size:12px;line-height:1.85}
+.result-summary dt,.result-provenance dt{color:#6e829d}
+.result-summary dd,.result-provenance dd{color:#425f80;margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.result-summary.compact dd{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.result-source-status{font-size:11px;line-height:1.8;color:#667d98;overflow-wrap:anywhere}
+.candidate-detail h3{font-size:16px;line-height:1.7;color:#405977;margin:10px 0;overflow-wrap:anywhere}
+.candidate-evidence{margin:14px 0;border-top:1px solid #e3eaf4}
+.candidate-detail footer,.analysis-review footer{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;border-top:1px solid #e3eaf4;padding-top:16px;margin-top:18px}
+.analysis-review>h3,.review-cautions h3{font-size:14px;color:#405977;margin:16px 0 9px}
+.review-question{font-size:15px;line-height:1.8;color:#365779;overflow-wrap:anywhere}
+.review-targets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:16px 0}
+.review-target{border:1px solid #dce5f0;border-radius:7px;padding:14px;min-width:0}
+.review-target h4{font-size:13px;line-height:1.7;color:#405977;overflow-wrap:anywhere}
+.review-target h5{font-size:12px;line-height:1.7;color:#627d9c;margin:8px 0;overflow-wrap:anywhere}
+.review-target .text-button{font-size:12px;margin-top:12px}
+.review-cautions{background:#f7f9fd;padding:1px 14px 12px;border-radius:7px;margin:14px 0}
+.review-cautions p,.review-cautions li{font-size:12px;line-height:1.9;color:#4c6585;margin:8px 0;overflow-wrap:anywhere}
+.review-cautions ul{padding-left:20px}
+@media(max-width:760px){.candidate-papers,.review-targets{grid-template-columns:1fr}.candidate-paper{padding:13px}.candidate-card-title{flex-wrap:wrap}.result-summary dl{grid-template-columns:58px minmax(0,1fr)}.analysis-review footer .button{width:100%;justify-content:center}}
