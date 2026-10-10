@@ -373,6 +373,49 @@ for(const provider of ['openai','deepseek'] as const) {
   })
 }
 
+test('DeepSeek analysis distinguishes JSON syntax from root schema errors without inferring legacy cause',async({page})=>{
+  await enableProvider(page,'deepseek')
+  await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+  const id=await demoProject(page)
+  const before=await (await page.request.get('/api/projects/'+id)).json()
+  const counts=await (await page.request.get('/_test/sdk-counts')).json()
+  let lastRunId=''
+  for(const [scenario,issue] of [['json-syntax','JSON_SYNTAX'],['root-shape','SCHEMA_VALIDATION']] as const){
+    await control(page,'scenario/'+scenario)
+    const response=page.waitForResponse(r=>r.url().endsWith('/analyses')&&r.request().method()==='POST')
+    await page.getByRole('button',{name:'运行分析',exact:true}).click()
+    lastRunId=(await (await response).json()).run_id
+    await expect(page.getByRole('alert')).toContainText(issue)
+    await expect(page.getByRole('alert')).toContainText('本次分析未入库')
+    const run=await (await page.request.get('/api/runs/'+lastRunId)).json()
+    expect(run.provider_status).toBe('completed')
+    expect(run.status).toBe('FAILED')
+    expect(run.validation_diagnostic.field_path).toBe('$')
+    expect(run.validation_diagnostic.parse_issue).toBe(issue)
+    expect(run.output).toBeNull()
+    await page.getByRole('button',{name:'运行与修订记录',exact:true}).click()
+    await expect(page.locator('.history-item').filter({has:page.locator('code',{hasText:lastRunId})})).toContainText(issue)
+    await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+    const after=await (await page.request.get('/api/projects/'+id)).json()
+    for(const field of ['revision','papers','evidence','observations','findings','corrections'])expect(after[field]).toEqual(before[field])
+    const exported=await (await page.request.get('/api/projects/'+id+'/exports/json')).json()
+    expect(exported.runs.find((r:{id:string})=>r.id===lastRunId).validation_diagnostic.parse_issue).toBe(issue)
+  }
+  const afterCounts=await (await page.request.get('/_test/sdk-counts')).json()
+  expect(afterCounts.deepseek-counts.deepseek).toBe(2)
+  // Read-only legacy view fixture; native Run metadata stays untouched.
+  await page.route('**/api/projects/'+id,async route=>{
+    const response=await route.fetch()
+    const body=await response.json()
+    delete body.runs.find((r:{id:string})=>r.id===lastRunId).validation_diagnostic.parse_issue
+    await route.fulfill({response,json:body})
+  })
+  await page.reload()
+  await page.getByRole('button',{name:'运行与修订记录',exact:true}).click()
+  await expect(page.locator('.history-item').filter({has:page.locator('code',{hasText:lastRunId})})).toContainText('UNKNOWN · 旧记录未保存解析分类')
+  expect(await (await page.request.get('/_test/sdk-counts')).json()).toEqual(afterCounts)
+})
+
 test('DeepSeek operation defaults and explicit extraction override are visible and recorded',async({page})=>{
   await enableProvider(page,'deepseek')
   await page.getByLabel('思考强度',{exact:true}).selectOption('')

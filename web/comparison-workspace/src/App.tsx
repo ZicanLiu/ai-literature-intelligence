@@ -42,6 +42,12 @@ function handleIssueText(run:Run) {
     :d.handle_issue==='DUPLICATE_HANDLE'?'DUPLICATE_HANDLE · 同一候选重复引用'
     :'UNKNOWN · 旧记录未区分未知或重复 handle'
 }
+function parseIssueText(run:Run) {
+  const d=run.validation_diagnostic
+  if(d?.rule!=='structured_output_schema')return ''
+  const labels={JSON_SYNTAX:'JSON 语法解析失败',SCHEMA_VALIDATION:'结构或字段约束校验失败',PARSER_INPUT:'解析输入不是可用的 JSON 文本类型',PARSER_FAILURE:'解析入口异常'}
+  return d.parse_issue?`${d.parse_issue} · ${labels[d.parse_issue]}`:'UNKNOWN · 旧记录未保存解析分类；不能由 $ 推断 JSON 错误或截断'
+}
 function completedFailureContext(run:Run) {
   if(run.status!=='FAILED'||run.provider_status!=='completed')return ''
   const token=(name:string)=>typeof run.token_usage?.[name]==='number'?run.token_usage[name]:'未知'
@@ -49,7 +55,7 @@ function completedFailureContext(run:Run) {
 }
 function runFailureText(run:Run) {
   const reason=run.failure_reason||'运行失败，输入已保留。'
-  return `${run.provider_status==='completed'?'提供方已完成，本地校验失败。':''}${reason} ${completedFailureContext(run)} ${handleIssueText(run)}${run.validation_diagnostic?' 校验位置：'+run.validation_diagnostic.field_path:''}`
+  return `${run.provider_status==='completed'?'提供方已完成，本地校验失败。':''}${reason} ${completedFailureContext(run)} ${handleIssueText(run)} ${parseIssueText(run)}${run.validation_diagnostic?' 校验位置：'+run.validation_diagnostic.field_path:''}`
 }
 
 function RunDiagnostics({run}:{run:Run}) {
@@ -59,6 +65,7 @@ function RunDiagnostics({run}:{run:Run}) {
     <small>提供方状态 {run.provider_status||'未知'}{run.incomplete_details?.reason?' · 未完成原因 '+run.incomplete_details.reason:''}</small>
     {completedFailureContext(run)&&<p>{completedFailureContext(run)}</p>}
     {handleIssueText(run)&&<p>{handleIssueText(run)}</p>}
+    {parseIssueText(run)&&<p>{parseIssueText(run)}</p>}
     {diagnostic&&<div className="run-diagnostic"><p>本地校验失败 · {diagnostic.field_path} · 规则 {diagnostic.rule}</p>{diagnostic.expected.length>0&&<p>预期：{diagnostic.expected.map(identity).join('；')}</p>}{diagnostic.returned&&<p>返回：{identity(diagnostic.returned)}（未知表示未匹配项目身份，原始值未保存）</p>}</div>}
   </>
 }

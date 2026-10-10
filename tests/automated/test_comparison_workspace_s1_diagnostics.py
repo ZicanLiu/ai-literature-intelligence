@@ -15,6 +15,8 @@ from src.comparison_workspace.services.workspace import Workspace
 from src.comparison_workspace.storage.repository import Repository
 from tests.automated.test_comparison_workspace_live_ai import KEYS, MODELS, wait_run
 from tests.fixtures.comparison_workspace.mock_live_sdk import MockRawResponse, response_for
+from src.comparison_workspace.domain.models import ValidationDiagnostic
+from src.comparison_workspace.providers.openai_provider import OpenAIProvider
 
 
 class S1DiagnosticsTests(unittest.TestCase):
@@ -210,6 +212,57 @@ class S1DiagnosticsTests(unittest.TestCase):
                 self.assertEqual(run.validation_diagnostic.rule, "structured_output_schema")
                 self.assertNotIn(KEYS["deepseek"], run.model_dump_json())
                 self.assert_exported_diagnostics(run)
+
+    def test_deepseek_json_syntax_and_root_structure_failures_are_distinct_and_atomic(self):
+        cases = [
+            ('{"observations":["'+KEYS['deepseek']+'"', 'JSON_SYNTAX', '$'),
+            ('```json\n{"observations":[],"findings":[]}\n```', 'JSON_SYNTAX', '$'),
+            ('', 'JSON_SYNTAX', '$'),
+            ('[]', 'SCHEMA_VALIDATION', '$'),
+            ('null', 'SCHEMA_VALIDATION', '$'),
+            (json.dumps({'observations': [], 'findings': [], KEYS['deepseek']: 'private'}), 'SCHEMA_VALIDATION', '$'),
+            ('{"observations":{},"findings":[]}', 'SCHEMA_VALIDATION', '$.observations'),
+            (None, 'PARSER_INPUT', '$'),
+        ]
+        for text, issue, path in cases:
+            def malformed(**options):
+                result = response_for(**options)
+                # Valid output_parsed must not be used as a fallback for invalid DeepSeek output_text.
+                result.output_text = text
+                result.usage = SimpleNamespace(model_dump=lambda **kw: {
+                    'input_tokens': 54948, 'output_tokens': 27395, 'total_tokens': 82343,
+                    'output_tokens_details': {'reasoning_tokens': 23167}})
+                return result
+            self.respond = malformed
+            self.sdk.reset_mock()
+            with self.subTest(issue=issue, path=path):
+                before, run = self.run_attempt('deepseek')
+                self.assert_failed_state_unchanged(before, run)
+                self.assertEqual(run.provider_status, 'completed')
+                self.assertIsNone(run.incomplete_details)
+                self.assertEqual(run.max_output_tokens, 32000)
+                self.assertEqual(run.reasoning_effort, 'high')
+                self.assertEqual(run.token_usage['output_tokens'], 27395)
+                self.assertEqual(run.token_usage['output_tokens_details']['reasoning_tokens'], 23167)
+                self.assertEqual(run.validation_diagnostic.rule, 'structured_output_schema')
+                self.assertEqual(run.validation_diagnostic.parse_issue, issue)
+                self.assertEqual(run.validation_diagnostic.field_path, path)
+                self.sdk.responses.create.assert_called_once()
+                self.assert_exported_diagnostics(run)
+                for file in self.repo.data_dir.rglob('*'):
+                    if file.is_file():
+                        self.assertNotIn(KEYS['deepseek'].encode(), file.read_bytes())
+
+    def test_parser_failure_classification_never_copies_exception_messages_or_infers_old_cause(self):
+        for exc, expected in ((TypeError(KEYS['deepseek']), 'PARSER_FAILURE'),
+                              (json.JSONDecodeError(KEYS['deepseek'], 'private text', 0), 'JSON_SYNTAX')):
+            diagnostic = OpenAIProvider._schema_diagnostic(exc)
+            self.assertEqual(diagnostic.parse_issue, expected)
+            self.assertEqual(diagnostic.field_path, '$')
+            self.assertNotIn(KEYS['deepseek'], diagnostic.model_dump_json())
+            self.assertNotIn('private text', diagnostic.model_dump_json())
+        old = ValidationDiagnostic.model_validate({'rule': 'structured_output_schema', 'field_path': '$'})
+        self.assertIsNone(old.parse_issue)
 
     def test_unknown_identity_and_provider_metadata_cannot_leak_credentials_or_paths(self):
         private_path = "/" + "Users" + "/" + "private-test-user" + "/credential.txt"

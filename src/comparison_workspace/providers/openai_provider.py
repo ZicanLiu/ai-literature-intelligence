@@ -168,11 +168,16 @@ class OpenAIProvider:
     def _schema_diagnostic(exc):
         # Never persist Pydantic input, context, error messages or arbitrary extra-field names.
         path = "$"
+        issue = "PARSER_FAILURE"
         if isinstance(exc, ValidationError):
             allowed = {"results", "observations", "findings", "paper_id", "source_snapshot_id", "page_index",
                        "quote", "evidence_handle", "result_id", "dimension", "value", "state", "evidence", "category",
                        "affected_result_ids", "scope", "explanation", "title", "description", "experiment_identity"}
             errors = exc.errors(include_input=False, include_context=False, include_url=False)
+            # Classify only library error codes, never messages, input values or extra-field names.
+            kind = errors[0]["type"] if errors else None
+            issue = ("JSON_SYNTAX" if kind == "json_invalid" else
+                     "PARSER_INPUT" if kind == "json_type" else "SCHEMA_VALIDATION")
             for part in errors[0]["loc"] if errors else ():
                 if type(part) is int and 0 <= part < 100000:
                     path += f"[{part}]"
@@ -180,7 +185,9 @@ class OpenAIProvider:
                     path += "." + part
                 else:
                     break
-        return ValidationDiagnostic(field_path=path, rule="structured_output_schema")
+        elif isinstance(exc, json.JSONDecodeError):
+            issue = "JSON_SYNTAX"
+        return ValidationDiagnostic(field_path=path, rule="structured_output_schema", parse_issue=issue)
 
     @staticmethod
     def _unfinished(metadata):

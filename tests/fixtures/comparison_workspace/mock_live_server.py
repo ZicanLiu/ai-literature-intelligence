@@ -47,6 +47,11 @@ def main():
         elif scenario == "empty-extraction":
             result.output_parsed = {"results": []}
             result.output_text = '{"results":[]}'
+        elif scenario == "json-syntax":
+            result.output_text = '{"observations":['
+        elif scenario == "root-shape":
+            result.output_parsed = []
+            result.output_text = '[]'
         return result
     sdk = Mock()
     sdk.responses.parse.side_effect = respond
@@ -86,7 +91,7 @@ def main():
 
         @app.post("/_test/scenario/{value}")
         def set_scenario(value: Literal["success", "failure", "schema", "incomplete", "identity",
-                                       "unknown-handle", "duplicate-handle", "empty-extraction"]):
+                                       "unknown-handle", "duplicate-handle", "empty-extraction", "json-syntax", "root-shape"]):
             nonlocal scenario
             scenario = value
             return {"scenario": scenario}

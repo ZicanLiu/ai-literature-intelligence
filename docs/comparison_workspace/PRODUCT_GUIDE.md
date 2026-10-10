@@ -149,4 +149,10 @@ request ID（服务提供时）、耗时、token usage、project revision 与含
 handle 失败新增 UNKNOWN_HANDLE / DUPLICATE_HANDLE 安全分类；旧记录只有合并规则时显示 UNKNOWN，
 不猜测历史原因。失败原始响应未保存，不能依靠重新生成随机注册表还原那次模型选择。
 
+结构解析失败新增可选安全分类 `parse_issue`：`JSON_SYNTAX`（JSON 语法）、
+`SCHEMA_VALIDATION`（结构约束）、`PARSER_INPUT`（解析输入类型）、`PARSER_FAILURE`（其他解析异常）。
+不保存原始输出、异常消息或违规值。位置 `$` 可以对应多类错误，不能据此推断输出截断；
+旧记录未保存分类时显示 UNKNOWN，不追填历史原因。该分类不改变解析与拒绝规则，
+不会移除围栏、补全括号、接受部分结果或自动重试。
+
 更多见 [局限](LIMITATIONS.md)、[来源与修订](DATA_PROVENANCE.md)、[组会脚本](DEMO_SCRIPT.md)。

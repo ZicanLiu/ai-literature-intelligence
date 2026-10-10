@@ -176,6 +176,7 @@ class EvidenceHandleTests(unittest.TestCase):
         old = {"rule": "evidence_handle_identity", "field_path": "$.results[0].evidence[1].evidence_handle",
                "expected": [], "returned": None}
         self.assertIsNone(ValidationDiagnostic.model_validate(old).handle_issue)
+        self.assertIsNone(ValidationDiagnostic.model_validate(old).parse_issue)
         with self.assertRaises(ValidationError):
             ValidationDiagnostic.model_validate({**old, "handle_issue": "arbitrary-provider-value"})
 

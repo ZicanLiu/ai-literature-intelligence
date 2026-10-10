@@ -176,6 +176,7 @@ class ValidationDiagnostic(Record):
     returned: EvidenceIdentity | None = None
     # Absent in historical records: never infer which old handle check failed.
     handle_issue: Literal["UNKNOWN_HANDLE", "DUPLICATE_HANDLE"] | None = None
+    parse_issue: Literal["JSON_SYNTAX", "SCHEMA_VALIDATION", "PARSER_INPUT", "PARSER_FAILURE"] | None = None
 
 
 class Run(Record):

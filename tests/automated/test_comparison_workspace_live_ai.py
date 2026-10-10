@@ -163,6 +163,19 @@ class DeepSeekAdapterTests(unittest.TestCase):
         self.assertEqual(result.model, "deepseek-reported")
         self.client.responses.parse.assert_not_called()
 
+    def test_sdk_output_text_excludes_reasoning_and_multiple_json_documents_still_fail(self):
+        from openai.types.responses import Response
+        response = Response.model_construct(output=[
+            SimpleNamespace(type='reasoning', content=[SimpleNamespace(type='output_text', text='not JSON reasoning')]),
+            SimpleNamespace(type='message', content=[SimpleNamespace(type='output_text', text='{"observations":'),
+                                                     SimpleNamespace(type='output_text', text='[],"findings":[]}')])])
+        self.assertEqual(response.output_text, '{"observations":[],"findings":[]}')
+        self.assertEqual(self.provider._parse_output(response, APIAnalysisOutput).observations, [])
+        response.output.append(SimpleNamespace(type='message', content=[SimpleNamespace(type='output_text', text='{}')]))
+        with self.assertRaises(ValueError) as caught:
+            self.provider._parse_output(response, APIAnalysisOutput)
+        self.assertEqual(self.provider._schema_diagnostic(caught.exception).parse_issue, 'JSON_SYNTAX')
+
     def test_each_reasoning_setting_and_default(self):
         for effort in (None, "none", "low", "high", "max"):
             self.provider.reasoning_effort = effort
