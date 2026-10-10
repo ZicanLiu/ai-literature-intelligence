@@ -18,3 +18,5 @@
 .stale-findings{margin-top:16px;color:#7a6847;font-size:12px}.stale-findings summary{cursor:pointer;padding:10px 0}.stale-findings .finding-card{width:100%;margin-top:8px}.stale-findings .finding-card footer{font-size:11px;overflow-wrap:anywhere}.stale-findings .form-note{margin-bottom:8px}
 
 .ai-settings{display:flex;flex-direction:column;gap:16px}.ai-settings .check-label{display:flex;align-items:flex-start;gap:10px;line-height:1.8}.ai-settings .check-label input{width:auto;margin-top:5px}.ai-actions{display:flex;flex-wrap:wrap;gap:12px}.credential-status{font-size:12px;color:#456387}.history-item small{overflow-wrap:anywhere}
+
+.evidence-card blockquote{white-space:pre-wrap}.quote-note{font-size:11px;line-height:1.8;color:#607a9c;margin-top:12px}.quote-toggle{font-size:12px;padding:6px 0;margin-bottom:12px}

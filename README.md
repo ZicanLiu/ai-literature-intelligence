@@ -34,7 +34,7 @@ judged set `w4_query_relevance_pilot_v0.1.0` 已 approved 并通过 strict valid
 
 ## 2. MVP 的输入、处理过程和输出
 
-### 独立科研比较工作台 v0.1
+### 独立科研比较工作台 v0.1.1
 
 新增中文本地 Web 入口支持 2–10 篇 PDF、一个比较问题、单活动目标、原文证据、用户修订和
 Markdown / JSON / CSV 报告。三篇合成演示可无 Key / 无网络运行；真实 PDF 支持离线手工整理。
@@ -47,6 +47,8 @@ python -m app.comparison_workspace_main
 首次启动自动构建前端（需要 Node.js / npm），打开 http://127.0.0.1:8765。
 准备好构建后只需一个本地后台服务。完整安装、组会演示与局限见
 [产品指南](docs/comparison_workspace/PRODUCT_GUIDE.md)。
+Windows 组员可按 [团队预览指南](docs/comparison_workspace/TEAM_PREVIEW.md) 使用
+`start-team-preview.cmd` 完成首次安装与强制离线启动；预览分支发布须另经组长确认。
 
 输入：
 

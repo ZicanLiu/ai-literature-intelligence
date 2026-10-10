@@ -12,6 +12,7 @@ htmlcov/
 .env.*
 !.env.example
 .venv/
+.venv-workspace/
 venv/
 env/
 

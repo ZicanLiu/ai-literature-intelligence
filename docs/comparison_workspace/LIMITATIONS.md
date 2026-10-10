@@ -11,7 +11,8 @@
 - 加密 / 损坏、超过 25 MiB / 100 页的源明确拒绝。没有静默截断。
 - 提供 PDF 页跳转和提取文本 exact quote；不承诺任意 PDF 图像上的准确 bbox 高亮。
 - AI / 导入解释需要源审阅；structured output 和有效 quote 不能校准科学解释。
-  实际 OpenAI / DeepSeek API 行为、账户可用模型、长文质量与费用本次未 live 验证。
+  已有受限 DeepSeek Extraction 技术观察，尚无 S1-B Analysis / Human Gold；不是模型稳定性或优越性证明。
+  账户模型可用性、未来长文科学质量与费用均不能由该次观察推定。
 - API 最多发送 600,000 个字符，超限明确拒绝、不截断；SDK 单次 120 秒、max_retries=0。
   模型由用户配置。上下文窗口 / 实际服务约束可能更小，失败单独记录。
 - OpenAI 使用 store=false 关闭 Responses 应用存储；DeepSeek Responses 为无状态接口，不发送 store。

@@ -191,3 +191,82 @@ test('switching away from a corrected observation clears the inspector and can r
   await page.getByRole('tab',{name:'未决 1',exact:true}).click()
   await expect(page.locator('.finding-list')).toContainText('内置演示结论不再适用')
 })
+
+test('browser back and forward retain the home/project history',async({page})=>{
+  await openDemo(page)
+  const projectUrl=page.url()
+  await page.getByRole('button',{name:'全部项目',exact:true}).click()
+  await page.goBack()
+  await expect(page.getByRole('button',{name:'全部项目',exact:true})).toBeVisible()
+  await expect(page).toHaveURL(projectUrl)
+  await page.goForward()
+  await expect(page.getByRole('heading',{name:'让文献比较，有据可循。',exact:true})).toBeVisible()
+  await page.goBack()
+  await expect(page).toHaveURL(projectUrl)
+})
+
+test('long canonical quotes disclose independently, preserve sources and fit narrow pairs',async({page},testInfo)=>{
+  await openDemo(page)
+  const id=new URL(page.url()).searchParams.get('project')!
+  const endpoint='/api/projects/'+id
+  let project=await (await page.request.get(endpoint)).json()
+  const quotes:string[]=[]
+  // Host fixture setup uses original synthetic page text; no historical scientific Run is edited.
+  for(let i=0;i<2;i++){
+    const paper=project.papers[i]
+    const quote=paper.source.pages[0].text
+    expect(Array.from(quote).length).toBeGreaterThan(600)
+    quotes.push(quote)
+    const evidence=await page.request.post(endpoint+'/evidence',{data:{expected_revision:project.revision,
+      candidate:{paper_id:paper.id,source_snapshot_id:paper.source.id,page_index:0,quote}}})
+    expect(evidence.ok()).toBe(true)
+    project=await evidence.json()
+    const stored=project.evidence.at(-1)
+    expect(stored.locator_status).toBe('LOCATED')
+    const observation=await page.request.post(endpoint+'/observations',{data:{expected_revision:project.revision,
+      result_id:paper.active_target_result_id,dimension:'长引文阅读',value:'长引文 '+i,state:'PRESENT',evidence_ids:[stored.id]}})
+    expect(observation.ok()).toBe(true)
+    project=await observation.json()
+  }
+  await page.reload()
+  for(let i=0;i<2;i++){
+    await page.locator('.matrix-cell').filter({hasText:'长引文 '+i}).click()
+    const card=page.locator('.inspector .evidence-card')
+    const toggle=card.getByRole('button',{name:'展开完整原文',exact:true})
+    await expect(toggle).toHaveAttribute('aria-expanded','false')
+    await expect(card).toContainText('原文预览 · 请展开核查完整上下文')
+    expect((await card.locator('blockquote').textContent())!.length).toBeLessThan(quotes[i].length)
+    await toggle.click()
+    expect(await card.locator('blockquote').textContent()).toBe(quotes[i])
+    await card.getByText('提取页面文本 · 精确片段',{exact:true}).click()
+    expect(await card.locator('mark').textContent()).toBe(quotes[i])
+    await card.getByRole('button',{name:'查看 PDF 第 1 页',exact:true}).click()
+    await expect(card.locator('.pdf-page .muted')).toHaveCount(0,{timeout:10000})
+    await expect(card.locator('.pdf-page canvas')).toBeVisible()
+    await card.getByRole('button',{name:'收起',exact:true}).click()
+    await expect(toggle).toHaveAttribute('aria-expanded','false')
+    await card.getByRole('button',{name:'固定证据',exact:true}).click()
+  }
+  await page.getByRole('button',{name:'并排查看',exact:true}).click()
+  const cards=page.locator('.evidence-pair .evidence-card')
+  await expect(cards).toHaveCount(2)
+  await cards.nth(0).getByRole('button',{name:'展开完整原文',exact:true}).click()
+  expect(await cards.nth(0).locator('blockquote').textContent()).toBe(quotes[0])
+  await expect(cards.nth(1).getByRole('button',{name:'展开完整原文',exact:true})).toHaveAttribute('aria-expanded','false')
+  await page.screenshot({path:testInfo.outputPath('long-pair-desktop.png')})
+  await page.setViewportSize({width:390,height:844})
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false)
+  expect(await page.getByRole('dialog').evaluate(el=>el.scrollWidth>el.clientWidth)).toBe(false)
+  await cards.nth(1).getByRole('button',{name:'展开完整原文',exact:true}).click()
+  expect(await cards.nth(1).locator('blockquote').textContent()).toBe(quotes[1])
+  await page.screenshot({path:testInfo.outputPath('long-pair-narrow.png')})
+  await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+  await page.setViewportSize({width:1440,height:900})
+  await page.getByRole('button',{name:'已报告 Evaluation split: temporal split. 合成演示 原文已定位',exact:true}).click()
+  await expect(page.locator('.inspector .evidence-card .quote-toggle')).toHaveCount(0)
+  await expect(page.locator('.inspector .evidence-card .pdf-page')).toHaveCount(0)
+  // Expanding, pinning and reading must not mutate canonical quote/hash/offset/ownership or revision.
+  expect(await (await page.request.get(endpoint)).json()).toEqual(project)
+  const exported=await (await page.request.get(endpoint+'/exports/json')).json()
+  expect(JSON.stringify(exported)).toContain(quotes[0].split('\n')[0])
+})

@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, CheckCircle2, ChevronDown, CircleHelp, Clock3, Download, FileText, FolderOpen, GitCompareArrows, History, Layers3, LoaderCircle, LockKeyhole, Maximize2, PencilLine, Pin, Plus, RefreshCw, Search, ShieldCheck, Sparkles, TriangleAlert, Upload, X } from 'lucide-react'
 import type { Capabilities, Correction, Evidence, Finding, Observation, Paper, Project, Run, Summary } from './types'
 import AISettings from './AISettings'
+import EvidenceQuote from './EvidenceQuote'
 const PdfCanvas = lazy(()=>import('./PdfPage'))
 function PdfPage(props:{url:string;page:number}) { return <Suspense fallback={<p className="muted">正在加载 PDF 查看器…</p>}><PdfCanvas {...props}/></Suspense> }
 
@@ -80,9 +81,9 @@ export default function App() {
   const [audit,setAudit]=useState('SUPPORTED_PREREQUISITE')
   const [runMode,setRunMode]=useState('manual')
   const [exportOpen,setExportOpen]=useState(false)
-  const navigate=useCallback(async(id?:string)=>{
+  const navigate=useCallback(async(id?:string, pushHistory=true)=>{
     setLoading(true);setError('');setSelection(null);setPinIds([])
-    window.history.pushState({},'',id?`?project=${id}`:'/');setExportOpen(false)
+    if(pushHistory)window.history.pushState({},'',id?`?project=${id}`:'/');setExportOpen(false)
     try {
       if(id) {const p=await api<Project>('/projects/'+id);setProject(p);setRunMode(p.demo_question?'demo':'manual')}
       else {setProject(null);setSummaries(await api<Summary[]>('/projects'))}
@@ -90,8 +91,8 @@ export default function App() {
   },[])
   useEffect(()=>{
     void api<Capabilities>('/capabilities').then(setCaps).catch(e=>setError(e.message))
-    void navigate(new URLSearchParams(window.location.search).get('project')||undefined)
-    const pop=()=>void navigate(new URLSearchParams(window.location.search).get('project')||undefined)
+    void navigate(new URLSearchParams(window.location.search).get('project')||undefined,false)
+    const pop=()=>void navigate(new URLSearchParams(window.location.search).get('project')||undefined,false)
     window.addEventListener('popstate',pop);return()=>window.removeEventListener('popstate',pop)
   },[navigate])
   useEffect(()=>{if(toast){const timer=setTimeout(()=>setToast(''),3500);return()=>clearTimeout(timer)}},[toast])
@@ -239,7 +240,7 @@ function Inspector({project,selection,pinIds,onPin,onEdit,onEvidence,onIdentity}
   return <div className="inspector-body">
     {(selection.observation||selection.finding)&&<div className="interpretation"><span className="caption">{selection.finding?.stale?'STALE · 历史判断':'当前记录 / 模型解释'}</span><h3>{selection.observation?.dimension||categories.find(c=>c[0]===selection.finding?.category)?.[1]}</h3><p>{selection.observation?.value||selection.finding?.explanation||'未定位原文信息；不能推断论文未报告。'}</p><div><Badge mode={(selection.observation||selection.finding)!.provenance.mode} corrected={changes.length>0}/><button className="text-button" onClick={onEdit}><PencilLine size={13}/>修订</button></div></div>}
     {selection.evidenceIds.length>1&&<label className="evidence-select">证据片段<select aria-label="选择证据片段" value={selectedId} onChange={e=>setSelectedId(e.target.value)}>{selection.evidenceIds.map((id,i)=>{const e=project.evidence.find(e=>e.id===id);const p=project.papers.find(p=>p.id===e?.paper_id);return <option key={id} value={id}>{i+1} · {p?short(paperTitle(p),24):'未知'} · 第 {(e?.page_index??0)+1} 页</option>})}</select></label>}
-    {ev?<EvidenceCard project={project} evidence={ev} onPin={()=>onPin(ev.id)} pinned={pinIds.includes(ev.id)}/>:<div className="no-evidence"><CircleHelp size={21}/><strong>{selection.paper?'原始论文阅读':'证据尚未定位'}</strong><p>{selection.paper?'选择页面，阅读 PDF 与提取文本，并手工创建精确引文。':'该记录没有有效定位。缺失不等于冲突，解释需要复核。'}</p></div>}
+    {ev?<EvidenceCard key={ev.id} project={project} evidence={ev} onPin={()=>onPin(ev.id)} pinned={pinIds.includes(ev.id)}/>:<div className="no-evidence"><CircleHelp size={21}/><strong>{selection.paper?'原始论文阅读':'证据尚未定位'}</strong><p>{selection.paper?'选择页面，阅读 PDF 与提取文本，并手工创建精确引文。':'该记录没有有效定位。缺失不等于冲突，解释需要复核。'}</p></div>}
     {paper&&!ev&&<><div className="page-controls"><button className="icon-button" disabled={page===0} onClick={()=>setPage(page-1)} aria-label="上一页"><ArrowLeft size={15}/></button><span>PDF 第 {page+1} / {paper.source.page_count} 页</span><button className="icon-button" disabled={page===paper.source.page_count-1} onClick={()=>setPage(page+1)} aria-label="下一页"><ArrowRight size={15}/></button></div><PdfPage url={`/api/projects/${project.id}/papers/${paper.id}/source`} page={page}/><pre className="page-text">{paper.source.pages[page].text||'本页无可提取文本；请阅读原始 PDF。'}</pre></>}
     {paper&&<div className="source-identity"><span className="caption">论文 / 源身份</span><h3>{paperTitle(paper)}</h3>{paper.synthetic&&<span className="synthetic-text">SYNTHETIC DEMO / NOT RESEARCH EVIDENCE</span>}<dl><dt>源文件</dt><dd>{paper.source.original_filename}</dd><dt>SHA256</dt><dd title={paper.source.sha256}>{paper.source.sha256.slice(0,24)}…</dd><dt>解析工具</dt><dd>{paper.source.parser}</dd></dl>{paper.source.errors.map((e,i)=><p className="parse-error" key={i}>{e}</p>)}<div className="identity-actions"><button className="text-button" onClick={()=>onEvidence(paper)}><Plus size={13}/>定位证据</button><button className="text-button" onClick={()=>onIdentity(paper)}><PencilLine size={13}/>修订身份</button><a className="text-button" href={`/api/projects/${project.id}/papers/${paper.id}/source`} target="_blank" rel="noreferrer"><ArrowUpRight size={13}/>源 PDF</a></div></div>}
     {changes.length>0&&<div className="inspector-history"><h3><History size={14}/>修订历史</h3>{changes.map(c=><CorrectionItem key={c.id} correction={c}/>)}</div>}
@@ -252,7 +253,7 @@ function EvidenceCard({project,evidence:e,onPin,pinned}:{project:Project;evidenc
   const paper=project.papers.find(p=>p.id===e.paper_id)!
   const page=paper.source.pages[e.page_index]
   const points=Array.from(page?.text||'')
-  return <div className="evidence-card"><div className="evidence-card-top"><span className="located"><FileText size={13}/>{e.locator_status==='LOCATED'?'原文已定位':'定位无效 · 待复核'}</span><button className={`icon-button ${pinned?'pinned':''}`} title={pinned?'取消固定':'固定证据'} aria-label={pinned?'取消固定证据':'固定证据'} onClick={onPin}><Pin size={14}/></button></div><span className="caption">{short(paperTitle(paper),34)} · PDF 第 {e.page_index+1} 页</span><blockquote>{e.quote}</blockquote>{e.review_reason&&<p className="parse-error">{e.review_reason}</p>}<details><summary>提取页面文本 · 精确片段</summary><pre className="page-text">{e.locator_status==='LOCATED'&&e.start!==null&&e.end!==null?<>{points.slice(0,e.start).join('')}<mark>{points.slice(e.start,e.end).join('')}</mark>{points.slice(e.end).join('')}</>:page?.text||'没有可用的页面文本'}</pre></details>{page&&<button className="pdf-toggle" onClick={()=>setPdf(!pdf)}><BookOpen size={14}/>{pdf?'收起 PDF 页':`查看 PDF 第 ${e.page_index+1} 页`}<ChevronDown size={14}/></button>}{pdf&&<PdfPage url={`/api/projects/${project.id}/papers/${paper.id}/source`} page={e.page_index}/>}</div>
+  return <div className="evidence-card"><div className="evidence-card-top"><span className="located"><FileText size={13}/>{e.locator_status==='LOCATED'?'原文已定位':'定位无效 · 待复核'}</span><button className={`icon-button ${pinned?'pinned':''}`} title={pinned?'取消固定':'固定证据'} aria-label={pinned?'取消固定证据':'固定证据'} onClick={onPin}><Pin size={14}/></button></div><span className="caption">{short(paperTitle(paper),34)} · PDF 第 {e.page_index+1} 页</span><EvidenceQuote quote={e.quote}/>{e.review_reason&&<p className="parse-error">{e.review_reason}</p>}<details><summary>提取页面文本 · 精确片段</summary><pre className="page-text">{e.locator_status==='LOCATED'&&e.start!==null&&e.end!==null?<>{points.slice(0,e.start).join('')}<mark>{points.slice(e.start,e.end).join('')}</mark>{points.slice(e.end).join('')}</>:page?.text||'没有可用的页面文本'}</pre></details>{page&&<button className="pdf-toggle" onClick={()=>setPdf(!pdf)}><BookOpen size={14}/>{pdf?'收起 PDF 页':`查看 PDF 第 ${e.page_index+1} 页`}<ChevronDown size={14}/></button>}{pdf&&<PdfPage url={`/api/projects/${project.id}/papers/${paper.id}/source`} page={e.page_index}/>}</div>
 }
 function CorrectionItem({correction:c}:{correction:Correction}) {
   return <div className="correction-item"><span><PencilLine size={13}/>用户修订 · {new Date(c.timestamp).toLocaleString('zh-CN')}</span><p>{c.rationale}</p><details><summary>查看修订前 / 后原记录</summary><pre>{JSON.stringify({before:c.before,after:c.after,operator:c.operator,evidence_ids:c.evidence_ids},null,2)}</pre></details></div>

@@ -1,5 +1,7 @@
 # 科研比较工作台 v0.1.1 使用指南
 
+Windows 组员请先看 [团队预览指南](TEAM_PREVIEW.md)，可用强制离线的一键启动脚本。
+
 这是独立的本地产品入口。历史文献获取、排序、benchmark 和 Pipeline 保持原接口。
 
 ## 安装与一条命令启动
@@ -133,7 +135,8 @@ DeepSeek 不接受任意 PDF 文件输入；deepseek-flash 的图像理解能力
 request ID（服务提供时）、耗时、token usage、project revision 与含 source / active result ID 的快照。
 不保存 Key。API 输入上限 600,000 字符，超过明确拒绝、不截断；SDK 120 秒、max_retries=0。
 失败不产生科学判断；每次显式重试创建新 Run，重启不自动重试。
-费用保持 unknown，没有运行正式 provider 对比实验。本轮两家 API 均只用 mock 验证，未执行真实请求。
+费用不由界面估计，没有正式 provider 对比实验。2026-10-09 已有一次受限的 DeepSeek span Extraction
+技术观察；不代表科学人工确认、S1-B Analysis 或恢复成功。常规自动测试仍只用 mock，团队演示不调用模型。
 请求模型固定入队配置；服务报告模型只有实际响应明确报告时才保存。未收到有效响应的认证、
 超时或网络失败显示“未取得服务端返回模型”，不以请求模型代替。响应已报告模型但本地解析 / 校验
 失败仍保留可安全取得的报告模型、request ID 与 usage。三种导出保留两个独立字段。
