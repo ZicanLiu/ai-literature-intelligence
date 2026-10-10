@@ -1,6 +1,6 @@
 # 3–5 分钟组会演示
 
-准备：首次安装和前端构建在组会前完成。运行 python -m app.comparison_workspace_main；
+准备：按 [团队指南](TEAM_PREVIEW.md) 在组会前完成首次安装与前端构建。Windows 运行 start-team-preview.cmd（强制离线）；
 浏览器打开 http://127.0.0.1:8765。无需 Key、无需网络。不要使用真实 / 私人论文作默认 demo。
 
 | 时间 | 操作 | 说明 |
