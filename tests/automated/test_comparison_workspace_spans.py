@@ -60,6 +60,43 @@ class SpanProtocolTests(unittest.TestCase):
                                   evidence_handle_sources=handles.sources(), evidence_protocol=handles.PROTOCOL)
         return self.workspace.validate_output(project, run, response)
 
+    def test_each_citable_handle_is_declared_once_including_single_block_pages(self):
+        texts = ["Single block page.\n", "".join(f"Unique source row {i:04d}\n" for i in range(220)), ""]
+        paper = paper_with_text(texts)
+        before = paper.model_dump(mode="json")
+        handles = EvidenceHandles([before])
+        declarations = []
+        for page, text in zip(handles.papers[0]["source"]["pages"], texts):
+            self.assertEqual("".join(s["text"] for s in page["evidence_spans"]), text)
+            declarations += [h for h in [page["evidence_handle"], *[s["evidence_handle"] for s in page["evidence_spans"]]] if h]
+        self.assertEqual(len(declarations), len(set(declarations)))
+        self.assertEqual(set(declarations), set(handles.sources()))
+        short = handles.papers[0]["source"]["pages"][0]
+        self.assertIsNotNone(short["evidence_handle"])
+        self.assertIsNone(short["evidence_spans"][0]["evidence_handle"])
+        source = self.validate([paper], handles, extraction(paper.id, [short["evidence_handle"]]))["evidence"][0]
+        self.assertEqual(source["quote"], texts[0])
+        self.assertEqual(source["locator_status"], "LOCATED")
+        self.assertEqual(paper.model_dump(mode="json"), before)
+
+    def test_unknown_and_duplicate_handle_diagnostics_cover_findings_without_raw_values(self):
+        paper = paper_with_text(["Original source A", "Original source B"])
+        handles = EvidenceHandles([paper.model_dump(mode="json")])
+        good = list(handles.sources())
+        for reference, issue in (("private-untrusted-handle-value", "UNKNOWN_HANDLE"), (good[0], "DUPLICATE_HANDLE")):
+            wire = APIAnalysisOutput(observations=[], findings=[dict(category="UNRESOLVED",
+                affected_result_ids=[paper.active_target_result_id], scope="Synthetic only", explanation="review required",
+                evidence=[{"evidence_handle": h} for h in [good[0], reference]])])
+            with self.subTest(issue=issue), self.assertRaises(ProviderFailure) as caught:
+                handles.resolve(wire)
+            diagnostic = caught.exception.validation_diagnostic
+            self.assertEqual(diagnostic.handle_issue, issue)
+            self.assertEqual(diagnostic.field_path, "$.findings[0].evidence[1].evidence_handle")
+            self.assertNotIn(reference, str(caught.exception)+diagnostic.model_dump_json())
+        wire.findings[0].evidence[1].evidence_handle = good[1]
+        valid = self.validate([paper], handles, wire, "analysis")
+        self.assertEqual([e["locator_status"] for e in valid["evidence"]], ["LOCATED", "LOCATED"])
+
     def test_all_identity_hash_offset_quote_fields_match_canonical_source(self):
         text = "Table X: mean [dex], columns A and B\n" + "".join(f"row {i}: {i}.01\n" for i in range(400)) + "Footnote: A minus B.\n"
         paper = paper_with_text([text])

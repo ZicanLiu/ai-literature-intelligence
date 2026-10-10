@@ -174,6 +174,8 @@ class ValidationDiagnostic(Record):
                   "evidence_handle_identity"]
     expected: list[EvidenceIdentity] = Field(default_factory=list)
     returned: EvidenceIdentity | None = None
+    # Absent in historical records: never infer which old handle check failed.
+    handle_issue: Literal["UNKNOWN_HANDLE", "DUPLICATE_HANDLE"] | None = None
 
 
 class Run(Record):

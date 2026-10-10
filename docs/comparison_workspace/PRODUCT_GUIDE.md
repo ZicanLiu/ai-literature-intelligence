@@ -142,4 +142,11 @@ request ID（服务提供时）、耗时、token usage、project revision 与含
 失败仍保留可安全取得的报告模型、request ID 与 usage。三种导出保留两个独立字段。
 旧记录的 model 原值仅兼容保留，来源不明时不推断为请求或服务返回。
 
+提供方 completed 只表示外部生成完成；本地 schema/handle/ownership 校验可能随后拒绝整份输出，
+不入库任何新候选。失败提示和历史记录显示服务报告的 input/output token 用量，不能把本地失败
+理解为请求未发生或免费；费用以服务方账单为准。先检查问题、论文、版本和 Run ID，再决定新的
+显式尝试，也可手工整理。不会自动删除异常引用或接受部分候选。
+handle 失败新增 UNKNOWN_HANDLE / DUPLICATE_HANDLE 安全分类；旧记录只有合并规则时显示 UNKNOWN，
+不猜测历史原因。失败原始响应未保存，不能依靠重新生成随机注册表还原那次模型选择。
+
 更多见 [局限](LIMITATIONS.md)、[来源与修订](DATA_PROVENANCE.md)、[组会脚本](DEMO_SCRIPT.md)。

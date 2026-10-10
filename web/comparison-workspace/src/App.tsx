@@ -35,11 +35,21 @@ const post = (body:unknown):RequestInit => ({method:'POST',body:JSON.stringify(b
 const short = (value:string, count=52) => value.length>count ? value.slice(0,count)+'…' : value
 const paperTitle = (paper:Paper) => paper.identity.title?.value || paper.source.original_filename
 
+function handleIssueText(run:Run) {
+  const d=run.validation_diagnostic
+  if(d?.rule!=='evidence_handle_identity')return ''
+  return d.handle_issue==='UNKNOWN_HANDLE'?'UNKNOWN_HANDLE · 引用未在本次请求声明'
+    :d.handle_issue==='DUPLICATE_HANDLE'?'DUPLICATE_HANDLE · 同一候选重复引用'
+    :'UNKNOWN · 旧记录未区分未知或重复 handle'
+}
+function completedFailureContext(run:Run) {
+  if(run.status!=='FAILED'||run.provider_status!=='completed')return ''
+  const token=(name:string)=>typeof run.token_usage?.[name]==='number'?run.token_usage[name]:'未知'
+  return `请求已发送；服务报告输入 ${token('input_tokens')} / 输出 ${token('output_tokens')} tokens，费用以服务方账单为准。本次${run.stage==='extraction'?'候选':'分析'}未入库，原项目已保留。先核对研究问题、论文与版本，可手工整理；不要仅因本地失败重复付费调用。`
+}
 function runFailureText(run:Run) {
   const reason=run.failure_reason||'运行失败，输入已保留。'
-  return run.validation_diagnostic
-    ? `${run.provider_status==='completed'?'提供方已完成，本地校验失败。':''}${reason} 校验位置：${run.validation_diagnostic.field_path}`
-    : reason
+  return `${run.provider_status==='completed'?'提供方已完成，本地校验失败。':''}${reason} ${completedFailureContext(run)} ${handleIssueText(run)}${run.validation_diagnostic?' 校验位置：'+run.validation_diagnostic.field_path:''}`
 }
 
 function RunDiagnostics({run}:{run:Run}) {
@@ -47,6 +57,8 @@ function RunDiagnostics({run}:{run:Run}) {
   const identity=(value:{paper_id:string|null;source_snapshot_id:string|null})=>`paper ${value.paper_id||'未知'} · source ${value.source_snapshot_id||'未知'}`
   return <>
     <small>提供方状态 {run.provider_status||'未知'}{run.incomplete_details?.reason?' · 未完成原因 '+run.incomplete_details.reason:''}</small>
+    {completedFailureContext(run)&&<p>{completedFailureContext(run)}</p>}
+    {handleIssueText(run)&&<p>{handleIssueText(run)}</p>}
     {diagnostic&&<div className="run-diagnostic"><p>本地校验失败 · {diagnostic.field_path} · 规则 {diagnostic.rule}</p>{diagnostic.expected.length>0&&<p>预期：{diagnostic.expected.map(identity).join('；')}</p>}{diagnostic.returned&&<p>返回：{identity(diagnostic.returned)}（未知表示未匹配项目身份，原始值未保存）</p>}</div>}
   </>
 }

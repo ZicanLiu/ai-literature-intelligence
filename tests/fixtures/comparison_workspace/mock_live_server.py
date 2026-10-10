@@ -1,5 +1,6 @@
 """Browser-only mock server. Real provider adapters + actual API/storage; SDK transport replaced."""
 import argparse
+import json
 import os
 import threading
 from pathlib import Path
@@ -36,6 +37,16 @@ def main():
         elif scenario == "identity":
             result.output_parsed.observations[0].evidence = result.output_parsed.observations[1].evidence
             result.output_text = result.output_parsed.model_dump_json()
+        elif scenario in {"unknown-handle", "duplicate-handle"}:
+            inputs = json.loads(options["input"])
+            group = "results" if inputs["stage"] == "extraction" else "observations"
+            refs = getattr(result.output_parsed, group)[0].evidence
+            refs.append(refs[0].model_copy(update={"evidence_handle": "untrusted-not-declared"})
+                        if scenario == "unknown-handle" else refs[0].model_copy())
+            result.output_text = result.output_parsed.model_dump_json()
+        elif scenario == "empty-extraction":
+            result.output_parsed = {"results": []}
+            result.output_text = '{"results":[]}'
         return result
     sdk = Mock()
     sdk.responses.parse.side_effect = respond
@@ -74,7 +85,8 @@ def main():
                     "deepseek": sdk.responses.create.call_count, "connection": sdk.models.list.call_count}
 
         @app.post("/_test/scenario/{value}")
-        def set_scenario(value: Literal["success", "failure", "schema", "incomplete", "identity"]):
+        def set_scenario(value: Literal["success", "failure", "schema", "incomplete", "identity",
+                                       "unknown-handle", "duplicate-handle", "empty-extraction"]):
             nonlocal scenario
             scenario = value
             return {"scenario": scenario}

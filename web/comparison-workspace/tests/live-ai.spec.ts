@@ -316,6 +316,63 @@ for(const provider of ['openai','deepseek'] as const) {
   })
 }
 
+for(const provider of ['openai','deepseek'] as const) {
+  test(`${provider} extraction rejects unknown/duplicate handles and shows spent usage; legacy remains UNKNOWN`,async({page})=>{
+    await enableProvider(page,provider)
+    await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+    const id=await demoProject(page)
+    const before=await (await page.request.get('/api/projects/'+id)).json()
+    const counts=await (await page.request.get('/_test/sdk-counts')).json()
+    let lastRunId=''
+    for(const [scenario,issue] of [['unknown-handle','UNKNOWN_HANDLE'],['empty-extraction',null],['duplicate-handle','DUPLICATE_HANDLE']] as const) {
+      await control(page,'scenario/'+scenario)
+      const response=page.waitForResponse(r=>r.url().endsWith('/extractions')&&r.request().method()==='POST')
+      await page.getByRole('button',{name:'提取候选结果',exact:true}).click()
+      lastRunId=(await (await response).json()).run_id
+      await expect(page.getByRole('alert')).toContainText('请求已发送')
+      await expect(page.getByRole('alert')).toContainText('输入 20 / 输出 10 tokens')
+      await expect(page.getByRole('alert')).toContainText('本次候选未入库')
+      await expect(page.getByRole('alert')).toContainText('先核对研究问题、论文与版本')
+      const run=await (await page.request.get('/api/runs/'+lastRunId)).json()
+      expect(run.status).toBe('FAILED')
+      expect(run.provider_status).toBe('completed')
+      expect(run.output).toBeNull()
+      expect(run.validation_diagnostic?.handle_issue??null).toBe(issue)
+      if(issue){
+        await expect(page.getByRole('alert')).toContainText(issue)
+        await expect(page.getByRole('alert')).toContainText('$.results[0].evidence[1].evidence_handle')
+      }else await expect(page.getByRole('alert')).toContainText('未返回结果候选')
+      await page.getByRole('button',{name:'运行与修订记录',exact:true}).click()
+      const item=page.locator('.history-item').filter({has:page.locator('code',{hasText:lastRunId})})
+      await expect(item).toContainText('输入 20 / 输出 10 tokens')
+      if(issue)await expect(item).toContainText(issue)
+      await page.getByRole('button',{name:'关闭窗口',exact:true}).click()
+      const after=await (await page.request.get('/api/projects/'+id)).json()
+      for(const field of ['revision','papers','evidence','observations','findings','corrections'])expect(after[field]).toEqual(before[field])
+      for(const format of ['json','markdown','csv']){
+        const body=await (await page.request.get('/api/projects/'+id+'/exports/'+format)).text()
+        if(issue)expect(body).toContain(issue)
+        expect(body).not.toContain('untrusted-not-declared')
+        for(const key of Object.values(keys))expect(body).not.toContain(key)
+      }
+    }
+    const afterCounts=await (await page.request.get('/_test/sdk-counts')).json()
+    expect(afterCounts[provider]-counts[provider]).toBe(3)
+    // Read-only legacy response fixture, without rewriting any native Run.
+    await page.route('**/api/projects/'+id,async route=>{
+      const response=await route.fetch()
+      const body=await response.json()
+      const diagnostic=body.runs.find((r:{id:string})=>r.id===lastRunId).validation_diagnostic
+      delete diagnostic.handle_issue
+      await route.fulfill({response,json:body})
+    })
+    await page.reload()
+    await page.getByRole('button',{name:'运行与修订记录',exact:true}).click()
+    await expect(page.locator('.history-item').filter({has:page.locator('code',{hasText:lastRunId})})).toContainText('UNKNOWN · 旧记录未区分未知或重复 handle')
+    expect(await (await page.request.get('/_test/sdk-counts')).json()).toEqual(afterCounts)
+  })
+}
+
 test('DeepSeek operation defaults and explicit extraction override are visible and recorded',async({page})=>{
   await enableProvider(page,'deepseek')
   await page.getByLabel('思考强度',{exact:true}).selectOption('')

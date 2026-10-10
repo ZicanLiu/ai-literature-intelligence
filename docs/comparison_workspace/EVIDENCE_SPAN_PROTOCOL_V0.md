@@ -18,6 +18,10 @@ null：没有超限的整页引用，仍可选择其中合法短块；完整页�
 表格必须审阅整页上下文（标题、列头、单位、脚注）。长表若无法用单个合法片段保留必要语义，不能
 把孤立数字的 LOCATED 当科学支持；可分别审阅多个引用，不自动合成引文或批准科学解释。
 
+单块页只在页级 evidence_handle 声明一次可引用 handle；该块的 evidence_handle 为 null、原文仍
+完整显示。避免把同一个整页/单块别名展示两次；不是删掉模型输出中的重复引用。多块页保留不同
+片段 handle 和整页上下文，不改候选集合或 canonical 位置；需要整页时引用整页一次，避免冗余重复。
+
 重复或空白块仍显示为上下文，但不分配可引用 handle。超过既有 quote 最大 10000 字符只禁止整页
 quote（whole_page_quote_exceeds_limit），其唯一、连续短块继续可引用，原文仍按顺序完整发送一次。
 空白/提取错误页保持不可引用；若一篇论文没有合法整页或短块，发送前失败。没有截断、检索或复杂索引。
@@ -31,6 +35,10 @@ Result.paper_id、Observation.result_id、Finding.affected_result_ids 仍由模�
 来自同一页，不同候选可以复用同一 span。source map 返回副本，不能修改进程内可信绑定。
 API extraction Result 必须有来源 evidence；无法确认时返回无候选，不编造来源。analysis 的
 NOT_LOCATED/AMBIGUOUS/UNRESOLVED 仍可没有 evidence，沿用原信息状态语义。
+
+安全诊断继续使用 evidence_handle_identity 规则，新增可选 handle_issue：UNKNOWN_HANDLE 表示不在
+本次注册表（包含伪造/跨请求），DUPLICATE_HANDLE 表示同一候选已引用过。只保存枚举和字段路径，
+不保存原始违规字符串或完整失败响应。历史缺字段的诊断为 UNKNOWN，不事后推断或写回旧 Run。
 
 ## Provenance 与兼容
 

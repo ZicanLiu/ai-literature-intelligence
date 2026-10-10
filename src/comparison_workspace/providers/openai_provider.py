@@ -21,6 +21,9 @@ Each page's ordered evidence_spans contains the original page text exactly once.
 evidence_handle refers to the entire page context: select this for tables or whenever column
 headers, units, captions or footnotes are needed. Never treat a clipped number as complete evidence.
 Null handles are context only and cannot be cited. Never invent or repeat a handle within a candidate.
+On a single-block page only the top-level page handle is citable; the block's null handle is context.
+Copy handles verbatim from the current request, never from paper/source IDs, evidence IDs or earlier runs.
+Use a full-page handle once when its context is needed; do not also cite its constituent blocks redundantly.
 Different spans on the same page can be selected; none may be concatenated across pages.
 An extraction result selects one supplied paper_id; all its evidence handles MUST belong to
 that paper. An observation's evidence MUST belong to the paper owning its active result_id.

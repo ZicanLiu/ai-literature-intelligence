@@ -12,7 +12,8 @@ from .base import ProviderFailure
 
 
 class EvidenceReference(Record):
-    evidence_handle: str = Field(min_length=1)
+    evidence_handle: str = Field(min_length=1, description=
+        "Copy one declared non-null evidence_handle exactly; use each handle at most once per candidate.")
 
 
 class ReferencedResult(Record):
@@ -96,8 +97,11 @@ class EvidenceHandles:
                             end = boundary + 1
                     quote = text[start:end]
                     handle = None
-                    if quote.strip() and text.find(quote) == start and text.find(quote, start + 1) < 0:
-                        handle = context if start == 0 and end == len(text) else new_id("span")
+                    if (not (start == 0 and end == len(text) and context is not None)
+                            and quote.strip() and text.find(quote) == start and text.find(quote, start + 1) < 0):
+                        # A single-block page is already citable via its full-page handle.
+                        # Do not declare that same handle a second time on the text block.
+                        handle = new_id("span")
                         self._add(handle, identity, text, start, end, context)
                         citable = True
                     # Non-overlapping blocks preserve every character exactly once in the input.
@@ -128,11 +132,13 @@ class EvidenceHandles:
                     handle = reference["evidence_handle"]
                     if handle not in self._identities or handle in seen:
                         # No arbitrary model values or source text in diagnostics.
+                        issue = "UNKNOWN_HANDLE" if handle not in self._identities else "DUPLICATE_HANDLE"
                         raise ProviderFailure(
-                            "证据 handle 未在本次输入中声明或证据引用在同一候选中重复；未接受输出。",
+                            ("证据 handle 未在本次输入中声明；未接受输出。" if issue == "UNKNOWN_HANDLE"
+                             else "同一候选重复引用了证据 handle；未接受输出。"),
                             validation_diagnostic=ValidationDiagnostic(
                                 field_path=f"$.{group}[{index}].evidence[{offset}].evidence_handle",
-                                rule="evidence_handle_identity"))
+                                rule="evidence_handle_identity", handle_issue=issue))
                     seen.add(handle)
                     identity = self._identities[handle]
                     candidate["evidence"][offset] = {

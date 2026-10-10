@@ -228,6 +228,7 @@ class S1DiagnosticsTests(unittest.TestCase):
         self.assertIsNone(run.request_id)
         self.assertEqual(run.incomplete_details, {"reason": None})
         self.assertEqual(run.validation_diagnostic.rule, "evidence_handle_identity")
+        self.assertEqual(run.validation_diagnostic.handle_issue, "UNKNOWN_HANDLE")
         self.assertIsNone(run.validation_diagnostic.returned)
         view = self.workspace.view(self.project.id)
         for output in (run.model_dump_json(), json.dumps(portable(view)), markdown(view), csv_report(view)):

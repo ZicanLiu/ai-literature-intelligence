@@ -9,10 +9,11 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import httpx
+from pydantic import ValidationError
 from openai import OpenAI as SDKClient
 
 from src.comparison_workspace.domain.models import (
-    AnalysisOutput, ExtractionOutput, OutputValidationFailure, Project, Run,
+    AnalysisOutput, ExtractionOutput, OutputValidationFailure, Project, Run, ValidationDiagnostic,
 )
 from src.comparison_workspace.providers.base import ProviderResult
 from src.comparison_workspace.providers.deepseek_provider import DeepSeekProvider
@@ -154,7 +155,7 @@ class EvidenceHandleTests(unittest.TestCase):
                     elif case == "duplicate":
                         refs.append(copy.deepcopy(refs[0]))
                     else:
-                        refs[0]["evidence_handle"] = "not-declared" if case == "unknown" else refs[0]["evidence_handle"] + "-forged"
+                        refs.append({"evidence_handle": "not-declared" if case == "unknown" else refs[0]["evidence_handle"] + "-forged"})
                     result.output_parsed, result.output_text = raw, json.dumps(raw)
                     return result
                 self.respond = invalid
@@ -163,6 +164,37 @@ class EvidenceHandleTests(unittest.TestCase):
                         before, run = self.attempt(provider, stage)
                         self.assert_rejected(before, run, "structured_output_schema" if case == "missing" else "evidence_handle_identity")
                         self.assertIsNone(run.validation_diagnostic.returned)
+                        expected = None if case == "missing" else "DUPLICATE_HANDLE" if case == "duplicate" else "UNKNOWN_HANDLE"
+                        self.assertEqual(run.validation_diagnostic.handle_issue, expected)
+                        self.assertEqual(run.validation_diagnostic.field_path,
+                                         f"$.{group}[0].evidence[{0 if case == 'missing' else 1}].evidence_handle")
+                        exported = next(r for r in portable(self.workspace.view(self.project.id))["runs"] if r["id"] == run.id)
+                        self.assertEqual(exported["validation_diagnostic"]["handle_issue"], expected)
+                        self.assertNotIn("not-declared", json.dumps(exported))
+
+    def test_historical_combined_handle_diagnostic_remains_unknown(self):
+        old = {"rule": "evidence_handle_identity", "field_path": "$.results[0].evidence[1].evidence_handle",
+               "expected": [], "returned": None}
+        self.assertIsNone(ValidationDiagnostic.model_validate(old).handle_issue)
+        with self.assertRaises(ValidationError):
+            ValidationDiagnostic.model_validate({**old, "handle_issue": "arbitrary-provider-value"})
+
+    def test_completed_empty_extraction_preserves_usage_but_attaches_no_candidates(self):
+        def empty(**options):
+            response = response_for(**options)
+            response.output_parsed = {"results": []}
+            response.output_text = '{"results":[]}'
+            return response
+        self.respond = empty
+        for provider in KEYS:
+            with self.subTest(provider=provider):
+                before, run = self.attempt(provider, "extraction")
+                self.assertEqual(run.status, "FAILED")
+                self.assertEqual(run.provider_status, "completed")
+                self.assertEqual(run.token_usage["output_tokens"], 10)
+                self.assertIn("未返回结果候选", run.failure_reason)
+                self.assertIsNone(run.output)
+                self.assertEqual(self.workspace.repo.get(self.project.id).model_dump(mode="json"), before)
 
     def test_explicit_model_identity_fields_cannot_override_the_handle(self):
         for stage in ("extraction", "analysis"):
@@ -277,7 +309,9 @@ class EvidenceHandleTests(unittest.TestCase):
                   mode="api", stage=saved["stage"], provider="deepseek")
         with self.assertRaises(OutputValidationFailure) as caught:
             self.workspace.validate_output(p, run, ProviderResult(raw, provider_status=saved["provider_status"]))
-        self.assertEqual(caught.exception.diagnostic.model_dump(mode="json"), saved["validation_diagnostic"])
+        expected = ValidationDiagnostic.model_validate(saved["validation_diagnostic"])
+        self.assertEqual(caught.exception.diagnostic.model_dump(mode="json"), expected.model_dump(mode="json"))
+        self.assertIsNone(caught.exception.diagnostic.handle_issue)
 
 
 @unittest.skipUnless(os.getenv("COMPARISON_IDENTITY_REPLAY_ROOT"), "Optional external S1-A captures not configured")
